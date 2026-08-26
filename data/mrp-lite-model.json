@@ -1,10 +1,10 @@
 {
-  "version": "uk-v096-mrp-lite",
-  "model_type": "constituency-residual-ml-v1",
+  "version": "uk-v097-mrp-lite",
+  "model_type": "constituency-residual-ml-fptp-v2",
   "status": "ok",
   "approved": false,
   "publication_ready": false,
-  "generated_at": "2026-08-26T18:08:37.445561+00:00",
+  "generated_at": "2026-08-26T18:31:04.122743+00:00",
   "selected_spec": {
     "name": "hgb_d2_g100",
     "kind": "hgb",
@@ -12,6 +12,12 @@
     "leaf": 24,
     "l2": 2.0,
     "gamma": 1.0
+  },
+  "selected_contest_spec": {
+    "name": "logit_c300_s040",
+    "kind": "logit",
+    "C": 3.0,
+    "strength": 0.4
   },
   "hard_gate": {
     "min_holdout_accuracy": 0.8,
@@ -22,8 +28,8 @@
   },
   "gate_failures": [
     "holdout_2024_accuracy_below_80pct",
-    "holdout_gain_below_5pp",
-    "holdout_seat_error_above_200"
+    "holdout_seat_error_above_200",
+    "validation_accuracy_worse_by_more_than_1pp"
   ],
   "validation_2019": {
     "baseline": {
@@ -122,7 +128,7 @@
         }
       }
     },
-    "candidate": {
+    "share_only_candidate": {
       "winner_accuracy": 0.9177215189873418,
       "correct_winners": 580,
       "gb_seats": 632,
@@ -210,6 +216,102 @@
           "correct": 57,
           "n": 59,
           "accuracy": 0.9661016949152542
+        },
+        "yorkshire": {
+          "correct": 51,
+          "n": 54,
+          "accuracy": 0.9444444444444444
+        }
+      }
+    },
+    "candidate": {
+      "winner_accuracy": 0.8924050632911392,
+      "correct_winners": 564,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 193,
+        "con": 342,
+        "ref": 0,
+        "ld": 47,
+        "green": 1,
+        "snp": 45,
+        "pc": 4,
+        "other": 0
+      },
+      "actual_seats": {
+        "lab": 202,
+        "con": 365,
+        "ref": 0,
+        "ld": 11,
+        "green": 1,
+        "snp": 48,
+        "pc": 4,
+        "other": 1
+      },
+      "seat_error": {
+        "lab": -9,
+        "con": -23,
+        "ref": 0,
+        "ld": 36,
+        "green": 0,
+        "snp": -3,
+        "pc": 0,
+        "other": -1
+      },
+      "seat_abs_error_sum": 72,
+      "share_mae": 4.88098623035104,
+      "winner_source": "official_BES_WinnerXX",
+      "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+      "regional_accuracy": {
+        "east_england": {
+          "correct": 55,
+          "n": 58,
+          "accuracy": 0.9482758620689655
+        },
+        "east_midlands": {
+          "correct": 46,
+          "n": 46,
+          "accuracy": 1.0
+        },
+        "london": {
+          "correct": 64,
+          "n": 73,
+          "accuracy": 0.8767123287671232
+        },
+        "north_east": {
+          "correct": 25,
+          "n": 29,
+          "accuracy": 0.8620689655172413
+        },
+        "north_west": {
+          "correct": 66,
+          "n": 75,
+          "accuracy": 0.88
+        },
+        "scotland": {
+          "correct": 52,
+          "n": 59,
+          "accuracy": 0.8813559322033898
+        },
+        "south_east": {
+          "correct": 76,
+          "n": 84,
+          "accuracy": 0.9047619047619048
+        },
+        "south_west": {
+          "correct": 42,
+          "n": 55,
+          "accuracy": 0.7636363636363637
+        },
+        "wales": {
+          "correct": 33,
+          "n": 40,
+          "accuracy": 0.825
+        },
+        "west_midlands": {
+          "correct": 54,
+          "n": 59,
+          "accuracy": 0.9152542372881356
         },
         "yorkshire": {
           "correct": 51,
@@ -316,7 +418,7 @@
         }
       }
     },
-    "candidate": {
+    "share_only_candidate": {
       "winner_accuracy": 0.7278481012658228,
       "correct_winners": 460,
       "gb_seats": 632,
@@ -412,8 +514,104 @@
         }
       }
     },
-    "accuracy_gain_pp": 4.588607594936711,
-    "seat_error_improvement": 88
+    "candidate": {
+      "winner_accuracy": 0.7420886075949367,
+      "correct_winners": 469,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 302,
+        "con": 178,
+        "ref": 41,
+        "ld": 71,
+        "green": 6,
+        "snp": 25,
+        "pc": 4,
+        "other": 5
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -109,
+        "con": 57,
+        "ref": 36,
+        "ld": -1,
+        "green": 2,
+        "snp": 16,
+        "pc": 0,
+        "other": -1
+      },
+      "seat_abs_error_sum": 222,
+      "share_mae": 7.906340864761132,
+      "winner_source": "official_BES_WinnerXX",
+      "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+      "regional_accuracy": {
+        "east_england": {
+          "correct": 43,
+          "n": 61,
+          "accuracy": 0.7049180327868853
+        },
+        "east_midlands": {
+          "correct": 31,
+          "n": 47,
+          "accuracy": 0.6595744680851063
+        },
+        "london": {
+          "correct": 66,
+          "n": 75,
+          "accuracy": 0.88
+        },
+        "north_east": {
+          "correct": 15,
+          "n": 27,
+          "accuracy": 0.5555555555555556
+        },
+        "north_west": {
+          "correct": 67,
+          "n": 73,
+          "accuracy": 0.9178082191780822
+        },
+        "scotland": {
+          "correct": 37,
+          "n": 57,
+          "accuracy": 0.6491228070175439
+        },
+        "south_east": {
+          "correct": 65,
+          "n": 91,
+          "accuracy": 0.7142857142857143
+        },
+        "south_west": {
+          "correct": 44,
+          "n": 58,
+          "accuracy": 0.7586206896551724
+        },
+        "wales": {
+          "correct": 23,
+          "n": 32,
+          "accuracy": 0.71875
+        },
+        "west_midlands": {
+          "correct": 43,
+          "n": 57,
+          "accuracy": 0.7543859649122807
+        },
+        "yorkshire": {
+          "correct": 35,
+          "n": 54,
+          "accuracy": 0.6481481481481481
+        }
+      }
+    },
+    "accuracy_gain_pp": 6.0126582278481,
+    "seat_error_improvement": 120
   },
   "internal_selection_2017": {
     "baseline": {
@@ -569,7 +767,7 @@
         "winner_accuracy": 0.8686708860759493,
         "correct_winners": 549,
         "seat_abs_error_sum": 98,
-        "share_mae": 3.053361340715711
+        "share_mae": 3.05336134071576
       },
       {
         "spec": {
@@ -585,7 +783,7 @@
         "winner_accuracy": 0.865506329113924,
         "correct_winners": 547,
         "seat_abs_error_sum": 108,
-        "share_mae": 3.146246092494248
+        "share_mae": 3.1462460924942883
       },
       {
         "spec": {
@@ -601,7 +799,7 @@
         "winner_accuracy": 0.8639240506329114,
         "correct_winners": 546,
         "seat_abs_error_sum": 106,
-        "share_mae": 3.2158979434403334
+        "share_mae": 3.2158979434403556
       },
       {
         "spec": {
@@ -613,7 +811,7 @@
         "winner_accuracy": 0.8575949367088608,
         "correct_winners": 542,
         "seat_abs_error_sum": 120,
-        "share_mae": 3.3233081486371443
+        "share_mae": 3.323308148637162
       },
       {
         "spec": {
@@ -625,7 +823,7 @@
         "winner_accuracy": 0.8560126582278481,
         "correct_winners": 541,
         "seat_abs_error_sum": 118,
-        "share_mae": 3.2031419738098257
+        "share_mae": 3.2031419738092843
       },
       {
         "spec": {
@@ -637,7 +835,7 @@
         "winner_accuracy": 0.8528481012658228,
         "correct_winners": 539,
         "seat_abs_error_sum": 122,
-        "share_mae": 3.258940799793759
+        "share_mae": 3.2589407997938085
       },
       {
         "spec": {
@@ -649,7 +847,7 @@
         "winner_accuracy": 0.8386075949367089,
         "correct_winners": 530,
         "seat_abs_error_sum": 144,
-        "share_mae": 3.8024517743158213
+        "share_mae": 3.8024517743159674
       },
       {
         "spec": {
@@ -661,7 +859,211 @@
         "winner_accuracy": 0.8354430379746836,
         "correct_winners": 528,
         "seat_abs_error_sum": 152,
-        "share_mae": 3.829211149727902
+        "share_mae": 3.8292111497279393
+      }
+    ]
+  },
+  "contestability_selection_2017": {
+    "selected": {
+      "name": "logit_c300_s040",
+      "kind": "logit",
+      "C": 3.0,
+      "strength": 0.4
+    },
+    "candidates": [
+      {
+        "spec": {
+          "name": "logit_c300_s040",
+          "kind": "logit",
+          "C": 3.0,
+          "strength": 0.4
+        },
+        "winner_accuracy": 0.8939873417721519,
+        "correct_winners": 565,
+        "seat_abs_error_sum": 46,
+        "predicted_seats": {
+          "lab": 269,
+          "con": 324,
+          "ref": 0,
+          "ld": 20,
+          "green": 2,
+          "snp": 14,
+          "pc": 3,
+          "other": 0
+        }
+      },
+      {
+        "spec": {
+          "name": "logit_c100_s025",
+          "kind": "logit",
+          "C": 1.0,
+          "strength": 0.25
+        },
+        "winner_accuracy": 0.8908227848101266,
+        "correct_winners": 563,
+        "seat_abs_error_sum": 48,
+        "predicted_seats": {
+          "lab": 275,
+          "con": 316,
+          "ref": 0,
+          "ld": 22,
+          "green": 2,
+          "snp": 14,
+          "pc": 3,
+          "other": 0
+        }
+      },
+      {
+        "spec": {
+          "name": "logit_c100_s040",
+          "kind": "logit",
+          "C": 1.0,
+          "strength": 0.4
+        },
+        "winner_accuracy": 0.8908227848101266,
+        "correct_winners": 563,
+        "seat_abs_error_sum": 52,
+        "predicted_seats": {
+          "lab": 276,
+          "con": 321,
+          "ref": 0,
+          "ld": 19,
+          "green": 2,
+          "snp": 11,
+          "pc": 3,
+          "other": 0
+        }
+      },
+      {
+        "spec": {
+          "name": "logit_c025_s025",
+          "kind": "logit",
+          "C": 0.25,
+          "strength": 0.25
+        },
+        "winner_accuracy": 0.8892405063291139,
+        "correct_winners": 562,
+        "seat_abs_error_sum": 56,
+        "predicted_seats": {
+          "lab": 272,
+          "con": 328,
+          "ref": 0,
+          "ld": 18,
+          "green": 2,
+          "snp": 9,
+          "pc": 3,
+          "other": 0
+        }
+      },
+      {
+        "spec": {
+          "name": "none",
+          "kind": "none",
+          "strength": 0.0
+        },
+        "winner_accuracy": 0.8876582278481012,
+        "correct_winners": 561,
+        "seat_abs_error_sum": 60,
+        "predicted_seats": {
+          "lab": 285,
+          "con": 316,
+          "ref": 0,
+          "ld": 18,
+          "green": 2,
+          "snp": 9,
+          "pc": 2,
+          "other": 0
+        }
+      },
+      {
+        "spec": {
+          "name": "logit_c025_s040",
+          "kind": "logit",
+          "C": 0.25,
+          "strength": 0.4
+        },
+        "winner_accuracy": 0.8765822784810127,
+        "correct_winners": 554,
+        "seat_abs_error_sum": 56,
+        "predicted_seats": {
+          "lab": 265,
+          "con": 336,
+          "ref": 0,
+          "ld": 17,
+          "green": 2,
+          "snp": 9,
+          "pc": 3,
+          "other": 0
+        }
+      },
+      {
+        "spec": {
+          "name": "hgb_d2_s040",
+          "kind": "hgb",
+          "depth": 2,
+          "leaf": 30,
+          "l2": 4.0,
+          "strength": 0.4
+        },
+        "winner_accuracy": 0.875,
+        "correct_winners": 553,
+        "seat_abs_error_sum": 76,
+        "predicted_seats": {
+          "lab": 291,
+          "con": 313,
+          "ref": 0,
+          "ld": 20,
+          "green": 2,
+          "snp": 3,
+          "pc": 3,
+          "other": 0
+        }
+      },
+      {
+        "spec": {
+          "name": "hgb_d3_s025",
+          "kind": "hgb",
+          "depth": 3,
+          "leaf": 36,
+          "l2": 6.0,
+          "strength": 0.25
+        },
+        "winner_accuracy": 0.875,
+        "correct_winners": 553,
+        "seat_abs_error_sum": 90,
+        "predicted_seats": {
+          "lab": 293,
+          "con": 305,
+          "ref": 0,
+          "ld": 25,
+          "green": 2,
+          "snp": 4,
+          "pc": 3,
+          "other": 0
+        }
+      },
+      {
+        "spec": {
+          "name": "hgb_d2_s025",
+          "kind": "hgb",
+          "depth": 2,
+          "leaf": 30,
+          "l2": 4.0,
+          "strength": 0.25
+        },
+        "winner_accuracy": 0.870253164556962,
+        "correct_winners": 550,
+        "seat_abs_error_sum": 82,
+        "predicted_seats": {
+          "lab": 292,
+          "con": 309,
+          "ref": 0,
+          "ld": 22,
+          "green": 2,
+          "snp": 4,
+          "pc": 3,
+          "other": 0
+        }
       }
     ]
   },
@@ -697,10 +1099,10 @@
       "routine",
       "leave"
     ],
-    "notes": "Census fields are converted to within-wave percentile ranks before modelling. Official WinnerXX/SecondXX fields define seat competition; aggregate Other remains a vote-share bucket, not a pooled candidate."
+    "notes": "Census fields are converted to within-wave percentile ranks. Stage 1 predicts local vote shares; Stage 2 is an FPTP contestability classifier trained only on earlier elections and selected on 2017. It redistributes territorial efficiency while the final raking preserves national party targets. Official WinnerXX/SecondXX define historical seat competition; Other is never a pooled universal candidate."
   },
   "integrity": {
-    "version": "uk-v096-bes-integrity",
+    "version": "uk-v097-bes-integrity",
     "status": "passed",
     "checks": [
       {
