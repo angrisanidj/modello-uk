@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.11 — Reform false-positive diagnostics (shadow only)
+modello-uk v0.9.12 — latent Reform/Brexit geography (shadow experiment)
 
 Purpose
 -------
-This is deliberately a SHADOW diagnostic build.  It preserves the v0.9.10
-candidate unchanged, measures where Reform is over-predicted in the 2024
-development benchmark, and cannot activate a new live model.
+This is deliberately a SHADOW structural experiment. It addresses a specific
+missing-data problem exposed by v0.9.12: a zero Brexit/Reform share can mean
+"party did not contest", not "zero local potential". The experiment builds a
+latent geographic prior from the broadly contested 2015 UKIP election and uses
+it only when a later Reform-family baseline has low candidate coverage and the
+national target implies a large Reform rise. It cannot activate a new live model.
 
 Data:
 - BES 2010-2019 Constituency Results with Census and Candidate Data
@@ -24,9 +27,10 @@ Rolling-origin validation:
 4. Only after the holdout has been scored, refit on all known history including
    2024 to create today's live central projection.
 
-The 2024 benchmark is used only to describe errors.  It is NEVER used here to
-select a model family, hyperparameters, blend strength, routing strength,
-approval threshold or any production coefficient.
+The 2024 benchmark is used only to score the pre-specified structural hypothesis.
+It is NEVER used here to fit the latent prior, select its ridge penalty, choose
+its activation rule, tune a threshold, or promote the model live. The latent
+prior is trained only on 2015 UKIP geography (pre-2024).
 
 Model structure
 ---------------
@@ -44,16 +48,18 @@ Model structure
 - Candidate families: ridge, gradient boosting, and conservative hybrid blends
 - Final iterative raking to the supplied GB vote target.
 
-Hard gate
----------
-The model can go live only if:
-- holdout 2024 winner accuracy >= 80%
-- holdout improves baseline winner accuracy by >= 5 percentage points
-- holdout aggregate seat absolute error <= 200
+Numerical gate and promotion rule
+---------------------------------
+The historical numerical gate is still calculated:
+- benchmark 2024 winner accuracy >= 80%
+- benchmark improves baseline winner accuracy by >= 5 percentage points
+- benchmark aggregate seat absolute error <= 200
 - validation 2019 accuracy is no worse than baseline by >1 percentage point
 - validation seat error is no worse than baseline by >30 seats
 
-This gate is intentionally difficult. approved=False is a valid outcome.
+But v0.9.12 is shadow-only regardless of this result. The hypothesis was
+motivated by the 2024 error pattern, so the same 2024 benchmark cannot serve as
+fresh promotion evidence. approved=False is therefore required in this release.
 """
 from __future__ import annotations
 
@@ -82,9 +88,9 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v0911-reform-diagnostics.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v0911.json"
-DIAGNOSTIC_OUT=DATA/"reform-diagnostics-v0911.json"
+BACKTEST_OUT=DATA/"backtest-v0912-ref-latent-potential.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v0912.json"
+DIAGNOSTIC_OUT=DATA/"reform-diagnostics-v0912.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -177,7 +183,21 @@ ROUTING_STRENGTH_GRID=(0.0,0.20,0.40,0.60,0.80)
 UNWIND_STRENGTH_GRID=(0.0,0.15,0.30,0.45,0.60)
 
 
-UA="FocusAmerica-UK-election-model/0.9.11 (+https://angrisanidj.github.io/modello-uk/)"
+# v0.9.12 latent Reform/Brexit geography. These values are fixed a priori and
+# are NOT tuned on 2024. 2015 UKIP is the donor because it contested almost the
+# whole country and predates both the 2019 Brexit Party withdrawal strategy and
+# the 2024 benchmark. The latent prior changes geography only: nat_shares()
+# always uses actually cast votes, and final raking still enforces the target.
+REF_LATENT_DONOR_YEAR="15"
+REF_LATENT_RIDGE_ALPHA=20.0
+REF_LATENT_COVERAGE_ZERO=0.75
+REF_LATENT_COVERAGE_FULL=0.40
+REF_LATENT_RISE_ZERO=3.0
+REF_LATENT_RISE_FULL=8.0
+REF_LATENT_MIN_TRAIN=450
+
+
+UA="FocusAmerica-UK-election-model/0.9.12 (+https://angrisanidj.github.io/modello-uk/)"
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -331,6 +351,29 @@ def party_vote_cols(df:pd.DataFrame,p:str,yy:str)->list[str]:
         ],
     }
     return find_cols(df,*variants[p])
+
+def ref_primary_cols(df:pd.DataFrame,yy:str,votes:bool=False)->list[str]:
+    """Columns for the principal Reform-family vehicle in a given election.
+
+    This deliberately distinguishes the 2019 Brexit Party from residual UKIP.
+    A small UKIP candidacy in a seat where the Brexit Party stood down must not
+    make that seat look like an observed Brexit/Reform geography.
+    """
+    suffix="Vote" if votes else ""
+    if yy=="19":
+        names=[f"Brexit{suffix}{yy}",f"Brx{suffix}{yy}",f"BrexitParty{suffix}{yy}"]
+    elif yy in {"24","25","26","27","28","29","30"}:
+        names=[f"RUK{suffix}{yy}",f"Reform{suffix}{yy}",f"ReformUK{suffix}{yy}"]
+    else:
+        names=[f"UKIP{suffix}{yy}",f"UKIndependence{suffix}{yy}"]
+    # Some datasets place the year before Vote (e.g. UKIPVote15); include both.
+    alt=[]
+    if votes:
+        if yy=="19": alt=[f"BrexitVote{yy}",f"BrxVote{yy}",f"BrexitPartyVote{yy}"]
+        elif yy in {"24","25","26","27","28","29","30"}: alt=[f"RUKVote{yy}",f"ReformVote{yy}",f"ReformUKVote{yy}"]
+        else: alt=[f"UKIPVote{yy}",f"UKIndependenceVote{yy}"]
+    return find_cols(df,*(names+alt))
+
 
 def sum_numeric_cols(df:pd.DataFrame,cols:list[str])->pd.Series:
     if not cols:return pd.Series(0.0,index=df.index,dtype=float)
@@ -572,6 +615,27 @@ def extract_election(df:pd.DataFrame,yy:str)->dict[str,Any]:
         data["weight"]=total_votes.clip(lower=1.0) if tv else 1.0
         share_source="published_shares"
 
+    # Candidate-entry metadata for the principal Reform-family vehicle.
+    # This is baseline-election information, never a future-election label.
+    primary_vote_cols=ref_primary_cols(source,yy,votes=True)
+    primary_share_cols=ref_primary_cols(source,yy,votes=False)
+    if primary_vote_cols:
+        primary_votes=sum_numeric_cols(source,primary_vote_cols)
+        data["ref_primary_stood"]=(primary_votes>0.5)
+        primary_source="vote_counts"
+    elif primary_share_cols:
+        primary_share=sum(
+            (normalize_share_series(source[c]) for c in primary_share_cols),
+            start=pd.Series(0.0,index=source.index,dtype=float)
+        )
+        data["ref_primary_stood"]=(primary_share>1e-6)
+        primary_source="published_shares"
+    else:
+        # Fail-safe: if the specific vehicle cannot be separated, treat a
+        # positive aggregate family share as evidence that it contested.
+        data["ref_primary_stood"]=(data["ref"]>1e-6)
+        primary_source="aggregate_family_fallback"
+
     tc=turnout_col(source,yy)
     data["turnout"]=normalize_share_series(source[tc]) if tc else 0.0
 
@@ -606,6 +670,9 @@ def extract_election(df:pd.DataFrame,yy:str)->dict[str,Any]:
         "unknown_second_labels":sorted(unknown_second_labels),
         "raw_winner_labels":sorted({str(x) for x in source[wc].dropna().unique()}),
         "raw_second_labels":sorted({str(x) for x in source[sc].dropna().unique()}) if sc is not None else [],
+        "ref_primary_source":primary_source,
+        "ref_primary_stood_count":int(data["ref_primary_stood"].sum()),
+        "ref_primary_coverage":float(data["ref_primary_stood"].mean()),
     }
 
 EXPECTED_COUNTRIES_OLD={"England":533,"Scotland":59,"Wales":40}
@@ -671,6 +738,9 @@ def integrity_record(label:str,election:dict[str,Any],boundary:str,expected_winn
         "raw_second_labels":election.get("raw_second_labels",[]),
         "other_winner_seats":int((df["actual_winner"]=="other").sum()),
         "other_runnerup_seats":int((df["actual_second"]=="other").sum()),
+        "ref_primary_source":election.get("ref_primary_source"),
+        "ref_primary_stood_count":election.get("ref_primary_stood_count"),
+        "ref_primary_coverage":election.get("ref_primary_coverage"),
         "errors":errors,
     }
 
@@ -678,7 +748,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v0911-bes-integrity",
+        "version":"uk-v0912-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -830,8 +900,126 @@ def merge_demo(election:dict[str,Any],demo:pd.DataFrame)->dict[str,Any]:
     merged["demo_columns"]=[f"demo_{c}" for c in d.columns]
     return merged
 
+def _latent_ref_design(election:dict[str,Any],feature_names:list[str]|None=None)->pd.DataFrame:
+    """Ex-ante design matrix for the fixed 2015 UKIP donor model."""
+    df=election["frame"]
+    demo_cols=[c for c in df.columns if str(c).startswith("demo_")]
+    records=[]
+    for _,row in df.iterrows():
+        rec={
+            "con":float(row["con"])/100.0,"lab":float(row["lab"])/100.0,
+            "ld":float(row["ld"])/100.0,"green":float(row["green"])/100.0,
+            "snp":float(row["snp"])/100.0,"pc":float(row["pc"])/100.0,
+            "other":float(row["other"])/100.0,"turnout":float(row.get("turnout",0.0))/100.0,
+        }
+        winner=str(row.get("actual_winner") or "")
+        second=str(row.get("actual_second") or "")
+        for p in PARTIES:
+            rec[f"winner_{p}"]=1.0 if winner==p else 0.0
+            rec[f"second_{p}"]=1.0 if second==p else 0.0
+        country=str(row.get("country") or "")
+        rec["is_scotland"]=1.0 if country=="Scotland" else 0.0
+        rec["is_wales"]=1.0 if country=="Wales" else 0.0
+        rk=str(row.get("region") or "")
+        for r in REGION_KEYS: rec[f"region_{r}"]=1.0 if rk==r else 0.0
+        for c in demo_cols: rec[c]=float(row.get(c,0.0))
+        records.append(rec)
+    x=pd.DataFrame(records,index=df.index).replace([np.inf,-np.inf],0).fillna(0.0)
+    if feature_names is not None:
+        for c in feature_names:
+            if c not in x: x[c]=0.0
+        x=x[feature_names]
+    return x
+
+def fit_ref_latent_donor(donor:dict[str,Any]):
+    """Fit the fixed latent geography model using only the 2015 UKIP cross-section."""
+    if donor.get("year")!=REF_LATENT_DONOR_YEAR:
+        raise RuntimeError(f"Latent Reform donor must be {REF_LATENT_DONOR_YEAR}, got {donor.get('year')}")
+    df=donor["frame"]
+    mask=df["ref_primary_stood"].astype(bool)
+    n=int(mask.sum())
+    if n<REF_LATENT_MIN_TRAIN:
+        raise RuntimeError(f"Only {n} donor seats have an observed principal Reform-family candidate")
+    x=_latent_ref_design(donor)
+    names=list(x.columns)
+    model=Pipeline([("scale",StandardScaler()),("ridge",Ridge(alpha=REF_LATENT_RIDGE_ALPHA))])
+    y=np.log1p(df.loc[mask,"ref"].astype(float).clip(lower=0.0))
+    model.fit(x.loc[mask],y)
+    fitted=np.expm1(model.predict(x.loc[mask]))
+    mae=float(np.mean(np.abs(fitted-df.loc[mask,"ref"].to_numpy(float))))
+    return model,names,{
+        "donor_year":donor["year"],"training_seats":n,"ridge_alpha":REF_LATENT_RIDGE_ALPHA,
+        "in_sample_mae_pp":mae,"uses_2024":False,"parameter_tuning":False,
+    }
+
+def attach_ref_latent(election:dict[str,Any],model,names:list[str],donor_meta:dict[str,Any])->dict[str,Any]:
+    """Attach a latent geographic prior; do not change any observed vote share."""
+    out=dict(election); frame=election["frame"].copy()
+    x=_latent_ref_design(election,names)
+    pred=np.expm1(model.predict(x))
+    # Fixed, broad plausibility bounds; final national target is still imposed by raking.
+    pred=np.clip(pred,0.25,35.0)
+    stood=frame["ref_primary_stood"].astype(bool).to_numpy()
+    observed=frame["ref"].to_numpy(float)
+    geo=np.where(stood,observed,pred)
+    frame["ref_latent_share"]=pred
+    frame["ref_geo_share"]=geo
+    coverage=float(np.mean(stood))
+    frame["ref_primary_coverage"]=coverage
+    out["frame"]=frame
+    out["ref_latent_meta"]={
+        **donor_meta,
+        "target_base_year":election.get("year"),
+        "principal_candidate_source":election.get("ref_primary_source"),
+        "principal_stood_count":int(np.sum(stood)),
+        "principal_coverage":coverage,
+        "imputed_seats":int(np.sum(~stood)),
+        "mean_latent_imputed_share_pp":float(np.mean(pred[~stood])) if np.any(~stood) else None,
+        "observed_national_share_unchanged":True,
+    }
+    return out
+
+def ref_latent_activation(row:pd.Series,nat_base:dict[str,float],nat_target:dict[str,float])->float:
+    """Pre-specified activation based only on baseline coverage and national swing."""
+    coverage=float(row.get("ref_primary_coverage",1.0))
+    rise=max(0.0,float(nat_target.get("ref",0.0))-float(nat_base.get("ref",0.0)))
+    coverage_need=clamp(
+        (REF_LATENT_COVERAGE_ZERO-coverage)/max(1e-9,REF_LATENT_COVERAGE_ZERO-REF_LATENT_COVERAGE_FULL),
+        0.0,1.0
+    )
+    rise_need=clamp(
+        (rise-REF_LATENT_RISE_ZERO)/max(1e-9,REF_LATENT_RISE_FULL-REF_LATENT_RISE_ZERO),
+        0.0,1.0
+    )
+    return coverage_need*rise_need
+
+def effective_ref_share(row:pd.Series,nat_base:dict[str,float],nat_target:dict[str,float])->float:
+    observed=float(row.get("ref",0.0))
+    if "ref_geo_share" not in row.index:
+        return observed
+    a=ref_latent_activation(row,nat_base,nat_target)
+    geo=float(row.get("ref_geo_share",observed))
+    return observed+a*(geo-observed)
+
+def ref_latent_audit(election:dict[str,Any],target:dict[str,float])->dict[str,Any]:
+    df=election["frame"]; base=nat_shares(election)
+    acts=[ref_latent_activation(row,base,target) for _,row in df.iterrows()]
+    eff=[effective_ref_share(row,base,target) for _,row in df.iterrows()]
+    return {
+        "base_year":election.get("year"),
+        "national_ref_base":base.get("ref"),"national_ref_target":target.get("ref"),
+        "national_ref_rise_pp":float(target.get("ref",0.0)-base.get("ref",0.0)),
+        "principal_coverage":float(df.get("ref_primary_coverage",pd.Series([1.0])).iloc[0]),
+        "activation":float(acts[0]) if acts else 0.0,
+        "imputed_seats":int((~df["ref_primary_stood"].astype(bool)).sum()),
+        "mean_effective_ref_prior_pp":float(np.mean(eff)),
+        "observed_national_share_unchanged":True,
+        "target_enforced_by_raking":True,
+    }
+
 def row_context(row:pd.Series,nat_base:dict[str,float],nat_target:dict[str,float],party:str,demo_cols:list[str])->dict[str,float]:
     local={p:float(row[p])/100.0 for p in PARTIES}
+    local["ref"]=effective_ref_share(row,nat_base,nat_target)/100.0
     rankable=competitive_parties(row)
     ordered=sorted(rankable,key=lambda p:local[p],reverse=True)
 
@@ -858,6 +1046,10 @@ def row_context(row:pd.Series,nat_base:dict[str,float],nat_target:dict[str,float
     f["other_competitive"]=1.0 if "other" in rankable else 0.0
     f["margin"]=margin
     f["turnout"]=float(row.get("turnout",0.0))/100.0
+    f["ref_primary_stood"]=1.0 if bool(row.get("ref_primary_stood",False)) else 0.0
+    f["ref_latent_activation"]=ref_latent_activation(row,nat_base,nat_target)
+    f["ref_latent_share"]=float(row.get("ref_latent_share",row.get("ref",0.0)))/100.0
+    f["ref_effective_share"]=local["ref"]
     country=str(row["country"])
     f["is_scotland"]=1.0 if country=="Scotland" else 0.0
     f["is_wales"]=1.0 if country=="Wales" else 0.0
@@ -905,7 +1097,8 @@ def base_prediction(election:dict[str,Any],target_nat:dict[str,float])->pd.DataF
                 raw[p]=0.0;continue
             if p=="other":
                 raw[p]=max(float(row[p]),FLOOR_SMALL);continue
-            b=max(float(row[p]),FLOOR_MAIN if p in {"lab","con","ref","ld","green"} else FLOOR_SMALL)
+            local_value=effective_ref_share(row,base_nat,target_nat) if p=="ref" else float(row[p])
+            b=max(local_value,FLOOR_MAIN if p in {"lab","con","ref","ld","green"} else FLOOR_SMALL)
             bn=max(.05,base_nat[p]);tn=max(.05,target_nat[p])
             raw[p]=b*(max(.08,tn/bn)**COMMON_LAMBDA)
         s=sum(raw.values()) or 1.0
@@ -1037,6 +1230,7 @@ def contest_feature_record(
     """
     f=row_context(row,nat_base,nat_target,party,demo_cols)
     local={p:float(row[p])/100.0 for p in PARTIES}
+    local["ref"]=effective_ref_share(row,nat_base,nat_target)/100.0
     allowed_main=[p for p in MAIN_PARTIES if allowed(p,str(row["country"]))]
     ordered=sorted(allowed_main,key=lambda p:local[p],reverse=True)
 
@@ -1957,11 +2151,14 @@ def build_reform_diagnostics(
         "baseline_ld_share","baseline_green_share","baseline_turnout",
         "baseline_winner_margin","predicted_ref_share",
         "predicted_best_non_ref_share","predicted_ref_margin",
-        "predicted_ref_rank","contestability_ref",
+        "predicted_ref_rank","contestability_ref","ref_primary_stood",
+        "ref_latent_share","ref_geo_share","ref_latent_activation",
         *[column.replace("demo_","") for column in demo_columns],
     ]
     outcome_feature_names=["actual_ref_share","ref_share_error"]
     all_feature_names=predictor_feature_names+outcome_feature_names
+    base_nat=nat_shares(base)
+    actual_nat=nat_shares(actual)
     records=[]
     binary=Counter()
     cohorts=Counter()
@@ -2019,6 +2216,10 @@ def build_reform_diagnostics(
             "predicted_best_non_ref_share":float(predicted_row[best_non_ref]),
             "predicted_ref_margin":float(predicted_row["ref"])-float(predicted_row[best_non_ref]),
             "predicted_ref_rank":float(predicted_order.index("ref")+1),
+            "ref_primary_stood":1.0 if bool(base_row.get("ref_primary_stood",False)) else 0.0,
+            "ref_latent_share":float(base_row.get("ref_latent_share",base_row.get("ref",0.0))),
+            "ref_geo_share":float(base_row.get("ref_geo_share",base_row.get("ref",0.0))),
+            "ref_latent_activation":ref_latent_activation(base_row,base_nat,actual_nat),
             "actual_ref_share":float(actual_row["ref"]),
             "ref_share_error":float(predicted_row["ref"])-float(actual_row["ref"]),
             "contestability_ref":contestability,
@@ -2068,6 +2269,10 @@ def build_reform_diagnostics(
             groups["false_positive"],groups["correct_non_reform"],predictor_feature_names,
             "false_positive","correct_non_reform"
         ),
+        _feature_separation(
+            groups["false_positive"],groups["false_negative"],predictor_feature_names,
+            "false_positive","false_negative"
+        ),
     ]
     outcome_comparisons=[
         _feature_separation(
@@ -2078,6 +2283,10 @@ def build_reform_diagnostics(
             groups["false_positive"],groups["correct_non_reform"],outcome_feature_names,
             "false_positive","correct_non_reform"
         ),
+        _feature_separation(
+            groups["false_positive"],groups["false_negative"],outcome_feature_names,
+            "false_positive","false_negative"
+        ),
     ]
     predicted_ref=tp+fp
     actual_ref=tp+fn
@@ -2085,13 +2294,13 @@ def build_reform_diagnostics(
         raise RuntimeError("Reform diagnostic does not cover all 632 GB seats")
 
     return {
-        "version":"uk-v0911-reform-diagnostics",
+        "version":"uk-v0912-ref-latent-potential",
         "status":"ok",
         "generated_at":utcnow().isoformat(),
         "diagnostic_only":True,
         "used_for_parameter_selection":False,
         "changes_production_model":False,
-        "source_model":"uk-v0910-incumbent-routing",
+        "source_model":"uk-v0912-ref-latent-potential",
         "benchmark":"2019_notional_to_2024",
         "benchmark_role":"development_diagnostic_not_pristine_holdout",
         "interpretation_warning":(
@@ -2283,14 +2492,16 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v0911-reform-diagnostics",
-        "model_type":"constituency-residual-incumbent-routing-v5",
+        "version":"uk-v0912-ref-latent-potential",
+        "model_type":"constituency-residual-ref-latent-potential-v6",
         "status":"error",
         "approved":False,
         "publication_ready":False,
-        "diagnostic_only":True,
+        "diagnostic_only":False,
         "used_for_parameter_selection":False,
         "changes_production_model":False,
+        "changes_candidate_model":True,
+        "shadow_only":True,
         "generated_at":utcnow().isoformat(),
         "error":str(exc),
         "traceback_tail":traceback.format_exc().splitlines()[-12:],
@@ -2298,22 +2509,23 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v0911-reform-diagnostics-live","approved":False,"status":"error",
-        "diagnostic_only":True,
+        "version":"uk-v0912-ref-latent-potential-live","approved":False,"status":"error",
+        "diagnostic_only":False,"changes_production_model":False,"changes_candidate_model":True,"shadow_only":True,
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v0911-reform-diagnostics-backtest","status":"error","error":str(exc)
+        "version":"uk-v0912-ref-latent-potential-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     DIAGNOSTIC_OUT.write_text(json.dumps({
-        "version":"uk-v0911-reform-diagnostics","status":"error",
+        "version":"uk-v0912-ref-latent-potential","status":"error",
         "diagnostic_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"parameter_updates":{},
+        "source_model":"uk-v0912-ref-latent-potential",
         "error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v0911-bes-integrity","status":"failed",
+            "version":"uk-v0912-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -2335,7 +2547,7 @@ def main()->int:
         e19n=merge_demo(extract_election(curr_df,"19"),curr_demo)
         e24=merge_demo(extract_election(curr_df,"24"),curr_demo)
 
-        # HARD PARSER GATE. No model fitting is allowed before these pass.
+        # HARD PARSER GATE. No target-election fitting is allowed before these pass.
         integrity=run_integrity_checks([
             ("2010 actual",e10,"old",EXPECTED_WINNERS["10"]),
             ("2015 actual",e15,"old",EXPECTED_WINNERS["15"]),
@@ -2349,6 +2561,15 @@ def main()->int:
         print("BES integrity gate: PASSED")
         for check in integrity["checks"]:
             print(check["label"],check["countries"],check["winner_counts"],check["share_source"])
+
+        # Only after parser/integrity gates pass may the fixed pre-2024 donor
+        # be fitted. It uses 2015 UKIP only and is transported to 2019 bases.
+        ref_latent_model,ref_latent_names,ref_latent_donor_meta=fit_ref_latent_donor(e15)
+        e19=attach_ref_latent(e19,ref_latent_model,ref_latent_names,ref_latent_donor_meta)
+        e19n=attach_ref_latent(e19n,ref_latent_model,ref_latent_names,ref_latent_donor_meta)
+        print("Latent Reform donor:",ref_latent_donor_meta)
+        print("2019 old-boundary latent audit:",e19.get("ref_latent_meta"))
+        print("2019 notional latent audit:",e19n.get("ref_latent_meta"))
 
         t10_15=build_transition(e10,e15)
         t15_17=build_transition(e15,e17)
@@ -2430,8 +2651,9 @@ def main()->int:
         reform_diagnostics=build_reform_diagnostics(
             hold_rows,e24,e19n,hold_contest_scores
         )
-        # v0.9.11 is intentionally diagnostic-only.  Even a future passing
-        # candidate gate cannot promote this build without a separate version.
+        # v0.9.12 is intentionally shadow-only. The hypothesis was motivated
+        # by the 2024 development benchmark, so that same benchmark cannot be
+        # used to promote it even if the numerical gate now passes.
         approved=False
         publication_ready=False
 
@@ -2467,15 +2689,28 @@ def main()->int:
         )
 
         model_payload={
-            "version":"uk-v0911-reform-diagnostics",
-            "model_type":"constituency-residual-incumbent-routing-v5",
+            "version":"uk-v0912-ref-latent-potential",
+            "model_type":"constituency-residual-ref-latent-potential-v6",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
-            "diagnostic_only":True,
+            "diagnostic_only":False,
             "used_for_parameter_selection":False,
             "changes_production_model":False,
+            "changes_candidate_model":True,
+            "shadow_only":True,
             "candidate_gate_passed":candidate_gate_passed,
+            "promotion_blocked_reason":"2024-inspired hypothesis requires fresh external validation",
+            "ref_latent_donor":ref_latent_donor_meta,
+            "ref_latent_activation":{
+                "coverage_zero":REF_LATENT_COVERAGE_ZERO,
+                "coverage_full":REF_LATENT_COVERAGE_FULL,
+                "rise_zero_pp":REF_LATENT_RISE_ZERO,
+                "rise_full_pp":REF_LATENT_RISE_FULL,
+                "validation_2019":ref_latent_audit(e17,t17_19["target"]),
+                "benchmark_2024":ref_latent_audit(e19n,t19n_24["target"]),
+                "live":ref_latent_audit(e24,target_now),
+            },
             "generated_at":utcnow().isoformat(),
             "selected_spec":selected_spec,
             "selected_party_strengths":selected_party_strengths,
@@ -2511,7 +2746,7 @@ def main()->int:
                 "version":reform_diagnostics["version"],
                 "counts":reform_diagnostics["counts"],
                 "binary_confusion":reform_diagnostics["binary_confusion"],
-                "output":"data/reform-diagnostics-v0911.json",
+                "output":"data/reform-diagnostics-v0912.json",
             },
             "development_2017":{
                 "candidate":development_2017,
@@ -2562,7 +2797,7 @@ def main()->int:
             "features":{
                 "historical_demographics":[c.replace("demo_","") for c in e19["demo_columns"]],
                 "current_demographics":[c.replace("demo_","") for c in e24["demo_columns"]],
-                "notes":"Stages 1-3 are the v0.9.9 scenario-aware share/dispersion/FPTP model. Stage 4 is an incumbent-collapse routing layer selected only on 2015->2017: when a baseline winner suffers a large relative national decline, third/fourth challenger support can consolidate around the baseline runner-up and part of the residual incumbent local lead can unwind. This supplies a historical analogue for both SNP collapse and later Conservative collapse. Final raking preserves national targets. 2019 remains temporal validation; 2024 is a development benchmark.",
+                "notes":"v0.9.12 adds a structural missing-candidate prior for the Reform family. A fixed Ridge model is trained only on the broadly contested 2015 UKIP cross-section. In a later baseline, if the principal Reform-family vehicle has low candidate coverage and Reform is rising sharply nationally, local zeroes are blended toward the 2015-derived latent geography. Observed historical national shares are never rewritten and final raking still enforces the supplied national target. The incumbent-routing layer remains separately selected on 2015->2017.",
             },
             "integrity":{
                 "version":integrity.get("version"),
@@ -2574,23 +2809,27 @@ def main()->int:
                 "current_bes":curr_meta,
             },
             "note":(
-                "v0.9.11 does not change the v0.9.10 candidate or any live coefficient. "
-                "It uses 2024 labels only to diagnose Reform false positives. "
-                "2019 remains temporal validation; a separate future version and fresh validation are required for promotion."
+                "v0.9.12 changes only the Reform geographic prior under low candidate coverage plus a large national Reform rise. "
+                "The latent donor is fitted on 2015 UKIP only; 2024 labels only score the hypothesis. "
+                "2019 remains temporal validation; fresh external validation is required for promotion."
             )
         }
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v0911-reform-diagnostics-live",
-            "model_type":"constituency-residual-incumbent-routing-v5",
+            "version":"uk-v0912-ref-latent-potential-live",
+            "model_type":"constituency-residual-ref-latent-potential-v6",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
-            "diagnostic_only":True,
+            "diagnostic_only":False,
             "used_for_parameter_selection":False,
             "changes_production_model":False,
+            "changes_candidate_model":True,
+            "shadow_only":True,
             "candidate_gate_passed":candidate_gate_passed,
+            "ref_latent_donor":ref_latent_donor_meta,
+            "ref_latent_activation":ref_latent_audit(e24,target_now),
             "generated_at":utcnow().isoformat(),
             "model_version":model_payload["version"],
             "selected_spec":selected_spec,
@@ -2615,10 +2854,18 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v0911-reform-diagnostics-backtest",
+            "version":"uk-v0912-ref-latent-potential-backtest",
             "status":"ok",
-            "diagnostic_only":True,
+            "diagnostic_only":False,
             "used_for_parameter_selection":False,
+            "shadow_only":True,
+            "changes_production_model":False,
+            "changes_candidate_model":True,
+            "ref_latent_donor":ref_latent_donor_meta,
+            "ref_latent_activation":{
+                "validation_2019":ref_latent_audit(e17,t17_19["target"]),
+                "benchmark_2024":ref_latent_audit(e19n,t19n_24["target"]),
+            },
             "selected_spec":selected_spec,
             "selected_party_strengths":selected_party_strengths,
             "party_contest_classifier":PARTY_CONTEST_BASE_SPEC,
@@ -2635,7 +2882,7 @@ def main()->int:
                 "version":reform_diagnostics["version"],
                 "counts":reform_diagnostics["counts"],
                 "binary_confusion":reform_diagnostics["binary_confusion"],
-                "output":"data/reform-diagnostics-v0911.json",
+                "output":"data/reform-diagnostics-v0912.json",
             },
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
@@ -2644,9 +2891,9 @@ def main()->int:
             encoding="utf-8"
         )
 
-        print("v0.9.11 preserves v0.9.10 share spec:",selected_spec)
-        print("v0.9.11 preserves v0.9.10 party strengths:",selected_party_strengths)
-        print("v0.9.11 preserves v0.9.10 incumbent routing:",selected_routing)
+        print("v0.9.12 selected share spec:",selected_spec)
+        print("v0.9.12 selected party strengths:",selected_party_strengths)
+        print("v0.9.12 incumbent routing:",selected_routing)
         print("2017 routing audit:",routing_tuning["selected_audit"])
         print("2017 scenario:",national_scenario_metrics(e15,t15_17["target"]))
         print("2019 scenario:",national_scenario_metrics(e17,t17_19["target"]))
@@ -2666,7 +2913,7 @@ def main()->int:
             f"routed {holdout['winner_accuracy']:.2%}/{holdout['seat_abs_error_sum']}"
         )
         print("Underlying candidate gate passed:",candidate_gate_passed,reasons)
-        print("Diagnostic-only build approved for live:",approved)
+        print("Shadow build approved for live:",approved)
         print("Reform diagnostic counts:",reform_diagnostics["counts"])
         print("Publication-ready (requires a future version and fresh validation):",publication_ready)
         print("Live central GB seat totals:",live["totals"])
@@ -2676,7 +2923,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.11 diagnostic build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.12 diagnostic build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # Shadow failure must not break the existing production model.
         raise SystemExit(0)

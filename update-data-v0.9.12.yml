@@ -1,0 +1,287 @@
+name: Update and deploy UK model
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 5 * * *"
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: uk-model-pages
+  cancel-in-progress: true
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Update election data and territorial inputs
+        run: python tools/build_data.py
+
+      - name: Build Northern Ireland module
+        run: python tools/build_ni.py
+
+      - name: Calibrate legacy partial-raking benchmark
+        run: python tools/build_backtest.py
+
+      - name: Build v0.9.12 latent Reform geography experiment (shadow only)
+        run: python tools/build_mrp_lite.py
+
+      - name: Validate BES integrity and v0.9.12 safeguards
+        run: |
+          python - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+
+          def load(path):
+              return json.loads(Path(path).read_text(encoding="utf-8"))
+
+          polls=load("data/polls.json")
+          constituencies=load("data/constituencies-2024.json")
+          territorial=load("data/territorial-baseline.json")
+          geo=load("data/constituencies-2024.geojson")
+          display=load("data/constituencies-map.geojson")
+          params=load("data/model-params.json")
+          ni=load("data/ni-2024.json")
+
+          integrity=load("data/bes-integrity-v0912.json")
+          mrp=load("data/mrp-lite-model.json")
+          live=load("data/mrp-lite-live.json")
+          backtest=load("data/backtest-v0912-ref-latent-potential.json")
+          diagnostic=load("data/reform-diagnostics-v0912.json")
+
+          n_polls=len(polls.get("polls",[]))
+          n_const=len(constituencies.get("constituencies",[]))
+          regions=territorial.get("english_regions",[])
+          ni_seats=ni.get("constituencies",[])
+          ni_winners=Counter(s.get("winner2024") for s in ni_seats)
+          expected_ni={"sf":7,"dup":5,"sdlp":2,"alliance":1,"uup":1,"tuv":1,"ind":1}
+
+          print(f"National polls: {n_polls}")
+          print(f"Constituencies: {n_const}")
+          print(f"Legacy GB model: {params.get('version')} approved={params.get('approved')}")
+          print(f"NI module: {ni.get('meta',{}).get('version')} seats={len(ni_seats)}")
+          print(f"BES integrity: {integrity.get('status')}")
+
+          if n_polls<10:
+              raise SystemExit("ERROR: too few national polls")
+          if n_const!=650:
+              raise SystemExit(f"ERROR: expected 650 constituencies, got {n_const}")
+          if len(geo.get("features",[]))<650 or len(display.get("features",[]))<650:
+              raise SystemExit("ERROR: geometry feature count below 650")
+          if len(regions)!=9:
+              raise SystemExit(f"ERROR: expected 9 English regions, got {regions}")
+          if params.get("version")!="uk-v07-partial-raking":
+              raise SystemExit(f"ERROR: unexpected legacy GB model version {params.get('version')}")
+          if ni.get("meta",{}).get("version")!="uk-v08-ni-constituency":
+              raise SystemExit("ERROR: unexpected NI module version")
+          if len(ni_seats)!=18:
+              raise SystemExit(f"ERROR: expected 18 NI seats, got {len(ni_seats)}")
+          if {k:ni_winners.get(k,0) for k in expected_ni}!=expected_ni:
+              raise SystemExit(f"ERROR: NI winner check failed: {dict(ni_winners)}")
+
+          # Parser/integrity remains a hard deployment gate.
+          if integrity.get("version")!="uk-v0912-bes-integrity":
+              raise SystemExit("ERROR: unexpected BES integrity version")
+          if integrity.get("status")!="passed":
+              raise SystemExit("ERROR: BES integrity failed: "+str(integrity.get("errors")))
+          for check in integrity.get("checks",[]):
+              if check.get("gb_rows")!=632:
+                  raise SystemExit(f"ERROR: {check.get('label')} does not contain exactly 632 GB rows")
+              if check.get("ni_filtered_before_party_parsing") is not True:
+                  raise SystemExit(f"ERROR: {check.get('label')} parsed parties before filtering NI")
+              print(
+                  check.get("label"),
+                  "winners=",check.get("winner_counts"),
+                  "ref_primary_stood=",check.get("ref_primary_stood_count"),
+                  "coverage=",check.get("ref_primary_coverage"),
+                  "source=",check.get("ref_primary_source"),
+              )
+
+          expected_versions={
+              "model":"uk-v0912-ref-latent-potential",
+              "live":"uk-v0912-ref-latent-potential-live",
+              "backtest":"uk-v0912-ref-latent-potential-backtest",
+              "diagnostic":"uk-v0912-ref-latent-potential",
+          }
+          observed_versions={
+              "model":mrp.get("version"),"live":live.get("version"),
+              "backtest":backtest.get("version"),"diagnostic":diagnostic.get("version"),
+          }
+          if observed_versions!=expected_versions:
+              raise SystemExit(f"ERROR: unexpected v0.9.12 versions {observed_versions}")
+
+          for label,payload in (("model",mrp),("live shadow",live),("backtest",backtest),("diagnostic",diagnostic)):
+              if payload.get("status")!="ok":
+                  raise SystemExit(f"ERROR: v0.9.12 {label} build failed: {payload.get('error')}")
+
+          if mrp.get("model_type")!="constituency-residual-ref-latent-potential-v6":
+              raise SystemExit(f"ERROR: unexpected v0.9.12 model type {mrp.get('model_type')}")
+          if live.get("model_type")!="constituency-residual-ref-latent-potential-v6":
+              raise SystemExit("ERROR: live shadow model type mismatch")
+
+          # The structural candidate changes the shadow model but may not go live.
+          if mrp.get("shadow_only") is not True or live.get("shadow_only") is not True:
+              raise SystemExit("ERROR: v0.9.12 must remain shadow-only")
+          if mrp.get("approved") is not False or live.get("approved") is not False:
+              raise SystemExit("ERROR: v0.9.12 cannot be promoted on the 2024-inspired benchmark")
+          if mrp.get("publication_ready") is not False or live.get("publication_ready") is not False:
+              raise SystemExit("ERROR: v0.9.12 incorrectly marked publication-ready")
+          if mrp.get("used_for_parameter_selection") is not False:
+              raise SystemExit("ERROR: v0.9.12 marked 2024 as parameter selection")
+          if mrp.get("changes_production_model") is not False:
+              raise SystemExit("ERROR: shadow experiment claims to change production")
+          if mrp.get("changes_candidate_model") is not True or live.get("changes_candidate_model") is not True:
+              raise SystemExit("ERROR: structural experiment is not marked as a changed shadow candidate")
+          if diagnostic.get("diagnostic_only") is not True:
+              raise SystemExit("ERROR: Reform report must remain diagnostic-only")
+          if diagnostic.get("used_for_parameter_selection") is not False:
+              raise SystemExit("ERROR: Reform report may not select parameters")
+          if diagnostic.get("changes_production_model") is not False:
+              raise SystemExit("ERROR: Reform report may not change the model")
+          if diagnostic.get("parameter_updates") not in ({},None):
+              raise SystemExit("ERROR: diagnostic report contains parameter updates")
+
+          donor=mrp.get("ref_latent_donor",{})
+          if donor.get("donor_year")!="15":
+              raise SystemExit(f"ERROR: latent donor is not 2015 UKIP: {donor}")
+          if donor.get("uses_2024") is not False or donor.get("parameter_tuning") is not False:
+              raise SystemExit(f"ERROR: latent donor leaks/tunes on 2024: {donor}")
+          if int(donor.get("training_seats") or 0)<450:
+              raise SystemExit(f"ERROR: too few 2015 donor seats: {donor}")
+          if abs(float(donor.get("ridge_alpha") or 0)-20.0)>1e-12:
+              raise SystemExit(f"ERROR: latent ridge alpha changed unexpectedly: {donor}")
+          print("Latent donor:",donor)
+
+          latent=mrp.get("ref_latent_activation",{})
+          val_latent=latent.get("validation_2019",{})
+          hold_latent=latent.get("benchmark_2024",{})
+          live_latent=latent.get("live",{})
+          if abs(float(val_latent.get("activation") or 0))>1e-12:
+              raise SystemExit(f"ERROR: latent layer activated in 2019 validation: {val_latent}")
+          if float(hold_latent.get("activation") or 0)<=0:
+              raise SystemExit(f"ERROR: latent layer did not activate for 2019->2024: {hold_latent}")
+          if float(hold_latent.get("principal_coverage") or 1)>=0.75:
+              raise SystemExit(f"ERROR: 2019 principal Reform-family coverage unexpectedly high: {hold_latent}")
+          if int(hold_latent.get("imputed_seats") or 0)<100:
+              raise SystemExit(f"ERROR: too few structurally missing 2019 seats: {hold_latent}")
+          if abs(float(live_latent.get("activation") or 0))>1e-12:
+              raise SystemExit(f"ERROR: latent layer should be inactive on fully contested 2024 live baseline: {live_latent}")
+          print("Latent activation 2019 validation:",val_latent)
+          print("Latent activation 2024 benchmark:",hold_latent)
+          print("Latent activation live:",live_latent)
+
+          strengths=mrp.get("selected_party_strengths")
+          required={"lab","con","ref","ld","green","snp","pc","other"}
+          if not isinstance(strengths,dict) or not required.issubset(strengths):
+              raise SystemExit(f"ERROR: incomplete party strengths {strengths}")
+          routing=mrp.get("selected_incumbent_routing")
+          if not isinstance(routing,dict):
+              raise SystemExit("ERROR: missing incumbent-routing parameters")
+          if abs(float(routing.get("route_strength") or 0))>1e-12 or abs(float(routing.get("unwind_strength") or 0))>1e-12:
+              raise SystemExit(f"ERROR: rejected v0.9.10 routing unexpectedly reactivated {routing}")
+
+          val=mrp.get("validation_2019",{}).get("candidate",{})
+          val_pre=mrp.get("validation_2019",{}).get("pre_routing_candidate",{})
+          hold=mrp.get("holdout_2024",{}).get("candidate",{})
+          hold_pre=mrp.get("holdout_2024",{}).get("pre_routing_candidate",{})
+          if val.get("gb_seats")!=632 or hold.get("gb_seats")!=632:
+              raise SystemExit("ERROR: v0.9.12 did not evaluate 632 GB seats")
+          if val.get("winner_source")!="official_BES_WinnerXX" or hold.get("winner_source")!="official_BES_WinnerXX":
+              raise SystemExit("ERROR: evaluation is not using official BES WinnerXX")
+
+          # Regression guard: the new structural layer must be exactly inactive in 2019.
+          expected_2019={"correct_winners":583,"seat_abs_error_sum":42}
+          observed_2019={k:val.get(k) for k in expected_2019}
+          if observed_2019!=expected_2019:
+              raise SystemExit(f"ERROR: v0.9.12 changed 2019 validation: expected={expected_2019} observed={observed_2019}")
+          if val_pre.get("correct_winners")!=val.get("correct_winners") or val_pre.get("seat_abs_error_sum")!=val.get("seat_abs_error_sum"):
+              raise SystemExit("ERROR: zero routing changed 2019 pre-routing metrics")
+          if hold_pre.get("correct_winners")!=hold.get("correct_winners") or hold_pre.get("seat_abs_error_sum")!=hold.get("seat_abs_error_sum"):
+              raise SystemExit("ERROR: zero routing changed 2024 pre-routing metrics")
+
+          print("2019 regression guard: PASSED",observed_2019)
+          print("2024 latent candidate:",hold)
+          print("Numerical candidate gate passed:",mrp.get("candidate_gate_passed"),mrp.get("gate_failures"))
+          print("NOTE: approval remains false regardless; 2024 is not fresh promotion evidence.")
+
+          # Diagnostic completeness and no outcome leakage into ranked predictors.
+          roles=diagnostic.get("feature_roles",{})
+          predictor_features=set(roles.get("predictors_ex_ante",[]))
+          outcome_features=set(roles.get("outcomes_2024_only",[]))
+          if outcome_features!={"actual_ref_share","ref_share_error"}:
+              raise SystemExit(f"ERROR: invalid diagnostic outcome roles {roles}")
+          if predictor_features & outcome_features:
+              raise SystemExit("ERROR: realised 2024 outcomes leaked into predictor feature set")
+          for comparison in diagnostic.get("feature_comparisons",[]):
+              ranked={row.get("feature") for row in comparison.get("features",[])}
+              leaked=ranked & outcome_features
+              if leaked:
+                  raise SystemExit(f"ERROR: realised 2024 outcomes leaked into predictor ranking: {sorted(leaked)}")
+          pairs={(x.get("left"),x.get("right")) for x in diagnostic.get("feature_comparisons",[])}
+          if ("false_positive","false_negative") not in pairs:
+              raise SystemExit(f"ERROR: missing FP-vs-FN Reform comparison: {pairs}")
+
+          confusion=diagnostic.get("binary_confusion",{})
+          counts=diagnostic.get("counts",{})
+          if confusion.get("total")!=632:
+              raise SystemExit(f"ERROR: Reform diagnostic covers {confusion.get('total')} seats")
+          if sum(int(confusion.get(k,0)) for k in ("true_positive","false_positive","false_negative","true_negative"))!=632:
+              raise SystemExit("ERROR: invalid Reform confusion matrix")
+          if counts.get("predicted_reform_wins")!=hold.get("predicted_seats",{}).get("ref"):
+              raise SystemExit("ERROR: Reform predicted-seat count does not match backtest")
+          if counts.get("actual_reform_wins")!=hold.get("actual_seats",{}).get("ref"):
+              raise SystemExit("ERROR: Reform actual-seat count does not match BES")
+          if len(diagnostic.get("false_positive_seats",[]))!=confusion.get("false_positive"):
+              raise SystemExit("ERROR: false-positive seat list does not match confusion matrix")
+          print("Reform diagnostic counts:",counts)
+          print("Dataset/model validation passed. v0.9.12 remains SHADOW ONLY.")
+          PY
+
+      - name: Commit refreshed data
+        run: |
+          if git diff --quiet -- data/; then
+            echo "No data changes to commit."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/
+            git commit -m "chore: update UK data and v0.9.12 latent Reform experiment"
+            git push
+          fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: "."
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

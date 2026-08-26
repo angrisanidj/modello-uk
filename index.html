@@ -27,7 +27,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Fonte sondaggi: —</span>
-      <span class="badge">Versione 0.9.11 · diagnostica Reform (shadow)</span>
+      <span class="badge">Versione 0.9.12 · potenziale Reform latente (shadow)</span>
     </div>
   </section>
   <div id="errorBox" class="errorbox"></div>
@@ -48,7 +48,7 @@
       <div class="explain compact">
         <p><strong>632 collegi GB</strong> sono simulati singolarmente con il risultato 2024 come baseline e swing regolarizzato.</p>
         <p><strong>18 collegi dell’Irlanda del Nord</strong> sono simulati separatamente con partiti, candidati e risultati Westminster 2024 reali. In assenza di polling Westminster recente, il tracker Assembly di LucidTalk entra soltanto come segnale debole.</p>
-        <p class="warning"><strong>Beta:</strong> la v0.9.11 è una build esclusivamente diagnostica. Il routing della v0.9.10 è stato selezionato con intensità zero e non ha modificato il candidato; questa versione conserva quindi modello e coefficienti, senza promuoverli live, e descrive soltanto dove il benchmark 2024 sovrastima Reform. Il sito continua a usare il fallback prudente. Il 2019 resta validazione temporale; le etichette 2024 sono un benchmark di sviluppo e non selezionano soglie o parametri.</p>
+        <p class="warning"><strong>Beta:</strong> la v0.9.12 testa in shadow una correzione strutturale per Reform/Brexit: nei collegi in cui il principale veicolo della famiglia non si presentò, lo zero storico non viene trattato automaticamente come assenza di potenziale locale. Il prior geografico è stimato esclusivamente sulla distribuzione UKIP 2015 e si attiva soltanto con bassa copertura dei candidati e forte crescita nazionale di Reform; la quota nazionale osservata non viene riscritta e il raking continua a imporre il target nazionale. Il 2024 serve solo a valutare l’ipotesi e non può promuovere questa versione: il sito continua quindi a usare il fallback prudente.</p>
       </div>
     </article>
   </section>
