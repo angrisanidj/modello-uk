@@ -16,7 +16,7 @@ import io
 import json
 import re
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -219,31 +219,79 @@ def fetch_constituencies() -> list[dict[str, Any]]:
             "shares": defaultdict(float),
             "candidates": [],
         })
-        share = pct(row.get("Share", "")) or 0.0
+        # Commons Library stores Share as a fraction (e.g. 0.488696 = 48.8696%).
+        # Use votes as the source of truth and keep the reported share only as a
+        # cross-check. This avoids unit mistakes if the CSV format is ever reused.
+        reported_share = pct(row.get("Share", ""))
+        if reported_share is not None and abs(reported_share) <= 1.000001:
+            reported_share *= 100.0
         votes = int((pct(row.get("Votes", "")) or 0))
         pid = map_party(row.get("Party abbreviation", ""), row.get("Party name", ""))
-        item["shares"][pid] += share
         item["candidates"].append({
             "party": pid,
             "party_name": (row.get("Party name") or "").strip(),
             "candidate": " ".join(filter(None, [(row.get("Candidate first name") or "").strip(), (row.get("Candidate surname") or "").strip()])),
             "votes": votes,
-            "share": share,
+            "reported_share": reported_share,
         })
 
     out: list[dict[str, Any]] = []
     for item in grouped.values():
         candidates = sorted(item.pop("candidates"), key=lambda x: x["votes"], reverse=True)
-        shares = dict(item["shares"]); item["shares"] = {k: round(v, 3) for k, v in shares.items()}
+        total_votes = sum(c["votes"] for c in candidates)
+        if total_votes <= 0:
+            raise RuntimeError(f"No valid votes found for {item['name']} ({item['id']})")
+
+        shares: defaultdict[str, float] = defaultdict(float)
+        for candidate in candidates:
+            share = candidate["votes"] / total_votes * 100.0
+            reported = candidate.pop("reported_share", None)
+            if reported is not None and abs(reported - share) > 0.25:
+                raise RuntimeError(
+                    f"Share validation failed for {item['name']}: "
+                    f"reported={reported:.3f} derived={share:.3f}"
+                )
+            candidate["share"] = round(share, 3)
+            shares[candidate["party"]] += share
+
+        item.pop("shares", None)
+        item["shares"] = {k: round(v, 3) for k, v in shares.items()}
+        share_total = sum(item["shares"].values())
+        if not 99.5 <= share_total <= 100.5:
+            raise RuntimeError(
+                f"Vote shares for {item['name']} sum to {share_total:.3f}, expected about 100"
+            )
+
         item["winner2024"] = candidates[0]["party"] if candidates else "other"
         item["winner2024_name"] = candidates[0]["party_name"] if candidates else ""
         item["winner2024_candidate"] = candidates[0]["candidate"] if candidates else ""
         item["majority2024"] = (candidates[0]["votes"] - candidates[1]["votes"]) if len(candidates) > 1 else 0
         item["top_candidates_2024"] = candidates[:4]
         out.append(item)
+
     out.sort(key=lambda x: x["name"])
     if len(out) != 650:
         raise RuntimeError(f"Expected 650 constituencies, got {len(out)}")
+
+    # Hard integrity checks against the certified 2024 result. With the party
+    # mapping used by the model, all Northern Ireland parties, independents and
+    # the Speaker are grouped as 'other'. If this changes, stop the build rather
+    # than silently feeding a bad baseline into the forecast.
+    expected_winners = {
+        "lab": 411, "con": 121, "ld": 72, "snp": 9, "ref": 5,
+        "green": 4, "pc": 4, "other": 24,
+    }
+    actual_winners = Counter(item["winner2024"] for item in out)
+    actual_compact = {k: actual_winners.get(k, 0) for k in expected_winners}
+    if actual_compact != expected_winners or sum(actual_winners.values()) != 650:
+        raise RuntimeError(
+            f"2024 winner validation failed: expected {expected_winners}, got {dict(actual_winners)}"
+        )
+
+    gb_count = sum(1 for item in out if "northern ireland" not in item["country"].lower())
+    if gb_count != 632:
+        raise RuntimeError(f"Expected 632 GB constituencies and 18 NI, got GB={gb_count}, NI={650-gb_count}")
+
     return out
 
 

@@ -1,0 +1,113 @@
+--- /tmp/ukv01/modello-regno-unito/scripts/app.js	2026-08-26 08:58:42.000000000 +0000
++++ /mnt/data/modello-uk-fix-v0.2/scripts/app.js	2026-08-26 09:21:25.494772051 +0000
+@@ -17,7 +17,7 @@
+   majority: 326,
+   gbSeats: 632,
+   niSeats: 18,
+-  cacheVersion: 'uk-v01-20260826',
++  cacheVersion: 'uk-v02-20260826-sharefix',
+   swingLambda: 0.82,
+   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
+   regionNoise: 0.035,
+@@ -25,6 +25,9 @@
+ };
+ 
+ const PARTY_ORDER = ['lab','con','ref','ld','green','snp','pc','rb','other'];
++// RB is shown in polling, but is deliberately excluded from the constituency
++// seat conversion until we have a defensible candidate/geographic baseline.
++const SEAT_MODEL_PARTIES = PARTY_ORDER.filter(p=>p!=='rb');
+ const PARTY = {
+   lab:{name:'Labour',short:'Lab',color:'#e4003b'},
+   con:{name:'Conservative',short:'Con',color:'#0087dc'},
+@@ -37,7 +40,7 @@
+   other:{name:'Altri / NI',short:'Altri',color:'#7c8491'},
+ };
+ 
+-const BASE_GB = {lab:34.6,con:24.4,ref:14.7,ld:12.6,green:6.6,snp:2.6,pc:0.7,rb:0.15,other:3.8};
++const BASE_GB = {lab:34.6,con:24.4,ref:14.7,ld:12.6,green:6.6,snp:2.6,pc:0.7,rb:0,other:3.8};
+ const MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+ const OFFLINE = new URLSearchParams(location.search).get('offline') === '1';
+ 
+@@ -149,10 +152,26 @@
+   for(const r of rows){
+     const id=(r['ONS ID']||'').trim(); if(!id)continue;
+     if(!grouped.has(id))grouped.set(id,{id,name:(r['Constituency name']||'').trim(),region:(r['Region name']||'').trim(),country:(r['Country name']||'').trim(),shares:{},candidates:[]});
+-    const x=grouped.get(id), party=mapCandidateParty(r), share=parsePercent(r.Share)||0, votes=Math.round(parsePercent(r.Votes)||0);
+-    x.shares[party]=(x.shares[party]||0)+share; x.candidates.push({party,party_name:r['Party name']||'',candidate:`${r['Candidate first name']||''} ${r['Candidate surname']||''}`.trim(),votes,share});
++    const x=grouped.get(id), party=mapCandidateParty(r), votes=Math.round(parsePercent(r.Votes)||0);
++    let reportedShare=parsePercent(r.Share);
++    if(Number.isFinite(reportedShare)&&Math.abs(reportedShare)<=1.000001)reportedShare*=100;
++    x.candidates.push({party,party_name:r['Party name']||'',candidate:`${r['Candidate first name']||''} ${r['Candidate surname']||''}`.trim(),votes,reportedShare});
+   }
+-  return [...grouped.values()].map(x=>{x.candidates.sort((a,b)=>b.votes-a.votes);x.winner2024=x.candidates[0]?.party||'other';x.winner2024_name=x.candidates[0]?.party_name||'';x.winner2024_candidate=x.candidates[0]?.candidate||'';x.majority2024=(x.candidates[0]?.votes||0)-(x.candidates[1]?.votes||0);x.top_candidates_2024=x.candidates.slice(0,4);delete x.candidates;return x;});
++  return [...grouped.values()].map(x=>{
++    const totalVotes=x.candidates.reduce((s,c)=>s+c.votes,0);
++    if(totalVotes<=0)throw new Error(`Nessun voto valido per ${x.name}`);
++    x.shares={};
++    for(const c of x.candidates){
++      c.share=c.votes/totalVotes*100;
++      if(Number.isFinite(c.reportedShare)&&Math.abs(c.reportedShare-c.share)>.25)throw new Error(`Quota voto incoerente per ${x.name}`);
++      delete c.reportedShare;
++      x.shares[c.party]=(x.shares[c.party]||0)+c.share;
++    }
++    const shareTotal=Object.values(x.shares).reduce((a,b)=>a+b,0);
++    if(Math.abs(shareTotal-100)>.5)throw new Error(`Quote voto non sommano a 100 per ${x.name}`);
++    x.candidates.sort((a,b)=>b.votes-a.votes);
++    x.winner2024=x.candidates[0]?.party||'other';x.winner2024_name=x.candidates[0]?.party_name||'';x.winner2024_candidate=x.candidates[0]?.candidate||'';x.majority2024=(x.candidates[0]?.votes||0)-(x.candidates[1]?.votes||0);x.top_candidates_2024=x.candidates.slice(0,4);delete x.candidates;return x;
++  });
+ }
+ async function loadConstituencies(){
+   try { const j=await fetchJson(CONFIG.constituencyLocal,7000); if(j?.constituencies?.length===650)return j.constituencies; } catch(_){ }
+@@ -194,7 +213,7 @@
+ function formatDate(iso){ try{return new Date(`${iso}T12:00:00Z`).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(_){return iso;} }
+ function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+ 
+-function partyAllowed(p, seat){ if(p==='snp')return /scotland/i.test(seat.country); if(p==='pc')return /wales/i.test(seat.country); return true; }
++function partyAllowed(p, seat){ if(p==='rb')return false; if(p==='snp')return /scotland/i.test(seat.country); if(p==='pc')return /wales/i.test(seat.country); return true; }
+ function normalizeTargets(avg){
+   const x={}; let total=0; for(const p of PARTY_ORDER){ x[p]=Math.max(0.05,avg[p]||0); total+=x[p]; }
+   for(const p of PARTY_ORDER)x[p]=x[p]/total*100; return x;
+@@ -204,10 +223,9 @@
+   for(const p of PARTY_ORDER){
+     if(!partyAllowed(p,seat)){raw[p]=0;continue;}
+     let base=seat.shares?.[p]||0;
+-    if(p==='rb')base=Math.max(base,.12); else if(['lab','con','ref','ld','green'].includes(p))base=Math.max(base,.18); else base=Math.max(base,.03);
++    if(['lab','con','ref','ld','green'].includes(p))base=Math.max(base,.18); else base=Math.max(base,.03);
+     const natBase=BASE_GB[p]||.2, ratio=Math.max(.08,target[p]/natBase);
+-    const lambda=p==='rb'?.50:CONFIG.swingLambda;
+-    raw[p]=base*Math.pow(ratio,lambda); sum+=raw[p];
++    raw[p]=base*Math.pow(ratio,CONFIG.swingLambda); sum+=raw[p];
+   }
+   if(sum<=0)return raw; for(const p of PARTY_ORDER)raw[p]=raw[p]/sum*100; return raw;
+ }
+@@ -215,7 +233,7 @@
+   const target=normalizeTargets(state.average.values), seats=[]; const totals=Object.fromEntries(PARTY_ORDER.map(p=>[p,0]));
+   for(const c of state.constituencies){
+     if(/northern ireland/i.test(c.country))continue;
+-    const shares=projectedShares(c,target); const winner=PARTY_ORDER.reduce((best,p)=>shares[p]>(shares[best]??-1)?p:best,PARTY_ORDER[0]); totals[winner]++; seats.push({...c,projected:shares,centralWinner:winner});
++    const shares=projectedShares(c,target); const winner=SEAT_MODEL_PARTIES.reduce((best,p)=>shares[p]>(shares[best]??-1)?p:best,SEAT_MODEL_PARTIES[0]); totals[winner]++; seats.push({...c,projected:shares,centralWinner:winner});
+   }
+   totals.other+=CONFIG.niSeats;
+   state.central={target,seats,totals}; state.byId=new Map(seats.map(s=>[s.id,s]));
+@@ -235,9 +253,9 @@
+   const seats=state.central.seats, target=state.central.target;
+   const regions=[...new Set(seats.map(s=>s.region||s.country||'Other'))]; const regionIndex=new Map(regions.map((r,i)=>[r,i]));
+   const models=seats.map(s=>{
+-    const candidates=PARTY_ORDER.filter(p=>partyAllowed(p,s)).map(p=>{
+-      let base=s.shares?.[p]||0; if(p==='rb')base=Math.max(base,.12); else if(['lab','con','ref','ld','green'].includes(p))base=Math.max(base,.18); else base=Math.max(base,.03);
+-      const nat=BASE_GB[p]||.2, lambda=p==='rb'?.50:CONFIG.swingLambda;
++    const candidates=SEAT_MODEL_PARTIES.filter(p=>partyAllowed(p,s)).map(p=>{
++      let base=s.shares?.[p]||0; if(['lab','con','ref','ld','green'].includes(p))base=Math.max(base,.18); else base=Math.max(base,.03);
++      const nat=BASE_GB[p]||.2, lambda=CONFIG.swingLambda;
+       return {p,baseLog:Math.log(base),lambda,nat,central:s.projected[p]||0};
+     }).sort((a,b)=>b.central-a.central).slice(0,5);
+     return {id:s.id,region:regionIndex.get(s.region||s.country||'Other'),candidates};
+@@ -259,7 +277,7 @@
+       const drawn={}; let sum=0;
+       for(const p of PARTY_ORDER){const sigma=CONFIG.nationalSigma[p]||.8;drawn[p]=Math.max(.05,target[p]+normalApprox(rng)*sigma);sum+=drawn[p];}
+       for(const p of PARTY_ORDER)drawn[p]=drawn[p]/sum*100;
+-      const natShift={}; for(const p of PARTY_ORDER)natShift[p]=(p==='rb'?.50:CONFIG.swingLambda)*Math.log(Math.max(.05,drawn[p])/(BASE_GB[p]||.2));
++      const natShift={}; for(const p of PARTY_ORDER)natShift[p]=CONFIG.swingLambda*Math.log(Math.max(.05,drawn[p])/(BASE_GB[p]||.2));
+       const regNoise=Array.from({length:regions.length},()=>Object.fromEntries(PARTY_ORDER.map(p=>[p,logistic(rng)*CONFIG.regionNoise])));
+       const counts=new Uint16Array(P);
+       for(let si=0;si<nSeats;si++){
