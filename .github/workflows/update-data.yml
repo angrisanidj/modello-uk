@@ -15,7 +15,7 @@ permissions:
 
 concurrency:
   group: uk-model-pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   update-and-deploy:
@@ -47,10 +47,10 @@ jobs:
       - name: Calibrate legacy partial-raking benchmark
         run: python tools/build_backtest.py
 
-      - name: Build v0.9.1 corrected MRP-lite shadow model
+      - name: Build v0.9.2 official-winner MRP-lite shadow model
         run: python tools/build_mrp_lite.py
 
-      - name: Validate BES integrity, datasets and model gates
+      - name: Validate BES integrity, official winners and model gates
         run: |
           python - <<'PY'
           import json
@@ -68,10 +68,10 @@ jobs:
           params=load("data/model-params.json")
           ni=load("data/ni-2024.json")
 
-          integrity=load("data/bes-integrity-v091.json")
+          integrity=load("data/bes-integrity-v092.json")
           mrp=load("data/mrp-lite-model.json")
           live=load("data/mrp-lite-live.json")
-          v091=load("data/backtest-v091-mrp-lite.json")
+          v092=load("data/backtest-v092-mrp-lite.json")
 
           n_polls=len(polls.get("polls",[]))
           n_const=len(constituencies.get("constituencies",[]))
@@ -112,21 +112,21 @@ jobs:
               raise SystemExit(f"ERROR: NI winner check failed: {dict(ni_winners)}")
 
           # Unlike v0.9, parser integrity is a HARD deployment gate.
-          if integrity.get("version")!="uk-v091-bes-integrity":
+          if integrity.get("version")!="uk-v092-bes-integrity":
               raise SystemExit("ERROR: unexpected BES integrity version")
           if integrity.get("status")!="passed":
               raise SystemExit("ERROR: BES integrity failed: "+str(integrity.get("errors")))
 
-          if mrp.get("version")!="uk-v091-mrp-lite":
-              raise SystemExit(f"ERROR: unexpected v0.9.1 model version {mrp.get('version')}")
-          if live.get("version")!="uk-v091-mrp-lite-live":
-              raise SystemExit(f"ERROR: unexpected v0.9.1 live version {live.get('version')}")
-          if v091.get("version")!="uk-v091-mrp-lite-backtest":
-              raise SystemExit("ERROR: unexpected v0.9.1 backtest version")
+          if mrp.get("version")!="uk-v092-mrp-lite":
+              raise SystemExit(f"ERROR: unexpected v0.9.2 model version {mrp.get('version')}")
+          if live.get("version")!="uk-v092-mrp-lite-live":
+              raise SystemExit(f"ERROR: unexpected v0.9.2 live version {live.get('version')}")
+          if v092.get("version")!="uk-v092-mrp-lite-backtest":
+              raise SystemExit("ERROR: unexpected v0.9.2 backtest version")
 
-          print(f"v0.9.1 status: {mrp.get('status')}")
-          print(f"v0.9.1 approved: {mrp.get('approved')}")
-          print(f"v0.9.1 publication_ready: {mrp.get('publication_ready')}")
+          print(f"v0.9.2 status: {mrp.get('status')}")
+          print(f"v0.9.2 approved: {mrp.get('approved')}")
+          print(f"v0.9.2 publication_ready: {mrp.get('publication_ready')}")
 
           if mrp.get("status")=="ok":
               val=mrp.get("validation_2019",{}).get("candidate",{})
@@ -139,17 +139,21 @@ jobs:
               print("2024 candidate:",hold)
               print("Selected spec:",mrp.get("selected_spec"))
               if val.get("gb_seats")!=632 or hold.get("gb_seats")!=632:
-                  raise SystemExit("ERROR: v0.9.1 did not evaluate 632 GB seats")
+                  raise SystemExit("ERROR: v0.9.2 did not evaluate 632 GB seats")
+              if val.get("winner_source")!="official_BES_WinnerXX" or hold.get("winner_source")!="official_BES_WinnerXX":
+                  raise SystemExit("ERROR: v0.9.2 evaluation is not using official BES WinnerXX")
+              if hold.get("other_prediction_rule")!="eligible_only_if_baseline_winner_or_runner_up":
+                  raise SystemExit("ERROR: pooled Other is still being treated as a universal seat candidate")
               if mrp.get("approved"):
                   if float(hold.get("winner_accuracy",0))<.80:
-                      raise SystemExit("ERROR: approved v0.9.1 below 80% holdout accuracy")
+                      raise SystemExit("ERROR: approved v0.9.2 below 80% holdout accuracy")
                   if len(live.get("seats",[]))!=632:
-                      raise SystemExit("ERROR: approved v0.9.1 live file does not contain 632 GB seats")
+                      raise SystemExit("ERROR: approved v0.9.2 live file does not contain 632 GB seats")
               else:
-                  print("v0.9.1 failed the model gate: production remains on fallback. This is VALID.")
+                  print("v0.9.2 failed the model gate: production remains on fallback. This is VALID.")
           else:
               # Integrity passed, so an ML-only shadow failure may safely fall back.
-              print("WARNING: v0.9.1 ML shadow build unavailable:",mrp.get("error"))
+              print("WARNING: v0.9.2 ML shadow build unavailable:",mrp.get("error"))
               print("Production remains on fallback.")
 
           print("Dataset/model validation passed.")
@@ -163,7 +167,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data and corrected v0.9.1 backtest"
+            git commit -m "chore: update UK data and corrected v0.9.2 backtest"
             git push
           fi
 
