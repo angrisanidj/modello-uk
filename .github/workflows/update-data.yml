@@ -47,10 +47,10 @@ jobs:
       - name: Calibrate legacy partial-raking benchmark
         run: python tools/build_backtest.py
 
-      - name: Build v0.9.9 scenario-aware calibration shadow model
+      - name: Build v0.9.10 incumbent-routing shadow model
         run: python tools/build_mrp_lite.py
 
-      - name: Validate BES integrity and v0.9.9 scenario-aware gates
+      - name: Validate BES integrity and v0.9.10 incumbent-routing gates
         run: |
           python - <<'PY'
           import json
@@ -68,10 +68,10 @@ jobs:
           params=load("data/model-params.json")
           ni=load("data/ni-2024.json")
 
-          integrity=load("data/bes-integrity-v099.json")
+          integrity=load("data/bes-integrity-v0910.json")
           mrp=load("data/mrp-lite-model.json")
           live=load("data/mrp-lite-live.json")
-          backtest=load("data/backtest-v099-scenario-aware.json")
+          backtest=load("data/backtest-v0910-incumbent-routing.json")
 
           n_polls=len(polls.get("polls",[]))
           n_const=len(constituencies.get("constituencies",[]))
@@ -115,7 +115,7 @@ jobs:
               raise SystemExit(f"ERROR: NI winner check failed: {dict(ni_winners)}")
 
           # Unlike v0.9, parser integrity is a HARD deployment gate.
-          if integrity.get("version")!="uk-v099-bes-integrity":
+          if integrity.get("version")!="uk-v0910-bes-integrity":
               raise SystemExit("ERROR: unexpected BES integrity version")
           if integrity.get("status")!="passed":
               raise SystemExit("ERROR: BES integrity failed: "+str(integrity.get("errors")))
@@ -125,22 +125,22 @@ jobs:
               if check.get("ni_filtered_before_party_parsing") is not True:
                   raise SystemExit(f"ERROR: {check.get('label')} parsed parties before filtering NI")
 
-          if mrp.get("version")!="uk-v099-scenario-aware":
-              raise SystemExit(f"ERROR: unexpected v0.9.9 model version {mrp.get('version')}")
-          if live.get("version")!="uk-v099-scenario-aware-live":
-              raise SystemExit(f"ERROR: unexpected v0.9.9 live version {live.get('version')}")
-          if backtest.get("version")!="uk-v099-scenario-aware-backtest":
+          if mrp.get("version")!="uk-v0910-incumbent-routing":
+              raise SystemExit(f"ERROR: unexpected v0.9.10 model version {mrp.get('version')}")
+          if live.get("version")!="uk-v0910-incumbent-routing-live":
+              raise SystemExit(f"ERROR: unexpected v0.9.10 live version {live.get('version')}")
+          if backtest.get("version")!="uk-v0910-incumbent-routing-backtest":
               raise SystemExit(
-                  f"ERROR: unexpected v0.9.9 backtest version {backtest.get('version')}"
+                  f"ERROR: unexpected v0.9.10 backtest version {backtest.get('version')}"
               )
 
-          print(f"v0.9.9 status: {mrp.get('status')}")
-          print(f"v0.9.9 approved: {mrp.get('approved')}")
-          print(f"v0.9.9 publication_ready: {mrp.get('publication_ready')}")
+          print(f"v0.9.10 status: {mrp.get('status')}")
+          print(f"v0.9.10 approved: {mrp.get('approved')}")
+          print(f"v0.9.10 publication_ready: {mrp.get('publication_ready')}")
 
           if mrp.get("status")=="ok":
-              if mrp.get("model_type")!="constituency-residual-scenario-aware-v4":
-                  raise SystemExit(f"ERROR: unexpected v0.9.9 model type {mrp.get('model_type')}")
+              if mrp.get("model_type")!="constituency-residual-incumbent-routing-v5":
+                  raise SystemExit(f"ERROR: unexpected v0.9.10 model type {mrp.get('model_type')}")
               strengths=mrp.get("selected_party_strengths")
               if not isinstance(strengths,dict):
                   raise SystemExit("ERROR: missing party-specific FPTP strengths")
@@ -161,29 +161,40 @@ jobs:
               val_share=mrp.get("validation_2019",{}).get("share_only_candidate",{})
               hold_share=mrp.get("holdout_2024",{}).get("share_only_candidate",{})
               print("2019 baseline:",val_base)
+              val_pre=mrp.get("validation_2019",{}).get("pre_routing_candidate",{})
+              hold_pre=mrp.get("holdout_2024",{}).get("pre_routing_candidate",{})
               print("2019 share-only:",val_share)
-              print("2019 FPTP candidate:",val)
+              print("2019 pre-routing:",val_pre)
+              print("2019 routed candidate:",val)
               print("2024 baseline:",base)
               print("2024 share-only:",hold_share)
-              print("2024 FPTP candidate:",hold)
+              print("2024 pre-routing:",hold_pre)
+              print("2024 routed candidate:",hold)
+              print("2024 Scotland:",mrp.get("holdout_2024",{}).get("scotland"))
               print("Selected share spec:",mrp.get("selected_spec"))
               print("Selected party strengths:",mrp.get("selected_party_strengths"))
+              routing=mrp.get("selected_incumbent_routing")
+              if not isinstance(routing,dict):
+                  raise SystemExit("ERROR: missing selected incumbent-routing parameters")
+              if "route_strength" not in routing or "unwind_strength" not in routing:
+                  raise SystemExit(f"ERROR: incomplete incumbent routing {routing}")
+              print("Selected incumbent routing:",routing)
               if val.get("gb_seats")!=632 or hold.get("gb_seats")!=632:
-                  raise SystemExit("ERROR: v0.9.9 did not evaluate 632 GB seats")
+                  raise SystemExit("ERROR: v0.9.10 did not evaluate 632 GB seats")
               if val.get("winner_source")!="official_BES_WinnerXX" or hold.get("winner_source")!="official_BES_WinnerXX":
-                  raise SystemExit("ERROR: v0.9.9 evaluation is not using official BES WinnerXX")
+                  raise SystemExit("ERROR: v0.9.10 evaluation is not using official BES WinnerXX")
               if hold.get("other_prediction_rule")!="eligible_only_if_baseline_winner_or_runner_up":
                   raise SystemExit("ERROR: pooled Other is still being treated as a universal seat candidate")
               if mrp.get("approved"):
                   if float(hold.get("winner_accuracy",0))<.80:
-                      raise SystemExit("ERROR: approved v0.9.9 below 80% holdout accuracy")
+                      raise SystemExit("ERROR: approved v0.9.10 below 80% holdout accuracy")
                   if len(live.get("seats",[]))!=632:
-                      raise SystemExit("ERROR: approved v0.9.9 live file does not contain 632 GB seats")
+                      raise SystemExit("ERROR: approved v0.9.10 live file does not contain 632 GB seats")
               else:
-                  print("v0.9.9 failed the model gate: production remains on fallback. This is VALID.")
+                  print("v0.9.10 failed the model gate: production remains on fallback. This is VALID.")
           else:
               # Integrity passed, so an ML-only shadow failure may safely fall back.
-              print("WARNING: v0.9.9 ML shadow build unavailable:",mrp.get("error"))
+              print("WARNING: v0.9.10 ML shadow build unavailable:",mrp.get("error"))
               print("Production remains on fallback.")
 
           print("Dataset/model validation passed.")
@@ -197,7 +208,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data and v0.9.9 scenario-aware calibration"
+            git commit -m "chore: update UK data and v0.9.10 incumbent routing"
             git push
           fi
 
