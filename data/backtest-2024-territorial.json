@@ -3,7 +3,7 @@
     "stage": "v0.4 historical territorial calibration",
     "source": "UK Parliament psephology database",
     "polling_error_included": false,
-    "production_rule": "fit on 2015/2017; require improvement on both 2019 validation and 2024 holdout"
+    "production_rule": "fit on 2015/2017; require non-worsening winner accuracy AND seat error on both 2019 validation and 2024 holdout, plus at least one strict improvement"
   },
   "common_lambda": 0.82,
   "training_common": {
@@ -867,5 +867,5 @@
       }
     }
   },
-  "approved_for_live": true
+  "approved_for_live": false
 }
