@@ -1,0 +1,5037 @@
+{
+  "version": "uk-v0914-place-regradient-sweep",
+  "status": "ok",
+  "generated_at": "2026-08-26T21:40:47.209965+00:00",
+  "canonical_candidate": "frozen_v0910_equivalent",
+  "total_seats": 632,
+  "wrong_seats": 138,
+  "correct_seats": 494,
+  "confusion_pairs": [
+    {
+      "predicted": "ref",
+      "actual": "lab",
+      "count": 39
+    },
+    {
+      "predicted": "con",
+      "actual": "lab",
+      "count": 31
+    },
+    {
+      "predicted": "con",
+      "actual": "ld",
+      "count": 19
+    },
+    {
+      "predicted": "snp",
+      "actual": "lab",
+      "count": 13
+    },
+    {
+      "predicted": "lab",
+      "actual": "con",
+      "count": 11
+    },
+    {
+      "predicted": "lab",
+      "actual": "other",
+      "count": 5
+    },
+    {
+      "predicted": "con",
+      "actual": "ref",
+      "count": 4
+    },
+    {
+      "predicted": "other",
+      "actual": "con",
+      "count": 3
+    },
+    {
+      "predicted": "green",
+      "actual": "lab",
+      "count": 3
+    },
+    {
+      "predicted": "ld",
+      "actual": "con",
+      "count": 3
+    },
+    {
+      "predicted": "green",
+      "actual": "con",
+      "count": 2
+    },
+    {
+      "predicted": "other",
+      "actual": "ref",
+      "count": 1
+    },
+    {
+      "predicted": "ld",
+      "actual": "lab",
+      "count": 1
+    },
+    {
+      "predicted": "con",
+      "actual": "snp",
+      "count": 1
+    },
+    {
+      "predicted": "snp",
+      "actual": "ld",
+      "count": 1
+    },
+    {
+      "predicted": "snp",
+      "actual": "con",
+      "count": 1
+    }
+  ],
+  "regions": {
+    "east_england": {
+      "n": 61,
+      "wrong": 15,
+      "accuracy": 0.7540983606557377
+    },
+    "east_midlands": {
+      "n": 47,
+      "wrong": 14,
+      "accuracy": 0.7021276595744681
+    },
+    "london": {
+      "n": 75,
+      "wrong": 7,
+      "accuracy": 0.9066666666666666
+    },
+    "north_east": {
+      "n": 27,
+      "wrong": 12,
+      "accuracy": 0.5555555555555556
+    },
+    "north_west": {
+      "n": 73,
+      "wrong": 5,
+      "accuracy": 0.9315068493150684
+    },
+    "scotland": {
+      "n": 57,
+      "wrong": 16,
+      "accuracy": 0.7192982456140351
+    },
+    "south_east": {
+      "n": 91,
+      "wrong": 20,
+      "accuracy": 0.7802197802197802
+    },
+    "south_west": {
+      "n": 58,
+      "wrong": 15,
+      "accuracy": 0.7413793103448276
+    },
+    "wales": {
+      "n": 32,
+      "wrong": 9,
+      "accuracy": 0.71875
+    },
+    "west_midlands": {
+      "n": 57,
+      "wrong": 8,
+      "accuracy": 0.8596491228070176
+    },
+    "yorkshire": {
+      "n": 54,
+      "wrong": 17,
+      "accuracy": 0.6851851851851851
+    }
+  },
+  "predicted_margin_bands": {
+    "10to20": {
+      "n": 168,
+      "wrong": 23,
+      "error_rate": 0.13690476190476192
+    },
+    "2to5": {
+      "n": 63,
+      "wrong": 25,
+      "error_rate": 0.3968253968253968
+    },
+    "5to10": {
+      "n": 96,
+      "wrong": 32,
+      "error_rate": 0.3333333333333333
+    },
+    "ge20": {
+      "n": 263,
+      "wrong": 38,
+      "error_rate": 0.1444866920152091
+    },
+    "lt2": {
+      "n": 42,
+      "wrong": 20,
+      "error_rate": 0.47619047619047616
+    }
+  },
+  "largest_error_pair": {
+    "predicted": "ref",
+    "actual": "lab",
+    "count": 39
+  },
+  "wrong_constituencies": [
+    {
+      "id": "E14001063",
+      "name": "Aldershot",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 5.472863184606787,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 34.701319749942115,
+      "competition_key": "south_east|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 32.60273161572652
+        },
+        {
+          "party": "lab",
+          "share": 27.129868431119732
+        },
+        {
+          "party": "ld",
+          "share": 19.017513123537235
+        }
+      ],
+      "actual_shares": {
+        "lab": 40.71357943309163,
+        "con": 29.006674357284112,
+        "ref": 16.912491760052735,
+        "ld": 8.347066578773896,
+        "green": 4.439271588661833,
+        "other": 0.5809162821357943
+      }
+    },
+    {
+      "id": "E14001066",
+      "name": "Amber Valley",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 7.104998814293623,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 37.03435725405074,
+      "competition_key": "east_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 38.60837592058896
+        },
+        {
+          "party": "lab",
+          "share": 31.50337710629534
+        },
+        {
+          "party": "ref",
+          "share": 10.010254923001632
+        }
+      ],
+      "actual_shares": {
+        "lab": 37.022407185347156,
+        "con": 25.216900613670028,
+        "ref": 28.66614939691049,
+        "ld": 3.738449601467165,
+        "green": 5.356093202605158,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001068",
+      "name": "Ashfield",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "other",
+      "actual_winner": "ref",
+      "predicted_margin": 22.03982449184696,
+      "baseline_winner": "con",
+      "baseline_second": "other",
+      "baseline_margin": 12.347202495983609,
+      "competition_key": "east_midlands|con|other|10to20",
+      "predicted_top3": [
+        {
+          "party": "other",
+          "share": 44.76588924549615
+        },
+        {
+          "party": "ref",
+          "share": 22.726064753649187
+        },
+        {
+          "party": "con",
+          "share": 16.0796143307573
+        }
+      ],
+      "actual_shares": {
+        "lab": 28.97046286545309,
+        "con": 8.20169500025074,
+        "ref": 42.78120455343263,
+        "ld": 1.5520786319642947,
+        "green": 2.7581365026829148,
+        "other": 15.73642244621634
+      }
+    },
+    {
+      "id": "E14001069",
+      "name": "Ashford",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 3.4499049459535414,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 35.428889026122405,
+      "competition_key": "south_east|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 31.5086579900202
+        },
+        {
+          "party": "lab",
+          "share": 28.05875304406666
+        },
+        {
+          "party": "green",
+          "share": 14.267445198229636
+        }
+      ],
+      "actual_shares": {
+        "lab": 32.489622139435866,
+        "con": 28.702501330494947,
+        "ref": 21.58807876530069,
+        "ld": 5.204896221394358,
+        "green": 9.27088877062267,
+        "other": 2.7440127727514634
+      }
+    },
+    {
+      "id": "E14001071",
+      "name": "Aylesbury",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 4.349655201179971,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 28.745163073521283,
+      "competition_key": "south_east|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 31.290295095326876
+        },
+        {
+          "party": "lab",
+          "share": 26.940639894146905
+        },
+        {
+          "party": "ld",
+          "share": 26.07946038684951
+        }
+      ],
+      "actual_shares": {
+        "lab": 30.198237885462554,
+        "con": 28.936724068882658,
+        "ref": 13.508209851822187,
+        "ld": 20.90508610332399,
+        "green": 5.186223468161795,
+        "other": 1.2655186223468162
+      }
+    },
+    {
+      "id": "E14001074",
+      "name": "Barnsley North",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 57.87535817821934,
+      "baseline_winner": "lab",
+      "baseline_second": "ref",
+      "baseline_margin": 8.997302158273378,
+      "competition_key": "yorkshire|lab|ref|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 71.61158112466067
+        },
+        {
+          "party": "lab",
+          "share": 13.73622294644134
+        },
+        {
+          "party": "con",
+          "share": 12.515681291109576
+        }
+      ],
+      "actual_shares": {
+        "lab": 50.441806255759744,
+        "con": 8.356372309860681,
+        "ref": 29.270342061039734,
+        "ld": 3.621185016533854,
+        "green": 4.892394427278148,
+        "other": 3.4178999295278367
+      }
+    },
+    {
+      "id": "E14001075",
+      "name": "Barnsley South",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 53.32840674796684,
+      "baseline_winner": "lab",
+      "baseline_second": "ref",
+      "baseline_margin": 12.583982083822118,
+      "competition_key": "yorkshire|lab|ref|10to20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 69.48489129275765
+        },
+        {
+          "party": "lab",
+          "share": 16.156484544790814
+        },
+        {
+          "party": "con",
+          "share": 12.055997718976077
+        }
+      ],
+      "actual_shares": {
+        "lab": 46.74476939741179,
+        "con": 9.255458639758283,
+        "ref": 33.21076335442677,
+        "ld": 3.3407445413602423,
+        "green": 4.335556695741406,
+        "other": 3.1127073713015228
+      }
+    },
+    {
+      "id": "E14001079",
+      "name": "Bassetlaw",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 24.983977681013453,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 26.402667953101083,
+      "competition_key": "east_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 49.47623171074652
+        },
+        {
+          "party": "con",
+          "share": 24.492254029733065
+        },
+        {
+          "party": "lab",
+          "share": 13.0046541161567
+        }
+      ],
+      "actual_shares": {
+        "lab": 41.16939257542671,
+        "con": 28.316769909532507,
+        "ref": 21.7277953562993,
+        "ld": 4.447613530014706,
+        "green": 4.338428628726771,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001082",
+      "name": "Beaconsfield",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "other",
+      "actual_winner": "con",
+      "predicted_margin": 43.1712705983997,
+      "baseline_winner": "con",
+      "baseline_second": "other",
+      "baseline_margin": 24.57583645241578,
+      "competition_key": "south_east|con|other|ge20",
+      "predicted_top3": [
+        {
+          "party": "other",
+          "share": 62.09195284971671
+        },
+        {
+          "party": "con",
+          "share": 18.92068225131701
+        },
+        {
+          "party": "ref",
+          "share": 6.761823226049485
+        }
+      ],
+      "actual_shares": {
+        "lab": 15.11964128567238,
+        "con": 38.750366676444706,
+        "ref": 12.68700498679965,
+        "ld": 27.32053807149143,
+        "green": 4.142396178183799,
+        "other": 1.9800528014080376
+      }
+    },
+    {
+      "id": "E14001098",
+      "name": "Birmingham Perry Barr",
+      "country": "England",
+      "region": "west_midlands",
+      "predicted_winner": "lab",
+      "actual_winner": "other",
+      "predicted_margin": 47.936046494664254,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 47.58605989555579,
+      "competition_key": "west_midlands|lab|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 64.22855241761984
+        },
+        {
+          "party": "ref",
+          "share": 16.292505922955584
+        },
+        {
+          "party": "con",
+          "share": 10.338054796134026
+        }
+      ],
+      "actual_shares": {
+        "lab": 34.14451915892838,
+        "con": 11.27921869996798,
+        "ref": 6.526843846728574,
+        "ld": 3.474223503041947,
+        "green": 6.510833600170776,
+        "other": 38.06436119116234
+      }
+    },
+    {
+      "id": "E14001102",
+      "name": "Blackburn",
+      "country": "England",
+      "region": "north_west",
+      "predicted_winner": "lab",
+      "actual_winner": "other",
+      "predicted_margin": 33.240171862237816,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 42.653224882575316,
+      "competition_key": "north_west|lab|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 57.93304322498181
+        },
+        {
+          "party": "ref",
+          "share": 24.692871362743993
+        },
+        {
+          "party": "con",
+          "share": 11.622914006014879
+        }
+      ],
+      "actual_shares": {
+        "lab": 26.708154396070665,
+        "con": 8.93357677372901,
+        "ref": 12.456605035101704,
+        "ld": 1.7718003445881658,
+        "green": 3.6413197212436037,
+        "other": 46.48854372926685
+      }
+    },
+    {
+      "id": "W07000084",
+      "name": "Blaenau Gwent and Rhymney",
+      "country": "Wales",
+      "region": "wales",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 27.541385028790398,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 30.809616572433136,
+      "competition_key": "wales|lab|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 51.67938375479773
+        },
+        {
+          "party": "lab",
+          "share": 24.137998726007336
+        },
+        {
+          "party": "con",
+          "share": 11.509227766215847
+        }
+      ],
+      "actual_shares": {
+        "lab": 53.56259608314953,
+        "con": 12.6194773076666,
+        "ref": 0.0,
+        "ld": 4.237684646748212,
+        "green": 5.74493683577301,
+        "pc": 12.846734843927546,
+        "other": 10.988570282735111
+      }
+    },
+    {
+      "id": "E14001106",
+      "name": "Blaydon and Consett",
+      "country": "England",
+      "region": "north_east",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 5.006196183738403,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 9.123815607367185,
+      "competition_key": "north_east|lab|con|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 42.234953943389755
+        },
+        {
+          "party": "lab",
+          "share": 37.22875775965135
+        },
+        {
+          "party": "con",
+          "share": 15.782927025690999
+        }
+      ],
+      "actual_shares": {
+        "lab": 50.1231760469964,
+        "con": 14.33579685427326,
+        "ref": 23.704282736403258,
+        "ld": 5.384214515823384,
+        "green": 6.132745878339966,
+        "other": 0.3197839681637294
+      }
+    },
+    {
+      "id": "E14001109",
+      "name": "Bolsover",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 14.562548254926792,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 11.54435589806463,
+      "competition_key": "east_midlands|con|lab|10to20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 41.184780122196976
+        },
+        {
+          "party": "lab",
+          "share": 26.622231867270184
+        },
+        {
+          "party": "con",
+          "share": 22.36622577570076
+        }
+      ],
+      "actual_shares": {
+        "lab": 40.52646462742141,
+        "con": 25.625677522741196,
+        "ref": 21.518122260451527,
+        "ld": 3.4830560399679507,
+        "green": 8.84667954941792,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001114",
+      "name": "Boston and Skegness",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "ref",
+      "predicted_margin": 30.303840253667836,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 60.868985739037726,
+      "competition_key": "east_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 47.89346161972517
+        },
+        {
+          "party": "lab",
+          "share": 17.589621366057337
+        },
+        {
+          "party": "ref",
+          "share": 11.730719263565964
+        }
+      ],
+      "actual_shares": {
+        "lab": 18.85799035965888,
+        "con": 33.39513039179335,
+        "ref": 38.363613891978744,
+        "ld": 3.3988382153009518,
+        "green": 3.722654801631442,
+        "other": 2.261772339636633
+      }
+    },
+    {
+      "id": "E14001137",
+      "name": "Bromley and Biggin Hill",
+      "country": "England",
+      "region": "london",
+      "predicted_winner": "lab",
+      "actual_winner": "con",
+      "predicted_margin": 3.484123416142289,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 29.31224265155532,
+      "competition_key": "london|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 31.584823762291776
+        },
+        {
+          "party": "con",
+          "share": 28.100700346149488
+        },
+        {
+          "party": "ld",
+          "share": 18.803234208711384
+        }
+      ],
+      "actual_shares": {
+        "lab": 33.39958963836881,
+        "con": 34.045054287424115,
+        "ref": 17.532273232452763,
+        "ld": 9.301530306916302,
+        "green": 5.52064631956912,
+        "other": 0.2009062152688723
+      }
+    },
+    {
+      "id": "E14001146",
+      "name": "Bury St Edmunds and Stowmarket",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "green",
+      "actual_winner": "lab",
+      "predicted_margin": 18.601546619040807,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 42.08189630532954,
+      "competition_key": "east_england|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "green",
+          "share": 43.63018757757094
+        },
+        {
+          "party": "con",
+          "share": 25.028640958530136
+        },
+        {
+          "party": "lab",
+          "share": 16.733525117663504
+        }
+      ],
+      "actual_shares": {
+        "lab": 32.90236378283851,
+        "con": 30.049319159805872,
+        "ref": 16.88837364667047,
+        "ld": 6.197315937358773,
+        "green": 11.319827874167373,
+        "other": 2.6427995991590203
+      }
+    },
+    {
+      "id": "W07000088",
+      "name": "Caerphilly",
+      "country": "Wales",
+      "region": "wales",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 14.918864234599635,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 15.312077037431497,
+      "competition_key": "wales|lab|con|10to20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 41.92799646756928
+        },
+        {
+          "party": "lab",
+          "share": 27.009132232969645
+        },
+        {
+          "party": "pc",
+          "share": 14.54103729267349
+        }
+      ],
+      "actual_shares": {
+        "lab": 38.02374849610295,
+        "con": 11.468849714913429,
+        "ref": 20.280378720510544,
+        "ld": 4.676465972694461,
+        "green": 4.315530679499922,
+        "pc": 21.235026416278707,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001150",
+      "name": "Cannock Chase",
+      "country": "England",
+      "region": "west_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 8.531886417096722,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 42.92315332627988,
+      "competition_key": "west_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 35.07891413084421
+        },
+        {
+          "party": "lab",
+          "share": 26.54702771374749
+        },
+        {
+          "party": "green",
+          "share": 24.94860949981006
+        }
+      ],
+      "actual_shares": {
+        "lab": 36.484063976904984,
+        "con": 29.20866994156403,
+        "ref": 26.936418876446343,
+        "ld": 2.3956417479570686,
+        "green": 4.975205457127557,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001155",
+      "name": "Central Devon",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "lab",
+      "actual_winner": "con",
+      "predicted_margin": 1.1615851518352578,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 30.498554403779707,
+      "competition_key": "south_west|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 29.329138293977273
+        },
+        {
+          "party": "con",
+          "share": 28.167553142142015
+        },
+        {
+          "party": "green",
+          "share": 16.087134460712626
+        }
+      ],
+      "actual_shares": {
+        "lab": 31.385686480011977,
+        "con": 31.499850276987573,
+        "ref": 14.568049109148076,
+        "ld": 15.406497978739333,
+        "green": 6.247192693516994,
+        "other": 0.8927234615960473
+      }
+    },
+    {
+      "id": "E14001157",
+      "name": "Chatham and Aylesford",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 9.95992959990064,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 41.45910192320285,
+      "competition_key": "south_east|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 40.650057585291165
+        },
+        {
+          "party": "lab",
+          "share": 30.690127985390525
+        },
+        {
+          "party": "ref",
+          "share": 10.866894700433118
+        }
+      ],
+      "actual_shares": {
+        "lab": 33.51450605949321,
+        "con": 28.622842453176645,
+        "ref": 24.45586975149957,
+        "ld": 5.325009181050312,
+        "green": 6.130493328436773,
+        "other": 1.9512792263434937
+      }
+    },
+    {
+      "id": "E14001159",
+      "name": "Chelmsford",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 1.3208107380784888,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 28.640433991008056,
+      "competition_key": "east_england|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 32.01010055436109
+        },
+        {
+          "party": "ld",
+          "share": 30.6892898162826
+        },
+        {
+          "party": "lab",
+          "share": 19.274468459316598
+        }
+      ],
+      "actual_shares": {
+        "lab": 12.043536556510768,
+        "con": 30.48544837920972,
+        "ref": 13.317296316744223,
+        "ld": 39.85724426216579,
+        "green": 3.131161763546022,
+        "other": 1.165312721823488
+      }
+    },
+    {
+      "id": "E14001162",
+      "name": "Chesham and Amersham",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 3.395507933693615,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 33.91484053545829,
+      "competition_key": "south_east|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 29.624906450351396
+        },
+        {
+          "party": "ld",
+          "share": 26.22939851665778
+        },
+        {
+          "party": "green",
+          "share": 16.02482099317526
+        }
+      ],
+      "actual_shares": {
+        "lab": 6.430998071802406,
+        "con": 34.83793958314204,
+        "ref": 9.751170691396567,
+        "ld": 44.84803966577909,
+        "green": 3.0722615003213667,
+        "other": 1.0595904875585347
+      }
+    },
+    {
+      "id": "E14001165",
+      "name": "Chesterfield",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 10.941795323277425,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 3.2111716018235796,
+      "competition_key": "east_midlands|lab|con|2to5",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 43.74339945258141
+        },
+        {
+          "party": "lab",
+          "share": 32.80160412930398
+        },
+        {
+          "party": "con",
+          "share": 16.53930068807938
+        }
+      ],
+      "actual_shares": {
+        "lab": 46.48297437131512,
+        "con": 20.445193117555046,
+        "ref": 19.003729996390327,
+        "ld": 6.143665022259656,
+        "green": 6.454096979906149,
+        "other": 1.4703405125736975
+      }
+    },
+    {
+      "id": "E14001166",
+      "name": "Chichester",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 10.762858095635547,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 38.45792011289247,
+      "competition_key": "south_east|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 32.559132945198144
+        },
+        {
+          "party": "ld",
+          "share": 21.796274849562597
+        },
+        {
+          "party": "lab",
+          "share": 17.04829643737675
+        }
+      ],
+      "actual_shares": {
+        "lab": 6.111998767975051,
+        "con": 25.733921111902514,
+        "ref": 15.128881359847538,
+        "ld": 49.165495601285926,
+        "green": 3.493945752401486,
+        "other": 0.3657574065874834
+      }
+    },
+    {
+      "id": "E14001167",
+      "name": "Chingford and Woodford Green",
+      "country": "England",
+      "region": "london",
+      "predicted_winner": "lab",
+      "actual_winner": "con",
+      "predicted_margin": 37.46349480599116,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 2.9374061458447827,
+      "competition_key": "london|con|lab|2to5",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 60.74567451267263
+        },
+        {
+          "party": "con",
+          "share": 23.282179706681465
+        },
+        {
+          "party": "ld",
+          "share": 5.785299925793842
+        }
+      ],
+      "actual_shares": {
+        "lab": 25.81629287598944,
+        "con": 35.62211411609499,
+        "ref": 7.530095646437996,
+        "ld": 2.6282156992084427,
+        "green": 2.7498350923482846,
+        "other": 25.653446569920842
+      }
+    },
+    {
+      "id": "E14001174",
+      "name": "Clacton",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "con",
+      "actual_winner": "ref",
+      "predicted_margin": 25.45760482403506,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 56.311721298911735,
+      "competition_key": "east_england|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 43.24367773789529
+        },
+        {
+          "party": "lab",
+          "share": 17.78607291386023
+        },
+        {
+          "party": "ref",
+          "share": 11.766437427304245
+        }
+      ],
+      "actual_shares": {
+        "lab": 16.20610122285565,
+        "con": 27.89503459680578,
+        "ref": 46.18347186561643,
+        "ld": 4.386613864833108,
+        "green": 4.21036598633535,
+        "other": 1.1184124635536796
+      }
+    },
+    {
+      "id": "E14001178",
+      "name": "Congleton",
+      "country": "England",
+      "region": "north_west",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 6.2041942723545915,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 36.54266958424509,
+      "competition_key": "north_west|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 35.876571683113056
+        },
+        {
+          "party": "lab",
+          "share": 29.672377410758465
+        },
+        {
+          "party": "ld",
+          "share": 14.866385462794774
+        }
+      ],
+      "actual_shares": {
+        "lab": 37.65586034912718,
+        "con": 30.898753117206983,
+        "ref": 16.448877805486283,
+        "ld": 5.556109725685785,
+        "green": 4.003990024937655,
+        "other": 5.43640897755611
+      }
+    },
+    {
+      "id": "E14001187",
+      "name": "Croydon South",
+      "country": "England",
+      "region": "london",
+      "predicted_winner": "lab",
+      "actual_winner": "con",
+      "predicted_margin": 12.347356165592977,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 26.34495225370378,
+      "competition_key": "london|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 41.754987742317326
+        },
+        {
+          "party": "con",
+          "share": 29.40763157672435
+        },
+        {
+          "party": "ld",
+          "share": 16.010277008821706
+        }
+      ],
+      "actual_shares": {
+        "lab": 35.327473773745396,
+        "con": 40.011746121754626,
+        "ref": 8.402527441370651,
+        "ld": 8.878447891773664,
+        "green": 5.790027947669003,
+        "other": 1.589776823686662
+      }
+    },
+    {
+      "id": "E14001195",
+      "name": "Derbyshire Dales",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 4.5623316333302135,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 34.8544409419618,
+      "competition_key": "east_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 31.960765522469725
+        },
+        {
+          "party": "lab",
+          "share": 27.39843388913951
+        },
+        {
+          "party": "ld",
+          "share": 14.70977407969207
+        }
+      ],
+      "actual_shares": {
+        "lab": 34.636838820408805,
+        "con": 33.954205024184745,
+        "ref": 15.072554220627246,
+        "ld": 9.478857856139806,
+        "green": 5.519581838040256,
+        "other": 1.3379622405991576
+      }
+    },
+    {
+      "id": "E14001196",
+      "name": "Dewsbury and Batley",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "lab",
+      "actual_winner": "other",
+      "predicted_margin": 36.88509300752783,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 30.387627166438918,
+      "competition_key": "yorkshire|lab|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 56.41029743976783
+        },
+        {
+          "party": "ref",
+          "share": 19.525204432240002
+        },
+        {
+          "party": "con",
+          "share": 13.464337663749617
+        }
+      ],
+      "actual_shares": {
+        "lab": 22.871027055424218,
+        "con": 10.985027580772263,
+        "ref": 16.159705805095875,
+        "ld": 3.5198318886262148,
+        "green": 5.379563961124244,
+        "other": 41.08484370895719
+      }
+    },
+    {
+      "id": "E14001198",
+      "name": "Doncaster Central",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 32.03481075804343,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 2.7604630454140704,
+      "competition_key": "yorkshire|lab|con|2to5",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 55.46144853725501
+        },
+        {
+          "party": "lab",
+          "share": 23.426637779211582
+        },
+        {
+          "party": "con",
+          "share": 16.533573883864054
+        }
+      ],
+      "actual_shares": {
+        "lab": 46.16013071895424,
+        "con": 20.98882563778199,
+        "ref": 20.783259540375287,
+        "ld": 3.159919881931267,
+        "green": 4.9546700400590336,
+        "other": 3.953194180898165
+      }
+    },
+    {
+      "id": "E14001199",
+      "name": "Doncaster East and the Isle of Axholme",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 26.46405555712227,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 23.407761582025802,
+      "competition_key": "yorkshire|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 51.71550432493825
+        },
+        {
+          "party": "con",
+          "share": 25.251448767815983
+        },
+        {
+          "party": "lab",
+          "share": 14.859975258627767
+        }
+      ],
+      "actual_shares": {
+        "lab": 38.64356536849637,
+        "con": 32.737912705713995,
+        "ref": 21.68813247470101,
+        "ld": 2.9796585914341205,
+        "green": 3.5776346723908823,
+        "other": 0.37309618726362054
+      }
+    },
+    {
+      "id": "E14001200",
+      "name": "Doncaster North",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 48.9559014380918,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 5.165959570751191,
+      "competition_key": "yorkshire|lab|con|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 64.92572337399572
+        },
+        {
+          "party": "lab",
+          "share": 15.969821935903926
+        },
+        {
+          "party": "con",
+          "share": 15.838973344510254
+        }
+      ],
+      "actual_shares": {
+        "lab": 52.354686794400365,
+        "con": 22.91787626604735,
+        "ref": 0.0,
+        "ld": 3.37075027417586,
+        "green": 5.735113863621702,
+        "other": 15.621572801754727
+      }
+    },
+    {
+      "id": "E14001211",
+      "name": "Easington",
+      "country": "England",
+      "region": "north_east",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 32.680395819278004,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 19.704878538446096,
+      "competition_key": "north_east|lab|con|10to20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 56.53452532290195
+        },
+        {
+          "party": "lab",
+          "share": 23.854129503623945
+        },
+        {
+          "party": "con",
+          "share": 13.702159283018103
+        }
+      ],
+      "actual_shares": {
+        "lab": 48.86959561822631,
+        "con": 10.934040321640834,
+        "ref": 29.81004544924834,
+        "ld": 2.362778230975411,
+        "green": 3.41743386551684,
+        "other": 4.606106514392263
+      }
+    },
+    {
+      "id": "E14001232",
+      "name": "Exmouth and Exeter East",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "other",
+      "actual_winner": "con",
+      "predicted_margin": 49.400596446185375,
+      "baseline_winner": "con",
+      "baseline_second": "other",
+      "baseline_margin": 15.285141137698808,
+      "competition_key": "south_west|con|other|10to20",
+      "predicted_top3": [
+        {
+          "party": "other",
+          "share": 66.44197808527895
+        },
+        {
+          "party": "con",
+          "share": 17.041381639093572
+        },
+        {
+          "party": "ref",
+          "share": 5.238454467386001
+        }
+      ],
+      "actual_shares": {
+        "lab": 28.46480629823057,
+        "con": 28.700600202665832,
+        "ref": 13.806610024164003,
+        "ld": 22.18996024631694,
+        "green": 4.5424429027983475,
+        "other": 2.295580325824304
+      }
+    },
+    {
+      "id": "E14001234",
+      "name": "Farnham and Bordon",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "ld",
+      "actual_winner": "con",
+      "predicted_margin": 6.474174535611496,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 26.54817074363035,
+      "competition_key": "south_east|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "ld",
+          "share": 40.585102220284384
+        },
+        {
+          "party": "con",
+          "share": 34.11092768467289
+        },
+        {
+          "party": "ref",
+          "share": 8.91273706518612
+        }
+      ],
+      "actual_shares": {
+        "lab": 13.822503065170237,
+        "con": 35.74648684334621,
+        "ref": 11.726869753843252,
+        "ld": 33.20192398377817,
+        "green": 4.708101480713005,
+        "other": 0.7941148731491086
+      }
+    },
+    {
+      "id": "E14001238",
+      "name": "Finchley and Golders Green",
+      "country": "England",
+      "region": "london",
+      "predicted_winner": "ld",
+      "actual_winner": "lab",
+      "predicted_margin": 7.6233317541363625,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 11.963112683173314,
+      "competition_key": "london|con|ld|10to20",
+      "predicted_top3": [
+        {
+          "party": "ld",
+          "share": 35.381940839781336
+        },
+        {
+          "party": "lab",
+          "share": 27.758609085644974
+        },
+        {
+          "party": "con",
+          "share": 24.12728457613565
+        }
+      ],
+      "actual_shares": {
+        "lab": 44.34457992655562,
+        "con": 35.050416928726484,
+        "ref": 5.2709529509626885,
+        "ld": 6.847369595650143,
+        "green": 6.303637728499259,
+        "other": 2.183042869605794
+      }
+    },
+    {
+      "id": "E14001240",
+      "name": "Forest of Dean",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "green",
+      "actual_winner": "lab",
+      "predicted_margin": 3.9629006727261675,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 30.828557552209798,
+      "competition_key": "south_west|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "green",
+          "share": 31.78772055879418
+        },
+        {
+          "party": "lab",
+          "share": 27.824819886068013
+        },
+        {
+          "party": "con",
+          "share": 25.630941390589495
+        }
+      ],
+      "actual_shares": {
+        "lab": 34.045871368863196,
+        "con": 33.46780062797613,
+        "ref": 17.038531118088624,
+        "ld": 5.414734565719157,
+        "green": 9.84591711546859,
+        "other": 0.18714520388430267
+      }
+    },
+    {
+      "id": "E14001241",
+      "name": "Frome and East Somerset",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 2.7025825879835104,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 25.839066082968525,
+      "competition_key": "south_west|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 24.813954178248725
+        },
+        {
+          "party": "lab",
+          "share": 22.111371590265215
+        },
+        {
+          "party": "green",
+          "share": 21.33330825339726
+        }
+      ],
+      "actual_shares": {
+        "lab": 13.734052572994262,
+        "con": 23.899734566315608,
+        "ref": 13.787567428718212,
+        "ld": 35.49105231612295,
+        "green": 10.880640465793304,
+        "other": 2.2069526500556553
+      }
+    },
+    {
+      "id": "E14001249",
+      "name": "Godalming and Ash",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "ld",
+      "actual_winner": "con",
+      "predicted_margin": 12.877654721878745,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 19.254948449904802,
+      "competition_key": "south_east|con|ld|10to20",
+      "predicted_top3": [
+        {
+          "party": "ld",
+          "share": 42.345448361096445
+        },
+        {
+          "party": "con",
+          "share": 29.4677936392177
+        },
+        {
+          "party": "ref",
+          "share": 8.879907117365873
+        }
+      ],
+      "actual_shares": {
+        "lab": 5.024133391838524,
+        "con": 42.58629515869533,
+        "ref": 8.803203159280384,
+        "ld": 40.95729120959485,
+        "green": 2.2725610647945,
+        "other": 0.3565160157964019
+      }
+    },
+    {
+      "id": "E14001256",
+      "name": "Great Yarmouth",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "con",
+      "actual_winner": "ref",
+      "predicted_margin": 9.521802814984074,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 40.64009939717454,
+      "competition_key": "east_england|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 39.64178684383401
+        },
+        {
+          "party": "lab",
+          "share": 30.119984028849938
+        },
+        {
+          "party": "ref",
+          "share": 11.116461925434736
+        }
+      ],
+      "actual_shares": {
+        "lab": 31.80278786688917,
+        "con": 24.624521448905472,
+        "ref": 35.3023461274173,
+        "ld": 2.7044272111514682,
+        "green": 4.260331795425544,
+        "other": 1.3055855502110536
+      }
+    },
+    {
+      "id": "E14001266",
+      "name": "Harborough, Oadby and Wigston",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "lab",
+      "actual_winner": "con",
+      "predicted_margin": 1.6359231491579855,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 29.681468099267857,
+      "competition_key": "east_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 32.698439509168814
+        },
+        {
+          "party": "con",
+          "share": 31.06251636001083
+        },
+        {
+          "party": "ld",
+          "share": 18.62375320989063
+        }
+      ],
+      "actual_shares": {
+        "lab": 32.22323661334497,
+        "con": 36.9428015718652,
+        "ref": 12.566982892073195,
+        "ld": 9.391497638232844,
+        "green": 8.472591592902791,
+        "other": 0.40288969158099475
+      }
+    },
+    {
+      "id": "E14001267",
+      "name": "Harlow",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 0.44984855466865525,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 35.24915540540542,
+      "competition_key": "east_england|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 37.39336011819989
+        },
+        {
+          "party": "lab",
+          "share": 36.94351156353123
+        },
+        {
+          "party": "ref",
+          "share": 9.337397095319194
+        }
+      ],
+      "actual_shares": {
+        "lab": 37.62483566667436,
+        "con": 31.84952833452499,
+        "ref": 21.82115921304518,
+        "ld": 3.1136840648568858,
+        "green": 5.2286827963189335,
+        "other": 0.36210992457965263
+      }
+    },
+    {
+      "id": "E14001270",
+      "name": "Harrow East",
+      "country": "England",
+      "region": "london",
+      "predicted_winner": "lab",
+      "actual_winner": "con",
+      "predicted_margin": 26.883228950173482,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 17.187828714594453,
+      "competition_key": "london|con|lab|10to20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 54.23752334173005
+        },
+        {
+          "party": "con",
+          "share": 27.35429439155657
+        },
+        {
+          "party": "ld",
+          "share": 7.459133063756351
+        }
+      ],
+      "actual_shares": {
+        "lab": 28.854888335391504,
+        "con": 53.30179793624548,
+        "ref": 4.579609435502439,
+        "ld": 3.162609623877598,
+        "green": 4.198673001653516,
+        "other": 5.9024216673294685
+      }
+    },
+    {
+      "id": "E14001272",
+      "name": "Hartlepool",
+      "country": "England",
+      "region": "north_east",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 54.73216521764529,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 8.760386967858274,
+      "competition_key": "north_east|lab|con|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 68.30813885319999
+        },
+        {
+          "party": "con",
+          "share": 13.575973635554703
+        },
+        {
+          "party": "lab",
+          "share": 13.450820192813095
+        }
+      ],
+      "actual_shares": {
+        "lab": 46.22229731632452,
+        "con": 21.87209597026274,
+        "ref": 24.54450733575512,
+        "ld": 1.6107684942693812,
+        "green": 2.3485680493368255,
+        "other": 3.4017628340514214
+      }
+    },
+    {
+      "id": "E14001273",
+      "name": "Harwich and North Essex",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "lab",
+      "actual_winner": "con",
+      "predicted_margin": 0.9324652198110748,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 32.63626950669328,
+      "competition_key": "east_england|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 32.74627056353062
+        },
+        {
+          "party": "con",
+          "share": 31.813805343719547
+        },
+        {
+          "party": "ld",
+          "share": 12.766536841288053
+        }
+      ],
+      "actual_shares": {
+        "lab": 31.97135899090398,
+        "con": 34.39002560206482,
+        "ref": 20.41088191828154,
+        "ld": 7.412109984805279,
+        "green": 5.815623503944383,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001283",
+      "name": "Hertford and Stortford",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 0.39505162675415306,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 32.005032803091574,
+      "competition_key": "east_england|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 28.658868465482552
+        },
+        {
+          "party": "lab",
+          "share": 28.2638168387284
+        },
+        {
+          "party": "ld",
+          "share": 15.677512513385372
+        }
+      ],
+      "actual_shares": {
+        "lab": 38.52691218130311,
+        "con": 29.73578477661131,
+        "ref": 15.414097650391604,
+        "ld": 7.71538076987169,
+        "green": 8.096798681701198,
+        "other": 0.5110259401210909
+      }
+    },
+    {
+      "id": "E14001291",
+      "name": "Honiton and Sidmouth",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 18.797950181807316,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 46.170501152986326,
+      "competition_key": "south_west|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 32.27613683994977
+        },
+        {
+          "party": "lab",
+          "share": 13.478186658142457
+        },
+        {
+          "party": "ld",
+          "share": 12.477145712468591
+        }
+      ],
+      "actual_shares": {
+        "lab": 5.817786990425428,
+        "con": 32.192281117362555,
+        "ref": 12.415358799723622,
+        "ld": 45.419010956470245,
+        "green": 2.7519494620471816,
+        "other": 1.4036126739709804
+      }
+    },
+    {
+      "id": "E14001294",
+      "name": "Horsham",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 2.421187991356053,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 31.070725156669646,
+      "competition_key": "south_east|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 33.472436225724614
+        },
+        {
+          "party": "ld",
+          "share": 31.05124823436856
+        },
+        {
+          "party": "lab",
+          "share": 15.860720257187852
+        }
+      ],
+      "actual_shares": {
+        "lab": 10.773167084091604,
+        "con": 34.44206201913548,
+        "ref": 11.020018378709526,
+        "ld": 38.977278869889545,
+        "green": 3.8505198291861116,
+        "other": 0.9369538189877294
+      }
+    },
+    {
+      "id": "E14001295",
+      "name": "Houghton and Sunderland South",
+      "country": "England",
+      "region": "north_east",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 34.795170127032335,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 7.46837755148637,
+      "competition_key": "north_east|lab|con|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 57.15214727061515
+        },
+        {
+          "party": "lab",
+          "share": 22.356977143582814
+        },
+        {
+          "party": "con",
+          "share": 15.879763696039614
+        }
+      ],
+      "actual_shares": {
+        "lab": 47.05485611510792,
+        "con": 13.773980815347725,
+        "ref": 29.146682653876905,
+        "ld": 5.720423661071144,
+        "green": 4.304056754596322,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001303",
+      "name": "Isle of Wight East",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "green",
+      "actual_winner": "con",
+      "predicted_margin": 25.32217382776656,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 33.34984451966207,
+      "competition_key": "south_east|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "green",
+          "share": 47.41654082898252
+        },
+        {
+          "party": "con",
+          "share": 22.09436700121596
+        },
+        {
+          "party": "lab",
+          "share": 15.632411055744624
+        }
+      ],
+      "actual_shares": {
+        "lab": 18.381360408474677,
+        "con": 30.59745290216562,
+        "ref": 20.846293796584305,
+        "ld": 10.417278009272843,
+        "green": 18.525148189447737,
+        "other": 1.2324666940548155
+      }
+    },
+    {
+      "id": "E14001304",
+      "name": "Isle of Wight West",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "green",
+      "actual_winner": "lab",
+      "predicted_margin": 33.4822629643044,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 30.49103745111933,
+      "competition_key": "south_east|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "green",
+          "share": 54.006493103411955
+        },
+        {
+          "party": "con",
+          "share": 20.52423013910756
+        },
+        {
+          "party": "lab",
+          "share": 13.407589029799945
+        }
+      ],
+      "actual_shares": {
+        "lab": 38.611840186643335,
+        "con": 29.346748323126278,
+        "ref": 17.013706620005834,
+        "ld": 7.949839603382911,
+        "green": 6.73665791776028,
+        "other": 0.34120734908136485
+      }
+    },
+    {
+      "id": "E14001305",
+      "name": "Islington North",
+      "country": "England",
+      "region": "london",
+      "predicted_winner": "lab",
+      "actual_winner": "other",
+      "predicted_margin": 37.54340296727986,
+      "baseline_winner": "lab",
+      "baseline_second": "ld",
+      "baseline_margin": 48.67205650032525,
+      "competition_key": "london|lab|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 56.97674273992885
+        },
+        {
+          "party": "green",
+          "share": 19.433339772648996
+        },
+        {
+          "party": "ref",
+          "share": 8.695229104370576
+        }
+      ],
+      "actual_shares": {
+        "lab": 34.430477900665224,
+        "con": 3.9791045994368037,
+        "ref": 3.4893686487368893,
+        "ld": 3.389380892135657,
+        "green": 5.42790678692405,
+        "other": 49.28376117210138
+      }
+    },
+    {
+      "id": "E14001307",
+      "name": "Jarrow and Gateshead East",
+      "country": "England",
+      "region": "north_east",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 1.3656601370881987,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 25.47030069619316,
+      "competition_key": "north_east|lab|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 38.07237921634471
+        },
+        {
+          "party": "lab",
+          "share": 36.70671907925651
+        },
+        {
+          "party": "con",
+          "share": 11.745042246045298
+        }
+      ],
+      "actual_shares": {
+        "lab": 51.33957743411022,
+        "con": 9.131997386190372,
+        "ref": 26.933130037028967,
+        "ld": 4.737529949901982,
+        "green": 6.490960575038118,
+        "other": 1.366804617730342
+      }
+    },
+    {
+      "id": "E14001308",
+      "name": "Keighley and Ilkley",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "lab",
+      "actual_winner": "con",
+      "predicted_margin": 29.661884967604507,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 4.21673003802281,
+      "competition_key": "yorkshire|con|lab|2to5",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 52.69204140291879
+        },
+        {
+          "party": "con",
+          "share": 23.030156435314282
+        },
+        {
+          "party": "ref",
+          "share": 12.999662515779928
+        }
+      ],
+      "actual_shares": {
+        "lab": 36.72974494435543,
+        "con": 40.24812713809379,
+        "ref": 10.353786861819598,
+        "ld": 2.1002035248776685,
+        "green": 5.298142294201706,
+        "other": 5.269995236651799
+      }
+    },
+    {
+      "id": "E14001311",
+      "name": "Kettering",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 1.6589159215480436,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 33.36664296558217,
+      "competition_key": "east_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 35.09527837103833
+        },
+        {
+          "party": "lab",
+          "share": 33.43636244949029
+        },
+        {
+          "party": "ref",
+          "share": 10.547064939742695
+        }
+      ],
+      "actual_shares": {
+        "lab": 35.85236208715734,
+        "con": 28.247496565865703,
+        "ref": 16.858115506360612,
+        "ld": 2.7015189823017662,
+        "green": 13.943580657362983,
+        "other": 2.396926200951604
+      }
+    },
+    {
+      "id": "E14001313",
+      "name": "Kingston upon Hull East",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 34.52122535504412,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 7.34839336730186,
+      "competition_key": "yorkshire|lab|con|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 56.70646471916968
+        },
+        {
+          "party": "lab",
+          "share": 22.18523936412556
+        },
+        {
+          "party": "con",
+          "share": 16.615382622174568
+        }
+      ],
+      "actual_shares": {
+        "lab": 43.758384759860476,
+        "con": 9.105849208478668,
+        "ref": 30.611081298631603,
+        "ld": 10.906895626509256,
+        "green": 5.6177891065199885,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001314",
+      "name": "Kingston upon Hull North and Cottingham",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 2.786024160654854,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 13.177276874123855,
+      "competition_key": "yorkshire|lab|con|10to20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 41.36365589860631
+        },
+        {
+          "party": "lab",
+          "share": 38.57763173795146
+        },
+        {
+          "party": "con",
+          "share": 14.77411600405679
+        }
+      ],
+      "actual_shares": {
+        "lab": 48.34152976875588,
+        "con": 12.809982211991212,
+        "ref": 20.406508318509992,
+        "ld": 8.491158313278225,
+        "green": 6.074081824840431,
+        "other": 3.876739562624255
+      }
+    },
+    {
+      "id": "E14001315",
+      "name": "Kingston upon Hull West and Haltemprice",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 34.941176108894226,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 8.709855636424777,
+      "competition_key": "yorkshire|con|lab|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 54.17026369983988
+        },
+        {
+          "party": "con",
+          "share": 19.229087590945657
+        },
+        {
+          "party": "lab",
+          "share": 15.485112742770982
+        }
+      ],
+      "actual_shares": {
+        "lab": 46.82015820629682,
+        "con": 18.136099324218137,
+        "ref": 23.301377756823303,
+        "ld": 6.875687568756876,
+        "green": 4.578553093404579,
+        "other": 0.2881240505002881
+      }
+    },
+    {
+      "id": "E14001326",
+      "name": "Leicester East",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "lab",
+      "actual_winner": "con",
+      "predicted_margin": 36.43314924286126,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 12.435737976782761,
+      "competition_key": "east_midlands|lab|con|10to20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 54.13012480092365
+        },
+        {
+          "party": "con",
+          "share": 17.696975558062388
+        },
+        {
+          "party": "ref",
+          "share": 16.948993479069234
+        }
+      ],
+      "actual_shares": {
+        "lab": 21.620927345121377,
+        "con": 31.0956030312112,
+        "ref": 5.589330821595239,
+        "ld": 13.548400907650812,
+        "green": 4.58748983174209,
+        "other": 23.558248062679283
+      }
+    },
+    {
+      "id": "E14001327",
+      "name": "Leicester South",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "lab",
+      "actual_winner": "other",
+      "predicted_margin": 52.6909341099562,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 46.35640313210407,
+      "competition_key": "east_midlands|lab|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 66.43030166581805
+        },
+        {
+          "party": "ref",
+          "share": 13.739367555861847
+        },
+        {
+          "party": "con",
+          "share": 10.839425690625292
+        }
+      ],
+      "actual_shares": {
+        "lab": 32.88954752969859,
+        "con": 11.520902550374071,
+        "ref": 5.903864999880488,
+        "ld": 3.4060759614695124,
+        "green": 9.14501517795253,
+        "other": 37.13459378062481
+      }
+    },
+    {
+      "id": "E14001335",
+      "name": "Lichfield",
+      "country": "England",
+      "region": "west_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 13.95601935541439,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 43.09349089869437,
+      "competition_key": "west_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 38.277062468232295
+        },
+        {
+          "party": "lab",
+          "share": 24.321043112817904
+        },
+        {
+          "party": "ld",
+          "share": 14.182487756727227
+        }
+      ],
+      "actual_shares": {
+        "lab": 35.0928641251222,
+        "con": 33.44330400782013,
+        "ref": 19.82323232323232,
+        "ld": 7.274356467904856,
+        "green": 3.510915607689801,
+        "other": 0.8553274682306942
+      }
+    },
+    {
+      "id": "W07000098",
+      "name": "Llanelli",
+      "country": "Wales",
+      "region": "wales",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 7.385069912513355,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 8.641665907226827,
+      "competition_key": "wales|lab|con|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 33.02071234239169
+        },
+        {
+          "party": "lab",
+          "share": 25.635642429878335
+        },
+        {
+          "party": "pc",
+          "share": 24.070382610661124
+        }
+      ],
+      "actual_shares": {
+        "lab": 31.29540545847241,
+        "con": 10.492342430787353,
+        "ref": 27.604064402120553,
+        "ld": 3.0777537796976238,
+        "green": 2.714510111918319,
+        "pc": 23.343314353033573,
+        "other": 1.4726094639701548
+      }
+    },
+    {
+      "id": "E14001348",
+      "name": "Maidenhead",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 3.9258776010772927,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 33.5880111560671,
+      "competition_key": "south_east|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 32.1194036465371
+        },
+        {
+          "party": "ld",
+          "share": 28.19352604545981
+        },
+        {
+          "party": "lab",
+          "share": 16.39156033311238
+        }
+      ],
+      "actual_shares": {
+        "lab": 11.456615470206044,
+        "con": 37.616483538317866,
+        "ref": 0.0,
+        "ld": 43.50374535556041,
+        "green": 3.9659043493810726,
+        "other": 3.4572512865346026
+      }
+    },
+    {
+      "id": "E14001350",
+      "name": "Makerfield",
+      "country": "England",
+      "region": "north_west",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 23.581217810333236,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 10.977446940493593,
+      "competition_key": "north_west|lab|con|10to20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 51.24183688308763
+        },
+        {
+          "party": "lab",
+          "share": 27.660619072754393
+        },
+        {
+          "party": "con",
+          "share": 16.222888139332525
+        }
+      ],
+      "actual_shares": {
+        "lab": 45.207758984675756,
+        "con": 10.875990363360902,
+        "ref": 31.79842535330204,
+        "ld": 6.792837096093188,
+        "green": 4.4109976901870205,
+        "other": 0.9139905123810943
+      }
+    },
+    {
+      "id": "E14001356",
+      "name": "Melksham and Devizes",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 1.3755448783362638,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 30.535829567462883,
+      "competition_key": "south_west|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 34.694535489835516
+        },
+        {
+          "party": "ld",
+          "share": 33.31899061149925
+        },
+        {
+          "party": "lab",
+          "share": 11.700327802189602
+        }
+      ],
+      "actual_shares": {
+        "lab": 8.958459465265706,
+        "con": 34.43157627482765,
+        "ref": 13.135949065484445,
+        "ld": 39.120754643282616,
+        "green": 4.353260551139582,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "W07000099",
+      "name": "Merthyr Tydfil and Aberdare",
+      "country": "Wales",
+      "region": "wales",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 6.600332476128891,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 31.109358325987113,
+      "competition_key": "wales|lab|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 39.95565479759891
+        },
+        {
+          "party": "lab",
+          "share": 33.35532232147002
+        },
+        {
+          "party": "con",
+          "share": 10.358945395017113
+        }
+      ],
+      "actual_shares": {
+        "lab": 44.84168678120119,
+        "con": 7.630271191253726,
+        "ref": 23.69444838847082,
+        "ld": 3.62345591367315,
+        "green": 3.4956694590373414,
+        "pc": 13.539684793411896,
+        "other": 3.174783472951867
+      }
+    },
+    {
+      "id": "W07000102",
+      "name": "Montgomeryshire and Glyndwr",
+      "country": "Wales",
+      "region": "wales",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 2.6751362574128663,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 28.833385408529917,
+      "competition_key": "wales|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 29.122919112940675
+        },
+        {
+          "party": "lab",
+          "share": 26.44778285552781
+        },
+        {
+          "party": "ld",
+          "share": 15.990811821381365
+        }
+      ],
+      "actual_shares": {
+        "lab": 29.378857578769736,
+        "con": 17.973138537645344,
+        "ref": 20.55988349245244,
+        "ld": 14.956425252548602,
+        "green": 4.031531010887908,
+        "pc": 13.10016412769597,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "W07000105",
+      "name": "Newport West and Islwyn",
+      "country": "Wales",
+      "region": "wales",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 2.226515659282825,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 4.122628098151921,
+      "competition_key": "wales|lab|con|2to5",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 37.01633684751973
+        },
+        {
+          "party": "lab",
+          "share": 34.78982118823691
+        },
+        {
+          "party": "con",
+          "share": 15.92767472424087
+        }
+      ],
+      "actual_shares": {
+        "lab": 41.498414817286836,
+        "con": 15.994851135848966,
+        "ref": 20.359466997211033,
+        "ld": 4.974851612595647,
+        "green": 4.953398011966342,
+        "pc": 8.412195180091059,
+        "other": 3.8068222450001197
+      }
+    },
+    {
+      "id": "E14001381",
+      "name": "Newton Abbot",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 7.686598356793841,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 33.30662087387902,
+      "competition_key": "south_west|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 33.10179476665888
+        },
+        {
+          "party": "ld",
+          "share": 25.415196409865036
+        },
+        {
+          "party": "lab",
+          "share": 19.41308964053875
+        }
+      ],
+      "actual_shares": {
+        "lab": 14.8253875645941,
+        "con": 26.99408234705784,
+        "ref": 17.698783130521754,
+        "ld": 31.674029004834136,
+        "green": 4.340306717786298,
+        "other": 4.4674112352058675
+      }
+    },
+    {
+      "id": "E14001382",
+      "name": "Newton Aycliffe and Spennymoor",
+      "country": "England",
+      "region": "north_east",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 1.9471186443486062,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 7.857603984137235,
+      "competition_key": "north_east|con|lab|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 35.87758076284061
+        },
+        {
+          "party": "lab",
+          "share": 33.930462118492
+        },
+        {
+          "party": "con",
+          "share": 20.772643731835448
+        }
+      ],
+      "actual_shares": {
+        "lab": 46.16272649701351,
+        "con": 20.566681724639864,
+        "ref": 23.97982231591628,
+        "ld": 3.7419063394067162,
+        "green": 4.2689354012949865,
+        "other": 1.2799277217286555
+      }
+    },
+    {
+      "id": "E14001383",
+      "name": "Normanton and Hemsworth",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 32.63804197942464,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 8.116770816519473,
+      "competition_key": "yorkshire|lab|con|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 54.51863674594533
+        },
+        {
+          "party": "lab",
+          "share": 21.880594766520687
+        },
+        {
+          "party": "con",
+          "share": 14.906821017540405
+        }
+      ],
+      "actual_shares": {
+        "lab": 47.525378965033426,
+        "con": 13.741781066879419,
+        "ref": 29.19750199455281,
+        "ld": 3.6287105559987896,
+        "green": 5.9066274175355575,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001385",
+      "name": "North Cornwall",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 0.6004577527196702,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 29.18616047487842,
+      "competition_key": "south_west|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 35.793155458349176
+        },
+        {
+          "party": "ld",
+          "share": 35.192697705629506
+        },
+        {
+          "party": "ref",
+          "share": 8.986671861229867
+        }
+      ],
+      "actual_shares": {
+        "lab": 5.7722704654112595,
+        "con": 27.587081666504048,
+        "ref": 16.47770514196507,
+        "ld": 47.01726997755878,
+        "green": 2.6051322080202945,
+        "other": 0.5405405405405406
+      }
+    },
+    {
+      "id": "E14001389",
+      "name": "North Durham",
+      "country": "England",
+      "region": "north_east",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 7.430668866266501,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 9.255617389848943,
+      "competition_key": "north_east|lab|con|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 42.527302965889135
+        },
+        {
+          "party": "lab",
+          "share": 35.096634099622634
+        },
+        {
+          "party": "con",
+          "share": 15.466117347284067
+        }
+      ],
+      "actual_shares": {
+        "lab": 39.846024299290264,
+        "con": 15.618910140743413,
+        "ref": 25.716347888848794,
+        "ld": 10.123902321664865,
+        "green": 5.692289185612896,
+        "other": 3.0025261638397693
+      }
+    },
+    {
+      "id": "E14001392",
+      "name": "North East Hampshire",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 5.2781398315432355,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 39.54345143662965,
+      "competition_key": "south_east|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 35.439611670238826
+        },
+        {
+          "party": "ld",
+          "share": 30.16147183869559
+        },
+        {
+          "party": "lab",
+          "share": 10.867312510261169
+        }
+      ],
+      "actual_shares": {
+        "lab": 9.101871850251978,
+        "con": 36.97624190064794,
+        "ref": 12.01043916486681,
+        "ld": 38.11735061195104,
+        "green": 2.5647948164146865,
+        "other": 1.2293016558675307
+      }
+    },
+    {
+      "id": "E14001393",
+      "name": "North East Hertfordshire",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 2.261175679948746,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 32.875449599652974,
+      "competition_key": "east_england|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 30.948898096567806
+        },
+        {
+          "party": "lab",
+          "share": 28.68772241661906
+        },
+        {
+          "party": "ld",
+          "share": 16.721322860920466
+        }
+      ],
+      "actual_shares": {
+        "lab": 34.954303122619955,
+        "con": 31.292840822543795,
+        "ref": 16.111957349581115,
+        "ld": 10.401751713632903,
+        "green": 7.239146991622239,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001396",
+      "name": "North Norfolk",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 1.0337449823174971,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 28.105969512431635,
+      "competition_key": "east_england|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 32.63439615162375
+        },
+        {
+          "party": "ld",
+          "share": 31.60065116930625
+        },
+        {
+          "party": "ref",
+          "share": 25.06098222476698
+        }
+      ],
+      "actual_shares": {
+        "lab": 6.117807112641626,
+        "con": 35.930956784218694,
+        "ref": 13.536551665497523,
+        "ld": 41.42592946878388,
+        "green": 2.9887549688582786,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001397",
+      "name": "North Northumberland",
+      "country": "England",
+      "region": "north_east",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 6.518193592564572,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 32.81380356465681,
+      "competition_key": "north_east|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 32.22896358175484
+        },
+        {
+          "party": "lab",
+          "share": 25.71076998919027
+        },
+        {
+          "party": "ld",
+          "share": 16.813242675185602
+        }
+      ],
+      "actual_shares": {
+        "lab": 36.55590360952439,
+        "con": 26.181847961836908,
+        "ref": 15.740228896668917,
+        "ld": 10.58288802899085,
+        "green": 3.568576868742706,
+        "other": 7.3705546342362265
+      }
+    },
+    {
+      "id": "E14001398",
+      "name": "North Shropshire",
+      "country": "England",
+      "region": "west_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 11.712764660245757,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 39.3009508140269,
+      "competition_key": "west_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 36.38892293279115
+        },
+        {
+          "party": "lab",
+          "share": 24.67615827254539
+        },
+        {
+          "party": "ld",
+          "share": 13.00677924633632
+        }
+      ],
+      "actual_shares": {
+        "lab": 6.902044602169617,
+        "con": 21.984514255756746,
+        "ref": 15.499858853893617,
+        "ld": 52.85720046779853,
+        "green": 2.488204218252208,
+        "other": 0.2681776021292898
+      }
+    },
+    {
+      "id": "E14001400",
+      "name": "North Warwickshire and Bedworth",
+      "country": "England",
+      "region": "west_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 8.080575495852962,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 39.107897373350184,
+      "competition_key": "west_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 40.517268342507954
+        },
+        {
+          "party": "lab",
+          "share": 32.43669284665499
+        },
+        {
+          "party": "ref",
+          "share": 10.201864564505197
+        }
+      ],
+      "actual_shares": {
+        "lab": 35.97215437225208,
+        "con": 30.603321934538346,
+        "ref": 26.13825109916952,
+        "ld": 2.9995114802149487,
+        "green": 4.28676111382511,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001401",
+      "name": "North West Cambridgeshire",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 3.5844171740074984,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 36.21364177581221,
+      "competition_key": "east_england|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 32.39275335154459
+        },
+        {
+          "party": "lab",
+          "share": 28.808336177537093
+        },
+        {
+          "party": "green",
+          "share": 18.190948676462764
+        }
+      ],
+      "actual_shares": {
+        "lab": 33.28155951737799,
+        "con": 33.193769133801545,
+        "ref": 19.676301098505316,
+        "ld": 7.185305240410591,
+        "green": 6.663065009904558,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001404",
+      "name": "North West Leicestershire",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 5.57598151636579,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 36.66047357394157,
+      "competition_key": "east_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 34.334129921094096
+        },
+        {
+          "party": "lab",
+          "share": 28.758148404728306
+        },
+        {
+          "party": "green",
+          "share": 15.732488867075878
+        }
+      ],
+      "actual_shares": {
+        "lab": 34.734003129374955,
+        "con": 32.65049822943259,
+        "ref": 19.925059705179944,
+        "ld": 3.3537840731285526,
+        "green": 5.828460841637158,
+        "other": 3.5081940212468097
+      }
+    },
+    {
+      "id": "E14001423",
+      "name": "Penistone and Stocksbridge",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 18.130298563459263,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 14.559773828756065,
+      "competition_key": "yorkshire|con|lab|10to20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 41.23632522869267
+        },
+        {
+          "party": "con",
+          "share": 23.106026665233408
+        },
+        {
+          "party": "lab",
+          "share": 20.146691605926563
+        }
+      ],
+      "actual_shares": {
+        "lab": 43.60059137950643,
+        "con": 23.723416353917894,
+        "ref": 21.508017741385196,
+        "ld": 6.518821790060277,
+        "green": 4.649152735130218,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001428",
+      "name": "Pontefract, Castleford and Knottingley",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 38.79137768646636,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 2.621886207230773,
+      "competition_key": "yorkshire|lab|con|2to5",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 56.95541574839952
+        },
+        {
+          "party": "lab",
+          "share": 18.16403806193316
+        },
+        {
+          "party": "con",
+          "share": 16.253320071849664
+        }
+      ],
+      "actual_shares": {
+        "lab": 47.52621186417109,
+        "con": 15.034624690602664,
+        "ref": 29.08752120588481,
+        "ld": 3.373473871568818,
+        "green": 4.591595516867369,
+        "other": 0.38657285090524796
+      }
+    },
+    {
+      "id": "W07000106",
+      "name": "Pontypridd",
+      "country": "Wales",
+      "region": "wales",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 0.7110487516200266,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 19.302749073038026,
+      "competition_key": "wales|lab|con|10to20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 35.884942460100675
+        },
+        {
+          "party": "lab",
+          "share": 35.17389370848065
+        },
+        {
+          "party": "con",
+          "share": 12.316056890494052
+        }
+      ],
+      "actual_shares": {
+        "lab": 41.20320991416527,
+        "con": 9.586571181878206,
+        "ref": 19.866422875717404,
+        "ld": 4.078419422012291,
+        "green": 4.736147087206055,
+        "pc": 13.395804764081468,
+        "other": 7.133424754939306
+      }
+    },
+    {
+      "id": "E14001429",
+      "name": "Poole",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 9.672383967937446,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 38.13036618102088,
+      "competition_key": "south_west|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 33.87991540612735
+        },
+        {
+          "party": "lab",
+          "share": 24.207531438189907
+        },
+        {
+          "party": "ld",
+          "share": 16.741081442493424
+        }
+      ],
+      "actual_shares": {
+        "lab": 31.841779975278122,
+        "con": 31.801325991684458,
+        "ref": 16.696258006517585,
+        "ld": 12.376671536127654,
+        "green": 4.984829756152377,
+        "other": 2.2991347342398023
+      }
+    },
+    {
+      "id": "E14001431",
+      "name": "Portsmouth North",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 1.4107119204025338,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 34.371596602047475,
+      "competition_key": "south_east|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 35.458433588309006
+        },
+        {
+          "party": "lab",
+          "share": 34.04772166790647
+        },
+        {
+          "party": "ref",
+          "share": 10.334848274514554
+        }
+      ],
+      "actual_shares": {
+        "lab": 34.849614117760204,
+        "con": 32.97429855985382,
+        "ref": 20.438535330464262,
+        "ld": 7.287283917966966,
+        "green": 4.450268073954752,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001436",
+      "name": "Rawmarsh and Conisbrough",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 36.42645030182964,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 3.1003354380426202,
+      "competition_key": "yorkshire|lab|con|2to5",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 56.13285445703819
+        },
+        {
+          "party": "lab",
+          "share": 19.706404155208553
+        },
+        {
+          "party": "con",
+          "share": 17.1318830558906
+        }
+      ],
+      "actual_shares": {
+        "lab": 48.997168475696085,
+        "con": 13.260972156677678,
+        "ref": 28.621991505427086,
+        "ld": 3.3535865974516277,
+        "green": 4.975814063237376,
+        "other": 0.7904672015101464
+      }
+    },
+    {
+      "id": "E14001439",
+      "name": "Reading West and Mid Berkshire",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 4.785760983091585,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 33.89288892484427,
+      "competition_key": "south_east|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 32.34672785915909
+        },
+        {
+          "party": "lab",
+          "share": 27.560966876067504
+        },
+        {
+          "party": "ld",
+          "share": 19.413973764172773
+        }
+      ],
+      "actual_shares": {
+        "lab": 34.95735859594853,
+        "con": 32.03368348692832,
+        "ref": 13.447616592554404,
+        "ld": 10.962170522652574,
+        "green": 6.807587377285127,
+        "other": 1.7915834246310498
+      }
+    },
+    {
+      "id": "E14001441",
+      "name": "Redditch",
+      "country": "England",
+      "region": "west_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 9.078137792915516,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 38.78444664322856,
+      "competition_key": "west_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 39.41636436929314
+        },
+        {
+          "party": "lab",
+          "share": 30.338226576377625
+        },
+        {
+          "party": "ref",
+          "share": 10.056573984441945
+        }
+      ],
+      "actual_shares": {
+        "lab": 34.94985250737463,
+        "con": 33.087905604719765,
+        "ref": 20.096755162241887,
+        "ld": 5.109144542772862,
+        "green": 4.951032448377581,
+        "other": 1.8053097345132743
+      }
+    },
+    {
+      "id": "W07000107",
+      "name": "Rhondda and Ogmore",
+      "country": "Wales",
+      "region": "wales",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 4.344651282510277,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 40.83997273731461,
+      "competition_key": "wales|lab|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 39.547291845412865
+        },
+        {
+          "party": "lab",
+          "share": 35.20264056290259
+        },
+        {
+          "party": "pc",
+          "share": 10.62208807967794
+        }
+      ],
+      "actual_shares": {
+        "lab": 47.80763000614422,
+        "con": 5.72529743618388,
+        "ref": 26.05149974864548,
+        "ld": 2.6112941965033794,
+        "green": 3.2871585767748424,
+        "pc": 14.5171200357482,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001449",
+      "name": "Romsey and Southampton North",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "ld",
+      "actual_winner": "con",
+      "predicted_margin": 0.47110625632395653,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 29.707151213805215,
+      "competition_key": "south_east|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "ld",
+          "share": 34.81476936964077
+        },
+        {
+          "party": "con",
+          "share": 34.343663113316815
+        },
+        {
+          "party": "lab",
+          "share": 10.800323075128345
+        }
+      ],
+      "actual_shares": {
+        "lab": 9.27499150458752,
+        "con": 39.76452715533611,
+        "ref": 11.42583005177204,
+        "ld": 35.38489215823456,
+        "green": 3.7839566634017623,
+        "other": 0.3658024666679992
+      }
+    },
+    {
+      "id": "E14001451",
+      "name": "Rother Valley",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 31.962281029583576,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 13.487073513893776,
+      "competition_key": "yorkshire|con|lab|10to20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 54.362342641819474
+        },
+        {
+          "party": "con",
+          "share": 22.4000616122359
+        },
+        {
+          "party": "lab",
+          "share": 16.683039005043252
+        }
+      ],
+      "actual_shares": {
+        "lab": 38.50942126514132,
+        "con": 36.11084406844838,
+        "ref": 18.455585464333783,
+        "ld": 2.823976158431071,
+        "green": 4.100173043645452,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001452",
+      "name": "Rotherham",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 37.72510651018618,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 7.575653132970288,
+      "competition_key": "yorkshire|lab|con|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 57.58066865116529
+        },
+        {
+          "party": "lab",
+          "share": 19.855562140979107
+        },
+        {
+          "party": "con",
+          "share": 15.9163540151855
+        }
+      ],
+      "actual_shares": {
+        "lab": 45.13971623524315,
+        "con": 0.0,
+        "ref": 30.274558648326654,
+        "ld": 7.646485432687101,
+        "green": 7.12661106899166,
+        "other": 9.812628614751436
+      }
+    },
+    {
+      "id": "E14001454",
+      "name": "Ruislip, Northwood and Pinner",
+      "country": "England",
+      "region": "london",
+      "predicted_winner": "lab",
+      "actual_winner": "con",
+      "predicted_margin": 5.555123201191051,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 30.25489895897122,
+      "competition_key": "london|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 36.341504725449795
+        },
+        {
+          "party": "con",
+          "share": 30.786381524258744
+        },
+        {
+          "party": "ld",
+          "share": 19.01470147776072
+        }
+      ],
+      "actual_shares": {
+        "lab": 29.273109511371597,
+        "con": 45.37172708160795,
+        "ref": 9.919092820284131,
+        "ld": 9.222569068399482,
+        "green": 6.213501518336837,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001470",
+      "name": "Sheffield South East",
+      "country": "England",
+      "region": "yorkshire",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 5.684632310007146,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 11.118219037871022,
+      "competition_key": "yorkshire|lab|con|10to20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 41.705647817027426
+        },
+        {
+          "party": "lab",
+          "share": 36.02101550702028
+        },
+        {
+          "party": "con",
+          "share": 14.880233442801053
+        }
+      ],
+      "actual_shares": {
+        "lab": 52.304939755668,
+        "con": 17.47784518185122,
+        "ref": 0.0,
+        "ld": 9.563612982583656,
+        "green": 8.828380531715634,
+        "other": 11.825221548181487
+      }
+    },
+    {
+      "id": "E14001474",
+      "name": "Sittingbourne and Sheppey",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 17.310719346784907,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 45.627953724098106,
+      "competition_key": "south_east|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 41.72443107216671
+        },
+        {
+          "party": "lab",
+          "share": 24.413711725381802
+        },
+        {
+          "party": "ref",
+          "share": 12.335419552278914
+        }
+      ],
+      "actual_shares": {
+        "lab": 29.07214986096883,
+        "con": 28.206253963607974,
+        "ref": 25.640275135372452,
+        "ld": 3.222108395531489,
+        "green": 4.127030586857894,
+        "other": 9.732182057661348
+      }
+    },
+    {
+      "id": "E14001480",
+      "name": "South Basildon and East Thurrock",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "con",
+      "actual_winner": "ref",
+      "predicted_margin": 12.895716791220135,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 41.87663484540232,
+      "competition_key": "east_england|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 37.67014038674625
+        },
+        {
+          "party": "lab",
+          "share": 24.774423595526113
+        },
+        {
+          "party": "ref",
+          "share": 11.302905928245234
+        }
+      ],
+      "actual_shares": {
+        "lab": 30.544387974411485,
+        "con": 25.68712230397734,
+        "ref": 30.792181850362837,
+        "ld": 2.7080330728969124,
+        "green": 4.343978355963488,
+        "other": 5.924296442387923
+      }
+    },
+    {
+      "id": "E14001482",
+      "name": "South Cotswolds",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 0.7977731130833057,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 30.25437590479235,
+      "competition_key": "south_west|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 32.740991247861785
+        },
+        {
+          "party": "ld",
+          "share": 31.94321813477848
+        },
+        {
+          "party": "green",
+          "share": 13.810043421155699
+        }
+      ],
+      "actual_shares": {
+        "lab": 7.539158873142464,
+        "con": 34.40243272706409,
+        "ref": 9.841834490408706,
+        "ld": 43.91340103658653,
+        "green": 2.9911832769139557,
+        "other": 1.3119895958842542
+      }
+    },
+    {
+      "id": "E14001483",
+      "name": "South Derbyshire",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 2.9779043542459576,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 34.9223500497892,
+      "competition_key": "east_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 36.24824610546083
+        },
+        {
+          "party": "lab",
+          "share": 33.27034175121487
+        },
+        {
+          "party": "green",
+          "share": 9.406637720714963
+        }
+      ],
+      "actual_shares": {
+        "lab": 38.773859238690775,
+        "con": 29.66088724664932,
+        "ref": 19.631807945427116,
+        "ld": 4.665806677307213,
+        "green": 4.243828847541377,
+        "other": 3.023810044384197
+      }
+    },
+    {
+      "id": "E14001485",
+      "name": "South Dorset",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 2.2199281890504707,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 34.42212485062312,
+      "competition_key": "south_west|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 31.97332600824391
+        },
+        {
+          "party": "lab",
+          "share": 29.753397819193438
+        },
+        {
+          "party": "green",
+          "share": 14.450047658219303
+        }
+      ],
+      "actual_shares": {
+        "lab": 31.933030160898905,
+        "con": 29.795868425882492,
+        "ref": 16.656810163753896,
+        "ld": 16.348879417582644,
+        "green": 4.39056222852132,
+        "other": 0.8748496033607275
+      }
+    },
+    {
+      "id": "E14001486",
+      "name": "South East Cornwall",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 14.090311158601796,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 38.71035657549715,
+      "competition_key": "south_west|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 36.48796365432414
+        },
+        {
+          "party": "lab",
+          "share": 22.397652495722344
+        },
+        {
+          "party": "ld",
+          "share": 19.375519320656966
+        }
+      ],
+      "actual_shares": {
+        "lab": 31.794018585399503,
+        "con": 27.916649758552126,
+        "ref": 18.89177454043745,
+        "ld": 16.808018504240554,
+        "green": 4.055918516414398,
+        "other": 0.5336200949559713
+      }
+    },
+    {
+      "id": "E14001489",
+      "name": "South Norfolk",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 3.7327138966228723,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 33.119925950209236,
+      "competition_key": "east_england|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 32.580179475325856
+        },
+        {
+          "party": "lab",
+          "share": 28.847465578702984
+        },
+        {
+          "party": "ld",
+          "share": 20.04934966162079
+        }
+      ],
+      "actual_shares": {
+        "lab": 35.000705944048896,
+        "con": 29.30071199499788,
+        "ref": 15.294782064987192,
+        "ld": 11.589584299804352,
+        "green": 8.041711208374513,
+        "other": 0.772504487787168
+      }
+    },
+    {
+      "id": "E14001492",
+      "name": "South Shields",
+      "country": "England",
+      "region": "north_east",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 24.502817354699136,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 18.264989737543125,
+      "competition_key": "north_east|lab|con|10to20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 51.12929868573156
+        },
+        {
+          "party": "lab",
+          "share": 26.626481331032426
+        },
+        {
+          "party": "con",
+          "share": 12.275809706615401
+        }
+      ],
+      "actual_shares": {
+        "lab": 41.06560938518357,
+        "con": 11.210080382359328,
+        "ref": 22.99858787747121,
+        "ld": 3.807299587225722,
+        "green": 14.753964805561587,
+        "other": 6.164457962198566
+      }
+    },
+    {
+      "id": "E14001496",
+      "name": "South West Hertfordshire",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "other",
+      "actual_winner": "con",
+      "predicted_margin": 14.076064070983968,
+      "baseline_winner": "con",
+      "baseline_second": "other",
+      "baseline_margin": 34.63776091827509,
+      "competition_key": "east_england|con|other|ge20",
+      "predicted_top3": [
+        {
+          "party": "other",
+          "share": 38.309513767801526
+        },
+        {
+          "party": "con",
+          "share": 24.23344969681756
+        },
+        {
+          "party": "ld",
+          "share": 12.567141120122717
+        }
+      ],
+      "actual_shares": {
+        "lab": 19.971401334604383,
+        "con": 34.107017034857215,
+        "ref": 14.071372321465574,
+        "ld": 24.872549425954322,
+        "green": 5.247233389978032,
+        "other": 1.7304264931404647
+      }
+    },
+    {
+      "id": "E14001497",
+      "name": "South West Norfolk",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 21.670844488430788,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 50.32362796312099,
+      "competition_key": "east_england|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 41.91236013453887
+        },
+        {
+          "party": "lab",
+          "share": 20.241515646108084
+        },
+        {
+          "party": "ld",
+          "share": 11.077715168913139
+        }
+      ],
+      "actual_shares": {
+        "lab": 26.721551821360094,
+        "con": 25.3005526108041,
+        "ref": 22.460809743994584,
+        "ld": 5.905041163866019,
+        "green": 4.145708807939552,
+        "other": 15.466335852035634
+      }
+    },
+    {
+      "id": "E14001509",
+      "name": "St Helens North",
+      "country": "England",
+      "region": "north_west",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 3.577166742517022,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 25.670191964004122,
+      "competition_key": "north_west|lab|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 42.19575538285786
+        },
+        {
+          "party": "lab",
+          "share": 38.61858864034084
+        },
+        {
+          "party": "con",
+          "share": 12.386579269145738
+        }
+      ],
+      "actual_shares": {
+        "lab": 52.58684587636508,
+        "con": 11.135543805900086,
+        "ref": 22.520630528240353,
+        "ld": 4.444828778969216,
+        "green": 8.63517319760834,
+        "other": 0.6769778129169345
+      }
+    },
+    {
+      "id": "E14001519",
+      "name": "Stockton West",
+      "country": "England",
+      "region": "north_east",
+      "predicted_winner": "lab",
+      "actual_winner": "con",
+      "predicted_margin": 8.977377119182947,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 22.572526416906825,
+      "competition_key": "north_east|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "lab",
+          "share": 35.78500874339598
+        },
+        {
+          "party": "con",
+          "share": 26.80763162421303
+        },
+        {
+          "party": "ref",
+          "share": 25.748508206540095
+        }
+      ],
+      "actual_shares": {
+        "lab": 37.48714996504791,
+        "con": 41.884945927052925,
+        "ref": 14.048686212426501,
+        "ld": 2.4733747275792597,
+        "green": 3.0367202598791074,
+        "other": 1.06912290801431
+      }
+    },
+    {
+      "id": "E14001526",
+      "name": "Stratford-on-Avon",
+      "country": "England",
+      "region": "west_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 5.4434551658091515,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 35.513564986836464,
+      "competition_key": "west_midlands|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 34.351339198510814
+        },
+        {
+          "party": "ld",
+          "share": 28.907884032701663
+        },
+        {
+          "party": "green",
+          "share": 12.974455721069242
+        }
+      ],
+      "actual_shares": {
+        "lab": 7.086614173228346,
+        "con": 30.831397873826923,
+        "ref": 14.639626881172227,
+        "ld": 44.279537000321,
+        "green": 2.2602390528522065,
+        "other": 0.9025850185992939
+      }
+    },
+    {
+      "id": "E14001530",
+      "name": "Suffolk Coastal",
+      "country": "England",
+      "region": "east_england",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 7.654050018933411,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 35.05203857538433,
+      "competition_key": "east_england|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 31.42478405753716
+        },
+        {
+          "party": "lab",
+          "share": 23.77073403860375
+        },
+        {
+          "party": "ld",
+          "share": 16.180193371029578
+        }
+      ],
+      "actual_shares": {
+        "lab": 31.691977917534526,
+        "con": 29.52821985399688,
+        "ref": 15.874299811935044,
+        "ld": 14.04824978261309,
+        "green": 8.857252633920448,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001531",
+      "name": "Sunderland Central",
+      "country": "England",
+      "region": "north_east",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 12.205000484927616,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 6.817554512834668,
+      "competition_key": "north_east|lab|con|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 45.641686503132156
+        },
+        {
+          "party": "lab",
+          "share": 33.43668601820454
+        },
+        {
+          "party": "con",
+          "share": 15.218398850405618
+        }
+      ],
+      "actual_shares": {
+        "lab": 42.175338488875546,
+        "con": 14.342918637535353,
+        "ref": 26.976499737217512,
+        "ld": 9.014690792602046,
+        "green": 7.490552343769553,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001538",
+      "name": "Tamworth",
+      "country": "England",
+      "region": "west_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 15.435115017510743,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 43.42426025554808,
+      "competition_key": "west_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 43.10303806497341
+        },
+        {
+          "party": "lab",
+          "share": 27.66792304746267
+        },
+        {
+          "party": "ref",
+          "share": 10.647568948102258
+        }
+      ],
+      "actual_shares": {
+        "lab": 35.027861514570205,
+        "con": 31.87174568374897,
+        "ref": 25.130172650041104,
+        "ld": 3.3136932492920437,
+        "green": 3.606010779208916,
+        "other": 1.0505161231387596
+      }
+    },
+    {
+      "id": "E14001542",
+      "name": "Tewkesbury",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 7.793231369122481,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 36.1004864644064,
+      "competition_key": "south_west|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 32.49248798208043
+        },
+        {
+          "party": "ld",
+          "share": 24.699256612957953
+        },
+        {
+          "party": "lab",
+          "share": 16.80533601073074
+        }
+      ],
+      "actual_shares": {
+        "lab": 8.854735367436493,
+        "con": 29.806959352273427,
+        "ref": 12.361194091349223,
+        "ld": 42.70792558561156,
+        "green": 5.918951770741053,
+        "other": 0.350233832588228
+      }
+    },
+    {
+      "id": "E14001548",
+      "name": "Tiverton and Minehead",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 13.64594168774105,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 41.82267106514743,
+      "competition_key": "south_west|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 35.28826949198892
+        },
+        {
+          "party": "ld",
+          "share": 21.64232780424787
+        },
+        {
+          "party": "lab",
+          "share": 16.288859616544837
+        }
+      ],
+      "actual_shares": {
+        "lab": 9.106988692594387,
+        "con": 31.20380703712282,
+        "ref": 16.396790970920804,
+        "ld": 38.588364111094734,
+        "green": 4.704049188267251,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "E14001549",
+      "name": "Tonbridge",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "green",
+      "actual_winner": "con",
+      "predicted_margin": 0.07904022889868045,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 49.682277318640956,
+      "competition_key": "south_east|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "green",
+          "share": 29.87407864066114
+        },
+        {
+          "party": "con",
+          "share": 29.79503841176246
+        },
+        {
+          "party": "lab",
+          "share": 15.423635948577793
+        }
+      ],
+      "actual_shares": {
+        "lab": 18.580114449213163,
+        "con": 40.76657129232237,
+        "ref": 14.997615641392464,
+        "ld": 8.412811953584486,
+        "green": 15.092989985693848,
+        "other": 2.149896677793673
+      }
+    },
+    {
+      "id": "E14001551",
+      "name": "Torbay",
+      "country": "England",
+      "region": "south_west",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 7.49181780035304,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 34.825685193541425,
+      "competition_key": "south_west|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 36.611316734814004
+        },
+        {
+          "party": "ld",
+          "share": 29.119498934460964
+        },
+        {
+          "party": "lab",
+          "share": 14.297909178195317
+        }
+      ],
+      "actual_shares": {
+        "lab": 7.103979182478584,
+        "con": 29.465466767862946,
+        "ref": 18.779139108749867,
+        "ld": 41.06472948064621,
+        "green": 3.079258375799631,
+        "other": 0.507427084462756
+      }
+    },
+    {
+      "id": "W07000109",
+      "name": "Torfaen",
+      "country": "Wales",
+      "region": "wales",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 20.070628226652804,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 9.436778178311478,
+      "competition_key": "wales|lab|con|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 48.012925933454966
+        },
+        {
+          "party": "lab",
+          "share": 27.94229770680216
+        },
+        {
+          "party": "con",
+          "share": 14.848666233860563
+        }
+      ],
+      "actual_shares": {
+        "lab": 42.50385100126033,
+        "con": 16.067777622181765,
+        "ref": 21.996919198991737,
+        "ld": 4.604397143257247,
+        "green": 4.77524156280633,
+        "pc": 7.200672174765439,
+        "other": 2.8511412967371514
+      }
+    },
+    {
+      "id": "E14001567",
+      "name": "Washington and Gateshead South",
+      "country": "England",
+      "region": "north_east",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 21.758478350704415,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 9.38647089669638,
+      "competition_key": "north_east|lab|con|5to10",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 50.53621703656578
+        },
+        {
+          "party": "lab",
+          "share": 28.777738685861365
+        },
+        {
+          "party": "con",
+          "share": 15.135380704855908
+        }
+      ],
+      "actual_shares": {
+        "lab": 47.762080981064805,
+        "con": 12.571243348369846,
+        "ref": 29.08889549174793,
+        "ld": 4.32727370951622,
+        "green": 4.556873126063586,
+        "other": 1.693633343237622
+      }
+    },
+    {
+      "id": "E14001571",
+      "name": "Wellingborough and Rushden",
+      "country": "England",
+      "region": "east_midlands",
+      "predicted_winner": "con",
+      "actual_winner": "lab",
+      "predicted_margin": 1.2065764116020148,
+      "baseline_winner": "con",
+      "baseline_second": "lab",
+      "baseline_margin": 34.09148881897797,
+      "competition_key": "east_midlands|con|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 37.4547346385179
+        },
+        {
+          "party": "lab",
+          "share": 36.24815822691588
+        },
+        {
+          "party": "ref",
+          "share": 10.221432182055068
+        }
+      ],
+      "actual_shares": {
+        "lab": 40.31829032624758,
+        "con": 27.84585654200295,
+        "ref": 21.498238035693984,
+        "ld": 3.5693986586336246,
+        "green": 6.147550301239058,
+        "other": 0.6206661361827895
+      }
+    },
+    {
+      "id": "E14001585",
+      "name": "Wigan",
+      "country": "England",
+      "region": "north_west",
+      "predicted_winner": "ref",
+      "actual_winner": "lab",
+      "predicted_margin": 14.9981482132645,
+      "baseline_winner": "lab",
+      "baseline_second": "con",
+      "baseline_margin": 14.937169752675285,
+      "competition_key": "north_west|lab|con|10to20",
+      "predicted_top3": [
+        {
+          "party": "ref",
+          "share": 47.89958437898372
+        },
+        {
+          "party": "lab",
+          "share": 32.90143616571922
+        },
+        {
+          "party": "con",
+          "share": 14.447858747858094
+        }
+      ],
+      "actual_shares": {
+        "lab": 47.43636763735055,
+        "con": 10.538154967114112,
+        "ref": 24.088608523435784,
+        "ld": 4.137020465048045,
+        "green": 3.982982469009023,
+        "other": 9.816865938042497
+      }
+    },
+    {
+      "id": "E14001591",
+      "name": "Witney",
+      "country": "England",
+      "region": "south_east",
+      "predicted_winner": "con",
+      "actual_winner": "ld",
+      "predicted_margin": 3.262837276904996,
+      "baseline_winner": "con",
+      "baseline_second": "ld",
+      "baseline_margin": 32.093204201560226,
+      "competition_key": "south_east|con|ld|ge20",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 35.97033219359817
+        },
+        {
+          "party": "ld",
+          "share": 32.70749491669317
+        },
+        {
+          "party": "lab",
+          "share": 15.724490383193078
+        }
+      ],
+      "actual_shares": {
+        "lab": 9.435789973114028,
+        "con": 32.605171595761504,
+        "ref": 12.468369444883757,
+        "ld": 41.18298276134746,
+        "green": 3.2836470030049023,
+        "other": 1.0240392218883443
+      }
+    },
+    {
+      "id": "S14000062",
+      "name": "Aberdeenshire North and Moray East",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "con",
+      "actual_winner": "snp",
+      "predicted_margin": 2.6958081072275775,
+      "baseline_winner": "con",
+      "baseline_second": "snp",
+      "baseline_margin": 5.22760454119544,
+      "competition_key": "scotland|con|snp|5to10",
+      "predicted_top3": [
+        {
+          "party": "con",
+          "share": 37.94239963250652
+        },
+        {
+          "party": "snp",
+          "share": 35.246591525278944
+        },
+        {
+          "party": "ref",
+          "share": 10.917785620368022
+        }
+      ],
+      "actual_shares": {
+        "lab": 10.149785272860584,
+        "con": 32.76683775007856,
+        "ref": 14.564784749135853,
+        "ld": 7.285010998219336,
+        "green": 0.0,
+        "snp": 35.23358122970567,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "S14000064",
+      "name": "Alloa and Grangemouth",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "lab",
+      "predicted_margin": 11.507087137910762,
+      "baseline_winner": "snp",
+      "baseline_second": "con",
+      "baseline_margin": 27.87463314205616,
+      "competition_key": "scotland|snp|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 35.74280610803733
+        },
+        {
+          "party": "con",
+          "share": 24.235718970126566
+        },
+        {
+          "party": "lab",
+          "share": 12.797449877201512
+        }
+      ],
+      "actual_shares": {
+        "lab": 43.78291789034247,
+        "con": 7.589621611125944,
+        "ref": 9.232785611999708,
+        "ld": 2.7936215140409213,
+        "green": 3.448945413946263,
+        "snp": 28.924055241377637,
+        "other": 4.228052717167059
+      }
+    },
+    {
+      "id": "S14000107",
+      "name": "Ayr, Carrick and Cumnock",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "lab",
+      "predicted_margin": 3.4780026447223733,
+      "baseline_winner": "snp",
+      "baseline_second": "con",
+      "baseline_margin": 4.99871222527473,
+      "competition_key": "scotland|snp|con|2to5",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 33.09549723041364
+        },
+        {
+          "party": "con",
+          "share": 29.61749458569127
+        },
+        {
+          "party": "lab",
+          "share": 12.4780568543199
+        }
+      ],
+      "actual_shares": {
+        "lab": 36.47156537033418,
+        "con": 22.58891928864569,
+        "ref": 8.657416454954074,
+        "ld": 2.640707445769005,
+        "green": 2.1643541137385185,
+        "snp": 26.324017979284736,
+        "other": 1.1530193472737933
+      }
+    },
+    {
+      "id": "S14000068",
+      "name": "Bathgate and Linlithgow",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "lab",
+      "predicted_margin": 5.911983873865804,
+      "baseline_winner": "snp",
+      "baseline_second": "con",
+      "baseline_margin": 18.364148505834763,
+      "competition_key": "scotland|snp|con|10to20",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 27.126432858542554
+        },
+        {
+          "party": "lab",
+          "share": 21.21444898467675
+        },
+        {
+          "party": "ref",
+          "share": 18.536261559535806
+        }
+      ],
+      "actual_shares": {
+        "lab": 47.00820159277309,
+        "con": 7.474147153215262,
+        "ref": 8.377510994888862,
+        "ld": 5.161060263877332,
+        "green": 3.304409841911328,
+        "snp": 27.22215618685368,
+        "other": 1.452513966480447
+      }
+    },
+    {
+      "id": "S14000109",
+      "name": "Central Ayrshire",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "lab",
+      "predicted_margin": 7.685343407312725,
+      "baseline_winner": "snp",
+      "baseline_second": "con",
+      "baseline_margin": 11.398117505479867,
+      "competition_key": "scotland|snp|con|10to20",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 34.59058164178621
+        },
+        {
+          "party": "con",
+          "share": 26.905238234473483
+        },
+        {
+          "party": "lab",
+          "share": 13.61487478639169
+        }
+      ],
+      "actual_shares": {
+        "lab": 43.678022163741275,
+        "con": 14.841014993119101,
+        "ref": 8.25708008401941,
+        "ld": 2.373306936430141,
+        "green": 2.508510586928704,
+        "snp": 27.093845819551415,
+        "other": 1.248219416209952
+      }
+    },
+    {
+      "id": "S14000077",
+      "name": "East Kilbride and Strathaven",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "lab",
+      "predicted_margin": 4.245610882849093,
+      "baseline_winner": "snp",
+      "baseline_second": "lab",
+      "baseline_margin": 25.479839021747548,
+      "competition_key": "scotland|snp|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 32.0237779567196
+        },
+        {
+          "party": "lab",
+          "share": 27.778167073870506
+        },
+        {
+          "party": "con",
+          "share": 16.929666892448942
+        }
+      ],
+      "actual_shares": {
+        "lab": 48.562314000042825,
+        "con": 7.594150769691909,
+        "ref": 7.230179630462244,
+        "ld": 2.2994411972509474,
+        "green": 3.8773631361466157,
+        "snp": 29.171216305907038,
+        "other": 1.2653349604984263
+      }
+    },
+    {
+      "id": "S14000021",
+      "name": "East Renfrewshire",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "lab",
+      "predicted_margin": 8.579196471955594,
+      "baseline_winner": "snp",
+      "baseline_second": "con",
+      "baseline_margin": 9.801831746662572,
+      "competition_key": "scotland|snp|con|5to10",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 33.857579412132225
+        },
+        {
+          "party": "con",
+          "share": 25.27838294017663
+        },
+        {
+          "party": "ld",
+          "share": 12.695087155969437
+        }
+      ],
+      "actual_shares": {
+        "lab": 43.67173034423717,
+        "con": 16.911223047364963,
+        "ref": 4.69866804706632,
+        "ld": 2.2896051924263845,
+        "green": 3.0063511657076876,
+        "snp": 26.90584745256535,
+        "other": 2.51657475063213
+      }
+    },
+    {
+      "id": "S14000081",
+      "name": "Edinburgh South West",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "lab",
+      "predicted_margin": 15.352647448496203,
+      "baseline_winner": "snp",
+      "baseline_second": "con",
+      "baseline_margin": 22.98440467284341,
+      "competition_key": "scotland|snp|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 34.08659886900228
+        },
+        {
+          "party": "con",
+          "share": 18.733951420506077
+        },
+        {
+          "party": "ld",
+          "share": 15.521559851307973
+        }
+      ],
+      "actual_shares": {
+        "lab": 40.870269796776455,
+        "con": 12.171513665031535,
+        "ref": 4.570339873861248,
+        "ld": 6.6003854239663635,
+        "green": 7.555185704274702,
+        "snp": 27.255606166783465,
+        "other": 0.9766993693062368
+      }
+    },
+    {
+      "id": "S14000083",
+      "name": "Falkirk",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "lab",
+      "predicted_margin": 13.395025416811709,
+      "baseline_winner": "snp",
+      "baseline_second": "con",
+      "baseline_margin": 25.820622831687636,
+      "competition_key": "scotland|snp|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 37.566685392242256
+        },
+        {
+          "party": "con",
+          "share": 24.171659975430547
+        },
+        {
+          "party": "lab",
+          "share": 10.450507546202045
+        }
+      ],
+      "actual_shares": {
+        "lab": 43.033431085043986,
+        "con": 8.389442815249266,
+        "ref": 7.9178885630498534,
+        "ld": 2.5618768328445745,
+        "green": 4.014076246334311,
+        "snp": 31.312609970674487,
+        "other": 2.770674486803519
+      }
+    },
+    {
+      "id": "S14000094",
+      "name": "Inverness, Skye and West Ross-shire",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "ld",
+      "predicted_margin": 8.266896207839586,
+      "baseline_winner": "snp",
+      "baseline_second": "con",
+      "baseline_margin": 25.33328082232243,
+      "competition_key": "scotland|snp|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 28.82287549074559
+        },
+        {
+          "party": "con",
+          "share": 20.555979282906005
+        },
+        {
+          "party": "ref",
+          "share": 17.942134978053804
+        }
+      ],
+      "actual_shares": {
+        "lab": 12.997336440819044,
+        "con": 5.206425836524056,
+        "ref": 6.105377060096554,
+        "ld": 37.78716497419677,
+        "green": 4.240885633427668,
+        "snp": 33.292408856334276,
+        "other": 0.37040119860163145
+      }
+    },
+    {
+      "id": "S14000110",
+      "name": "Kilmarnock and Loudoun",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "lab",
+      "predicted_margin": 10.188201033497691,
+      "baseline_winner": "snp",
+      "baseline_second": "con",
+      "baseline_margin": 26.57722911549201,
+      "competition_key": "scotland|snp|con|ge20",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 33.21185700470839
+        },
+        {
+          "party": "con",
+          "share": 23.0236559712107
+        },
+        {
+          "party": "lab",
+          "share": 20.589539447842657
+        }
+      ],
+      "actual_shares": {
+        "lab": 44.85851499599792,
+        "con": 8.303121615895288,
+        "ref": 8.173642826875087,
+        "ld": 2.001035830312161,
+        "green": 2.9120956730542864,
+        "snp": 32.807570977917976,
+        "other": 0.9440180799472666
+      }
+    },
+    {
+      "id": "S14000095",
+      "name": "Livingston",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "lab",
+      "predicted_margin": 4.580334883838546,
+      "baseline_winner": "snp",
+      "baseline_second": "lab",
+      "baseline_margin": 25.224347261136153,
+      "competition_key": "scotland|snp|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 32.27175807507609
+        },
+        {
+          "party": "lab",
+          "share": 27.691423191237547
+        },
+        {
+          "party": "con",
+          "share": 17.17043433210258
+        }
+      ],
+      "actual_shares": {
+        "lab": 40.86529884032114,
+        "con": 7.736396074933095,
+        "ref": 8.869313113291703,
+        "ld": 4.5160570918822485,
+        "green": 3.800178412132025,
+        "snp": 32.99732381801962,
+        "other": 1.2154326494201606
+      }
+    },
+    {
+      "id": "S14000048",
+      "name": "North Ayrshire and Arran",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "lab",
+      "predicted_margin": 8.95753661835423,
+      "baseline_winner": "snp",
+      "baseline_second": "con",
+      "baseline_margin": 17.695310877601024,
+      "competition_key": "scotland|snp|con|10to20",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 37.055197535442105
+        },
+        {
+          "party": "con",
+          "share": 28.097660917087875
+        },
+        {
+          "party": "lab",
+          "share": 13.265231785865122
+        }
+      ],
+      "actual_shares": {
+        "lab": 39.801713122900004,
+        "con": 14.08830627987317,
+        "ref": 8.08054517060243,
+        "ld": 2.378022810089442,
+        "green": 3.139936586058398,
+        "snp": 31.399365860583973,
+        "other": 1.1121101698925746
+      }
+    },
+    {
+      "id": "S14000101",
+      "name": "Paisley and Renfrewshire North",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "lab",
+      "predicted_margin": 0.09963370553555961,
+      "baseline_winner": "snp",
+      "baseline_second": "lab",
+      "baseline_margin": 25.125058788319294,
+      "competition_key": "scotland|snp|lab|ge20",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 31.4414951356735
+        },
+        {
+          "party": "lab",
+          "share": 31.34186143013794
+        },
+        {
+          "party": "con",
+          "share": 17.603247136821537
+        }
+      ],
+      "actual_shares": {
+        "lab": 47.11336978250921,
+        "con": 6.404296827958284,
+        "ref": 7.77475372720923,
+        "ld": 3.30932825935114,
+        "green": 3.538139165201474,
+        "snp": 31.86011223777066,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "S14000105",
+      "name": "Stirling and Strathallan",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "lab",
+      "predicted_margin": 9.03420863826673,
+      "baseline_winner": "snp",
+      "baseline_second": "con",
+      "baseline_margin": 14.79995156631091,
+      "competition_key": "scotland|snp|con|10to20",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 36.7876568326376
+        },
+        {
+          "party": "con",
+          "share": 27.753448194370872
+        },
+        {
+          "party": "ld",
+          "share": 9.912474801499224
+        }
+      ],
+      "actual_shares": {
+        "lab": 33.859627977984005,
+        "con": 19.020931260294883,
+        "ref": 6.317544493993813,
+        "ld": 5.082158209794705,
+        "green": 4.660318990799888,
+        "snp": 31.059419067132698,
+        "other": 0.0
+      }
+    },
+    {
+      "id": "S14000111",
+      "name": "West Aberdeenshire and Kincardine",
+      "country": "Scotland",
+      "region": "scotland",
+      "predicted_winner": "snp",
+      "actual_winner": "con",
+      "predicted_margin": 0.4529555652359356,
+      "baseline_winner": "con",
+      "baseline_second": "snp",
+      "baseline_margin": 1.5802793139000855,
+      "competition_key": "scotland|con|snp|lt2",
+      "predicted_top3": [
+        {
+          "party": "snp",
+          "share": 31.905677460519787
+        },
+        {
+          "party": "con",
+          "share": 31.45272189528385
+        },
+        {
+          "party": "ld",
+          "share": 18.15652852294203
+        }
+      ],
+      "actual_shares": {
+        "lab": 13.066301728011762,
+        "con": 35.597859389680956,
+        "ref": 7.1428571428571415,
+        "ld": 12.953960537603656,
+        "green": 2.107929245475714,
+        "snp": 28.569386004330237,
+        "other": 0.5617059520405244
+      }
+    }
+  ]
+}
