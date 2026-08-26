@@ -87,3 +87,7 @@ I numeri decisivi saranno:
 Sovrascrivere i file contenuti nello ZIP nella root del repository e avviare **Update and deploy UK model**.
 
 Il workflow completo è incluso in `.github/workflows/update-data.yml` ed è fornito anche separatamente come `update-data-v0.9.12.yml`.
+
+## Nota di isolamento del layer latente
+
+Il prior latente Reform non aggiunge nuove variabili al feature set generale del modello residuale o del classificatore di contestability. Quando l'activation è 0, feature matrix e base prediction devono essere identiche alla v0.9.10; il workflow applica inoltre il regression guard 2019 (583 collegi corretti, errore seggi 42).

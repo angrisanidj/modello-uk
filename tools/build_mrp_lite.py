@@ -1046,10 +1046,10 @@ def row_context(row:pd.Series,nat_base:dict[str,float],nat_target:dict[str,float
     f["other_competitive"]=1.0 if "other" in rankable else 0.0
     f["margin"]=margin
     f["turnout"]=float(row.get("turnout",0.0))/100.0
-    f["ref_primary_stood"]=1.0 if bool(row.get("ref_primary_stood",False)) else 0.0
-    f["ref_latent_activation"]=ref_latent_activation(row,nat_base,nat_target)
-    f["ref_latent_share"]=float(row.get("ref_latent_share",row.get("ref",0.0)))/100.0
-    f["ref_effective_share"]=local["ref"]
+    # v0.9.12 isolation rule: latent-prior metadata is deliberately NOT added
+    # as ML features. When activation is zero, the residual/contest models must
+    # have exactly the same feature space as v0.9.10. The latent layer changes
+    # geography only through local["ref"] / base_prediction when activated.
     country=str(row["country"])
     f["is_scotland"]=1.0 if country=="Scotland" else 0.0
     f["is_wales"]=1.0 if country=="Wales" else 0.0
