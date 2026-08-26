@@ -1,65 +1,48 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.13 — Reform structural sweep (shadow research)
+modello-uk v0.9.14 — place + regradient structural sweep (shadow research)
 
 Purpose
 -------
-This is deliberately a SHADOW structural experiment. It addresses a specific
-missing-data problem exposed by v0.9.13: a zero Brexit/Reform share can mean
-"party did not contest", not "zero local potential". The experiment builds a
-latent geographic prior from the broadly contested 2015 UKIP election and uses
-it only when a later Reform-family baseline has low candidate coverage and the
-national target implies a large Reform rise. It cannot activate a new live model.
+The canonical constituency model is frozen at the v0.9.10-equivalent result.
+v0.9.14 tests two different, literature-motivated post-calibration layers without
+changing production:
 
-Data:
+1. REGRADIENTING: correct only the part of each party's constituency
+   distribution aligned with previous-election local strength.  This is distinct
+   from the existing generic dispersion layer and is motivated by the attenuation
+   / unwinding problem documented by public UK MRP practitioners.
+2. PLACE + COMPETITION RESIDUAL PERSISTENCE: transport shrunk residual effects
+   from the previous honestly predicted election by region and by a structural
+   competition cell (region, prior winner, runner-up, prior-margin band).  This is
+   a low-dimensional proxy for persistent place/spatial effects; it is explicitly
+   NOT a full ICAR adjacency model.
+
+Data
+----
 - BES 2010-2019 Constituency Results with Census and Candidate Data
 - BES 2024 Constituency Results with Census and Candidate Data
-Both are CC BY 4.0 and downloaded through the Figshare API.
+Both are downloaded through the Figshare API.
 
-Rolling-origin validation:
-1. Tune model family/hyperparameters on:
-      train 2010->2015
-      internal test 2015->2017
-2. Refit selected model on 2010->2015 + 2015->2017
-      validation 2017->2019
-3. Refit selected model on all pre-2024 transitions
-      holdout 2019 notional (2024 boundaries) -> 2024
-4. Only after the holdout has been scored, refit on all known history including
-   2024 to create today's live central projection.
+Selection discipline
+--------------------
+The new v0.9.14 strength grid is fixed in source.  The experiment uses the
+honestly generated 2017 residuals to construct the place profile used for 2019,
+and ONLY the 2019 result may rank/select the experimental strengths.  After that
+selection, residuals are rolled forward through 2019 and the selected candidate
+is scored on 2024.  No 2024 label selects a strength, threshold, candidate or
+live configuration.
 
-The 2024 benchmark is used only to score the pre-specified structural hypothesis.
-It is NEVER used here to fit the latent prior, select its ridge penalty, choose
-its activation rule, tune a threshold, or promote the model live. The latent
-prior is trained only on 2015 UKIP geography (pre-2024).
+The canonical core remains guarded at:
+- 2019: 583/632 correct, seat absolute error 42
+- 2024 benchmark: 494/632 correct, seat absolute error 176, Reform 39 vs 5 actual
 
-Model structure
----------------
-- Conservative proportional-swing centre (lambda=0.82)
-- Residual model using:
-    * all parties' local baseline shares
-    * national base/target shares and changes
-    * baseline winner, runner-up, margin and party ranks
-    * England/Scotland/Wales + English region
-    * constituency demographics expressed as within-wave percentiles:
-      density, age structure, tenure, ethnicity, economic activity,
-      industrial structure, NS-SEC and Leave estimate
-    * explicit competition/tactical interactions for Conservative collapse,
-      Reform growth, Labour/LD second-place positioning and Scotland
-- Candidate families: ridge, gradient boosting, and conservative hybrid blends
-- Final iterative raking to the supplied GB vote target.
-
-Numerical gate and promotion rule
----------------------------------
-The historical numerical gate is still calculated:
-- benchmark 2024 winner accuracy >= 80%
-- benchmark improves baseline winner accuracy by >= 5 percentage points
-- benchmark aggregate seat absolute error <= 200
-- validation 2019 accuracy is no worse than baseline by >1 percentage point
-- validation seat error is no worse than baseline by >30 seats
-
-But v0.9.13 is shadow-only regardless of this result. The hypothesis was
-motivated by the 2024 error pattern, so the same 2024 benchmark cannot serve as
-fresh promotion evidence. approved=False is therefore required in this release.
+Research gate
+-------------
+A v0.9.14 experimental candidate is considered numerically interesting only if
+it reaches >=506/632 correct (>=80%) on the 2024 benchmark AND does not exceed
+the canonical seat absolute error of 176.  Even then, v0.9.14 stays shadow-only
+and cannot be promoted without a fresh independent validation election/data set.
 """
 from __future__ import annotations
 
@@ -88,10 +71,10 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v0913-reform-structural-sweep.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v0913.json"
-DIAGNOSTIC_OUT=DATA/"reform-diagnostics-v0913.json"
-SWEEP_OUT=DATA/"reform-structural-sweep-v0913.json"
+BACKTEST_OUT=DATA/"backtest-v0914-place-regradient.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v0914.json"
+DIAGNOSTIC_OUT=DATA/"error-structure-v0914.json"
+SWEEP_OUT=DATA/"place-regradient-sweep-v0914.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -103,6 +86,20 @@ COMMON_LAMBDA=.82
 FLOOR_MAIN=.18
 FLOOR_SMALL=.03
 RAKE_ITERATIONS=80
+
+# v0.9.14 shadow research grids.  These are fixed ex ante; only the 2019
+# election may select among them.  The 2024 result is never used to choose a
+# strength, threshold or live candidate.
+REGRADE_PARTIES=("lab","con","ld","green","snp","pc")
+REGRADE_STRENGTH_GRID=(0.0,0.25,0.50,0.75,1.00,1.25)
+PLACE_REGION_STRENGTH_GRID=(0.0,0.50,1.00)
+PLACE_COMP_STRENGTH_GRID=(0.0,0.50,1.00)
+REGRADE_SIMILARITY_TAU=0.80
+REGRADE_MAX_DELTA_SLOPE=0.65
+REGRADE_MAX_SEAT_SHIFT=7.5
+PLACE_REGION_PRIOR_N=14.0
+PLACE_COMP_PRIOR_N=10.0
+PLACE_MAX_SEAT_SHIFT=6.0
 
 REGION_KEYS=(
     "north_east","north_west","yorkshire","east_midlands","west_midlands",
@@ -184,7 +181,7 @@ ROUTING_STRENGTH_GRID=(0.0,0.20,0.40,0.60,0.80)
 UNWIND_STRENGTH_GRID=(0.0,0.15,0.30,0.45,0.60)
 
 
-# v0.9.13 latent Reform/Brexit geography. These values are fixed a priori and
+# v0.9.14 latent Reform/Brexit geography. These values are fixed a priori and
 # are NOT tuned on 2024. 2015 UKIP is the donor because it contested almost the
 # whole country and predates both the 2019 Brexit Party withdrawal strategy and
 # the 2024 benchmark. The latent prior changes geography only: nat_shares()
@@ -199,7 +196,7 @@ REF_LATENT_MIN_TRAIN=450
 REF_CALIBRATION_RIDGE_ALPHA=10.0
 
 
-UA="FocusAmerica-UK-election-model/0.9.13 (+https://angrisanidj.github.io/modello-uk/)"
+UA="FocusAmerica-UK-election-model/0.9.14 (+https://angrisanidj.github.io/modello-uk/)"
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -750,7 +747,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v0913-bes-integrity",
+        "version":"uk-v0914-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -1208,7 +1205,7 @@ def evaluate_ref_structural_sweep(
         reverse=True,
     )
     return {
-        "version":"uk-v0913-reform-structural-sweep",
+        "version":"uk-v0914-place-regradient-sweep",
         "status":"ok",
         "generated_at":utcnow().isoformat(),
         "diagnostic_only":True,
@@ -1251,7 +1248,7 @@ def row_context(row:pd.Series,nat_base:dict[str,float],nat_target:dict[str,float
     f["other_competitive"]=1.0 if "other" in rankable else 0.0
     f["margin"]=margin
     f["turnout"]=float(row.get("turnout",0.0))/100.0
-    # v0.9.13 isolation rule: latent-prior metadata is deliberately NOT added
+    # v0.9.14 isolation rule: latent-prior metadata is deliberately NOT added
     # as ML features. When activation is zero, the residual/contest models must
     # have exactly the same feature space as v0.9.10. The latent layer changes
     # geography only through local["ref"] / base_prediction when activated.
@@ -2507,13 +2504,13 @@ def build_reform_diagnostics(
         raise RuntimeError("Reform diagnostic does not cover all 632 GB seats")
 
     return {
-        "version":"uk-v0913-reform-structural-sweep",
+        "version":"uk-v0914-place-regradient-sweep",
         "status":"ok",
         "generated_at":utcnow().isoformat(),
         "diagnostic_only":True,
         "used_for_parameter_selection":False,
         "changes_production_model":False,
-        "source_model":"uk-v0913-reform-structural-sweep",
+        "source_model":"uk-v0914-place-regradient-sweep",
         "benchmark":"2019_notional_to_2024",
         "benchmark_role":"development_diagnostic_not_pristine_holdout",
         "interpretation_warning":(
@@ -2689,6 +2686,335 @@ def live_projection(
         "contestability_spec":contest_spec,
     }
 
+
+
+def experimental_rake(rows:pd.DataFrame,election:dict[str,Any],target:dict[str,float])->pd.DataFrame:
+    """Vectorised raking for the v0.9.14 shadow sweep only."""
+    target=normalize_target(target);df=election["frame"]
+    arr=rows.loc[:,PARTIES].to_numpy(dtype=float,copy=True)
+    w=df["weight"].to_numpy(dtype=float);den=float(w.sum()) or 1.0
+    mask=np.zeros_like(arr,dtype=bool)
+    countries=df["country"].astype(str).tolist()
+    for j,p in enumerate(PARTIES):
+        mask[:,j]=np.asarray([allowed(p,c) for c in countries],dtype=bool)
+    arr=np.maximum(arr,0.0001);arr[~mask]=0.0
+    targ=np.asarray([target[p] for p in PARTIES],dtype=float)
+    for _ in range(35):
+        cur=np.sum(arr*w[:,None],axis=0)/den
+        if float(np.max(np.abs(cur-targ)))<0.01:break
+        mult=np.clip(targ/np.maximum(.01,cur),.35,3.0)
+        arr*=mult[None,:];arr[~mask]=0.0
+        rowsum=arr.sum(axis=1);rowsum=np.where(rowsum>0,rowsum,1.0)
+        arr=arr/rowsum[:,None]*100.0;arr[~mask]=0.0
+    return pd.DataFrame(arr,index=rows.index,columns=PARTIES)
+
+
+def _baseline_margin(row:pd.Series)->float:
+    winner=str(row.get("actual_winner") or "")
+    second=str(row.get("actual_second") or "")
+    if winner in PARTIES and second in PARTIES:
+        return max(0.0,float(row.get(winner,0.0))-float(row.get(second,0.0)))
+    vals=sorted((float(row.get(p,0.0)) for p in competitive_parties(row)),reverse=True)
+    return max(0.0,vals[0]-vals[1]) if len(vals)>1 else 0.0
+
+
+def _margin_band(margin:float)->str:
+    if margin<2.0:return "lt2"
+    if margin<5.0:return "2to5"
+    if margin<10.0:return "5to10"
+    if margin<20.0:return "10to20"
+    return "ge20"
+
+
+def _competition_key(row:pd.Series)->str:
+    return "|".join((
+        str(row.get("region") or "unknown"),
+        str(row.get("actual_winner") or "other"),
+        str(row.get("actual_second") or "other"),
+        _margin_band(_baseline_margin(row)),
+    ))
+
+
+def _ols_slope(x:np.ndarray,y:np.ndarray)->float|None:
+    if len(x)<12:return None
+    xc=x-float(np.mean(x));yc=y-float(np.mean(y))
+    den=float(np.dot(xc,xc))
+    if den<1e-8:return None
+    return float(np.dot(xc,yc)/den)
+
+
+def _gradient_observation(transition:dict[str,Any],party:str)->dict[str,Any]|None:
+    base=transition["base"];actual=transition["actual"]
+    indexes=[
+        idx for idx,row in base["frame"].iterrows()
+        if allowed(party,str(row["country"]))
+    ]
+    if len(indexes)<20:return None
+    x=np.asarray([float(base["frame"].at[idx,party]) for idx in indexes],dtype=float)
+    y=np.asarray([float(actual["frame"].at[idx,party]) for idx in indexes],dtype=float)
+    slope=_ols_slope(x,y)
+    if slope is None:return None
+    bn=float(nat_shares(base).get(party,0.0));tn=float(nat_shares(actual).get(party,0.0))
+    return {
+        "base_year":str(base.get("year")),"target_year":str(actual.get("year")),
+        "slope":float(slope),"base_nat":bn,"target_nat":tn,"n":len(indexes),
+        "log_swing":math.log((tn+0.50)/(bn+0.50)),
+    }
+
+
+def historical_gradient_target(
+    history:list[dict[str,Any]],target:dict[str,float],base:dict[str,Any],party:str
+)->dict[str,Any]:
+    observations=[]
+    current_log=math.log((float(target.get(party,0.0))+0.50)/(float(nat_shares(base).get(party,0.0))+0.50))
+    for order,tr in enumerate(history):
+        obs=_gradient_observation(tr,party)
+        if obs is None:continue
+        distance=abs(float(obs["log_swing"])-current_log)
+        similarity=math.exp(-distance/REGRADE_SIMILARITY_TAU)
+        recency=1.0+0.18*order
+        w=similarity*recency
+        obs=dict(obs);obs["weight"]=w;observations.append(obs)
+    if not observations:
+        return {"desired_slope":None,"observations":[],"current_log_swing":current_log}
+    den=sum(float(x["weight"]) for x in observations) or 1.0
+    desired=sum(float(x["slope"])*float(x["weight"]) for x in observations)/den
+    return {"desired_slope":float(desired),"observations":observations,"current_log_swing":current_log}
+
+
+def apply_regradient(
+    rows:pd.DataFrame,base:dict[str,Any],target:dict[str,float],
+    history:list[dict[str,Any]],strength:float
+)->tuple[pd.DataFrame,dict[str,Any]]:
+    """Adjust only the baseline-aligned slope, then re-rake to national shares.
+
+    This is deliberately different from v0.9.x dispersion calibration: the old
+    layer rescales *all* cross-seat variance; this one changes only the component
+    correlated with the previous election's local party strength, mirroring the
+    attenuation/regradient concern described by public 2024 MRP practitioners.
+    """
+    strength=float(strength)
+    if strength<=1e-12:
+        return rows.copy().astype(float),{"strength":0.0,"parties":{},"national_target_preserved":True}
+    out=rows.copy().astype(float);meta={"strength":strength,"parties":{},"national_target_preserved":True}
+    df=base["frame"]
+    for p in REGRADE_PARTIES:
+        indexes=[idx for idx,row in df.iterrows() if allowed(p,str(row["country"]))]
+        if len(indexes)<20 or float(target.get(p,0.0))<0.45:
+            meta["parties"][p]={"applied":False,"reason":"too_few_seats_or_tiny_target"};continue
+        x=np.asarray([float(df.at[idx,p]) for idx in indexes],dtype=float)
+        y=np.asarray([float(out.at[idx,p]) for idx in indexes],dtype=float)
+        current=_ols_slope(x,y)
+        hist=historical_gradient_target(history,target,base,p)
+        desired=hist.get("desired_slope")
+        if current is None or desired is None:
+            meta["parties"][p]={"applied":False,"reason":"slope_unavailable","history":hist};continue
+        delta=clamp(float(desired)-float(current),-REGRADE_MAX_DELTA_SLOPE,REGRADE_MAX_DELTA_SLOPE)
+        centre=float(np.mean(x))
+        raw=np.clip(strength*delta*(x-centre),-REGRADE_MAX_SEAT_SHIFT,REGRADE_MAX_SEAT_SHIFT)
+        for idx,d in zip(indexes,raw):out.at[idx,p]=max(.0001,float(out.at[idx,p])+float(d))
+        meta["parties"][p]={
+            "applied":True,"current_slope":float(current),"desired_slope":float(desired),
+            "delta_slope":float(delta),"max_abs_pre_rake_shift":float(np.max(np.abs(raw))) if len(raw) else 0.0,
+            "history":hist,
+        }
+    # Per-seat simplex, then preserve exact national target through the existing rake.
+    for idx,row in df.iterrows():
+        vals={p:(max(.0001,float(out.at[idx,p])) if allowed(p,str(row["country"])) else 0.0) for p in PARTIES}
+        den=sum(vals.values()) or 1.0
+        for p in PARTIES:out.at[idx,p]=vals[p]/den*100.0
+    return experimental_rake(out,base,target),meta
+
+
+def build_place_residual_profile(
+    predicted:pd.DataFrame,actual:dict[str,Any],base:dict[str,Any]
+)->dict[str,Any]:
+    """Learn *prior-election* residual place/competition effects only.
+
+    The profile is transportable across boundary changes because keys are
+    region + prior winner + prior runner-up + prior-margin band, rather than
+    constituency identity.  This is a deliberately low-dimensional proxy for
+    the spatial/context effects found in the academic literature; it is not an
+    ICAR adjacency model and is labelled accordingly in the output.
+    """
+    if not actual["frame"].index.equals(base["frame"].index):
+        raise RuntimeError("place residual profile requires aligned base/actual rows")
+    region_vals=defaultdict(list);comp_vals=defaultdict(list);global_vals=defaultdict(list)
+    for idx,arow in actual["frame"].iterrows():
+        brow=base["frame"].loc[idx];region=str(brow["region"]);ckey=_competition_key(brow)
+        for p in PARTIES:
+            if not allowed(p,str(arow["country"])):continue
+            resid=float(arow[p])-float(predicted.at[idx,p])
+            global_vals[p].append(resid);region_vals[(region,p)].append(resid);comp_vals[(ckey,p)].append(resid)
+    global_mean={p:(float(np.mean(v)) if v else 0.0) for p,v in global_vals.items()}
+    region_effect={};region_counts={}
+    for (r,p),vals in region_vals.items():
+        n=len(vals);raw=float(np.mean(vals))-global_mean.get(p,0.0);shrink=n/(n+PLACE_REGION_PRIOR_N)
+        region_effect[f"{r}|{p}"]=float(raw*shrink);region_counts[f"{r}|{p}"]=n
+    comp_effect={};comp_counts={}
+    for (ck,p),vals in comp_vals.items():
+        n=len(vals);r=ck.split("|",1)[0]
+        raw=float(np.mean(vals))-global_mean.get(p,0.0)-region_effect.get(f"{r}|{p}",0.0)
+        shrink=n/(n+PLACE_COMP_PRIOR_N)
+        comp_effect[f"{ck}|{p}"]=float(raw*shrink);comp_counts[f"{ck}|{p}"]=n
+    return {
+        "source_prediction_year":str(base.get("year")),"source_actual_year":str(actual.get("year")),
+        "global_mean":global_mean,"region_effect":region_effect,"region_counts":region_counts,
+        "competition_effect":comp_effect,"competition_counts":comp_counts,
+        "competition_key":"region|baseline_winner|baseline_second|baseline_margin_band",
+        "uses_target_election_labels_only_after_that_election":True,
+    }
+
+
+def apply_place_residual(
+    rows:pd.DataFrame,base:dict[str,Any],target:dict[str,float],profile:dict[str,Any],
+    region_strength:float,competition_strength:float
+)->tuple[pd.DataFrame,dict[str,Any]]:
+    rs=float(region_strength);cs=float(competition_strength)
+    if rs<=1e-12 and cs<=1e-12:
+        return rows.copy().astype(float),{"region_strength":0.0,"competition_strength":0.0,"national_target_preserved":True,"mean_abs_shift":0.0}
+    out=rows.copy().astype(float);shifts=[];df=base["frame"]
+    reff=profile.get("region_effect",{});ceff=profile.get("competition_effect",{})
+    for idx,brow in df.iterrows():
+        r=str(brow["region"]);ck=_competition_key(brow)
+        for p in PARTIES:
+            if not allowed(p,str(brow["country"])):continue
+            d=rs*float(reff.get(f"{r}|{p}",0.0))+cs*float(ceff.get(f"{ck}|{p}",0.0))
+            d=clamp(d,-PLACE_MAX_SEAT_SHIFT,PLACE_MAX_SEAT_SHIFT)
+            out.at[idx,p]=max(.0001,float(out.at[idx,p])+d);shifts.append(abs(d))
+        vals={p:(max(.0001,float(out.at[idx,p])) if allowed(p,str(brow["country"])) else 0.0) for p in PARTIES}
+        den=sum(vals.values()) or 1.0
+        for p in PARTIES:out.at[idx,p]=vals[p]/den*100.0
+    return experimental_rake(out,base,target),{
+        "region_strength":rs,"competition_strength":cs,"national_target_preserved":True,
+        "mean_abs_shift":float(np.mean(shifts)) if shifts else 0.0,"profile_source":{
+            "prediction_year":profile.get("source_prediction_year"),"actual_year":profile.get("source_actual_year")
+        }
+    }
+
+
+def build_error_structure(rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,Any])->dict[str,Any]:
+    pairs=Counter();regions=defaultdict(lambda:{"n":0,"wrong":0});margin_bins=defaultdict(lambda:{"n":0,"wrong":0});wrong=[]
+    for idx,arow in actual["frame"].iterrows():
+        brow=base["frame"].loc[idx];pw=predicted_winner(rows.loc[idx],brow);rw=str(arow["actual_winner"])
+        ordered=sorted(((p,float(rows.at[idx,p])) for p in competitive_parties(brow)),key=lambda x:x[1],reverse=True)
+        pmargin=(ordered[0][1]-ordered[1][1]) if len(ordered)>1 else 100.0
+        mb=_margin_band(pmargin);r=str(arow["region"]);regions[r]["n"]+=1;margin_bins[mb]["n"]+=1
+        if pw!=rw:
+            pairs[(pw,rw)]+=1;regions[r]["wrong"]+=1;margin_bins[mb]["wrong"]+=1
+            wrong.append({
+                "id":str(arow["id"]),"name":str(arow["name"]),"country":str(arow["country"]),"region":r,
+                "predicted_winner":pw,"actual_winner":rw,"predicted_margin":float(pmargin),
+                "baseline_winner":str(brow.get("actual_winner") or ""),"baseline_second":str(brow.get("actual_second") or ""),
+                "baseline_margin":float(_baseline_margin(brow)),"competition_key":_competition_key(brow),
+                "predicted_top3":[{"party":p,"share":v} for p,v in ordered[:3]],
+                "actual_shares":{p:float(arow[p]) for p in PARTIES if allowed(p,str(arow["country"]))},
+            })
+    pair_rows=[{"predicted":a,"actual":b,"count":int(n)} for (a,b),n in pairs.most_common()]
+    return {
+        "version":"uk-v0914-place-regradient-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "canonical_candidate":"frozen_v0910_equivalent","total_seats":len(actual["frame"]),"wrong_seats":len(wrong),
+        "correct_seats":len(actual["frame"])-len(wrong),"confusion_pairs":pair_rows,
+        "regions":{r:{**v,"accuracy":1.0-v["wrong"]/v["n"] if v["n"] else None} for r,v in sorted(regions.items())},
+        "predicted_margin_bands":{b:{**v,"error_rate":v["wrong"]/v["n"] if v["n"] else None} for b,v in sorted(margin_bins.items())},
+        "largest_error_pair":pair_rows[0] if pair_rows else None,"wrong_constituencies":wrong,
+    }
+
+
+def _apply_structural_config(
+    canonical:pd.DataFrame,base:dict[str,Any],target:dict[str,float],history:list[dict[str,Any]],
+    place_profile:dict[str,Any],gradient_strength:float,region_strength:float,competition_strength:float
+)->tuple[pd.DataFrame,dict[str,Any]]:
+    a,gmeta=apply_regradient(canonical,base,target,history,gradient_strength)
+    b,pmeta=apply_place_residual(a,base,target,place_profile,region_strength,competition_strength)
+    return b,{"regradient":gmeta,"place":pmeta}
+
+
+def evaluate_place_regradient_sweep(
+    dev_rows:pd.DataFrame,val_rows:pd.DataFrame,hold_rows:pd.DataFrame,
+    e15:dict[str,Any],e17:dict[str,Any],e19:dict[str,Any],e19n:dict[str,Any],e24:dict[str,Any],
+    t10_15:dict[str,Any],t15_17:dict[str,Any],t17_19:dict[str,Any],
+    validation_base_metrics:dict[str,Any],holdout_base_metrics:dict[str,Any]
+)->dict[str,Any]:
+    """Select all strengths on 2019 only; 2024 is score-only research."""
+    target19=nat_shares(e19);target24=nat_shares(e24)
+    profile17=build_place_residual_profile(dev_rows,e17,e15)
+    candidates=[];val_row_cache={}
+    for gs in REGRADE_STRENGTH_GRID:
+        regraded,gmeta=apply_regradient(val_rows,e17,target19,[t10_15,t15_17],gs)
+        for rs in PLACE_REGION_STRENGTH_GRID:
+            for cs in PLACE_COMP_STRENGTH_GRID:
+                adjusted,pmeta=apply_place_residual(regraded,e17,target19,profile17,rs,cs)
+                metrics=evaluate_rows(adjusted,e19,e17)
+                cid=f"g{gs:.2f}_r{rs:.2f}_c{cs:.2f}"
+                candidates.append({"id":cid,"gradient_strength":gs,"region_strength":rs,"competition_strength":cs,"validation_2019":metrics,"meta_2019":{"regradient":gmeta,"place":pmeta}})
+                val_row_cache[cid]=adjusted
+    # Selection is explicitly pre-2024.  Prefer simpler configuration only after metrics tie.
+    candidates.sort(key=lambda x:(score_tuple(x["validation_2019"]),-(x["gradient_strength"]+x["region_strength"]+x["competition_strength"])),reverse=True)
+    selected=candidates[0]
+    selected_id=selected["id"]
+    # Roll the residual profile forward using the selected, honestly generated 2019 prediction.
+    profile19=build_place_residual_profile(val_row_cache[selected_id],e19,e17)
+    selected_hold,selected_meta=_apply_structural_config(
+        hold_rows,e19n,target24,[t10_15,t15_17,t17_19],profile19,
+        selected["gradient_strength"],selected["region_strength"],selected["competition_strength"]
+    )
+    selected_2024=evaluate_rows(selected_hold,e24,e19n)
+
+    # Benchmark only the configurations that were already top-ranked on 2019.
+    # This avoids a 2024-wide oracle search and keeps the diagnostic bounded to
+    # a pre-2024 shortlist.  The first item is the actual selected candidate.
+    benchmark_shortlist=[]
+    for cand in candidates[:12]:
+        cid=cand["id"]
+        prof=build_place_residual_profile(val_row_cache[cid],e19,e17)
+        hrows,hmeta=_apply_structural_config(
+            hold_rows,e19n,target24,[t10_15,t15_17,t17_19],prof,
+            cand["gradient_strength"],cand["region_strength"],cand["competition_strength"]
+        )
+        hm=evaluate_rows(hrows,e24,e19n)
+        benchmark_shortlist.append({
+            "id":cid,"pre2024_rank":len(benchmark_shortlist)+1,
+            "gradient_strength":cand["gradient_strength"],"region_strength":cand["region_strength"],
+            "competition_strength":cand["competition_strength"],"validation_2019":cand["validation_2019"],"benchmark_2024":hm,
+            "research_gate":bool(hm["correct_winners"]>=506 and hm["seat_abs_error_sum"]<=176),
+        })
+    baseline19=evaluate_rows(val_rows,e19,e17);baseline24=evaluate_rows(hold_rows,e24,e19n)
+    selected_gate=bool(selected_2024["correct_winners"]>=506 and selected_2024["seat_abs_error_sum"]<=176)
+    return {
+        "version":"uk-v0914-place-regradient-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "shadow_only":True,"uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
+        "selection_policy":"grid fixed in source; rank by 2019 correct winners, then seat error, then share MAE; 2024 labels never select strengths",
+        "methods":{
+            "regradient":"baseline-aligned party slope correction learned from prior elections; national target preserved by raking",
+            "place_residual":"rolling prior-election residual by region plus shrunk region/winner/runner-up/margin-band competition cell; no constituency identity",
+            "spatial_scope":"low-dimensional place proxy, not a full ICAR adjacency model",
+        },
+        "baseline":{"validation_2019":baseline19,"benchmark_2024":baseline24},
+        "selected_pre2024":{
+            "id":selected_id,"gradient_strength":selected["gradient_strength"],"region_strength":selected["region_strength"],
+            "competition_strength":selected["competition_strength"],"validation_2019":selected["validation_2019"],
+            "benchmark_2024":selected_2024,"research_gate":selected_gate,"meta_2024":selected_meta,
+        },
+        "pre2024_validation_ranking":[{
+            "id":x["id"],"gradient_strength":x["gradient_strength"],"region_strength":x["region_strength"],
+            "competition_strength":x["competition_strength"],"validation_2019":x["validation_2019"]
+        } for x in candidates[:20]],
+        "benchmark_2024_pre2024_shortlist":{
+            "candidates":benchmark_shortlist,
+            "best_by_2024_diagnostic":max(benchmark_shortlist,key=lambda x:score_tuple(x["benchmark_2024"])),
+            "passing_research_gate":[x["id"] for x in benchmark_shortlist if x["research_gate"]],
+            "warning":"All candidates in this shortlist were selected/ranked on 2019 before 2024 was inspected; the 2024 comparison is diagnostic only."
+        },
+        "profiles":{
+            "for_2019_from_honest_2017_residuals":profile17,
+            "for_2024_from_selected_honest_2019_residuals":profile19,
+        },
+        "candidate_count":len(candidates),
+        "research_gate_definition":"2024 >=506/632 correct AND seat_abs_error_sum <=176; informational only",
+    }
+
+
 def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[str,Any],hold_base:dict[str,Any])->tuple[bool,list[str]]:
     reasons=[]
     if holdout["winner_accuracy"]<.80:
@@ -2705,8 +3031,8 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v0913-reform-structural-sweep",
-        "model_type":"constituency-residual-reform-structural-sweep-v7",
+        "version":"uk-v0914-place-regradient-sweep",
+        "model_type":"constituency-residual-place-regradient-sweep-v8",
         "status":"error",
         "approved":False,
         "publication_ready":False,
@@ -2722,28 +3048,28 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v0913-reform-structural-sweep-live","approved":False,"status":"error",
+        "version":"uk-v0914-place-regradient-sweep-live","approved":False,"status":"error",
         "diagnostic_only":True,"changes_production_model":False,"changes_candidate_model":False,"shadow_only":True,
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v0913-reform-structural-sweep-backtest","status":"error","error":str(exc)
+        "version":"uk-v0914-place-regradient-sweep-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     DIAGNOSTIC_OUT.write_text(json.dumps({
-        "version":"uk-v0913-reform-structural-sweep","status":"error",
+        "version":"uk-v0914-place-regradient-sweep","status":"error",
         "diagnostic_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"parameter_updates":{},
-        "source_model":"uk-v0913-reform-structural-sweep",
+        "source_model":"uk-v0914-place-regradient-sweep",
         "error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     SWEEP_OUT.write_text(json.dumps({
-        "version":"uk-v0913-reform-structural-sweep","status":"error",
+        "version":"uk-v0914-place-regradient-sweep","status":"error",
         "diagnostic_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v0913-bes-integrity","status":"failed",
+            "version":"uk-v0914-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -2779,17 +3105,6 @@ def main()->int:
         print("BES integrity gate: PASSED")
         for check in integrity["checks"]:
             print(check["label"],check["countries"],check["winner_counts"],check["share_source"])
-
-        # Only after parser/integrity gates pass may the fixed pre-2024 donor
-        # be fitted. It uses 2015 UKIP only and is transported to 2019 bases.
-        ref_latent_model,ref_latent_names,ref_latent_donor_meta=fit_ref_latent_donor(e15)
-        e19=attach_ref_latent(e19,ref_latent_model,ref_latent_names,ref_latent_donor_meta)
-        e19n=attach_ref_latent(e19n,ref_latent_model,ref_latent_names,ref_latent_donor_meta)
-        e19n,ref_2019_calibration_meta=fit_ref_2019_calibrator(e19n)
-        print("Latent Reform donor:",ref_latent_donor_meta)
-        print("2019 old-boundary latent audit:",e19.get("ref_latent_meta"))
-        print("2019 notional latent audit:",e19n.get("ref_latent_meta"))
-        print("2019 contested-seat calibration:",ref_2019_calibration_meta)
 
         t10_15=build_transition(e10,e15)
         t15_17=build_transition(e15,e17)
@@ -2868,18 +3183,14 @@ def main()->int:
         candidate_gate_passed,reasons=approval_gate(
             validation,holdout,validation_base,holdout_base
         )
-        reform_diagnostics=build_reform_diagnostics(
-            hold_rows,e24,e19n,hold_contest_scores
+        error_structure=build_error_structure(hold_rows,e24,e19n)
+        place_sweep=evaluate_place_regradient_sweep(
+            dev_routed,val_rows,hold_rows,e15,e17,e19,e19n,e24,
+            t10_15,t15_17,t17_19,validation_base,holdout_base
         )
-        structural_sweep=evaluate_ref_structural_sweep(
-            e19n,e24,t19n_24["target"],models_hold,names_hold,selected_spec,
-            [e10,e15,e17,e19],[t10_15,t15_17,t17_19],
-            selected_party_strengths,selected_routing,
-            validation,validation_base,holdout_base
-        )
-        # v0.9.13 is a research sweep only. The canonical candidate remains
-        # the frozen v0.9.10-equivalent baseline and no 2024-ranked variant is
-        # selected for live use.
+        # v0.9.14 is research-only.  The canonical candidate remains the
+        # frozen v0.9.10-equivalent baseline.  All new strengths are selected
+        # on 2019 only; the 2024 benchmark can score but cannot promote them.
         approved=False
         publication_ready=False
 
@@ -2915,8 +3226,8 @@ def main()->int:
         )
 
         model_payload={
-            "version":"uk-v0913-reform-structural-sweep",
-            "model_type":"constituency-residual-reform-structural-sweep-v7",
+            "version":"uk-v0914-place-regradient-sweep",
+            "model_type":"constituency-residual-place-regradient-sweep-v8",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -2926,25 +3237,18 @@ def main()->int:
             "changes_candidate_model":False,
             "shadow_only":True,
             "candidate_gate_passed":candidate_gate_passed,
-            "promotion_blocked_reason":"2024 structural sweep is diagnostic-only and cannot select a live candidate",
+            "promotion_blocked_reason":"v0.9.14 is shadow research; 2019 may select experimental strengths but 2024 cannot promote them",
             "canonical_candidate":"frozen_v0910_equivalent",
-            "ref_latent_donor":ref_latent_donor_meta,
-            "ref_2019_calibration":ref_2019_calibration_meta,
-            "reform_structural_sweep":{
-                "output":"data/reform-structural-sweep-v0913.json",
-                "best_development_variant":structural_sweep["best_development_variant"],
-                "passing_variants":structural_sweep["passing_variants"],
-                "development_ranking":structural_sweep["development_ranking"],
-                "selection_policy":structural_sweep["selection_policy"],
+            "place_regradient_sweep":{
+                "output":"data/place-regradient-sweep-v0914.json",
+                "selected_pre2024":place_sweep["selected_pre2024"],
+                "benchmark_2024_pre2024_shortlist":place_sweep["benchmark_2024_pre2024_shortlist"],
+                "selection_policy":place_sweep["selection_policy"],
             },
-            "ref_latent_activation":{
-                "coverage_zero":REF_LATENT_COVERAGE_ZERO,
-                "coverage_full":REF_LATENT_COVERAGE_FULL,
-                "rise_zero_pp":REF_LATENT_RISE_ZERO,
-                "rise_full_pp":REF_LATENT_RISE_FULL,
-                "validation_2019":ref_latent_audit(e17,t17_19["target"]),
-                "benchmark_2024":ref_latent_audit(e19n,t19n_24["target"]),
-                "live":ref_latent_audit(e24,target_now),
+            "error_structure":{
+                "output":"data/error-structure-v0914.json",
+                "wrong_seats":error_structure["wrong_seats"],
+                "largest_error_pair":error_structure["largest_error_pair"],
             },
             "generated_at":utcnow().isoformat(),
             "selected_spec":selected_spec,
@@ -2977,12 +3281,6 @@ def main()->int:
                 "max_validation_seat_error_increase":30,
             },
             "gate_failures":reasons,
-            "reform_diagnostics":{
-                "version":reform_diagnostics["version"],
-                "counts":reform_diagnostics["counts"],
-                "binary_confusion":reform_diagnostics["binary_confusion"],
-                "output":"data/reform-diagnostics-v0913.json",
-            },
             "development_2017":{
                 "candidate":development_2017,
                 "dispersion":dev_dispersion,
@@ -3032,7 +3330,7 @@ def main()->int:
             "features":{
                 "historical_demographics":[c.replace("demo_","") for c in e19["demo_columns"]],
                 "current_demographics":[c.replace("demo_","") for c in e24["demo_columns"]],
-                "notes":"v0.9.13 keeps the canonical candidate identical to v0.9.10 and runs a diagnostic sweep. The 2015 UKIP donor is calibrated to observed 2019 Brexit support only in constituencies where the principal vehicle stood; missing-seat variants are then scored on 2024 without selecting any live parameter. Final raking always enforces the national target.",
+                "notes":"v0.9.14 keeps the canonical candidate identical to v0.9.10. Shadow experiments add historical regradienting and rolling place/competition residual persistence. Strengths are selected on 2019 only; 2024 is score-only. Final raking always enforces the national target.",
             },
             "integrity":{
                 "version":integrity.get("version"),
@@ -3044,15 +3342,15 @@ def main()->int:
                 "current_bes":curr_meta,
             },
             "note":(
-                "v0.9.13 keeps the canonical candidate frozen at the v0.9.10-equivalent model and evaluates multiple pre-2024 structural Reform geographies in one shadow sweep. "
-                "The 2015 donor and 2019 contested-seat calibration use no 2024 labels. The 2024 benchmark ranks variants for research only and selects nothing for live use."
+                "v0.9.14 keeps the canonical candidate frozen at the v0.9.10-equivalent model and evaluates regradient plus rolling place/competition residual corrections in one shadow sweep. "
+                "Experimental strengths are selected on 2019 only. The 2024 benchmark scores the pre-selected candidate and a bounded pre-2024 shortlist for research only; it selects nothing for live use."
             )
         }
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v0913-reform-structural-sweep-live",
-            "model_type":"constituency-residual-reform-structural-sweep-v7",
+            "version":"uk-v0914-place-regradient-sweep-live",
+            "model_type":"constituency-residual-place-regradient-sweep-v8",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -3062,14 +3360,12 @@ def main()->int:
             "changes_candidate_model":False,
             "shadow_only":True,
             "candidate_gate_passed":candidate_gate_passed,
-            "ref_latent_donor":ref_latent_donor_meta,
-            "ref_2019_calibration":ref_2019_calibration_meta,
-            "reform_structural_sweep":{
-                "output":"data/reform-structural-sweep-v0913.json",
-                "best_development_variant":structural_sweep["best_development_variant"],
-                "passing_variants":structural_sweep["passing_variants"],
+            "place_regradient_sweep":{
+                "output":"data/place-regradient-sweep-v0914.json",
+                "selected_pre2024_id":place_sweep["selected_pre2024"]["id"],
+                "selected_pre2024_benchmark_2024":place_sweep["selected_pre2024"]["benchmark_2024"],
+                "uses_2024_for_parameter_selection":False,
             },
-            "ref_latent_activation":ref_latent_audit(e24,target_now),
             "generated_at":utcnow().isoformat(),
             "model_version":model_payload["version"],
             "selected_spec":selected_spec,
@@ -3094,23 +3390,22 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v0913-reform-structural-sweep-backtest",
+            "version":"uk-v0914-place-regradient-sweep-backtest",
             "status":"ok",
             "diagnostic_only":True,
             "used_for_parameter_selection":False,
             "shadow_only":True,
             "changes_production_model":False,
             "changes_candidate_model":False,
-            "ref_latent_donor":ref_latent_donor_meta,
-            "ref_2019_calibration":ref_2019_calibration_meta,
-            "reform_structural_sweep":{
-                "output":"data/reform-structural-sweep-v0913.json",
-                "best_development_variant":structural_sweep["best_development_variant"],
-                "passing_variants":structural_sweep["passing_variants"],
+            "place_regradient_sweep":{
+                "output":"data/place-regradient-sweep-v0914.json",
+                "selected_pre2024":place_sweep["selected_pre2024"],
+                "uses_2024_for_parameter_selection":False,
             },
-            "ref_latent_activation":{
-                "validation_2019":ref_latent_audit(e17,t17_19["target"]),
-                "benchmark_2024":ref_latent_audit(e19n,t19n_24["target"]),
+            "error_structure":{
+                "output":"data/error-structure-v0914.json",
+                "wrong_seats":error_structure["wrong_seats"],
+                "largest_error_pair":error_structure["largest_error_pair"],
             },
             "selected_spec":selected_spec,
             "selected_party_strengths":selected_party_strengths,
@@ -3124,28 +3419,25 @@ def main()->int:
             "holdout_2024":{"evaluation_label":"development_benchmark_not_pristine_holdout","baseline":holdout_base,"share_only_candidate":holdout_share_only,"pre_routing_candidate":holdout_pre_route,"candidate":holdout,"dispersion":hold_dispersion,"routing":hold_routing,"scotland":country_accuracy(hold_rows,e24,e19n,"Scotland")},
             "internal_selection_2017":model_payload["internal_selection_2017"],
             "party_calibration_2017":model_payload["party_calibration_2017"],
-            "reform_diagnostics":{
-                "version":reform_diagnostics["version"],
-                "counts":reform_diagnostics["counts"],
-                "binary_confusion":reform_diagnostics["binary_confusion"],
-                "output":"data/reform-diagnostics-v0913.json",
-            },
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
         DIAGNOSTIC_OUT.write_text(
-            json.dumps(reform_diagnostics,ensure_ascii=False,indent=2),
+            json.dumps(error_structure,ensure_ascii=False,indent=2),
             encoding="utf-8"
         )
         SWEEP_OUT.write_text(
-            json.dumps(structural_sweep,ensure_ascii=False,indent=2),
+            json.dumps(place_sweep,ensure_ascii=False,indent=2),
             encoding="utf-8"
         )
 
-        print("v0.9.13 selected share spec:",selected_spec)
-        print("v0.9.13 structural sweep ranking:",structural_sweep["development_ranking"])
-        print("v0.9.13 structural sweep passing variants:",structural_sweep["passing_variants"])
-        print("v0.9.13 selected party strengths:",selected_party_strengths)
-        print("v0.9.13 incumbent routing:",selected_routing)
+        print("v0.9.14 selected share spec:",selected_spec)
+        print("v0.9.14 pre-2024 selected structural config:",place_sweep["selected_pre2024"]["id"])
+        print("v0.9.14 selected config 2019:",place_sweep["selected_pre2024"]["validation_2019"])
+        print("v0.9.14 selected config 2024 benchmark:",place_sweep["selected_pre2024"]["benchmark_2024"])
+        print("v0.9.14 best 2024 result within pre-2024 shortlist (NOT selectable):",place_sweep["benchmark_2024_pre2024_shortlist"]["best_by_2024_diagnostic"])
+        print("v0.9.14 largest canonical error pair:",error_structure["largest_error_pair"])
+        print("v0.9.14 selected party strengths:",selected_party_strengths)
+        print("v0.9.14 incumbent routing:",selected_routing)
         print("2017 routing audit:",routing_tuning["selected_audit"])
         print("2017 scenario:",national_scenario_metrics(e15,t15_17["target"]))
         print("2019 scenario:",national_scenario_metrics(e17,t17_19["target"]))
@@ -3166,7 +3458,7 @@ def main()->int:
         )
         print("Underlying candidate gate passed:",candidate_gate_passed,reasons)
         print("Shadow build approved for live:",approved)
-        print("Reform diagnostic counts:",reform_diagnostics["counts"])
+        print("Canonical 2024 wrong seats:",error_structure["wrong_seats"])
         print("Publication-ready (requires a future version and fresh validation):",publication_ready)
         print("Live central GB seat totals:",live["totals"])
     return 0
@@ -3175,7 +3467,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.13 diagnostic build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.14 diagnostic build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # A broken research build must not be deployed. The previously deployed
         # production/fallback remains untouched because this workflow stops before
