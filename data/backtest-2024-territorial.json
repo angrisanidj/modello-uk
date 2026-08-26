@@ -1,0 +1,4118 @@
+{
+  "meta": {
+    "stage": 1,
+    "label": "territorial conversion / oracle national vote",
+    "source": "UK Parliament psephology database",
+    "source_db": "https://raw.githubusercontent.com/ukparliament/psephology-datasette/main/psephology.db",
+    "baseline": "2019 notional results on 2024 boundaries",
+    "target": "2024 actual result",
+    "important": "This isolates constituency conversion from polling error. It is not a full historical forecast backtest and must not be used alone to choose the final production model."
+  },
+  "national_2019_notional_gb": {
+    "lab": 32.8993,
+    "con": 44.7252,
+    "ref": 2.0639,
+    "ld": 11.8418,
+    "green": 2.7679,
+    "snp": 3.9801,
+    "pc": 0.491,
+    "other": 1.2308
+  },
+  "national_2024_actual_gb": {
+    "lab": 34.6504,
+    "con": 24.3614,
+    "ref": 14.6903,
+    "ld": 12.5551,
+    "green": 6.9077,
+    "snp": 2.5857,
+    "pc": 0.695,
+    "other": 3.5544
+  },
+  "current_lambda_0_82": {
+    "lambda": 0.82,
+    "winner_accuracy": 0.6819620253164557,
+    "correct_winners": 431,
+    "gb_seats": 632,
+    "predicted_seats": {
+      "lab": 279,
+      "con": 234,
+      "ref": 34,
+      "ld": 38,
+      "green": 2,
+      "snp": 38,
+      "pc": 4,
+      "other": 3
+    },
+    "actual_seats": {
+      "lab": 411,
+      "con": 121,
+      "ref": 5,
+      "ld": 72,
+      "green": 4,
+      "snp": 9,
+      "pc": 4,
+      "other": 6
+    },
+    "seat_error": {
+      "lab": -132,
+      "con": 113,
+      "ref": 29,
+      "ld": -34,
+      "green": -2,
+      "snp": 29,
+      "pc": 0,
+      "other": -3
+    },
+    "seat_abs_error_sum": 342,
+    "seat_mae_across_party_buckets": 42.75,
+    "regional_accuracy": {
+      "East Midlands": {
+        "correct": 29,
+        "n": 47,
+        "accuracy": 0.6170212765957447
+      },
+      "East of England": {
+        "correct": 36,
+        "n": 61,
+        "accuracy": 0.5901639344262295
+      },
+      "London": {
+        "correct": 70,
+        "n": 75,
+        "accuracy": 0.9333333333333333
+      },
+      "North East": {
+        "correct": 17,
+        "n": 27,
+        "accuracy": 0.6296296296296297
+      },
+      "North West": {
+        "correct": 64,
+        "n": 73,
+        "accuracy": 0.8767123287671232
+      },
+      "Scotland": {
+        "correct": 28,
+        "n": 57,
+        "accuracy": 0.49122807017543857
+      },
+      "South East": {
+        "correct": 59,
+        "n": 91,
+        "accuracy": 0.6483516483516484
+      },
+      "South West": {
+        "correct": 29,
+        "n": 58,
+        "accuracy": 0.5
+      },
+      "Wales": {
+        "correct": 26,
+        "n": 32,
+        "accuracy": 0.8125
+      },
+      "West Midlands": {
+        "correct": 39,
+        "n": 57,
+        "accuracy": 0.6842105263157895
+      },
+      "Yorkshire and The Humber": {
+        "correct": 34,
+        "n": 54,
+        "accuracy": 0.6296296296296297
+      }
+    }
+  },
+  "best_lambda_by_winner_accuracy": {
+    "lambda": 1.2,
+    "winner_accuracy": 0.6962025316455697,
+    "correct_winners": 440,
+    "gb_seats": 632,
+    "predicted_seats": {
+      "lab": 276,
+      "con": 152,
+      "ref": 100,
+      "ld": 61,
+      "green": 5,
+      "snp": 32,
+      "pc": 3,
+      "other": 3
+    },
+    "actual_seats": {
+      "lab": 411,
+      "con": 121,
+      "ref": 5,
+      "ld": 72,
+      "green": 4,
+      "snp": 9,
+      "pc": 4,
+      "other": 6
+    },
+    "seat_error": {
+      "lab": -135,
+      "con": 31,
+      "ref": 95,
+      "ld": -11,
+      "green": 1,
+      "snp": 23,
+      "pc": -1,
+      "other": -3
+    },
+    "seat_abs_error_sum": 300,
+    "seat_mae_across_party_buckets": 37.5,
+    "regional_accuracy": {
+      "East Midlands": {
+        "correct": 30,
+        "n": 47,
+        "accuracy": 0.6382978723404256
+      },
+      "East of England": {
+        "correct": 48,
+        "n": 61,
+        "accuracy": 0.7868852459016393
+      },
+      "London": {
+        "correct": 67,
+        "n": 75,
+        "accuracy": 0.8933333333333333
+      },
+      "North East": {
+        "correct": 6,
+        "n": 27,
+        "accuracy": 0.2222222222222222
+      },
+      "North West": {
+        "correct": 50,
+        "n": 73,
+        "accuracy": 0.684931506849315
+      },
+      "Scotland": {
+        "correct": 33,
+        "n": 57,
+        "accuracy": 0.5789473684210527
+      },
+      "South East": {
+        "correct": 72,
+        "n": 91,
+        "accuracy": 0.7912087912087912
+      },
+      "South West": {
+        "correct": 48,
+        "n": 58,
+        "accuracy": 0.8275862068965517
+      },
+      "Wales": {
+        "correct": 16,
+        "n": 32,
+        "accuracy": 0.5
+      },
+      "West Midlands": {
+        "correct": 43,
+        "n": 57,
+        "accuracy": 0.7543859649122807
+      },
+      "Yorkshire and The Humber": {
+        "correct": 27,
+        "n": 54,
+        "accuracy": 0.5
+      }
+    }
+  },
+  "grid": [
+    {
+      "lambda": 0.4,
+      "winner_accuracy": 0.620253164556962,
+      "correct_winners": 392,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 248,
+        "con": 305,
+        "ref": 4,
+        "ld": 23,
+        "green": 1,
+        "snp": 46,
+        "pc": 4,
+        "other": 1
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -163,
+        "con": 184,
+        "ref": -1,
+        "ld": -49,
+        "green": -3,
+        "snp": 37,
+        "pc": 0,
+        "other": -5
+      },
+      "seat_abs_error_sum": 442,
+      "seat_mae_across_party_buckets": 55.25,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 26,
+          "n": 47,
+          "accuracy": 0.5531914893617021
+        },
+        "East of England": {
+          "correct": 33,
+          "n": 61,
+          "accuracy": 0.5409836065573771
+        },
+        "London": {
+          "correct": 67,
+          "n": 75,
+          "accuracy": 0.8933333333333333
+        },
+        "North East": {
+          "correct": 22,
+          "n": 27,
+          "accuracy": 0.8148148148148148
+        },
+        "North West": {
+          "correct": 58,
+          "n": 73,
+          "accuracy": 0.7945205479452054
+        },
+        "Scotland": {
+          "correct": 18,
+          "n": 57,
+          "accuracy": 0.3157894736842105
+        },
+        "South East": {
+          "correct": 48,
+          "n": 91,
+          "accuracy": 0.5274725274725275
+        },
+        "South West": {
+          "correct": 23,
+          "n": 58,
+          "accuracy": 0.39655172413793105
+        },
+        "Wales": {
+          "correct": 28,
+          "n": 32,
+          "accuracy": 0.875
+        },
+        "West Midlands": {
+          "correct": 33,
+          "n": 57,
+          "accuracy": 0.5789473684210527
+        },
+        "Yorkshire and The Humber": {
+          "correct": 36,
+          "n": 54,
+          "accuracy": 0.6666666666666666
+        }
+      }
+    },
+    {
+      "lambda": 0.42,
+      "winner_accuracy": 0.6234177215189873,
+      "correct_winners": 394,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 250,
+        "con": 303,
+        "ref": 4,
+        "ld": 23,
+        "green": 1,
+        "snp": 46,
+        "pc": 4,
+        "other": 1
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -161,
+        "con": 182,
+        "ref": -1,
+        "ld": -49,
+        "green": -3,
+        "snp": 37,
+        "pc": 0,
+        "other": -5
+      },
+      "seat_abs_error_sum": 438,
+      "seat_mae_across_party_buckets": 54.75,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 27,
+          "n": 47,
+          "accuracy": 0.574468085106383
+        },
+        "East of England": {
+          "correct": 33,
+          "n": 61,
+          "accuracy": 0.5409836065573771
+        },
+        "London": {
+          "correct": 67,
+          "n": 75,
+          "accuracy": 0.8933333333333333
+        },
+        "North East": {
+          "correct": 22,
+          "n": 27,
+          "accuracy": 0.8148148148148148
+        },
+        "North West": {
+          "correct": 59,
+          "n": 73,
+          "accuracy": 0.8082191780821918
+        },
+        "Scotland": {
+          "correct": 18,
+          "n": 57,
+          "accuracy": 0.3157894736842105
+        },
+        "South East": {
+          "correct": 48,
+          "n": 91,
+          "accuracy": 0.5274725274725275
+        },
+        "South West": {
+          "correct": 23,
+          "n": 58,
+          "accuracy": 0.39655172413793105
+        },
+        "Wales": {
+          "correct": 28,
+          "n": 32,
+          "accuracy": 0.875
+        },
+        "West Midlands": {
+          "correct": 33,
+          "n": 57,
+          "accuracy": 0.5789473684210527
+        },
+        "Yorkshire and The Humber": {
+          "correct": 36,
+          "n": 54,
+          "accuracy": 0.6666666666666666
+        }
+      }
+    },
+    {
+      "lambda": 0.44,
+      "winner_accuracy": 0.629746835443038,
+      "correct_winners": 398,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 254,
+        "con": 300,
+        "ref": 4,
+        "ld": 23,
+        "green": 1,
+        "snp": 45,
+        "pc": 4,
+        "other": 1
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -157,
+        "con": 179,
+        "ref": -1,
+        "ld": -49,
+        "green": -3,
+        "snp": 36,
+        "pc": 0,
+        "other": -5
+      },
+      "seat_abs_error_sum": 430,
+      "seat_mae_across_party_buckets": 53.75,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 28,
+          "n": 47,
+          "accuracy": 0.5957446808510638
+        },
+        "East of England": {
+          "correct": 34,
+          "n": 61,
+          "accuracy": 0.5573770491803278
+        },
+        "London": {
+          "correct": 67,
+          "n": 75,
+          "accuracy": 0.8933333333333333
+        },
+        "North East": {
+          "correct": 22,
+          "n": 27,
+          "accuracy": 0.8148148148148148
+        },
+        "North West": {
+          "correct": 59,
+          "n": 73,
+          "accuracy": 0.8082191780821918
+        },
+        "Scotland": {
+          "correct": 19,
+          "n": 57,
+          "accuracy": 0.3333333333333333
+        },
+        "South East": {
+          "correct": 48,
+          "n": 91,
+          "accuracy": 0.5274725274725275
+        },
+        "South West": {
+          "correct": 23,
+          "n": 58,
+          "accuracy": 0.39655172413793105
+        },
+        "Wales": {
+          "correct": 28,
+          "n": 32,
+          "accuracy": 0.875
+        },
+        "West Midlands": {
+          "correct": 34,
+          "n": 57,
+          "accuracy": 0.5964912280701754
+        },
+        "Yorkshire and The Humber": {
+          "correct": 36,
+          "n": 54,
+          "accuracy": 0.6666666666666666
+        }
+      }
+    },
+    {
+      "lambda": 0.46,
+      "winner_accuracy": 0.634493670886076,
+      "correct_winners": 401,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 256,
+        "con": 296,
+        "ref": 5,
+        "ld": 24,
+        "green": 1,
+        "snp": 45,
+        "pc": 4,
+        "other": 1
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -155,
+        "con": 175,
+        "ref": 0,
+        "ld": -48,
+        "green": -3,
+        "snp": 36,
+        "pc": 0,
+        "other": -5
+      },
+      "seat_abs_error_sum": 422,
+      "seat_mae_across_party_buckets": 52.75,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 29,
+          "n": 47,
+          "accuracy": 0.6170212765957447
+        },
+        "East of England": {
+          "correct": 34,
+          "n": 61,
+          "accuracy": 0.5573770491803278
+        },
+        "London": {
+          "correct": 67,
+          "n": 75,
+          "accuracy": 0.8933333333333333
+        },
+        "North East": {
+          "correct": 22,
+          "n": 27,
+          "accuracy": 0.8148148148148148
+        },
+        "North West": {
+          "correct": 59,
+          "n": 73,
+          "accuracy": 0.8082191780821918
+        },
+        "Scotland": {
+          "correct": 19,
+          "n": 57,
+          "accuracy": 0.3333333333333333
+        },
+        "South East": {
+          "correct": 50,
+          "n": 91,
+          "accuracy": 0.5494505494505495
+        },
+        "South West": {
+          "correct": 23,
+          "n": 58,
+          "accuracy": 0.39655172413793105
+        },
+        "Wales": {
+          "correct": 28,
+          "n": 32,
+          "accuracy": 0.875
+        },
+        "West Midlands": {
+          "correct": 35,
+          "n": 57,
+          "accuracy": 0.6140350877192983
+        },
+        "Yorkshire and The Humber": {
+          "correct": 35,
+          "n": 54,
+          "accuracy": 0.6481481481481481
+        }
+      }
+    },
+    {
+      "lambda": 0.48,
+      "winner_accuracy": 0.6313291139240507,
+      "correct_winners": 399,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 254,
+        "con": 294,
+        "ref": 8,
+        "ld": 25,
+        "green": 1,
+        "snp": 45,
+        "pc": 4,
+        "other": 1
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -157,
+        "con": 173,
+        "ref": 3,
+        "ld": -47,
+        "green": -3,
+        "snp": 36,
+        "pc": 0,
+        "other": -5
+      },
+      "seat_abs_error_sum": 424,
+      "seat_mae_across_party_buckets": 53.0,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 29,
+          "n": 47,
+          "accuracy": 0.6170212765957447
+        },
+        "East of England": {
+          "correct": 34,
+          "n": 61,
+          "accuracy": 0.5573770491803278
+        },
+        "London": {
+          "correct": 67,
+          "n": 75,
+          "accuracy": 0.8933333333333333
+        },
+        "North East": {
+          "correct": 22,
+          "n": 27,
+          "accuracy": 0.8148148148148148
+        },
+        "North West": {
+          "correct": 60,
+          "n": 73,
+          "accuracy": 0.821917808219178
+        },
+        "Scotland": {
+          "correct": 19,
+          "n": 57,
+          "accuracy": 0.3333333333333333
+        },
+        "South East": {
+          "correct": 50,
+          "n": 91,
+          "accuracy": 0.5494505494505495
+        },
+        "South West": {
+          "correct": 23,
+          "n": 58,
+          "accuracy": 0.39655172413793105
+        },
+        "Wales": {
+          "correct": 28,
+          "n": 32,
+          "accuracy": 0.875
+        },
+        "West Midlands": {
+          "correct": 35,
+          "n": 57,
+          "accuracy": 0.6140350877192983
+        },
+        "Yorkshire and The Humber": {
+          "correct": 32,
+          "n": 54,
+          "accuracy": 0.5925925925925926
+        }
+      }
+    },
+    {
+      "lambda": 0.5,
+      "winner_accuracy": 0.629746835443038,
+      "correct_winners": 398,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 253,
+        "con": 291,
+        "ref": 13,
+        "ld": 25,
+        "green": 1,
+        "snp": 44,
+        "pc": 4,
+        "other": 1
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -158,
+        "con": 170,
+        "ref": 8,
+        "ld": -47,
+        "green": -3,
+        "snp": 35,
+        "pc": 0,
+        "other": -5
+      },
+      "seat_abs_error_sum": 426,
+      "seat_mae_across_party_buckets": 53.25,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 29,
+          "n": 47,
+          "accuracy": 0.6170212765957447
+        },
+        "East of England": {
+          "correct": 34,
+          "n": 61,
+          "accuracy": 0.5573770491803278
+        },
+        "London": {
+          "correct": 67,
+          "n": 75,
+          "accuracy": 0.8933333333333333
+        },
+        "North East": {
+          "correct": 20,
+          "n": 27,
+          "accuracy": 0.7407407407407407
+        },
+        "North West": {
+          "correct": 61,
+          "n": 73,
+          "accuracy": 0.8356164383561644
+        },
+        "Scotland": {
+          "correct": 20,
+          "n": 57,
+          "accuracy": 0.3508771929824561
+        },
+        "South East": {
+          "correct": 51,
+          "n": 91,
+          "accuracy": 0.5604395604395604
+        },
+        "South West": {
+          "correct": 23,
+          "n": 58,
+          "accuracy": 0.39655172413793105
+        },
+        "Wales": {
+          "correct": 28,
+          "n": 32,
+          "accuracy": 0.875
+        },
+        "West Midlands": {
+          "correct": 35,
+          "n": 57,
+          "accuracy": 0.6140350877192983
+        },
+        "Yorkshire and The Humber": {
+          "correct": 30,
+          "n": 54,
+          "accuracy": 0.5555555555555556
+        }
+      }
+    },
+    {
+      "lambda": 0.52,
+      "winner_accuracy": 0.6329113924050633,
+      "correct_winners": 400,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 255,
+        "con": 289,
+        "ref": 13,
+        "ld": 25,
+        "green": 1,
+        "snp": 44,
+        "pc": 4,
+        "other": 1
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -156,
+        "con": 168,
+        "ref": 8,
+        "ld": -47,
+        "green": -3,
+        "snp": 35,
+        "pc": 0,
+        "other": -5
+      },
+      "seat_abs_error_sum": 422,
+      "seat_mae_across_party_buckets": 52.75,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 29,
+          "n": 47,
+          "accuracy": 0.6170212765957447
+        },
+        "East of England": {
+          "correct": 34,
+          "n": 61,
+          "accuracy": 0.5573770491803278
+        },
+        "London": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "North East": {
+          "correct": 20,
+          "n": 27,
+          "accuracy": 0.7407407407407407
+        },
+        "North West": {
+          "correct": 61,
+          "n": 73,
+          "accuracy": 0.8356164383561644
+        },
+        "Scotland": {
+          "correct": 20,
+          "n": 57,
+          "accuracy": 0.3508771929824561
+        },
+        "South East": {
+          "correct": 51,
+          "n": 91,
+          "accuracy": 0.5604395604395604
+        },
+        "South West": {
+          "correct": 23,
+          "n": 58,
+          "accuracy": 0.39655172413793105
+        },
+        "Wales": {
+          "correct": 28,
+          "n": 32,
+          "accuracy": 0.875
+        },
+        "West Midlands": {
+          "correct": 36,
+          "n": 57,
+          "accuracy": 0.631578947368421
+        },
+        "Yorkshire and The Humber": {
+          "correct": 30,
+          "n": 54,
+          "accuracy": 0.5555555555555556
+        }
+      }
+    },
+    {
+      "lambda": 0.54,
+      "winner_accuracy": 0.6424050632911392,
+      "correct_winners": 406,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 260,
+        "con": 281,
+        "ref": 15,
+        "ld": 26,
+        "green": 1,
+        "snp": 44,
+        "pc": 4,
+        "other": 1
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -151,
+        "con": 160,
+        "ref": 10,
+        "ld": -46,
+        "green": -3,
+        "snp": 35,
+        "pc": 0,
+        "other": -5
+      },
+      "seat_abs_error_sum": 410,
+      "seat_mae_across_party_buckets": 51.25,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 30,
+          "n": 47,
+          "accuracy": 0.6382978723404256
+        },
+        "East of England": {
+          "correct": 34,
+          "n": 61,
+          "accuracy": 0.5573770491803278
+        },
+        "London": {
+          "correct": 69,
+          "n": 75,
+          "accuracy": 0.92
+        },
+        "North East": {
+          "correct": 20,
+          "n": 27,
+          "accuracy": 0.7407407407407407
+        },
+        "North West": {
+          "correct": 61,
+          "n": 73,
+          "accuracy": 0.8356164383561644
+        },
+        "Scotland": {
+          "correct": 20,
+          "n": 57,
+          "accuracy": 0.3508771929824561
+        },
+        "South East": {
+          "correct": 52,
+          "n": 91,
+          "accuracy": 0.5714285714285714
+        },
+        "South West": {
+          "correct": 25,
+          "n": 58,
+          "accuracy": 0.43103448275862066
+        },
+        "Wales": {
+          "correct": 28,
+          "n": 32,
+          "accuracy": 0.875
+        },
+        "West Midlands": {
+          "correct": 36,
+          "n": 57,
+          "accuracy": 0.631578947368421
+        },
+        "Yorkshire and The Humber": {
+          "correct": 31,
+          "n": 54,
+          "accuracy": 0.5740740740740741
+        }
+      }
+    },
+    {
+      "lambda": 0.56,
+      "winner_accuracy": 0.6487341772151899,
+      "correct_winners": 410,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 263,
+        "con": 278,
+        "ref": 15,
+        "ld": 27,
+        "green": 1,
+        "snp": 43,
+        "pc": 4,
+        "other": 1
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -148,
+        "con": 157,
+        "ref": 10,
+        "ld": -45,
+        "green": -3,
+        "snp": 34,
+        "pc": 0,
+        "other": -5
+      },
+      "seat_abs_error_sum": 402,
+      "seat_mae_across_party_buckets": 50.25,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 30,
+          "n": 47,
+          "accuracy": 0.6382978723404256
+        },
+        "East of England": {
+          "correct": 34,
+          "n": 61,
+          "accuracy": 0.5573770491803278
+        },
+        "London": {
+          "correct": 69,
+          "n": 75,
+          "accuracy": 0.92
+        },
+        "North East": {
+          "correct": 20,
+          "n": 27,
+          "accuracy": 0.7407407407407407
+        },
+        "North West": {
+          "correct": 61,
+          "n": 73,
+          "accuracy": 0.8356164383561644
+        },
+        "Scotland": {
+          "correct": 21,
+          "n": 57,
+          "accuracy": 0.3684210526315789
+        },
+        "South East": {
+          "correct": 52,
+          "n": 91,
+          "accuracy": 0.5714285714285714
+        },
+        "South West": {
+          "correct": 25,
+          "n": 58,
+          "accuracy": 0.43103448275862066
+        },
+        "Wales": {
+          "correct": 28,
+          "n": 32,
+          "accuracy": 0.875
+        },
+        "West Midlands": {
+          "correct": 36,
+          "n": 57,
+          "accuracy": 0.631578947368421
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 0.58,
+      "winner_accuracy": 0.6487341772151899,
+      "correct_winners": 410,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 265,
+        "con": 275,
+        "ref": 16,
+        "ld": 27,
+        "green": 1,
+        "snp": 43,
+        "pc": 4,
+        "other": 1
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -146,
+        "con": 154,
+        "ref": 11,
+        "ld": -45,
+        "green": -3,
+        "snp": 34,
+        "pc": 0,
+        "other": -5
+      },
+      "seat_abs_error_sum": 398,
+      "seat_mae_across_party_buckets": 49.75,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 30,
+          "n": 47,
+          "accuracy": 0.6382978723404256
+        },
+        "East of England": {
+          "correct": 34,
+          "n": 61,
+          "accuracy": 0.5573770491803278
+        },
+        "London": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "North East": {
+          "correct": 20,
+          "n": 27,
+          "accuracy": 0.7407407407407407
+        },
+        "North West": {
+          "correct": 61,
+          "n": 73,
+          "accuracy": 0.8356164383561644
+        },
+        "Scotland": {
+          "correct": 21,
+          "n": 57,
+          "accuracy": 0.3684210526315789
+        },
+        "South East": {
+          "correct": 53,
+          "n": 91,
+          "accuracy": 0.5824175824175825
+        },
+        "South West": {
+          "correct": 25,
+          "n": 58,
+          "accuracy": 0.43103448275862066
+        },
+        "Wales": {
+          "correct": 28,
+          "n": 32,
+          "accuracy": 0.875
+        },
+        "West Midlands": {
+          "correct": 36,
+          "n": 57,
+          "accuracy": 0.631578947368421
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 0.6,
+      "winner_accuracy": 0.6487341772151899,
+      "correct_winners": 410,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 265,
+        "con": 274,
+        "ref": 17,
+        "ld": 27,
+        "green": 1,
+        "snp": 43,
+        "pc": 4,
+        "other": 1
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -146,
+        "con": 153,
+        "ref": 12,
+        "ld": -45,
+        "green": -3,
+        "snp": 34,
+        "pc": 0,
+        "other": -5
+      },
+      "seat_abs_error_sum": 398,
+      "seat_mae_across_party_buckets": 49.75,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 30,
+          "n": 47,
+          "accuracy": 0.6382978723404256
+        },
+        "East of England": {
+          "correct": 34,
+          "n": 61,
+          "accuracy": 0.5573770491803278
+        },
+        "London": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "North East": {
+          "correct": 19,
+          "n": 27,
+          "accuracy": 0.7037037037037037
+        },
+        "North West": {
+          "correct": 62,
+          "n": 73,
+          "accuracy": 0.8493150684931506
+        },
+        "Scotland": {
+          "correct": 21,
+          "n": 57,
+          "accuracy": 0.3684210526315789
+        },
+        "South East": {
+          "correct": 53,
+          "n": 91,
+          "accuracy": 0.5824175824175825
+        },
+        "South West": {
+          "correct": 25,
+          "n": 58,
+          "accuracy": 0.43103448275862066
+        },
+        "Wales": {
+          "correct": 28,
+          "n": 32,
+          "accuracy": 0.875
+        },
+        "West Midlands": {
+          "correct": 36,
+          "n": 57,
+          "accuracy": 0.631578947368421
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 0.62,
+      "winner_accuracy": 0.6518987341772152,
+      "correct_winners": 412,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 266,
+        "con": 270,
+        "ref": 18,
+        "ld": 29,
+        "green": 1,
+        "snp": 42,
+        "pc": 4,
+        "other": 2
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -145,
+        "con": 149,
+        "ref": 13,
+        "ld": -43,
+        "green": -3,
+        "snp": 33,
+        "pc": 0,
+        "other": -4
+      },
+      "seat_abs_error_sum": 390,
+      "seat_mae_across_party_buckets": 48.75,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 30,
+          "n": 47,
+          "accuracy": 0.6382978723404256
+        },
+        "East of England": {
+          "correct": 34,
+          "n": 61,
+          "accuracy": 0.5573770491803278
+        },
+        "London": {
+          "correct": 69,
+          "n": 75,
+          "accuracy": 0.92
+        },
+        "North East": {
+          "correct": 19,
+          "n": 27,
+          "accuracy": 0.7037037037037037
+        },
+        "North West": {
+          "correct": 62,
+          "n": 73,
+          "accuracy": 0.8493150684931506
+        },
+        "Scotland": {
+          "correct": 22,
+          "n": 57,
+          "accuracy": 0.38596491228070173
+        },
+        "South East": {
+          "correct": 54,
+          "n": 91,
+          "accuracy": 0.5934065934065934
+        },
+        "South West": {
+          "correct": 24,
+          "n": 58,
+          "accuracy": 0.41379310344827586
+        },
+        "Wales": {
+          "correct": 27,
+          "n": 32,
+          "accuracy": 0.84375
+        },
+        "West Midlands": {
+          "correct": 37,
+          "n": 57,
+          "accuracy": 0.6491228070175439
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 0.64,
+      "winner_accuracy": 0.6534810126582279,
+      "correct_winners": 413,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 267,
+        "con": 266,
+        "ref": 20,
+        "ld": 29,
+        "green": 1,
+        "snp": 42,
+        "pc": 4,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -144,
+        "con": 145,
+        "ref": 15,
+        "ld": -43,
+        "green": -3,
+        "snp": 33,
+        "pc": 0,
+        "other": -3
+      },
+      "seat_abs_error_sum": 386,
+      "seat_mae_across_party_buckets": 48.25,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 30,
+          "n": 47,
+          "accuracy": 0.6382978723404256
+        },
+        "East of England": {
+          "correct": 35,
+          "n": 61,
+          "accuracy": 0.5737704918032787
+        },
+        "London": {
+          "correct": 69,
+          "n": 75,
+          "accuracy": 0.92
+        },
+        "North East": {
+          "correct": 19,
+          "n": 27,
+          "accuracy": 0.7037037037037037
+        },
+        "North West": {
+          "correct": 62,
+          "n": 73,
+          "accuracy": 0.8493150684931506
+        },
+        "Scotland": {
+          "correct": 22,
+          "n": 57,
+          "accuracy": 0.38596491228070173
+        },
+        "South East": {
+          "correct": 54,
+          "n": 91,
+          "accuracy": 0.5934065934065934
+        },
+        "South West": {
+          "correct": 24,
+          "n": 58,
+          "accuracy": 0.41379310344827586
+        },
+        "Wales": {
+          "correct": 27,
+          "n": 32,
+          "accuracy": 0.84375
+        },
+        "West Midlands": {
+          "correct": 37,
+          "n": 57,
+          "accuracy": 0.6491228070175439
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 0.66,
+      "winner_accuracy": 0.6550632911392406,
+      "correct_winners": 414,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 267,
+        "con": 264,
+        "ref": 21,
+        "ld": 29,
+        "green": 1,
+        "snp": 43,
+        "pc": 4,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -144,
+        "con": 143,
+        "ref": 16,
+        "ld": -43,
+        "green": -3,
+        "snp": 34,
+        "pc": 0,
+        "other": -3
+      },
+      "seat_abs_error_sum": 386,
+      "seat_mae_across_party_buckets": 48.25,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 30,
+          "n": 47,
+          "accuracy": 0.6382978723404256
+        },
+        "East of England": {
+          "correct": 35,
+          "n": 61,
+          "accuracy": 0.5737704918032787
+        },
+        "London": {
+          "correct": 69,
+          "n": 75,
+          "accuracy": 0.92
+        },
+        "North East": {
+          "correct": 19,
+          "n": 27,
+          "accuracy": 0.7037037037037037
+        },
+        "North West": {
+          "correct": 62,
+          "n": 73,
+          "accuracy": 0.8493150684931506
+        },
+        "Scotland": {
+          "correct": 23,
+          "n": 57,
+          "accuracy": 0.40350877192982454
+        },
+        "South East": {
+          "correct": 54,
+          "n": 91,
+          "accuracy": 0.5934065934065934
+        },
+        "South West": {
+          "correct": 24,
+          "n": 58,
+          "accuracy": 0.41379310344827586
+        },
+        "Wales": {
+          "correct": 27,
+          "n": 32,
+          "accuracy": 0.84375
+        },
+        "West Midlands": {
+          "correct": 37,
+          "n": 57,
+          "accuracy": 0.6491228070175439
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 0.68,
+      "winner_accuracy": 0.6645569620253164,
+      "correct_winners": 420,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 273,
+        "con": 256,
+        "ref": 23,
+        "ld": 31,
+        "green": 1,
+        "snp": 41,
+        "pc": 4,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -138,
+        "con": 135,
+        "ref": 18,
+        "ld": -41,
+        "green": -3,
+        "snp": 32,
+        "pc": 0,
+        "other": -3
+      },
+      "seat_abs_error_sum": 370,
+      "seat_mae_across_party_buckets": 46.25,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 30,
+          "n": 47,
+          "accuracy": 0.6382978723404256
+        },
+        "East of England": {
+          "correct": 35,
+          "n": 61,
+          "accuracy": 0.5737704918032787
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 18,
+          "n": 27,
+          "accuracy": 0.6666666666666666
+        },
+        "North West": {
+          "correct": 61,
+          "n": 73,
+          "accuracy": 0.8356164383561644
+        },
+        "Scotland": {
+          "correct": 25,
+          "n": 57,
+          "accuracy": 0.43859649122807015
+        },
+        "South East": {
+          "correct": 54,
+          "n": 91,
+          "accuracy": 0.5934065934065934
+        },
+        "South West": {
+          "correct": 27,
+          "n": 58,
+          "accuracy": 0.46551724137931033
+        },
+        "Wales": {
+          "correct": 27,
+          "n": 32,
+          "accuracy": 0.84375
+        },
+        "West Midlands": {
+          "correct": 39,
+          "n": 57,
+          "accuracy": 0.6842105263157895
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 0.7,
+      "winner_accuracy": 0.6693037974683544,
+      "correct_winners": 423,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 274,
+        "con": 253,
+        "ref": 25,
+        "ld": 33,
+        "green": 1,
+        "snp": 39,
+        "pc": 4,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -137,
+        "con": 132,
+        "ref": 20,
+        "ld": -39,
+        "green": -3,
+        "snp": 30,
+        "pc": 0,
+        "other": -3
+      },
+      "seat_abs_error_sum": 364,
+      "seat_mae_across_party_buckets": 45.5,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 29,
+          "n": 47,
+          "accuracy": 0.6170212765957447
+        },
+        "East of England": {
+          "correct": 35,
+          "n": 61,
+          "accuracy": 0.5737704918032787
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 18,
+          "n": 27,
+          "accuracy": 0.6666666666666666
+        },
+        "North West": {
+          "correct": 62,
+          "n": 73,
+          "accuracy": 0.8493150684931506
+        },
+        "Scotland": {
+          "correct": 27,
+          "n": 57,
+          "accuracy": 0.47368421052631576
+        },
+        "South East": {
+          "correct": 56,
+          "n": 91,
+          "accuracy": 0.6153846153846154
+        },
+        "South West": {
+          "correct": 27,
+          "n": 58,
+          "accuracy": 0.46551724137931033
+        },
+        "Wales": {
+          "correct": 26,
+          "n": 32,
+          "accuracy": 0.8125
+        },
+        "West Midlands": {
+          "correct": 39,
+          "n": 57,
+          "accuracy": 0.6842105263157895
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 0.72,
+      "winner_accuracy": 0.6724683544303798,
+      "correct_winners": 425,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 275,
+        "con": 250,
+        "ref": 26,
+        "ld": 34,
+        "green": 1,
+        "snp": 39,
+        "pc": 4,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -136,
+        "con": 129,
+        "ref": 21,
+        "ld": -38,
+        "green": -3,
+        "snp": 30,
+        "pc": 0,
+        "other": -3
+      },
+      "seat_abs_error_sum": 360,
+      "seat_mae_across_party_buckets": 45.0,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 29,
+          "n": 47,
+          "accuracy": 0.6170212765957447
+        },
+        "East of England": {
+          "correct": 35,
+          "n": 61,
+          "accuracy": 0.5737704918032787
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 18,
+          "n": 27,
+          "accuracy": 0.6666666666666666
+        },
+        "North West": {
+          "correct": 63,
+          "n": 73,
+          "accuracy": 0.863013698630137
+        },
+        "Scotland": {
+          "correct": 27,
+          "n": 57,
+          "accuracy": 0.47368421052631576
+        },
+        "South East": {
+          "correct": 56,
+          "n": 91,
+          "accuracy": 0.6153846153846154
+        },
+        "South West": {
+          "correct": 27,
+          "n": 58,
+          "accuracy": 0.46551724137931033
+        },
+        "Wales": {
+          "correct": 27,
+          "n": 32,
+          "accuracy": 0.84375
+        },
+        "West Midlands": {
+          "correct": 39,
+          "n": 57,
+          "accuracy": 0.6842105263157895
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 0.74,
+      "winner_accuracy": 0.6756329113924051,
+      "correct_winners": 427,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 277,
+        "con": 247,
+        "ref": 27,
+        "ld": 34,
+        "green": 1,
+        "snp": 39,
+        "pc": 4,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -134,
+        "con": 126,
+        "ref": 22,
+        "ld": -38,
+        "green": -3,
+        "snp": 30,
+        "pc": 0,
+        "other": -3
+      },
+      "seat_abs_error_sum": 356,
+      "seat_mae_across_party_buckets": 44.5,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 30,
+          "n": 47,
+          "accuracy": 0.6382978723404256
+        },
+        "East of England": {
+          "correct": 35,
+          "n": 61,
+          "accuracy": 0.5737704918032787
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 17,
+          "n": 27,
+          "accuracy": 0.6296296296296297
+        },
+        "North West": {
+          "correct": 64,
+          "n": 73,
+          "accuracy": 0.8767123287671232
+        },
+        "Scotland": {
+          "correct": 27,
+          "n": 57,
+          "accuracy": 0.47368421052631576
+        },
+        "South East": {
+          "correct": 56,
+          "n": 91,
+          "accuracy": 0.6153846153846154
+        },
+        "South West": {
+          "correct": 27,
+          "n": 58,
+          "accuracy": 0.46551724137931033
+        },
+        "Wales": {
+          "correct": 27,
+          "n": 32,
+          "accuracy": 0.84375
+        },
+        "West Midlands": {
+          "correct": 39,
+          "n": 57,
+          "accuracy": 0.6842105263157895
+        },
+        "Yorkshire and The Humber": {
+          "correct": 35,
+          "n": 54,
+          "accuracy": 0.6481481481481481
+        }
+      }
+    },
+    {
+      "lambda": 0.76,
+      "winner_accuracy": 0.6787974683544303,
+      "correct_winners": 429,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 278,
+        "con": 244,
+        "ref": 28,
+        "ld": 35,
+        "green": 1,
+        "snp": 39,
+        "pc": 4,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -133,
+        "con": 123,
+        "ref": 23,
+        "ld": -37,
+        "green": -3,
+        "snp": 30,
+        "pc": 0,
+        "other": -3
+      },
+      "seat_abs_error_sum": 352,
+      "seat_mae_across_party_buckets": 44.0,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 29,
+          "n": 47,
+          "accuracy": 0.6170212765957447
+        },
+        "East of England": {
+          "correct": 35,
+          "n": 61,
+          "accuracy": 0.5737704918032787
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 17,
+          "n": 27,
+          "accuracy": 0.6296296296296297
+        },
+        "North West": {
+          "correct": 65,
+          "n": 73,
+          "accuracy": 0.8904109589041096
+        },
+        "Scotland": {
+          "correct": 27,
+          "n": 57,
+          "accuracy": 0.47368421052631576
+        },
+        "South East": {
+          "correct": 56,
+          "n": 91,
+          "accuracy": 0.6153846153846154
+        },
+        "South West": {
+          "correct": 28,
+          "n": 58,
+          "accuracy": 0.4827586206896552
+        },
+        "Wales": {
+          "correct": 28,
+          "n": 32,
+          "accuracy": 0.875
+        },
+        "West Midlands": {
+          "correct": 39,
+          "n": 57,
+          "accuracy": 0.6842105263157895
+        },
+        "Yorkshire and The Humber": {
+          "correct": 35,
+          "n": 54,
+          "accuracy": 0.6481481481481481
+        }
+      }
+    },
+    {
+      "lambda": 0.78,
+      "winner_accuracy": 0.6787974683544303,
+      "correct_winners": 429,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 280,
+        "con": 240,
+        "ref": 31,
+        "ld": 35,
+        "green": 1,
+        "snp": 38,
+        "pc": 4,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -131,
+        "con": 119,
+        "ref": 26,
+        "ld": -37,
+        "green": -3,
+        "snp": 29,
+        "pc": 0,
+        "other": -3
+      },
+      "seat_abs_error_sum": 348,
+      "seat_mae_across_party_buckets": 43.5,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 29,
+          "n": 47,
+          "accuracy": 0.6170212765957447
+        },
+        "East of England": {
+          "correct": 36,
+          "n": 61,
+          "accuracy": 0.5901639344262295
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 17,
+          "n": 27,
+          "accuracy": 0.6296296296296297
+        },
+        "North West": {
+          "correct": 65,
+          "n": 73,
+          "accuracy": 0.8904109589041096
+        },
+        "Scotland": {
+          "correct": 28,
+          "n": 57,
+          "accuracy": 0.49122807017543857
+        },
+        "South East": {
+          "correct": 56,
+          "n": 91,
+          "accuracy": 0.6153846153846154
+        },
+        "South West": {
+          "correct": 28,
+          "n": 58,
+          "accuracy": 0.4827586206896552
+        },
+        "Wales": {
+          "correct": 27,
+          "n": 32,
+          "accuracy": 0.84375
+        },
+        "West Midlands": {
+          "correct": 39,
+          "n": 57,
+          "accuracy": 0.6842105263157895
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 0.8,
+      "winner_accuracy": 0.680379746835443,
+      "correct_winners": 430,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 279,
+        "con": 236,
+        "ref": 33,
+        "ld": 37,
+        "green": 2,
+        "snp": 38,
+        "pc": 4,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -132,
+        "con": 115,
+        "ref": 28,
+        "ld": -35,
+        "green": -2,
+        "snp": 29,
+        "pc": 0,
+        "other": -3
+      },
+      "seat_abs_error_sum": 344,
+      "seat_mae_across_party_buckets": 43.0,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 29,
+          "n": 47,
+          "accuracy": 0.6170212765957447
+        },
+        "East of England": {
+          "correct": 36,
+          "n": 61,
+          "accuracy": 0.5901639344262295
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 16,
+          "n": 27,
+          "accuracy": 0.5925925925925926
+        },
+        "North West": {
+          "correct": 64,
+          "n": 73,
+          "accuracy": 0.8767123287671232
+        },
+        "Scotland": {
+          "correct": 28,
+          "n": 57,
+          "accuracy": 0.49122807017543857
+        },
+        "South East": {
+          "correct": 58,
+          "n": 91,
+          "accuracy": 0.6373626373626373
+        },
+        "South West": {
+          "correct": 29,
+          "n": 58,
+          "accuracy": 0.5
+        },
+        "Wales": {
+          "correct": 27,
+          "n": 32,
+          "accuracy": 0.84375
+        },
+        "West Midlands": {
+          "correct": 39,
+          "n": 57,
+          "accuracy": 0.6842105263157895
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 0.82,
+      "winner_accuracy": 0.6819620253164557,
+      "correct_winners": 431,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 279,
+        "con": 234,
+        "ref": 34,
+        "ld": 38,
+        "green": 2,
+        "snp": 38,
+        "pc": 4,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -132,
+        "con": 113,
+        "ref": 29,
+        "ld": -34,
+        "green": -2,
+        "snp": 29,
+        "pc": 0,
+        "other": -3
+      },
+      "seat_abs_error_sum": 342,
+      "seat_mae_across_party_buckets": 42.75,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 29,
+          "n": 47,
+          "accuracy": 0.6170212765957447
+        },
+        "East of England": {
+          "correct": 36,
+          "n": 61,
+          "accuracy": 0.5901639344262295
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 17,
+          "n": 27,
+          "accuracy": 0.6296296296296297
+        },
+        "North West": {
+          "correct": 64,
+          "n": 73,
+          "accuracy": 0.8767123287671232
+        },
+        "Scotland": {
+          "correct": 28,
+          "n": 57,
+          "accuracy": 0.49122807017543857
+        },
+        "South East": {
+          "correct": 59,
+          "n": 91,
+          "accuracy": 0.6483516483516484
+        },
+        "South West": {
+          "correct": 29,
+          "n": 58,
+          "accuracy": 0.5
+        },
+        "Wales": {
+          "correct": 26,
+          "n": 32,
+          "accuracy": 0.8125
+        },
+        "West Midlands": {
+          "correct": 39,
+          "n": 57,
+          "accuracy": 0.6842105263157895
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 0.84,
+      "winner_accuracy": 0.6835443037974683,
+      "correct_winners": 432,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 280,
+        "con": 230,
+        "ref": 37,
+        "ld": 38,
+        "green": 2,
+        "snp": 38,
+        "pc": 4,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -131,
+        "con": 109,
+        "ref": 32,
+        "ld": -34,
+        "green": -2,
+        "snp": 29,
+        "pc": 0,
+        "other": -3
+      },
+      "seat_abs_error_sum": 340,
+      "seat_mae_across_party_buckets": 42.5,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 29,
+          "n": 47,
+          "accuracy": 0.6170212765957447
+        },
+        "East of England": {
+          "correct": 36,
+          "n": 61,
+          "accuracy": 0.5901639344262295
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 16,
+          "n": 27,
+          "accuracy": 0.5925925925925926
+        },
+        "North West": {
+          "correct": 65,
+          "n": 73,
+          "accuracy": 0.8904109589041096
+        },
+        "Scotland": {
+          "correct": 28,
+          "n": 57,
+          "accuracy": 0.49122807017543857
+        },
+        "South East": {
+          "correct": 59,
+          "n": 91,
+          "accuracy": 0.6483516483516484
+        },
+        "South West": {
+          "correct": 29,
+          "n": 58,
+          "accuracy": 0.5
+        },
+        "Wales": {
+          "correct": 24,
+          "n": 32,
+          "accuracy": 0.75
+        },
+        "West Midlands": {
+          "correct": 40,
+          "n": 57,
+          "accuracy": 0.7017543859649122
+        },
+        "Yorkshire and The Humber": {
+          "correct": 36,
+          "n": 54,
+          "accuracy": 0.6666666666666666
+        }
+      }
+    },
+    {
+      "lambda": 0.86,
+      "winner_accuracy": 0.685126582278481,
+      "correct_winners": 433,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 280,
+        "con": 228,
+        "ref": 40,
+        "ld": 38,
+        "green": 2,
+        "snp": 38,
+        "pc": 4,
+        "other": 2
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -131,
+        "con": 107,
+        "ref": 35,
+        "ld": -34,
+        "green": -2,
+        "snp": 29,
+        "pc": 0,
+        "other": -4
+      },
+      "seat_abs_error_sum": 342,
+      "seat_mae_across_party_buckets": 42.75,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 30,
+          "n": 47,
+          "accuracy": 0.6382978723404256
+        },
+        "East of England": {
+          "correct": 37,
+          "n": 61,
+          "accuracy": 0.6065573770491803
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 15,
+          "n": 27,
+          "accuracy": 0.5555555555555556
+        },
+        "North West": {
+          "correct": 64,
+          "n": 73,
+          "accuracy": 0.8767123287671232
+        },
+        "Scotland": {
+          "correct": 28,
+          "n": 57,
+          "accuracy": 0.49122807017543857
+        },
+        "South East": {
+          "correct": 60,
+          "n": 91,
+          "accuracy": 0.6593406593406593
+        },
+        "South West": {
+          "correct": 29,
+          "n": 58,
+          "accuracy": 0.5
+        },
+        "Wales": {
+          "correct": 24,
+          "n": 32,
+          "accuracy": 0.75
+        },
+        "West Midlands": {
+          "correct": 40,
+          "n": 57,
+          "accuracy": 0.7017543859649122
+        },
+        "Yorkshire and The Humber": {
+          "correct": 36,
+          "n": 54,
+          "accuracy": 0.6666666666666666
+        }
+      }
+    },
+    {
+      "lambda": 0.88,
+      "winner_accuracy": 0.680379746835443,
+      "correct_winners": 430,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 276,
+        "con": 227,
+        "ref": 44,
+        "ld": 39,
+        "green": 2,
+        "snp": 38,
+        "pc": 4,
+        "other": 2
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -135,
+        "con": 106,
+        "ref": 39,
+        "ld": -33,
+        "green": -2,
+        "snp": 29,
+        "pc": 0,
+        "other": -4
+      },
+      "seat_abs_error_sum": 348,
+      "seat_mae_across_party_buckets": 43.5,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 30,
+          "n": 47,
+          "accuracy": 0.6382978723404256
+        },
+        "East of England": {
+          "correct": 37,
+          "n": 61,
+          "accuracy": 0.6065573770491803
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 13,
+          "n": 27,
+          "accuracy": 0.48148148148148145
+        },
+        "North West": {
+          "correct": 63,
+          "n": 73,
+          "accuracy": 0.863013698630137
+        },
+        "Scotland": {
+          "correct": 28,
+          "n": 57,
+          "accuracy": 0.49122807017543857
+        },
+        "South East": {
+          "correct": 60,
+          "n": 91,
+          "accuracy": 0.6593406593406593
+        },
+        "South West": {
+          "correct": 30,
+          "n": 58,
+          "accuracy": 0.5172413793103449
+        },
+        "Wales": {
+          "correct": 23,
+          "n": 32,
+          "accuracy": 0.71875
+        },
+        "West Midlands": {
+          "correct": 40,
+          "n": 57,
+          "accuracy": 0.7017543859649122
+        },
+        "Yorkshire and The Humber": {
+          "correct": 36,
+          "n": 54,
+          "accuracy": 0.6666666666666666
+        }
+      }
+    },
+    {
+      "lambda": 0.9,
+      "winner_accuracy": 0.6772151898734177,
+      "correct_winners": 428,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 275,
+        "con": 224,
+        "ref": 47,
+        "ld": 40,
+        "green": 2,
+        "snp": 38,
+        "pc": 4,
+        "other": 2
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -136,
+        "con": 103,
+        "ref": 42,
+        "ld": -32,
+        "green": -2,
+        "snp": 29,
+        "pc": 0,
+        "other": -4
+      },
+      "seat_abs_error_sum": 348,
+      "seat_mae_across_party_buckets": 43.5,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 31,
+          "n": 47,
+          "accuracy": 0.6595744680851063
+        },
+        "East of England": {
+          "correct": 38,
+          "n": 61,
+          "accuracy": 0.6229508196721312
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 12,
+          "n": 27,
+          "accuracy": 0.4444444444444444
+        },
+        "North West": {
+          "correct": 62,
+          "n": 73,
+          "accuracy": 0.8493150684931506
+        },
+        "Scotland": {
+          "correct": 28,
+          "n": 57,
+          "accuracy": 0.49122807017543857
+        },
+        "South East": {
+          "correct": 59,
+          "n": 91,
+          "accuracy": 0.6483516483516484
+        },
+        "South West": {
+          "correct": 30,
+          "n": 58,
+          "accuracy": 0.5172413793103449
+        },
+        "Wales": {
+          "correct": 22,
+          "n": 32,
+          "accuracy": 0.6875
+        },
+        "West Midlands": {
+          "correct": 40,
+          "n": 57,
+          "accuracy": 0.7017543859649122
+        },
+        "Yorkshire and The Humber": {
+          "correct": 36,
+          "n": 54,
+          "accuracy": 0.6666666666666666
+        }
+      }
+    },
+    {
+      "lambda": 0.92,
+      "winner_accuracy": 0.6787974683544303,
+      "correct_winners": 429,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 275,
+        "con": 218,
+        "ref": 50,
+        "ld": 42,
+        "green": 2,
+        "snp": 39,
+        "pc": 4,
+        "other": 2
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -136,
+        "con": 97,
+        "ref": 45,
+        "ld": -30,
+        "green": -2,
+        "snp": 30,
+        "pc": 0,
+        "other": -4
+      },
+      "seat_abs_error_sum": 344,
+      "seat_mae_across_party_buckets": 43.0,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 31,
+          "n": 47,
+          "accuracy": 0.6595744680851063
+        },
+        "East of England": {
+          "correct": 40,
+          "n": 61,
+          "accuracy": 0.6557377049180327
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 11,
+          "n": 27,
+          "accuracy": 0.4074074074074074
+        },
+        "North West": {
+          "correct": 61,
+          "n": 73,
+          "accuracy": 0.8356164383561644
+        },
+        "Scotland": {
+          "correct": 27,
+          "n": 57,
+          "accuracy": 0.47368421052631576
+        },
+        "South East": {
+          "correct": 60,
+          "n": 91,
+          "accuracy": 0.6593406593406593
+        },
+        "South West": {
+          "correct": 31,
+          "n": 58,
+          "accuracy": 0.5344827586206896
+        },
+        "Wales": {
+          "correct": 22,
+          "n": 32,
+          "accuracy": 0.6875
+        },
+        "West Midlands": {
+          "correct": 40,
+          "n": 57,
+          "accuracy": 0.7017543859649122
+        },
+        "Yorkshire and The Humber": {
+          "correct": 36,
+          "n": 54,
+          "accuracy": 0.6666666666666666
+        }
+      }
+    },
+    {
+      "lambda": 0.94,
+      "winner_accuracy": 0.689873417721519,
+      "correct_winners": 436,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 278,
+        "con": 209,
+        "ref": 51,
+        "ld": 45,
+        "green": 4,
+        "snp": 39,
+        "pc": 4,
+        "other": 2
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -133,
+        "con": 88,
+        "ref": 46,
+        "ld": -27,
+        "green": 0,
+        "snp": 30,
+        "pc": 0,
+        "other": -4
+      },
+      "seat_abs_error_sum": 328,
+      "seat_mae_across_party_buckets": 41.0,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 31,
+          "n": 47,
+          "accuracy": 0.6595744680851063
+        },
+        "East of England": {
+          "correct": 40,
+          "n": 61,
+          "accuracy": 0.6557377049180327
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 11,
+          "n": 27,
+          "accuracy": 0.4074074074074074
+        },
+        "North West": {
+          "correct": 61,
+          "n": 73,
+          "accuracy": 0.8356164383561644
+        },
+        "Scotland": {
+          "correct": 27,
+          "n": 57,
+          "accuracy": 0.47368421052631576
+        },
+        "South East": {
+          "correct": 60,
+          "n": 91,
+          "accuracy": 0.6593406593406593
+        },
+        "South West": {
+          "correct": 36,
+          "n": 58,
+          "accuracy": 0.6206896551724138
+        },
+        "Wales": {
+          "correct": 22,
+          "n": 32,
+          "accuracy": 0.6875
+        },
+        "West Midlands": {
+          "correct": 43,
+          "n": 57,
+          "accuracy": 0.7543859649122807
+        },
+        "Yorkshire and The Humber": {
+          "correct": 35,
+          "n": 54,
+          "accuracy": 0.6481481481481481
+        }
+      }
+    },
+    {
+      "lambda": 0.96,
+      "winner_accuracy": 0.6867088607594937,
+      "correct_winners": 434,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 275,
+        "con": 206,
+        "ref": 56,
+        "ld": 46,
+        "green": 4,
+        "snp": 39,
+        "pc": 4,
+        "other": 2
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -136,
+        "con": 85,
+        "ref": 51,
+        "ld": -26,
+        "green": 0,
+        "snp": 30,
+        "pc": 0,
+        "other": -4
+      },
+      "seat_abs_error_sum": 332,
+      "seat_mae_across_party_buckets": 41.5,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 32,
+          "n": 47,
+          "accuracy": 0.6808510638297872
+        },
+        "East of England": {
+          "correct": 41,
+          "n": 61,
+          "accuracy": 0.6721311475409836
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 10,
+          "n": 27,
+          "accuracy": 0.37037037037037035
+        },
+        "North West": {
+          "correct": 60,
+          "n": 73,
+          "accuracy": 0.821917808219178
+        },
+        "Scotland": {
+          "correct": 27,
+          "n": 57,
+          "accuracy": 0.47368421052631576
+        },
+        "South East": {
+          "correct": 60,
+          "n": 91,
+          "accuracy": 0.6593406593406593
+        },
+        "South West": {
+          "correct": 37,
+          "n": 58,
+          "accuracy": 0.6379310344827587
+        },
+        "Wales": {
+          "correct": 21,
+          "n": 32,
+          "accuracy": 0.65625
+        },
+        "West Midlands": {
+          "correct": 42,
+          "n": 57,
+          "accuracy": 0.7368421052631579
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 0.98,
+      "winner_accuracy": 0.689873417721519,
+      "correct_winners": 436,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 277,
+        "con": 201,
+        "ref": 59,
+        "ld": 48,
+        "green": 4,
+        "snp": 37,
+        "pc": 3,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -134,
+        "con": 80,
+        "ref": 54,
+        "ld": -24,
+        "green": 0,
+        "snp": 28,
+        "pc": -1,
+        "other": -3
+      },
+      "seat_abs_error_sum": 324,
+      "seat_mae_across_party_buckets": 40.5,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 32,
+          "n": 47,
+          "accuracy": 0.6808510638297872
+        },
+        "East of England": {
+          "correct": 42,
+          "n": 61,
+          "accuracy": 0.6885245901639344
+        },
+        "London": {
+          "correct": 70,
+          "n": 75,
+          "accuracy": 0.9333333333333333
+        },
+        "North East": {
+          "correct": 10,
+          "n": 27,
+          "accuracy": 0.37037037037037035
+        },
+        "North West": {
+          "correct": 59,
+          "n": 73,
+          "accuracy": 0.8082191780821918
+        },
+        "Scotland": {
+          "correct": 29,
+          "n": 57,
+          "accuracy": 0.5087719298245614
+        },
+        "South East": {
+          "correct": 60,
+          "n": 91,
+          "accuracy": 0.6593406593406593
+        },
+        "South West": {
+          "correct": 38,
+          "n": 58,
+          "accuracy": 0.6551724137931034
+        },
+        "Wales": {
+          "correct": 20,
+          "n": 32,
+          "accuracy": 0.625
+        },
+        "West Midlands": {
+          "correct": 42,
+          "n": 57,
+          "accuracy": 0.7368421052631579
+        },
+        "Yorkshire and The Humber": {
+          "correct": 34,
+          "n": 54,
+          "accuracy": 0.6296296296296297
+        }
+      }
+    },
+    {
+      "lambda": 1.0,
+      "winner_accuracy": 0.685126582278481,
+      "correct_winners": 433,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 272,
+        "con": 196,
+        "ref": 67,
+        "ld": 50,
+        "green": 4,
+        "snp": 37,
+        "pc": 3,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -139,
+        "con": 75,
+        "ref": 62,
+        "ld": -22,
+        "green": 0,
+        "snp": 28,
+        "pc": -1,
+        "other": -3
+      },
+      "seat_abs_error_sum": 330,
+      "seat_mae_across_party_buckets": 41.25,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 32,
+          "n": 47,
+          "accuracy": 0.6808510638297872
+        },
+        "East of England": {
+          "correct": 43,
+          "n": 61,
+          "accuracy": 0.7049180327868853
+        },
+        "London": {
+          "correct": 69,
+          "n": 75,
+          "accuracy": 0.92
+        },
+        "North East": {
+          "correct": 9,
+          "n": 27,
+          "accuracy": 0.3333333333333333
+        },
+        "North West": {
+          "correct": 57,
+          "n": 73,
+          "accuracy": 0.7808219178082192
+        },
+        "Scotland": {
+          "correct": 29,
+          "n": 57,
+          "accuracy": 0.5087719298245614
+        },
+        "South East": {
+          "correct": 62,
+          "n": 91,
+          "accuracy": 0.6813186813186813
+        },
+        "South West": {
+          "correct": 39,
+          "n": 58,
+          "accuracy": 0.6724137931034483
+        },
+        "Wales": {
+          "correct": 20,
+          "n": 32,
+          "accuracy": 0.625
+        },
+        "West Midlands": {
+          "correct": 42,
+          "n": 57,
+          "accuracy": 0.7368421052631579
+        },
+        "Yorkshire and The Humber": {
+          "correct": 31,
+          "n": 54,
+          "accuracy": 0.5740740740740741
+        }
+      }
+    },
+    {
+      "lambda": 1.02,
+      "winner_accuracy": 0.6867088607594937,
+      "correct_winners": 434,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 275,
+        "con": 193,
+        "ref": 67,
+        "ld": 50,
+        "green": 4,
+        "snp": 37,
+        "pc": 3,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -136,
+        "con": 72,
+        "ref": 62,
+        "ld": -22,
+        "green": 0,
+        "snp": 28,
+        "pc": -1,
+        "other": -3
+      },
+      "seat_abs_error_sum": 324,
+      "seat_mae_across_party_buckets": 40.5,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 32,
+          "n": 47,
+          "accuracy": 0.6808510638297872
+        },
+        "East of England": {
+          "correct": 44,
+          "n": 61,
+          "accuracy": 0.7213114754098361
+        },
+        "London": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "North East": {
+          "correct": 9,
+          "n": 27,
+          "accuracy": 0.3333333333333333
+        },
+        "North West": {
+          "correct": 57,
+          "n": 73,
+          "accuracy": 0.7808219178082192
+        },
+        "Scotland": {
+          "correct": 29,
+          "n": 57,
+          "accuracy": 0.5087719298245614
+        },
+        "South East": {
+          "correct": 62,
+          "n": 91,
+          "accuracy": 0.6813186813186813
+        },
+        "South West": {
+          "correct": 39,
+          "n": 58,
+          "accuracy": 0.6724137931034483
+        },
+        "Wales": {
+          "correct": 20,
+          "n": 32,
+          "accuracy": 0.625
+        },
+        "West Midlands": {
+          "correct": 42,
+          "n": 57,
+          "accuracy": 0.7368421052631579
+        },
+        "Yorkshire and The Humber": {
+          "correct": 32,
+          "n": 54,
+          "accuracy": 0.5925925925925926
+        }
+      }
+    },
+    {
+      "lambda": 1.04,
+      "winner_accuracy": 0.6882911392405063,
+      "correct_winners": 435,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 274,
+        "con": 191,
+        "ref": 70,
+        "ld": 51,
+        "green": 4,
+        "snp": 36,
+        "pc": 3,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -137,
+        "con": 70,
+        "ref": 65,
+        "ld": -21,
+        "green": 0,
+        "snp": 27,
+        "pc": -1,
+        "other": -3
+      },
+      "seat_abs_error_sum": 324,
+      "seat_mae_across_party_buckets": 40.5,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 32,
+          "n": 47,
+          "accuracy": 0.6808510638297872
+        },
+        "East of England": {
+          "correct": 44,
+          "n": 61,
+          "accuracy": 0.7213114754098361
+        },
+        "London": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "North East": {
+          "correct": 8,
+          "n": 27,
+          "accuracy": 0.2962962962962963
+        },
+        "North West": {
+          "correct": 57,
+          "n": 73,
+          "accuracy": 0.7808219178082192
+        },
+        "Scotland": {
+          "correct": 30,
+          "n": 57,
+          "accuracy": 0.5263157894736842
+        },
+        "South East": {
+          "correct": 62,
+          "n": 91,
+          "accuracy": 0.6813186813186813
+        },
+        "South West": {
+          "correct": 40,
+          "n": 58,
+          "accuracy": 0.6896551724137931
+        },
+        "Wales": {
+          "correct": 19,
+          "n": 32,
+          "accuracy": 0.59375
+        },
+        "West Midlands": {
+          "correct": 43,
+          "n": 57,
+          "accuracy": 0.7543859649122807
+        },
+        "Yorkshire and The Humber": {
+          "correct": 32,
+          "n": 54,
+          "accuracy": 0.5925925925925926
+        }
+      }
+    },
+    {
+      "lambda": 1.06,
+      "winner_accuracy": 0.685126582278481,
+      "correct_winners": 433,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 270,
+        "con": 189,
+        "ref": 74,
+        "ld": 53,
+        "green": 4,
+        "snp": 36,
+        "pc": 3,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -141,
+        "con": 68,
+        "ref": 69,
+        "ld": -19,
+        "green": 0,
+        "snp": 27,
+        "pc": -1,
+        "other": -3
+      },
+      "seat_abs_error_sum": 328,
+      "seat_mae_across_party_buckets": 41.0,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 32,
+          "n": 47,
+          "accuracy": 0.6808510638297872
+        },
+        "East of England": {
+          "correct": 44,
+          "n": 61,
+          "accuracy": 0.7213114754098361
+        },
+        "London": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "North East": {
+          "correct": 8,
+          "n": 27,
+          "accuracy": 0.2962962962962963
+        },
+        "North West": {
+          "correct": 55,
+          "n": 73,
+          "accuracy": 0.7534246575342466
+        },
+        "Scotland": {
+          "correct": 30,
+          "n": 57,
+          "accuracy": 0.5263157894736842
+        },
+        "South East": {
+          "correct": 63,
+          "n": 91,
+          "accuracy": 0.6923076923076923
+        },
+        "South West": {
+          "correct": 41,
+          "n": 58,
+          "accuracy": 0.7068965517241379
+        },
+        "Wales": {
+          "correct": 17,
+          "n": 32,
+          "accuracy": 0.53125
+        },
+        "West Midlands": {
+          "correct": 43,
+          "n": 57,
+          "accuracy": 0.7543859649122807
+        },
+        "Yorkshire and The Humber": {
+          "correct": 32,
+          "n": 54,
+          "accuracy": 0.5925925925925926
+        }
+      }
+    },
+    {
+      "lambda": 1.08,
+      "winner_accuracy": 0.685126582278481,
+      "correct_winners": 433,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 269,
+        "con": 185,
+        "ref": 79,
+        "ld": 54,
+        "green": 5,
+        "snp": 34,
+        "pc": 3,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -142,
+        "con": 64,
+        "ref": 74,
+        "ld": -18,
+        "green": 1,
+        "snp": 25,
+        "pc": -1,
+        "other": -3
+      },
+      "seat_abs_error_sum": 328,
+      "seat_mae_across_party_buckets": 41.0,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 32,
+          "n": 47,
+          "accuracy": 0.6808510638297872
+        },
+        "East of England": {
+          "correct": 45,
+          "n": 61,
+          "accuracy": 0.7377049180327869
+        },
+        "London": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "North East": {
+          "correct": 7,
+          "n": 27,
+          "accuracy": 0.25925925925925924
+        },
+        "North West": {
+          "correct": 53,
+          "n": 73,
+          "accuracy": 0.726027397260274
+        },
+        "Scotland": {
+          "correct": 32,
+          "n": 57,
+          "accuracy": 0.5614035087719298
+        },
+        "South East": {
+          "correct": 64,
+          "n": 91,
+          "accuracy": 0.7032967032967034
+        },
+        "South West": {
+          "correct": 42,
+          "n": 58,
+          "accuracy": 0.7241379310344828
+        },
+        "Wales": {
+          "correct": 16,
+          "n": 32,
+          "accuracy": 0.5
+        },
+        "West Midlands": {
+          "correct": 43,
+          "n": 57,
+          "accuracy": 0.7543859649122807
+        },
+        "Yorkshire and The Humber": {
+          "correct": 31,
+          "n": 54,
+          "accuracy": 0.5740740740740741
+        }
+      }
+    },
+    {
+      "lambda": 1.1,
+      "winner_accuracy": 0.6819620253164557,
+      "correct_winners": 431,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 266,
+        "con": 180,
+        "ref": 84,
+        "ld": 57,
+        "green": 5,
+        "snp": 34,
+        "pc": 3,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -145,
+        "con": 59,
+        "ref": 79,
+        "ld": -15,
+        "green": 1,
+        "snp": 25,
+        "pc": -1,
+        "other": -3
+      },
+      "seat_abs_error_sum": 328,
+      "seat_mae_across_party_buckets": 41.0,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 32,
+          "n": 47,
+          "accuracy": 0.6808510638297872
+        },
+        "East of England": {
+          "correct": 46,
+          "n": 61,
+          "accuracy": 0.7540983606557377
+        },
+        "London": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "North East": {
+          "correct": 7,
+          "n": 27,
+          "accuracy": 0.25925925925925924
+        },
+        "North West": {
+          "correct": 52,
+          "n": 73,
+          "accuracy": 0.7123287671232876
+        },
+        "Scotland": {
+          "correct": 32,
+          "n": 57,
+          "accuracy": 0.5614035087719298
+        },
+        "South East": {
+          "correct": 64,
+          "n": 91,
+          "accuracy": 0.7032967032967034
+        },
+        "South West": {
+          "correct": 42,
+          "n": 58,
+          "accuracy": 0.7241379310344828
+        },
+        "Wales": {
+          "correct": 16,
+          "n": 32,
+          "accuracy": 0.5
+        },
+        "West Midlands": {
+          "correct": 43,
+          "n": 57,
+          "accuracy": 0.7543859649122807
+        },
+        "Yorkshire and The Humber": {
+          "correct": 29,
+          "n": 54,
+          "accuracy": 0.5370370370370371
+        }
+      }
+    },
+    {
+      "lambda": 1.12,
+      "winner_accuracy": 0.6930379746835443,
+      "correct_winners": 438,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 270,
+        "con": 172,
+        "ref": 85,
+        "ld": 60,
+        "green": 5,
+        "snp": 34,
+        "pc": 3,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -141,
+        "con": 51,
+        "ref": 80,
+        "ld": -12,
+        "green": 1,
+        "snp": 25,
+        "pc": -1,
+        "other": -3
+      },
+      "seat_abs_error_sum": 314,
+      "seat_mae_across_party_buckets": 39.25,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 32,
+          "n": 47,
+          "accuracy": 0.6808510638297872
+        },
+        "East of England": {
+          "correct": 47,
+          "n": 61,
+          "accuracy": 0.7704918032786885
+        },
+        "London": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "North East": {
+          "correct": 7,
+          "n": 27,
+          "accuracy": 0.25925925925925924
+        },
+        "North West": {
+          "correct": 51,
+          "n": 73,
+          "accuracy": 0.6986301369863014
+        },
+        "Scotland": {
+          "correct": 32,
+          "n": 57,
+          "accuracy": 0.5614035087719298
+        },
+        "South East": {
+          "correct": 66,
+          "n": 91,
+          "accuracy": 0.7252747252747253
+        },
+        "South West": {
+          "correct": 47,
+          "n": 58,
+          "accuracy": 0.8103448275862069
+        },
+        "Wales": {
+          "correct": 16,
+          "n": 32,
+          "accuracy": 0.5
+        },
+        "West Midlands": {
+          "correct": 43,
+          "n": 57,
+          "accuracy": 0.7543859649122807
+        },
+        "Yorkshire and The Humber": {
+          "correct": 29,
+          "n": 54,
+          "accuracy": 0.5370370370370371
+        }
+      }
+    },
+    {
+      "lambda": 1.14,
+      "winner_accuracy": 0.6914556962025317,
+      "correct_winners": 437,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 268,
+        "con": 166,
+        "ref": 92,
+        "ld": 61,
+        "green": 5,
+        "snp": 34,
+        "pc": 3,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -143,
+        "con": 45,
+        "ref": 87,
+        "ld": -11,
+        "green": 1,
+        "snp": 25,
+        "pc": -1,
+        "other": -3
+      },
+      "seat_abs_error_sum": 316,
+      "seat_mae_across_party_buckets": 39.5,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 31,
+          "n": 47,
+          "accuracy": 0.6595744680851063
+        },
+        "East of England": {
+          "correct": 47,
+          "n": 61,
+          "accuracy": 0.7704918032786885
+        },
+        "London": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "North East": {
+          "correct": 6,
+          "n": 27,
+          "accuracy": 0.2222222222222222
+        },
+        "North West": {
+          "correct": 49,
+          "n": 73,
+          "accuracy": 0.6712328767123288
+        },
+        "Scotland": {
+          "correct": 32,
+          "n": 57,
+          "accuracy": 0.5614035087719298
+        },
+        "South East": {
+          "correct": 69,
+          "n": 91,
+          "accuracy": 0.7582417582417582
+        },
+        "South West": {
+          "correct": 47,
+          "n": 58,
+          "accuracy": 0.8103448275862069
+        },
+        "Wales": {
+          "correct": 16,
+          "n": 32,
+          "accuracy": 0.5
+        },
+        "West Midlands": {
+          "correct": 43,
+          "n": 57,
+          "accuracy": 0.7543859649122807
+        },
+        "Yorkshire and The Humber": {
+          "correct": 29,
+          "n": 54,
+          "accuracy": 0.5370370370370371
+        }
+      }
+    },
+    {
+      "lambda": 1.16,
+      "winner_accuracy": 0.694620253164557,
+      "correct_winners": 439,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 272,
+        "con": 162,
+        "ref": 94,
+        "ld": 60,
+        "green": 5,
+        "snp": 33,
+        "pc": 3,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -139,
+        "con": 41,
+        "ref": 89,
+        "ld": -12,
+        "green": 1,
+        "snp": 24,
+        "pc": -1,
+        "other": -3
+      },
+      "seat_abs_error_sum": 310,
+      "seat_mae_across_party_buckets": 38.75,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 32,
+          "n": 47,
+          "accuracy": 0.6808510638297872
+        },
+        "East of England": {
+          "correct": 46,
+          "n": 61,
+          "accuracy": 0.7540983606557377
+        },
+        "London": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "North East": {
+          "correct": 6,
+          "n": 27,
+          "accuracy": 0.2222222222222222
+        },
+        "North West": {
+          "correct": 49,
+          "n": 73,
+          "accuracy": 0.6712328767123288
+        },
+        "Scotland": {
+          "correct": 33,
+          "n": 57,
+          "accuracy": 0.5789473684210527
+        },
+        "South East": {
+          "correct": 69,
+          "n": 91,
+          "accuracy": 0.7582417582417582
+        },
+        "South West": {
+          "correct": 48,
+          "n": 58,
+          "accuracy": 0.8275862068965517
+        },
+        "Wales": {
+          "correct": 16,
+          "n": 32,
+          "accuracy": 0.5
+        },
+        "West Midlands": {
+          "correct": 44,
+          "n": 57,
+          "accuracy": 0.7719298245614035
+        },
+        "Yorkshire and The Humber": {
+          "correct": 28,
+          "n": 54,
+          "accuracy": 0.5185185185185185
+        }
+      }
+    },
+    {
+      "lambda": 1.18,
+      "winner_accuracy": 0.694620253164557,
+      "correct_winners": 439,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 274,
+        "con": 157,
+        "ref": 98,
+        "ld": 60,
+        "green": 5,
+        "snp": 32,
+        "pc": 3,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -137,
+        "con": 36,
+        "ref": 93,
+        "ld": -12,
+        "green": 1,
+        "snp": 23,
+        "pc": -1,
+        "other": -3
+      },
+      "seat_abs_error_sum": 306,
+      "seat_mae_across_party_buckets": 38.25,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 32,
+          "n": 47,
+          "accuracy": 0.6808510638297872
+        },
+        "East of England": {
+          "correct": 46,
+          "n": 61,
+          "accuracy": 0.7540983606557377
+        },
+        "London": {
+          "correct": 67,
+          "n": 75,
+          "accuracy": 0.8933333333333333
+        },
+        "North East": {
+          "correct": 6,
+          "n": 27,
+          "accuracy": 0.2222222222222222
+        },
+        "North West": {
+          "correct": 50,
+          "n": 73,
+          "accuracy": 0.684931506849315
+        },
+        "Scotland": {
+          "correct": 33,
+          "n": 57,
+          "accuracy": 0.5789473684210527
+        },
+        "South East": {
+          "correct": 70,
+          "n": 91,
+          "accuracy": 0.7692307692307693
+        },
+        "South West": {
+          "correct": 48,
+          "n": 58,
+          "accuracy": 0.8275862068965517
+        },
+        "Wales": {
+          "correct": 16,
+          "n": 32,
+          "accuracy": 0.5
+        },
+        "West Midlands": {
+          "correct": 43,
+          "n": 57,
+          "accuracy": 0.7543859649122807
+        },
+        "Yorkshire and The Humber": {
+          "correct": 28,
+          "n": 54,
+          "accuracy": 0.5185185185185185
+        }
+      }
+    },
+    {
+      "lambda": 1.2,
+      "winner_accuracy": 0.6962025316455697,
+      "correct_winners": 440,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 276,
+        "con": 152,
+        "ref": 100,
+        "ld": 61,
+        "green": 5,
+        "snp": 32,
+        "pc": 3,
+        "other": 3
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -135,
+        "con": 31,
+        "ref": 95,
+        "ld": -11,
+        "green": 1,
+        "snp": 23,
+        "pc": -1,
+        "other": -3
+      },
+      "seat_abs_error_sum": 300,
+      "seat_mae_across_party_buckets": 37.5,
+      "regional_accuracy": {
+        "East Midlands": {
+          "correct": 30,
+          "n": 47,
+          "accuracy": 0.6382978723404256
+        },
+        "East of England": {
+          "correct": 48,
+          "n": 61,
+          "accuracy": 0.7868852459016393
+        },
+        "London": {
+          "correct": 67,
+          "n": 75,
+          "accuracy": 0.8933333333333333
+        },
+        "North East": {
+          "correct": 6,
+          "n": 27,
+          "accuracy": 0.2222222222222222
+        },
+        "North West": {
+          "correct": 50,
+          "n": 73,
+          "accuracy": 0.684931506849315
+        },
+        "Scotland": {
+          "correct": 33,
+          "n": 57,
+          "accuracy": 0.5789473684210527
+        },
+        "South East": {
+          "correct": 72,
+          "n": 91,
+          "accuracy": 0.7912087912087912
+        },
+        "South West": {
+          "correct": 48,
+          "n": 58,
+          "accuracy": 0.8275862068965517
+        },
+        "Wales": {
+          "correct": 16,
+          "n": 32,
+          "accuracy": 0.5
+        },
+        "West Midlands": {
+          "correct": 43,
+          "n": 57,
+          "accuracy": 0.7543859649122807
+        },
+        "Yorkshire and The Humber": {
+          "correct": 27,
+          "n": 54,
+          "accuracy": 0.5
+        }
+      }
+    }
+  ]
+}
