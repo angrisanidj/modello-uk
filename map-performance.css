@@ -1,0 +1,51 @@
+/*
+ * UK map performance patch v0.3
+ * Avoid expensive per-constituency hover restyling on 650 complex SVG paths.
+ * A single overlay path is moved by scripts/map-performance.js instead.
+ */
+#ukMap .constituency{
+  transition:none!important;
+  opacity:1!important;
+}
+#ukMap .constituency:hover{
+  stroke:#0b0d12!important;
+  stroke-width:.35!important;
+  opacity:1!important;
+}
+#ukMap .constituency.selected{
+  stroke:#fff!important;
+  stroke-width:1.55!important;
+}
+#ukMap .map-hover-overlay{
+  fill:none;
+  stroke:#fff;
+  stroke-width:1.15;
+  vector-effect:non-scaling-stroke;
+  pointer-events:none;
+  opacity:.96;
+}
+.map-wrap{
+  contain:layout paint;
+}
+.map-fast-tooltip{
+  position:absolute;
+  left:0;
+  top:0;
+  z-index:8;
+  pointer-events:none;
+  max-width:260px;
+  padding:6px 9px;
+  border:1px solid #3a4659;
+  border-radius:8px;
+  background:rgba(11,14,20,.94);
+  color:#f4f6f8;
+  box-shadow:0 6px 18px rgba(0,0,0,.28);
+  font-size:11px;
+  font-weight:750;
+  line-height:1.25;
+  white-space:normal;
+  transform:translate3d(-9999px,-9999px,0);
+}
+.map-fast-tooltip[hidden]{
+  display:none;
+}

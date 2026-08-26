@@ -7,6 +7,7 @@
 <title>Elezioni nel Regno Unito — Sondaggi e proiezione della House of Commons</title>
 <meta name="description" content="Media dei sondaggi, proiezione probabilistica dei 650 seggi, simulazione dei collegi e probabilità di maggioranza per le prossime elezioni britanniche." />
 <link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="map-performance.css" />
 </head>
 <body>
 <div class="flag-ribbon" aria-hidden="true"></div>
@@ -26,19 +27,16 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Fonte sondaggi: —</span>
-      <span class="badge">Versione 0.1 · beta metodologica</span>
+      <span class="badge">Versione 0.3 · backtest territoriale</span>
     </div>
   </section>
-
   <div id="errorBox" class="errorbox"></div>
-
   <section class="grid kpis">
     <article class="card kpi"><div class="label">Ultimo sondaggio</div><div id="kpiLastPoll" class="value">—</div><div id="kpiLastPollMeta" class="meta">—</div></article>
     <article class="card kpi"><div class="label">Media nazionale</div><div id="kpiLeader" class="value">—</div><div id="kpiLeaderMeta" class="meta">—</div></article>
     <article class="card kpi"><div class="label">Partito più grande</div><div id="kpiLargest" class="value">—</div><div id="kpiLargestMeta" class="meta">Monte Carlo</div></article>
     <article class="card kpi"><div class="label">Maggioranza assoluta</div><div id="kpiMajority" class="value">—</div><div id="kpiMajorityMeta" class="meta">326 seggi</div></article>
   </section>
-
   <div class="section-title"><div><div class="section-kicker">Voto nazionale</div><h2>Media dei sondaggi</h2><p>Media esponenziale con half-life di 7 giorni, ponderazione del campione e lieve correzione GB/UK.</p></div></div>
   <section class="grid two">
     <article class="card feature">
@@ -50,11 +48,10 @@
       <div class="explain compact">
         <p><strong>632 collegi GB</strong> sono simulati singolarmente con il risultato 2024 come baseline e swing regolarizzato.</p>
         <p><strong>18 collegi dell’Irlanda del Nord</strong> restano in un modulo separato, perché i normali Westminster polls non ne descrivono il sistema partitico.</p>
-        <p class="warning"><strong>Beta:</strong> il motore territoriale v0.1 non incorpora ancora tutti i correttivi regionali e demografici previsti dal backtest.</p>
+        <p class="warning"><strong>Beta:</strong> la v0.3 avvia il backtest territoriale 2019 nozionale → 2024; sondaggi storici e calibrazione probabilistica completa vengono dopo.</p>
       </div>
     </article>
   </section>
-
   <div class="section-title"><div><div class="section-kicker">House of Commons</div><h2>Proiezione dei seggi</h2><p>Mediane e intervalli dalla simulazione Monte Carlo. La linea di maggioranza è a 326.</p></div></div>
   <section class="projection-layout">
     <article class="card parliament-card">
@@ -75,7 +72,6 @@
       <div class="small-note">Seed deterministico: se i sondaggi e la baseline non cambiano, la distribuzione resta identica. Il risultato viene salvato in cache nel browser.</div>
     </article>
   </section>
-
   <div class="section-title"><div><div class="section-kicker">Territorio</div><h2>Mappa dei collegi</h2><p>Il colore indica il vincitore centrale; dopo il Monte Carlo il pannello mostra anche la probabilità di vittoria.</p></div></div>
   <section class="grid map-layout">
     <article class="card map-card">
@@ -87,27 +83,24 @@
       <div id="detailBody" class="detail-body"><p>Clicca un collegio sulla mappa per vedere risultato 2024, proiezione centrale e probabilità di vittoria.</p></div>
     </article>
   </section>
-
   <div class="section-title"><div><div class="section-kicker">Scenari</div><h2>Costruisci una maggioranza</h2><p>Somma le mediane dei partiti e, quando il Monte Carlo è disponibile, misura quante simulazioni raggiungono 326 seggi.</p></div></div>
   <section class="card coalition-card">
     <div id="coalitionButtons" class="coalition-buttons"></div>
     <div class="coalition-result"><div><span>Seggi mediani</span><strong id="coalSeats">0</strong></div><div><span>Probabilità ≥326</span><strong id="coalProb">—</strong></div><div><span>Distanza</span><strong id="coalDistance">−326</strong></div></div>
   </section>
-
   <div class="section-title"><div><div class="section-kicker">Sondaggi</div><h2>Rilevazioni recenti</h2><p>I record vengono acquisiti automaticamente e conservati in uno snapshot locale.</p></div></div>
   <section class="card poll-table-card"><div class="table-scroll"><table><thead><tr><th>Data</th><th>Istituto</th><th>Area</th><th>n</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>Green</th><th>SNP</th><th>PC</th><th>RB</th></tr></thead><tbody id="pollTableBody"></tbody></table></div></section>
-
-  <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La struttura è già predisposta per 2010, 2015, 2017, 2019 e 2024.</p></div></div>
+  <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La prima fase separa l’errore territoriale dall’errore dei sondaggi.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Stato della versione 0.1</p></div></div><div class="explain"><p><strong>Dataset:</strong> risultati ufficiali 2024 + risultati storici/parlamentari e 2019 nozionale sui confini 2024.</p><p><strong>Metriche previste:</strong> MAE seggi, accuratezza vincitore di collegio, Brier score, calibrazione delle probabilità e maggioranza/hung parliament.</p><p class="warning"><strong>Non ancora calibrato:</strong> i parametri territoriali della v0.1 sono iniziali. Non vanno presentati come previsione definitiva finché il backtest non determina shrinkage, varianze e correlazioni ottimali.</p></div></article>
-    <article class="card"><div class="cardhead"><div><h3>Pipeline e backstop</h3><p>Il sito non dipende da una singola richiesta live.</p></div></div><div class="pipeline"><span>Wikipedia / MediaWiki</span><b>→</b><span>snapshot validato</span><b>→</b><span>media</span><b>→</b><span>632 collegi GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>Se l’aggiornamento live fallisce, resta disponibile l’ultimo snapshot valido. La GitHub Action aggiorna sondaggi, risultati e geometrie senza modificare il codice del modello.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Stage 1 · conversione territoriale</p></div></div><div class="explain"><p><strong>Test:</strong> risultati nozionali 2019 sui confini 2024 → risultato reale 2024, usando come target il voto nazionale reale 2024.</p><p><strong>Perché:</strong> così misuriamo il motore dei collegi senza confonderlo con l’errore dei sondaggi.</p><p class="warning"><strong>Non è ancora il backtest finale:</strong> lo step successivo aggiungerà i sondaggi storici pre-elettorali e poi calibrerà varianze e probabilità.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Pipeline e backstop</h3><p>Il sito non dipende da una singola richiesta live.</p></div></div><div class="pipeline"><span>Wikipedia / MediaWiki</span><b>→</b><span>snapshot validato</span><b>→</b><span>media</span><b>→</b><span>632 collegi GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>Se l’aggiornamento live fallisce, resta disponibile l’ultimo snapshot valido. La GitHub Action aggiorna sondaggi, risultati, geometrie e ora anche il backtest territoriale.</p></div></article>
   </section>
-
   <footer>
     <p><strong>Fonti:</strong> Wikipedia/MediaWiki per i sondaggi; House of Commons Library e UK Parliament per i risultati; ONS per i confini. Modello indipendente a fini informativi.</p>
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
 <script src="scripts/app.js"></script>
+<script src="scripts/map-performance.js"></script>
 </body>
 </html>
