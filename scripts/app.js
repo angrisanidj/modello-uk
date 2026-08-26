@@ -363,9 +363,26 @@ function pathForGeometry(geom,project){
 function renderMap(){
   const map=$('#ukMap');
   if(!state.geometry?.features?.length){$('#mapEmpty').style.display='grid';$('#mapMeta').textContent='Geometrie non disponibili: esegui la build dati.';return;}
-  const features=state.geometry.features; let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-  for(const f of features)eachCoord(f.geometry,c=>{minX=Math.min(minX,c[0]);maxX=Math.max(maxX,c[0]);minY=Math.min(minY,c[1]);maxY=Math.max(maxY,c[1]);});
-  const pad=24,W=640,H=760,s=Math.min((W-2*pad)/(maxX-minX),(H-2*pad)/(maxY-minY));const project=c=>[pad+(c[0]-minX)*s,H-pad-(c[1]-minY)*s];
+  // Web Mercator for display only. The previous renderer treated one degree
+  // of longitude as the same physical distance as one degree of latitude; at
+  // UK latitudes that makes Britain look much too wide / vertically squashed.
+  // Projection is computed only while the SVG paths are built, so hover cost
+  // remains unchanged.
+  const features=state.geometry.features;
+  const RAD=Math.PI/180;
+  const mercator=c=>{
+    const lon=Number(c[0])*RAD;
+    const lat=clamp(Number(c[1]),-85,85)*RAD;
+    return [lon,Math.log(Math.tan(Math.PI/4+lat/2))];
+  };
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  for(const f of features)eachCoord(f.geometry,c=>{
+    const p=mercator(c);
+    minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);
+    minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);
+  });
+  const pad=24,W=640,H=760,s=Math.min((W-2*pad)/(maxX-minX),(H-2*pad)/(maxY-minY));
+  const project=c=>{const p=mercator(c);return [pad+(p[0]-minX)*s,H-pad-(p[1]-minY)*s];};
   map.innerHTML=features.map(f=>{
     const id=geometryCode(f.properties||{}),name=geometryName(f.properties||{}),seat=state.byId.get(id);
     const fill=seat?PARTY[seat.centralWinner]?.color:partyColorFrom2024(id);

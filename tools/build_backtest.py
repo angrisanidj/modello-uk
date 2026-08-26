@@ -302,11 +302,25 @@ def main()->int:
             hold_fit=evaluate(elections["2019N"],elections["2024"],lambdas,prior)
             hold_country=evaluate(elections["2019N"],elections["2024"],lambdas,prior,True)
 
-            approved=(
+            # Production gate: the fitted model must not trade one validation
+            # metric for another. On BOTH unseen elections it must be at least
+            # as good as the common-lambda baseline on constituency accuracy
+            # AND aggregate seat error, with at least one strict improvement.
+            val_ok=(
                 val_fit["winner_accuracy"]>=val_common["winner_accuracy"]
-                and hold_fit["winner_accuracy"]>=hold_common["winner_accuracy"]
-                and hold_fit["seat_abs_error_sum"]<hold_common["seat_abs_error_sum"]
+                and val_fit["seat_abs_error_sum"]<=val_common["seat_abs_error_sum"]
             )
+            hold_ok=(
+                hold_fit["winner_accuracy"]>=hold_common["winner_accuracy"]
+                and hold_fit["seat_abs_error_sum"]<=hold_common["seat_abs_error_sum"]
+            )
+            strict_improvement=(
+                val_fit["winner_accuracy"]>val_common["winner_accuracy"]
+                or val_fit["seat_abs_error_sum"]<val_common["seat_abs_error_sum"]
+                or hold_fit["winner_accuracy"]>hold_common["winner_accuracy"]
+                or hold_fit["seat_abs_error_sum"]<hold_common["seat_abs_error_sum"]
+            )
+            approved=val_ok and hold_ok and strict_improvement
 
             params={
                 "version":"uk-v04-historical-calibration",
@@ -337,7 +351,7 @@ def main()->int:
                     "stage":"v0.4 historical territorial calibration",
                     "source":"UK Parliament psephology database",
                     "polling_error_included":False,
-                    "production_rule":"fit on 2015/2017; require improvement on both 2019 validation and 2024 holdout"
+                    "production_rule":"fit on 2015/2017; require non-worsening winner accuracy AND seat error on both 2019 validation and 2024 holdout, plus at least one strict improvement"
                 },
                 "common_lambda":COMMON_LAMBDA,
                 "training_common":{
