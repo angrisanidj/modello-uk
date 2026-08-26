@@ -24,7 +24,7 @@ const CONFIG = {
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v096-20260826-metadata-fix',
+  cacheVersion: 'uk-v097-20260826-fptp-contestability',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
@@ -375,8 +375,8 @@ function buildGeographicTargets(gbTarget){
 
 function mrpLiteActive(){
   const m=state.mrpLite;
-  return m?.version==='uk-v096-mrp-lite-live'
-    && m?.model_type==='constituency-residual-ml-v1'
+  return m?.version==='uk-v097-mrp-lite-live'
+    && m?.model_type==='constituency-residual-ml-fptp-v2'
     && m?.status==='ok'
     && m?.approved===true
     && Number(m?.holdout_accuracy)>=.80
@@ -397,7 +397,7 @@ function buildMrpLiteCentral(target,geo){
     const computed=eligible.reduce((best,p)=>projected[p]>(projected[best]??-1)?p:best,eligible[0]||'other');
     const winner=(m.centralWinner&&eligible.includes(m.centralWinner))?m.centralWinner:computed;
     totals[winner]=(totals[winner]||0)+1;
-    seats.push({...c,projected,centralWinner:winner,otherEligible:m.otherEligible===true,modelZone:zoneForSeat(c),mrpLite:true});
+    seats.push({...c,projected,centralWinner:winner,otherEligible:m.otherEligible===true,contestability:m.contestability||null,modelZone:zoneForSeat(c),mrpLite:true});
   }
   const niCentral=buildNiCentral();
   for(const [p,n] of Object.entries(niCentral.totals||{}))totals[p]=(totals[p]||0)+n;

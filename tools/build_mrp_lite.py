@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.6 — metadata-preserving BES pipeline / hybrid residual model
+modello-uk v0.9.7 — MRP-lite + FPTP contestability calibration / hybrid residual model
 
 Purpose
 -------
@@ -68,8 +68,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import requests
-from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.linear_model import Ridge
+from sklearn.ensemble import HistGradientBoostingRegressor, HistGradientBoostingClassifier
+from sklearn.linear_model import Ridge, LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -79,8 +79,8 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v096-mrp-lite.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v096.json"
+BACKTEST_OUT=DATA/"backtest-v097-mrp-lite.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v097.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -112,7 +112,20 @@ MODEL_SPECS=(
     {"name":"hybrid_a5_d2_w40","kind":"hybrid","alpha":5.0,"depth":2,"leaf":24,"l2":2.0,"hgb_weight":.40,"gamma":.85},
 )
 
-UA="FocusAmerica-UK-election-model/0.9.6 (+https://angrisanidj.github.io/modello-uk/)"
+CONTEST_SPECS=(
+    {"name":"none","kind":"none","strength":0.0},
+    {"name":"logit_c025_s025","kind":"logit","C":0.25,"strength":0.25},
+    {"name":"logit_c025_s040","kind":"logit","C":0.25,"strength":0.40},
+    {"name":"logit_c100_s025","kind":"logit","C":1.00,"strength":0.25},
+    {"name":"logit_c100_s040","kind":"logit","C":1.00,"strength":0.40},
+    {"name":"logit_c300_s040","kind":"logit","C":3.00,"strength":0.40},
+    {"name":"hgb_d2_s025","kind":"hgb","depth":2,"leaf":30,"l2":4.0,"strength":0.25},
+    {"name":"hgb_d2_s040","kind":"hgb","depth":2,"leaf":30,"l2":4.0,"strength":0.40},
+    {"name":"hgb_d3_s025","kind":"hgb","depth":3,"leaf":36,"l2":6.0,"strength":0.25},
+)
+
+
+UA="FocusAmerica-UK-election-model/0.9.7 (+https://angrisanidj.github.io/modello-uk/)"
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -613,7 +626,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v096-bes-integrity",
+        "version":"uk-v097-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -956,6 +969,279 @@ def predict_transition(base:dict[str,Any],target:dict[str,float],models,feature_
         for p in PARTIES:out.at[idx,p]=vals[p]/s*100.0
     return rake(out,base,target)
 
+
+def contest_feature_record(
+    row:pd.Series,
+    nat_base:dict[str,float],
+    nat_target:dict[str,float],
+    swing_row:pd.Series,
+    party:str,
+    demo_cols:list[str]
+)->dict[str,float]:
+    """Party-seat features for the FPTP contestability layer.
+
+    Everything here is knowable from the baseline election, demographics and
+    the national target. The future election's local result is never a feature.
+    """
+    f=row_context(row,nat_base,nat_target,party,demo_cols)
+    local={p:float(row[p])/100.0 for p in PARTIES}
+    allowed_main=[p for p in MAIN_PARTIES if allowed(p,str(row["country"]))]
+    ordered=sorted(allowed_main,key=lambda p:local[p],reverse=True)
+
+    f["swing_share"]=float(swing_row.get(party,0.0))/100.0
+    f["local_party_share"]=local.get(party,0.0)
+    f["target_party_share"]=float(nat_target.get(party,0.0))/100.0
+    f["base_party_share"]=float(nat_base.get(party,0.0))/100.0
+    f["national_change_party"]=(float(nat_target.get(party,0.0))-float(nat_base.get(party,0.0)))/100.0
+
+    top1=local[ordered[0]] if ordered else 0.0
+    top2=local[ordered[1]] if len(ordered)>1 else 0.0
+    f["baseline_top1"]=top1
+    f["baseline_top2"]=top2
+    f["baseline_top2_sum"]=top1+top2
+    f["baseline_fragmentation"]=1.0-sum(local[p]**2 for p in allowed_main)
+    f["distance_to_top"]=local.get(party,0.0)-top1
+    f["distance_to_second"]=local.get(party,0.0)-top2
+
+    winner=str(row.get("actual_winner") or "")
+    second=str(row.get("actual_second") or "")
+    f["incumbent_party_proxy"]=1.0 if winner==party else 0.0
+    f["runnerup_party_proxy"]=1.0 if second==party else 0.0
+    f["challenger_to_con"]=1.0 if winner=="con" and party!="con" else 0.0
+    f["challenger_to_lab"]=1.0 if winner=="lab" and party!="lab" else 0.0
+    f["ld_target_con"]=1.0 if party=="ld" and winner=="con" and second=="ld" else 0.0
+    f["lab_target_con"]=1.0 if party=="lab" and winner=="con" and second=="lab" else 0.0
+    f["ref_target_con"]=1.0 if party=="ref" and winner=="con" else 0.0
+
+    # Party identity must be explicit because one binary classifier is trained
+    # over all party-seat pairs.
+    for p in PARTIES:
+        f[f"party_{p}"]=1.0 if p==party else 0.0
+
+    # Extra interactions for the 2015-UKIP / 2024-Reform analogue and
+    # Labour-vs-LibDem tactical targeting of Conservative seats.
+    con_drop=max(0.0,(nat_base["con"]-nat_target["con"])/100.0)
+    ref_rise=max(0.0,(nat_target["ref"]-nat_base["ref"])/100.0)
+    ld_rise=max(0.0,(nat_target["ld"]-nat_base["ld"])/100.0)
+    leave=float(row.get("demo_leave",0.0))
+    density=float(row.get("demo_density",0.0))
+    old=float(row.get("demo_old",0.0))
+    owner=float(row.get("demo_owner",0.0))
+
+    f["ref_leave_affinity"]=1.0 if party=="ref" else 0.0
+    f["ref_leave_affinity"]*=leave*ref_rise
+    f["ref_lowdensity_affinity"]=(1.0 if party=="ref" else 0.0)*(-density)*ref_rise
+    f["ref_old_affinity"]=(1.0 if party=="ref" else 0.0)*old*ref_rise
+    f["ref_owner_affinity"]=(1.0 if party=="ref" else 0.0)*owner*ref_rise
+    f["ref_concollapse_affinity"]=(1.0 if party=="ref" else 0.0)*local["con"]*con_drop
+
+    f["ld_concollapse_targeting"]=(1.0 if party=="ld" else 0.0)*local["ld"]*con_drop
+    f["ld_runnerup_x_condrop"]=(1.0 if party=="ld" and second=="ld" else 0.0)*con_drop
+    f["lab_runnerup_x_condrop"]=(1.0 if party=="lab" and second=="lab" else 0.0)*con_drop
+    f["ld_rise_x_local"]=(1.0 if party=="ld" else 0.0)*local["ld"]*ld_rise
+
+    return f
+
+
+def contest_matrix(
+    election:dict[str,Any],
+    target_nat:dict[str,float],
+    feature_names:list[str]|None=None
+)->tuple[pd.DataFrame,list[tuple[Any,str]]]:
+    df=election["frame"]
+    nat_base=nat_shares(election)
+    demo_cols=[c for c in df.columns if str(c).startswith("demo_")]
+    swing=base_prediction(election,target_nat)
+    records=[]
+    keys=[]
+
+    for idx,row in df.iterrows():
+        parties=competitive_parties(row)
+        for p in parties:
+            records.append(
+                contest_feature_record(row,nat_base,target_nat,swing.loc[idx],p,demo_cols)
+            )
+            keys.append((idx,p))
+
+    x=pd.DataFrame(records)
+    if feature_names is not None:
+        for c in feature_names:
+            if c not in x:x[c]=0.0
+        x=x[feature_names]
+    return x.replace([np.inf,-np.inf],0).fillna(0.0),keys
+
+
+def contest_training_data(transitions:list[dict[str,Any]],feature_names:list[str]|None=None):
+    xs=[];ys=[]
+    all_keys=[]
+    for tr in transitions:
+        x,keys=contest_matrix(tr["base"],tr["target"],feature_names)
+        actual=tr["actual"]["frame"]
+        y=np.asarray([1 if str(actual.loc[idx,"actual_winner"])==p else 0 for idx,p in keys],dtype=int)
+        xs.append(x);ys.append(y);all_keys.extend(keys)
+
+    if feature_names is None:
+        all_cols=sorted(set().union(*(set(x.columns) for x in xs)))
+    else:
+        all_cols=list(feature_names)
+
+    xcat=pd.concat(
+        [x.reindex(columns=all_cols,fill_value=0.0) for x in xs],
+        axis=0,ignore_index=True
+    )
+    ycat=np.concatenate(ys) if ys else np.array([],dtype=int)
+    return xcat,ycat,all_cols,all_keys
+
+
+def make_contest_estimator(spec:dict[str,Any]):
+    if spec["kind"]=="logit":
+        return Pipeline([
+            ("scale",StandardScaler()),
+            ("logit",LogisticRegression(
+                C=float(spec["C"]),
+                class_weight="balanced",
+                max_iter=1600,
+                solver="lbfgs",
+                random_state=202697,
+            ))
+        ])
+    if spec["kind"]=="hgb":
+        return HistGradientBoostingClassifier(
+            learning_rate=.05,
+            max_iter=130,
+            max_leaf_nodes=15,
+            max_depth=int(spec["depth"]),
+            min_samples_leaf=int(spec["leaf"]),
+            l2_regularization=float(spec["l2"]),
+            random_state=202697,
+        )
+    raise ValueError(spec["kind"])
+
+
+def train_contest_model(transitions:list[dict[str,Any]],spec:dict[str,Any]):
+    if spec["kind"]=="none":
+        return None,[]
+    x,y,names,_=contest_training_data(transitions)
+    if len(np.unique(y))<2:
+        raise RuntimeError("Contestability classifier training has only one class")
+    model=make_contest_estimator(spec)
+    if spec["kind"]=="hgb":
+        # Roughly equal total mass for winners and non-winners.
+        pos=max(1,int(y.sum()));neg=max(1,int((1-y).sum()))
+        pw=neg/pos
+        sw=np.where(y==1,pw,1.0)
+        model.fit(x,y,sample_weight=sw)
+    else:
+        model.fit(x,y)
+    return model,names
+
+
+def predict_contest_scores(
+    base:dict[str,Any],
+    target:dict[str,float],
+    model,
+    feature_names:list[str]
+)->pd.DataFrame:
+    df=base["frame"]
+    scores=pd.DataFrame(0.0,index=df.index,columns=PARTIES)
+    if model is None:
+        return scores
+    x,keys=contest_matrix(base,target,feature_names)
+    probs=model.predict_proba(x)[:,1]
+    for (idx,p),prob in zip(keys,probs):
+        scores.at[idx,p]=clamp(float(prob),1e-6,1-1e-6)
+    return scores
+
+
+def calibrate_with_contestability(
+    rows:pd.DataFrame,
+    contest_scores:pd.DataFrame,
+    base:dict[str,Any],
+    target:dict[str,float],
+    strength:float
+)->pd.DataFrame:
+    """Redistribute local shares using FPTP win-priors, then rake back nationally.
+
+    Strength is chosen on the 2017 internal test only. The operation preserves
+    national party targets after raking; it changes only territorial efficiency.
+    """
+    if strength<=0:
+        return rows.copy()
+
+    out=rows.copy().astype(float)
+    for idx,row in base["frame"].iterrows():
+        parties=competitive_parties(row)
+        share_sum=sum(max(.01,float(out.at[idx,p])) for p in parties) or 1.0
+        prob_sum=sum(max(1e-6,float(contest_scores.at[idx,p])) for p in parties) or 1.0
+
+        factors={}
+        for p in parties:
+            share_prob=max(.002,float(out.at[idx,p])/share_sum)
+            contest_prob=max(.002,float(contest_scores.at[idx,p])/prob_sum)
+            ratio=contest_prob/share_prob
+            factors[p]=clamp(ratio**strength,.60,1.65)
+
+        vals={}
+        country=str(row["country"])
+        for p in PARTIES:
+            if not allowed(p,country):
+                vals[p]=0.0
+            elif p in factors:
+                vals[p]=max(.0001,float(out.at[idx,p])*factors[p])
+            else:
+                vals[p]=max(.0001,float(out.at[idx,p]))
+        s=sum(vals.values()) or 1.0
+        for p in PARTIES:
+            out.at[idx,p]=vals[p]/s*100.0
+
+    return rake(out,base,target)
+
+
+def tune_contest_spec(
+    tr10_15:dict[str,Any],
+    tr15_17:dict[str,Any],
+    share_spec:dict[str,Any]
+):
+    # The share model and the contestability layer are both selected without
+    # seeing the 2019 validation or the 2024 holdout.
+    share_models,share_names=train_models([tr10_15],share_spec)
+    raw_rows=predict_transition(
+        tr15_17["base"],tr15_17["target"],share_models,share_names,share_spec
+    )
+
+    candidates=[]
+    for spec in CONTEST_SPECS:
+        if spec["kind"]=="none":
+            rows=raw_rows
+        else:
+            model,names=train_contest_model([tr10_15],spec)
+            scores=predict_contest_scores(tr15_17["base"],tr15_17["target"],model,names)
+            rows=calibrate_with_contestability(
+                raw_rows,scores,tr15_17["base"],tr15_17["target"],float(spec["strength"])
+            )
+        metrics=evaluate_rows(rows,tr15_17["actual"],tr15_17["base"])
+        candidates.append({"spec":spec,"metrics":metrics})
+
+    candidates.sort(key=lambda x:score_tuple(x["metrics"]),reverse=True)
+    return candidates[0]["spec"],candidates
+
+
+def apply_contest_layer(
+    raw_rows:pd.DataFrame,
+    base:dict[str,Any],
+    target:dict[str,float],
+    transitions:list[dict[str,Any]],
+    contest_spec:dict[str,Any]
+):
+    if contest_spec["kind"]=="none":
+        return raw_rows.copy(),None
+    model,names=train_contest_model(transitions,contest_spec)
+    scores=predict_contest_scores(base,target,model,names)
+    rows=calibrate_with_contestability(
+        raw_rows,scores,base,target,float(contest_spec["strength"])
+    )
+    return rows,scores
+
 def evaluate_rows(rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,Any])->dict[str,Any]:
     df=actual["frame"];base_df=base["frame"]
     pred=Counter();real=Counter();correct=0
@@ -1046,8 +1332,13 @@ def calculate_poll_target(path:Path)->tuple[dict[str,float],dict[str,Any]]:
     target=normalize_target(avg)
     return target,{"effective_polls":effective,"raw_average":avg}
 
-def live_projection(current:dict[str,Any],target:dict[str,float],models,names,spec:dict[str,Any])->dict[str,Any]:
-    rows=predict_transition(current,target,models,names,spec)
+def live_projection(
+    current:dict[str,Any],
+    target:dict[str,float],
+    rows:pd.DataFrame,
+    contest_scores:pd.DataFrame|None,
+    contest_spec:dict[str,Any]
+)->dict[str,Any]:
     df=current["frame"];seats=[];totals=Counter()
     for idx,row in df.iterrows():
         winner=predicted_winner(rows.loc[idx],row)
@@ -1063,11 +1354,16 @@ def live_projection(current:dict[str,Any],target:dict[str,float],models,names,sp
             "otherEligible":bool(other_eligible),
             "baselineWinner":str(row.get("actual_winner") or ""),
             "baselineSecond":str(row.get("actual_second") or ""),
+            "contestability":{
+                p:round(float(contest_scores.at[idx,p]),6)
+                for p in competitive_parties(row)
+            } if contest_scores is not None else None,
         })
     return {
         "seats":seats,
         "totals":{p:int(totals[p]) for p in PARTIES},
-        "other_rule":"Aggregate Other share is not treated as a single candidate; Other can win only if winner/runner-up in the 2024 baseline."
+        "other_rule":"Aggregate Other share is not treated as a single candidate; Other can win only if winner/runner-up in the 2024 baseline.",
+        "contestability_spec":contest_spec,
     }
 
 def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[str,Any],hold_base:dict[str,Any])->tuple[bool,list[str]]:
@@ -1086,8 +1382,8 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v096-mrp-lite",
-        "model_type":"constituency-residual-ml-v1",
+        "version":"uk-v097-mrp-lite",
+        "model_type":"constituency-residual-ml-fptp-v2",
         "status":"error",
         "approved":False,
         "publication_ready":False,
@@ -1098,15 +1394,15 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v096-mrp-lite-live","approved":False,"status":"error",
+        "version":"uk-v097-mrp-lite-live","approved":False,"status":"error",
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v096-mrp-lite-backtest","status":"error","error":str(exc)
+        "version":"uk-v097-mrp-lite-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v096-bes-integrity","status":"failed",
+            "version":"uk-v097-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -1155,15 +1451,27 @@ def main()->int:
 
         # Tune using only pre-validation history.
         selected_spec,tuning=tune_spec(t10_15,t15_17)
+        selected_contest_spec,contest_tuning=tune_contest_spec(
+            t10_15,t15_17,selected_spec
+        )
 
         # Unseen validation.
         models_val,names_val=train_models([t10_15,t15_17],selected_spec)
-        val_rows=predict_transition(e17,t17_19["target"],models_val,names_val,selected_spec)
+        val_raw=predict_transition(e17,t17_19["target"],models_val,names_val,selected_spec)
+        validation_share_only=evaluate_rows(val_raw,e19,e17)
+        val_rows,val_contest_scores=apply_contest_layer(
+            val_raw,e17,t17_19["target"],[t10_15,t15_17],selected_contest_spec
+        )
         validation=evaluate_rows(val_rows,e19,e17)
 
         # Genuine holdout. Refit using everything known by the end of 2019.
         models_hold,names_hold=train_models([t10_15,t15_17,t17_19],selected_spec)
-        hold_rows=predict_transition(e19n,t19n_24["target"],models_hold,names_hold,selected_spec)
+        hold_raw=predict_transition(e19n,t19n_24["target"],models_hold,names_hold,selected_spec)
+        holdout_share_only=evaluate_rows(hold_raw,e24,e19n)
+        hold_rows,hold_contest_scores=apply_contest_layer(
+            hold_raw,e19n,t19n_24["target"],
+            [t10_15,t15_17,t17_19],selected_contest_spec
+        )
         holdout=evaluate_rows(hold_rows,e24,e19n)
 
         approved,reasons=approval_gate(validation,holdout,validation_base,holdout_base)
@@ -1176,16 +1484,23 @@ def main()->int:
         # Live refit can use 2024 only AFTER the holdout has been scored.
         target_now,poll_meta=calculate_poll_target(DATA/"polls.json")
         models_live,names_live=train_models([t10_15,t15_17,t17_19,t19n_24],selected_spec)
-        live=live_projection(e24,target_now,models_live,names_live,selected_spec)
+        live_raw=predict_transition(e24,target_now,models_live,names_live,selected_spec)
+        live_rows,live_contest_scores=apply_contest_layer(
+            live_raw,e24,target_now,[t10_15,t15_17,t17_19,t19n_24],selected_contest_spec
+        )
+        live=live_projection(
+            e24,target_now,live_rows,live_contest_scores,selected_contest_spec
+        )
 
         model_payload={
-            "version":"uk-v096-mrp-lite",
-            "model_type":"constituency-residual-ml-v1",
+            "version":"uk-v097-mrp-lite",
+            "model_type":"constituency-residual-ml-fptp-v2",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
             "generated_at":utcnow().isoformat(),
             "selected_spec":selected_spec,
+            "selected_contest_spec":selected_contest_spec,
             "hard_gate":{
                 "min_holdout_accuracy":.80,
                 "min_holdout_gain_pp":5.0,
@@ -1196,10 +1511,12 @@ def main()->int:
             "gate_failures":reasons,
             "validation_2019":{
                 "baseline":validation_base,
+                "share_only_candidate":validation_share_only,
                 "candidate":validation,
             },
             "holdout_2024":{
                 "baseline":holdout_base,
+                "share_only_candidate":holdout_share_only,
                 "candidate":holdout,
                 "accuracy_gain_pp":(holdout["winner_accuracy"]-holdout_base["winner_accuracy"])*100,
                 "seat_error_improvement":holdout_base["seat_abs_error_sum"]-holdout["seat_abs_error_sum"],
@@ -1216,10 +1533,22 @@ def main()->int:
                     } for x in tuning
                 ],
             },
+            "contestability_selection_2017":{
+                "selected":selected_contest_spec,
+                "candidates":[
+                    {
+                        "spec":x["spec"],
+                        "winner_accuracy":x["metrics"]["winner_accuracy"],
+                        "correct_winners":x["metrics"]["correct_winners"],
+                        "seat_abs_error_sum":x["metrics"]["seat_abs_error_sum"],
+                        "predicted_seats":x["metrics"]["predicted_seats"],
+                    } for x in contest_tuning
+                ],
+            },
             "features":{
                 "historical_demographics":[c.replace("demo_","") for c in e19["demo_columns"]],
                 "current_demographics":[c.replace("demo_","") for c in e24["demo_columns"]],
-                "notes":"Census fields are converted to within-wave percentile ranks before modelling. Official WinnerXX/SecondXX fields define seat competition; aggregate Other remains a vote-share bucket, not a pooled candidate.",
+                "notes":"Census fields are converted to within-wave percentile ranks. Stage 1 predicts local vote shares; Stage 2 is an FPTP contestability classifier trained only on earlier elections and selected on 2017. It redistributes territorial efficiency while the final raking preserves national party targets. Official WinnerXX/SecondXX define historical seat competition; Other is never a pooled universal candidate.",
             },
             "integrity":{
                 "version":integrity.get("version"),
@@ -1238,14 +1567,15 @@ def main()->int:
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v096-mrp-lite-live",
-            "model_type":"constituency-residual-ml-v1",
+            "version":"uk-v097-mrp-lite-live",
+            "model_type":"constituency-residual-ml-fptp-v2",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
             "generated_at":utcnow().isoformat(),
             "model_version":model_payload["version"],
             "selected_spec":selected_spec,
+            "selected_contest_spec":selected_contest_spec,
             "target_gb":target_now,
             "poll_meta":poll_meta,
             "holdout_accuracy":holdout["winner_accuracy"],
@@ -1255,27 +1585,32 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v096-mrp-lite-backtest",
+            "version":"uk-v097-mrp-lite-backtest",
             "status":"ok",
             "selected_spec":selected_spec,
+            "selected_contest_spec":selected_contest_spec,
             "approved_for_live":approved,
             "publication_ready":publication_ready,
-            "validation_2019":{"baseline":validation_base,"candidate":validation},
-            "holdout_2024":{"baseline":holdout_base,"candidate":holdout},
+            "validation_2019":{"baseline":validation_base,"share_only_candidate":validation_share_only,"candidate":validation},
+            "holdout_2024":{"baseline":holdout_base,"share_only_candidate":holdout_share_only,"candidate":holdout},
             "internal_selection_2017":model_payload["internal_selection_2017"],
+            "contestability_selection_2017":model_payload["contestability_selection_2017"],
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
-        print("v0.9.6 selected spec:",selected_spec)
+        print("v0.9.7 selected share spec:",selected_spec)
+        print("v0.9.7 selected FPTP contest spec:",selected_contest_spec)
         print(
             "2019 validation:",
             f"baseline {validation_base['winner_accuracy']:.2%}/{validation_base['seat_abs_error_sum']}",
-            f"candidate {validation['winner_accuracy']:.2%}/{validation['seat_abs_error_sum']}"
+            f"share-only {validation_share_only['winner_accuracy']:.2%}/{validation_share_only['seat_abs_error_sum']}",
+            f"FPTP-calibrated {validation['winner_accuracy']:.2%}/{validation['seat_abs_error_sum']}"
         )
         print(
             "2024 HOLDOUT:",
             f"baseline {holdout_base['winner_accuracy']:.2%}/{holdout_base['seat_abs_error_sum']}",
-            f"candidate {holdout['winner_accuracy']:.2%}/{holdout['seat_abs_error_sum']}"
+            f"share-only {holdout_share_only['winner_accuracy']:.2%}/{holdout_share_only['seat_abs_error_sum']}",
+            f"FPTP-calibrated {holdout['winner_accuracy']:.2%}/{holdout['seat_abs_error_sum']}"
         )
         print("Approved for beta live:",approved,reasons)
         print("Publication-ready threshold (85% / seat error <=140):",publication_ready)
@@ -1286,7 +1621,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.6 shadow build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.7 shadow build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # Shadow failure must not break the existing production model.
         raise SystemExit(0)

@@ -27,7 +27,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Fonte sondaggi: —</span>
-      <span class="badge">Versione 0.9.6 · BES metadata propagation fix</span>
+      <span class="badge">Versione 0.9.7 · FPTP contestability calibration</span>
     </div>
   </section>
   <div id="errorBox" class="errorbox"></div>
@@ -48,7 +48,7 @@
       <div class="explain compact">
         <p><strong>632 collegi GB</strong> sono simulati singolarmente con il risultato 2024 come baseline e swing regolarizzato.</p>
         <p><strong>18 collegi dell’Irlanda del Nord</strong> sono simulati separatamente con partiti, candidati e risultati Westminster 2024 reali. In assenza di polling Westminster recente, il tracker Assembly di LucidTalk entra soltanto come segnale debole.</p>
-        <p class="warning"><strong>Beta:</strong> la v0.9.6 corregge esclusivamente la propagazione dei metadati BES: dopo l’aggiunta delle variabili demografiche vengono preservati il flag GB-first, la fonte delle quote e l’audit delle etichette. Il parser della v0.9.5 aveva già superato correttamente l’integrity gate; i criteri statistici del modello restano invariati.</p>
+        <p class="warning"><strong>Beta:</strong> la v0.9.7 aggiunge un secondo stadio FPTP sopra l’MRP-lite. Il primo stadio stima le quote locali; il secondo impara, usando solo elezioni precedenti, quali collegi trasformano davvero quelle quote in una vittoria. Serve soprattutto a distinguere voto diffuso da voto efficiente: il 2015 UKIP informa la dispersione territoriale di Reform, mentre winner/runner-up, margini e crollo Conservative aiutano il targeting Labour/LibDem. La forza del layer è scelta sul 2017, validata sul 2019 e soltanto dopo misurata sul holdout 2024.</p>
       </div>
     </article>
   </section>
@@ -100,7 +100,7 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.6"></script>
+<script src="scripts/app.js?v=0.9.7"></script>
 <script src="scripts/map-performance.js"></script>
 </body>
 </html>
