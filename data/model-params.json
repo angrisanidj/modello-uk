@@ -1,5 +1,6 @@
 {
-  "version": "uk-v05-hierarchical-territorial",
+  "version": "uk-v06-transfer-raked",
+  "model_type": "transfer-raked-v1",
   "approved": false,
   "training_elections": [
     "2010→2015",
@@ -8,129 +9,118 @@
   "validation_election": "2017→2019",
   "holdout_election": "2019 notional→2024",
   "common_lambda": 0.82,
-  "lambdas": {
-    "lab": 0.4,
-    "con": 0.4,
-    "ref": 0.82,
-    "ld": 0.65,
-    "green": 0.35,
-    "snp": 1.3,
-    "pc": 0.82
-  },
-  "regional_beta": {
-    "East Midlands": {
-      "lab": 0.9173,
-      "con": 1.0468,
-      "ref": 1.0319,
-      "ld": 1.2312,
-      "green": 1.1719,
-      "snp": 1.0,
-      "pc": 1.0
+  "transfer_feature_parties": [
+    "lab",
+    "con",
+    "ref",
+    "ld",
+    "green",
+    "snp",
+    "pc"
+  ],
+  "transfer_target_parties": [
+    "lab",
+    "con",
+    "ref",
+    "ld",
+    "green",
+    "snp",
+    "pc",
+    "other"
+  ],
+  "transfer_coefficients": {
+    "lab": {
+      "lab": -0.979004,
+      "con": 6.376841,
+      "ref": 5.604191,
+      "ld": -1.135957,
+      "green": -3.849053,
+      "snp": 16.760365,
+      "pc": -1.719455
     },
-    "East of England": {
-      "lab": 1.3846,
-      "con": 0.8686,
-      "ref": 0.9647,
-      "ld": 0.9978,
-      "green": 0.6418,
-      "snp": 1.0,
-      "pc": 1.0
+    "con": {
+      "lab": -1.14765,
+      "con": -11.134189,
+      "ref": -2.42216,
+      "ld": 2.461617,
+      "green": 18.0,
+      "snp": 3.829808,
+      "pc": 1.74447
     },
-    "London": {
-      "lab": 0.8561,
-      "con": 0.45,
-      "ref": 1.0062,
-      "ld": 0.9781,
-      "green": 0.9405,
-      "snp": 1.0,
-      "pc": 1.0
+    "ref": {
+      "lab": 0.861649,
+      "con": -0.084591,
+      "ref": -5.409836,
+      "ld": 2.637054,
+      "green": 0.030333,
+      "snp": -8.186942,
+      "pc": 0.134818
     },
-    "North East": {
-      "lab": 0.6763,
-      "con": 1.6308,
-      "ref": 0.9514,
-      "ld": 1.2054,
-      "green": 1.65,
-      "snp": 1.0,
-      "pc": 1.0
+    "ld": {
+      "lab": -0.195178,
+      "con": 1.527631,
+      "ref": 3.643486,
+      "ld": -3.783513,
+      "green": 6.932901,
+      "snp": 11.045597,
+      "pc": 1.455767
     },
-    "North West": {
-      "lab": 0.8025,
-      "con": 1.0217,
-      "ref": 1.0291,
-      "ld": 1.1159,
-      "green": 1.3379,
-      "snp": 1.0,
-      "pc": 1.0
+    "green": {
+      "lab": 0.219414,
+      "con": 0.806632,
+      "ref": -0.961453,
+      "ld": -0.356453,
+      "green": -18.0,
+      "snp": -3.606734,
+      "pc": -0.238747
     },
-    "Scotland": {
-      "lab": 0.45,
-      "con": 1.65,
-      "ref": 0.9187,
-      "ld": 0.8572,
-      "green": 0.9801,
-      "snp": 0.8466,
-      "pc": 1.0
+    "snp": {
+      "lab": 1.277151,
+      "con": 2.446752,
+      "ref": -1.387498,
+      "ld": 0.169094,
+      "green": -5.337324,
+      "snp": -18.0,
+      "pc": -1.108772
     },
-    "South East": {
-      "lab": 1.5397,
-      "con": 0.672,
-      "ref": 0.9534,
-      "ld": 0.9511,
-      "green": 0.8628,
-      "snp": 1.0,
-      "pc": 1.0
+    "pc": {
+      "lab": -0.077036,
+      "con": -0.178552,
+      "ref": -0.013535,
+      "ld": 0.055953,
+      "green": 0.099484,
+      "snp": 0.164,
+      "pc": -0.797875
     },
-    "South West": {
-      "lab": 1.65,
-      "con": 0.8319,
-      "ref": 1.1272,
-      "ld": 0.7765,
-      "green": 1.2132,
-      "snp": 1.0,
-      "pc": 1.0
-    },
-    "Wales": {
-      "lab": 1.0043,
-      "con": 1.2562,
-      "ref": 1.0817,
-      "ld": 1.0549,
-      "green": 1.6478,
-      "snp": 1.0,
-      "pc": 1.0245
-    },
-    "West Midlands": {
-      "lab": 0.9468,
-      "con": 1.0695,
-      "ref": 1.0731,
-      "ld": 1.222,
-      "green": 1.1632,
-      "snp": 1.0,
-      "pc": 1.0
-    },
-    "Yorkshire and The Humber": {
-      "lab": 0.8596,
-      "con": 1.2811,
-      "ref": 1.0474,
-      "ld": 1.0947,
-      "green": 1.0831,
-      "snp": 1.0,
-      "pc": 1.0
+    "other": {
+      "lab": 0.040654,
+      "con": 0.239476,
+      "ref": 0.946804,
+      "ld": -0.047795,
+      "green": 4.1047,
+      "snp": 1.446493,
+      "pc": 0.529795
     }
   },
-  "regional_ridge": 0.02,
-  "ref_missing_prior": 0.0,
+  "transfer_ridge": 0.3,
+  "rake_iterations": 36,
   "validation": {
     "common_accuracy": 0.9177215189873418,
-    "hierarchical_accuracy": 0.9034810126582279,
+    "raked_accuracy": 0.9145569620253164,
+    "transfer_accuracy": 0.9082278481012658,
     "common_seat_abs_error": 44,
-    "hierarchical_seat_abs_error": 84
+    "raked_seat_abs_error": 44,
+    "transfer_seat_abs_error": 50,
+    "transfer_share_mae": 2.7160996794826966
   },
   "holdout": {
     "common_accuracy": 0.6835443037974683,
-    "hierarchical_accuracy": 0.5917721518987342,
+    "raked_accuracy": 0.7104430379746836,
+    "transfer_accuracy": 0.6677215189873418,
     "common_seat_abs_error": 340,
-    "hierarchical_seat_abs_error": 480
+    "raked_seat_abs_error": 264,
+    "transfer_seat_abs_error": 348,
+    "transfer_share_mae": 7.573743620588588
   },
-  "note": "Live use only when approved=true. Regional betas are learned on 2010→2015 and 2015→2017 only; 2019 and 2024 are unseen gates. Current Scotland/Wales polling is a separate live-data layer in app.js."
+  "note": "The transfer matrix is trained only on 2010→2015 and 2015→2017. It redistributes local vote according to cross-party exposure, then rakes constituency shares back to the supplied national target. It is used live only when approved=true after unseen 2019 and 2024 gates."
 }
