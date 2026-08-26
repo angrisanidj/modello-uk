@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Elezioni nel Regno Unito — Sondaggi e proiezione della House of Commons</title>
+<meta name="description" content="Media dei sondaggi, proiezione probabilistica dei 650 seggi, simulazione dei collegi e probabilità di maggioranza per le prossime elezioni britanniche." />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="flag-ribbon" aria-hidden="true"></div>
+<main class="shell">
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow"><span class="flag-dot">UK</span> Focus America · modello elettorale</div>
+        <h1>Elezioni nel Regno Unito</h1>
+        <p class="subtitle">Sondaggi, proiezione dei <strong>650 seggi</strong> della House of Commons, simulazione probabilistica dei collegi e scenari di maggioranza. <strong>Nowcast: “se si votasse oggi”.</strong></p>
+      </div>
+      <div class="actions">
+        <button id="refreshBtn" class="primary">Aggiorna dati</button>
+        <a class="buttonlike" href="#metodo">Metodologia</a>
+      </div>
+    </div>
+    <div class="hero-meta">
+      <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
+      <span class="badge" id="dataBadge">Fonte sondaggi: —</span>
+      <span class="badge">Versione 0.1 · beta metodologica</span>
+    </div>
+  </section>
+
+  <div id="errorBox" class="errorbox"></div>
+
+  <section class="grid kpis">
+    <article class="card kpi"><div class="label">Ultimo sondaggio</div><div id="kpiLastPoll" class="value">—</div><div id="kpiLastPollMeta" class="meta">—</div></article>
+    <article class="card kpi"><div class="label">Media nazionale</div><div id="kpiLeader" class="value">—</div><div id="kpiLeaderMeta" class="meta">—</div></article>
+    <article class="card kpi"><div class="label">Partito più grande</div><div id="kpiLargest" class="value">—</div><div id="kpiLargestMeta" class="meta">Monte Carlo</div></article>
+    <article class="card kpi"><div class="label">Maggioranza assoluta</div><div id="kpiMajority" class="value">—</div><div id="kpiMajorityMeta" class="meta">326 seggi</div></article>
+  </section>
+
+  <div class="section-title"><div><div class="section-kicker">Voto nazionale</div><h2>Media dei sondaggi</h2><p>Media esponenziale con half-life di 7 giorni, ponderazione del campione e lieve correzione GB/UK.</p></div></div>
+  <section class="grid two">
+    <article class="card feature">
+      <div class="cardhead"><div><h3>Intenzione di voto</h3><p id="pollAverageMeta">—</p></div><div class="controls"><button class="active" data-window="all">Media</button><button data-window="latest">Ultimi poll</button></div></div>
+      <div id="voteBars" class="vote-bars"></div>
+    </article>
+    <article class="card">
+      <div class="cardhead"><div><h3>Come leggere il dato</h3><p>Il voto nazionale non viene convertito direttamente in seggi.</p></div></div>
+      <div class="explain compact">
+        <p><strong>632 collegi GB</strong> sono simulati singolarmente con il risultato 2024 come baseline e swing regolarizzato.</p>
+        <p><strong>18 collegi dell’Irlanda del Nord</strong> restano in un modulo separato, perché i normali Westminster polls non ne descrivono il sistema partitico.</p>
+        <p class="warning"><strong>Beta:</strong> il motore territoriale v0.1 non incorpora ancora tutti i correttivi regionali e demografici previsti dal backtest.</p>
+      </div>
+    </article>
+  </section>
+
+  <div class="section-title"><div><div class="section-kicker">House of Commons</div><h2>Proiezione dei seggi</h2><p>Mediane e intervalli dalla simulazione Monte Carlo. La linea di maggioranza è a 326.</p></div></div>
+  <section class="projection-layout">
+    <article class="card parliament-card">
+      <div class="projection-head"><div><h2 id="projectionTitle">In attesa dei dati territoriali</h2><p id="projectionSubtitle">La simulazione parte quando sono disponibili i risultati 2024 dei collegi.</p></div><span id="mcBadge" class="proj-badge">50.000 simulazioni</span></div>
+      <div class="hemicycle-wrap"><svg id="hemicycle" viewBox="0 0 620 330" role="img" aria-label="Proiezione della House of Commons"></svg><div class="majority-marker">326</div></div>
+      <div id="seatStrip" class="seat-strip"></div>
+      <div id="seatTable" class="seat-table"></div>
+    </article>
+    <article class="card probability-card">
+      <div class="cardhead"><div><h3>Esiti complessivi</h3><p>Frequenze nelle simulazioni.</p></div></div>
+      <div class="prob-list">
+        <div><span>Labour majority</span><strong id="probLabMaj">—</strong></div>
+        <div><span>Conservative majority</span><strong id="probConMaj">—</strong></div>
+        <div><span>Reform majority</span><strong id="probRefMaj">—</strong></div>
+        <div><span>Hung Parliament</span><strong id="probHung">—</strong></div>
+      </div>
+      <div class="mc-progress"><div><span id="mcStatus">Monte Carlo non avviato</span><span id="mcCount">0 / 50.000</span></div><progress id="mcProgress" value="0" max="50000"></progress></div>
+      <div class="small-note">Seed deterministico: se i sondaggi e la baseline non cambiano, la distribuzione resta identica. Il risultato viene salvato in cache nel browser.</div>
+    </article>
+  </section>
+
+  <div class="section-title"><div><div class="section-kicker">Territorio</div><h2>Mappa dei collegi</h2><p>Il colore indica il vincitore centrale; dopo il Monte Carlo il pannello mostra anche la probabilità di vittoria.</p></div></div>
+  <section class="grid map-layout">
+    <article class="card map-card">
+      <div class="cardhead"><div><h3>650 Westminster constituencies</h3><p id="mapMeta">Caricamento geometrie ONS…</p></div><div class="controls"><button id="mapCentralBtn" class="active">Proiezione</button><button id="mapProbBtn">Probabilità</button></div></div>
+      <div id="mapWrap" class="map-wrap"><svg id="ukMap" viewBox="0 0 640 760" role="img" aria-label="Mappa dei collegi parlamentari britannici"></svg><div id="mapEmpty" class="empty-state">Le geometrie saranno caricate dalla build automatica.</div></div>
+    </article>
+    <article class="card seat-detail">
+      <div class="cardhead"><div><h3 id="detailName">Seleziona un collegio</h3><p id="detailRegion">—</p></div></div>
+      <div id="detailBody" class="detail-body"><p>Clicca un collegio sulla mappa per vedere risultato 2024, proiezione centrale e probabilità di vittoria.</p></div>
+    </article>
+  </section>
+
+  <div class="section-title"><div><div class="section-kicker">Scenari</div><h2>Costruisci una maggioranza</h2><p>Somma le mediane dei partiti e, quando il Monte Carlo è disponibile, misura quante simulazioni raggiungono 326 seggi.</p></div></div>
+  <section class="card coalition-card">
+    <div id="coalitionButtons" class="coalition-buttons"></div>
+    <div class="coalition-result"><div><span>Seggi mediani</span><strong id="coalSeats">0</strong></div><div><span>Probabilità ≥326</span><strong id="coalProb">—</strong></div><div><span>Distanza</span><strong id="coalDistance">−326</strong></div></div>
+  </section>
+
+  <div class="section-title"><div><div class="section-kicker">Sondaggi</div><h2>Rilevazioni recenti</h2><p>I record vengono acquisiti automaticamente e conservati in uno snapshot locale.</p></div></div>
+  <section class="card poll-table-card"><div class="table-scroll"><table><thead><tr><th>Data</th><th>Istituto</th><th>Area</th><th>n</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>Green</th><th>SNP</th><th>PC</th><th>RB</th></tr></thead><tbody id="pollTableBody"></tbody></table></div></section>
+
+  <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La struttura è già predisposta per 2010, 2015, 2017, 2019 e 2024.</p></div></div>
+  <section class="grid two">
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Stato della versione 0.1</p></div></div><div class="explain"><p><strong>Dataset:</strong> risultati ufficiali 2024 + risultati storici/parlamentari e 2019 nozionale sui confini 2024.</p><p><strong>Metriche previste:</strong> MAE seggi, accuratezza vincitore di collegio, Brier score, calibrazione delle probabilità e maggioranza/hung parliament.</p><p class="warning"><strong>Non ancora calibrato:</strong> i parametri territoriali della v0.1 sono iniziali. Non vanno presentati come previsione definitiva finché il backtest non determina shrinkage, varianze e correlazioni ottimali.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Pipeline e backstop</h3><p>Il sito non dipende da una singola richiesta live.</p></div></div><div class="pipeline"><span>Wikipedia / MediaWiki</span><b>→</b><span>snapshot validato</span><b>→</b><span>media</span><b>→</b><span>632 collegi GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>Se l’aggiornamento live fallisce, resta disponibile l’ultimo snapshot valido. La GitHub Action aggiorna sondaggi, risultati e geometrie senza modificare il codice del modello.</p></div></article>
+  </section>
+
+  <footer>
+    <p><strong>Fonti:</strong> Wikipedia/MediaWiki per i sondaggi; House of Commons Library e UK Parliament per i risultati; ONS per i confini. Modello indipendente a fini informativi.</p>
+    <p id="footerBuild">Build dati: —</p>
+  </footer>
+</main>
+<script src="scripts/app.js"></script>
+</body>
+</html>

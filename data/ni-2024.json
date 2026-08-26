@@ -1,0 +1,12 @@
+{
+  "meta": {"source":"UK general election 2024", "seats":18, "mode":"fixed-baseline-v0.1"},
+  "parties": [
+    {"id":"sf","name":"Sinn Féin","seats":7,"abstentionist":true},
+    {"id":"dup","name":"DUP","seats":5},
+    {"id":"sdlp","name":"SDLP","seats":2},
+    {"id":"alliance","name":"Alliance","seats":1},
+    {"id":"uup","name":"UUP","seats":1},
+    {"id":"tuv","name":"TUV","seats":1},
+    {"id":"ind","name":"Independent","seats":1}
+  ]
+}

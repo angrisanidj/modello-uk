@@ -1,0 +1,8 @@
+{
+  "meta": {
+    "generated": false,
+    "source": "House of Commons Library — General election 2024 results",
+    "note": "Eseguire tools/build_data.py o la GitHub Action Update UK election data per popolare i 650 collegi."
+  },
+  "constituencies": []
+}
