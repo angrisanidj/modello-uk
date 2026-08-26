@@ -27,7 +27,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Fonte sondaggi: —</span>
-      <span class="badge">Versione 0.9.14 · place + regradient sweep (shadow)</span>
+      <span class="badge">Versione 0.9.15 · local strength sweep (shadow)</span>
     </div>
   </section>
   <div id="errorBox" class="errorbox"></div>
@@ -48,7 +48,7 @@
       <div class="explain compact">
         <p><strong>632 collegi GB</strong> sono simulati singolarmente con il risultato 2024 come baseline e swing regolarizzato.</p>
         <p><strong>18 collegi dell’Irlanda del Nord</strong> sono simulati separatamente con partiti, candidati e risultati Westminster 2024 reali. In assenza di polling Westminster recente, il tracker Assembly di LucidTalk entra soltanto come segnale debole.</p>
-        <p class="warning"><strong>Beta:</strong> la v0.9.14 mantiene congelato il candidato v0.9.10 e testa in shadow due correzioni strutturali documentate nella letteratura e nei modelli MRP pubblici: <em>regradienting</em> della distribuzione territoriale e persistenza dei residui di luogo/competizione. Le intensità vengono selezionate esclusivamente sul 2019; il 2024 serve solo come benchmark successivo. Nessun risultato sperimentale può andare live automaticamente: il sito continua a usare il fallback prudente.</p>
+        <p class="warning"><strong>Beta:</strong> la v0.9.15 mantiene congelato il candidato v0.9.10 e aggiunge in shadow informazione locale realmente nuova: risultati delle elezioni locali precedenti alla generale e by-election parlamentari. Il segnale locale è corretto per il clima nazionale delle stesse elezioni e per la geografia già presente nell’ultima generale. Le intensità vengono selezionate esclusivamente sul 2019; il 2024 serve solo come benchmark successivo. Nessun risultato sperimentale può andare live automaticamente: il sito continua a usare il fallback prudente.</p>
       </div>
     </article>
   </section>
@@ -92,15 +92,15 @@
   <section class="card poll-table-card"><div class="table-scroll"><table><thead><tr><th>Data</th><th>Istituto</th><th>Area</th><th>n</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>Green</th><th>SNP</th><th>PC</th><th>RB</th></tr></thead><tbody id="pollTableBody"></tbody></table></div></section>
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La calibrazione territoriale viene stimata su elezioni precedenti e verificata su elezioni non usate nel fit.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Stage 9 · place + regradient sweep</p></div></div><div class="explain"><p><strong>Baseline congelata:</strong> il candidato canonico deve restare identico alla v0.9.10: 583/632 nel 2019 e 494/632 nel benchmark 2024. <strong>Nuovo esperimento:</strong> una griglia prefissata combina regradienting storico e residui persistenti per regione, vincitore precedente, runner-up e fascia di marginalità.</p><p><strong>Selezione:</strong> le intensità sperimentali vengono ordinate soltanto sul risultato 2019, usando come profilo residuo una previsione 2017 generata senza dati futuri. Una volta scelto il candidato, il profilo viene fatto avanzare al 2019 e il 2024 viene aperto solo per il punteggio finale.</p><p class="warning"><strong>Gate di ricerca:</strong> almeno 506 collegi corretti su 632 (80%) e errore seggi non superiore a 176. Anche se superato, la v0.9.14 resta shadow e richiede una futura validazione indipendente prima di qualsiasi promozione.</p></div></article>
-    <article class="card"><div class="cardhead"><div><h3>Pipeline e backstop</h3><p>Il sito non dipende da una singola richiesta live.</p></div></div><div class="pipeline"><span>Wikipedia / MediaWiki</span><b>→</b><span>snapshot validato</span><b>→</b><span>media</span><b>→</b><span>632 collegi GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>Se l’aggiornamento live fallisce, resta disponibile l’ultimo snapshot valido. La GitHub Action aggiorna dati e backtest, genera il report completo dei 138 errori canonici e lo sweep place/regradient, e verifica automaticamente che la build shadow non possa attivare il modello sperimentale.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Stage 10 · local-election + by-election strength</p></div></div><div class="explain"><p><strong>Baseline congelata:</strong> il candidato canonico resta identico alla v0.9.10: 583/632 nel 2019 e 494/632 nel benchmark 2024. <strong>Nuovo esperimento:</strong> una griglia prefissata combina forza elettorale locale recente e by-election parlamentari, senza alterare il target nazionale.</p><p><strong>Selezione temporale:</strong> per il 2019 sono ammessi solo risultati locali/by-election precedenti al 12 dicembre 2019. Le due intensità vengono scelte sul 2019. Per il benchmark 2024 si usano soltanto informazioni pubblicate prima del 4 luglio 2024 e il risultato 2024 non seleziona alcun parametro.</p><p class="warning"><strong>Gate di ricerca:</strong> almeno 506 collegi corretti su 632 (80%) e errore seggi non superiore a 176. Anche se superato, la v0.9.15 resta shadow e richiede una futura validazione indipendente prima di qualsiasi promozione.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Pipeline e backstop</h3><p>Il sito non dipende da una singola richiesta live.</p></div></div><div class="pipeline"><span>Wikipedia / MediaWiki</span><b>→</b><span>snapshot validato</span><b>→</b><span>media</span><b>→</b><span>632 collegi GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>Se l’aggiornamento live fallisce, resta disponibile l’ultimo snapshot valido. La GitHub Action aggiorna dati e backtest, genera il report completo dei 138 errori canonici e lo sweep local-election/by-election, e verifica automaticamente che la build shadow non possa attivare il modello sperimentale.</p></div></article>
   </section>
   <footer>
-    <p><strong>Fonti:</strong> Wikipedia/MediaWiki per i sondaggi; House of Commons Library e UK Parliament per i risultati; ONS per i confini. Modello indipendente a fini informativi.</p>
+    <p><strong>Fonti:</strong> Wikipedia/MediaWiki per i sondaggi; House of Commons Library e UK Parliament per le generali; Democracy Club per elezioni locali e by-election; ONS per confini e lookup geografici. Modello indipendente a fini informativi.</p>
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.14"></script>
+<script src="scripts/app.js?v=0.9.15"></script>
 <script src="scripts/map-performance.js"></script>
 </body>
 </html>

@@ -1,51 +1,24 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.14 — place + regradient structural sweep (shadow research)
+modello-uk v0.9.15 — local-election + by-election strength sweep (shadow research)
 
-Purpose
--------
-The canonical constituency model is frozen at the v0.9.10-equivalent result.
-v0.9.14 tests two different, literature-motivated post-calibration layers without
-changing production:
+Adds genuinely new pre-election local information to the frozen v0.9.10-equivalent
+constituency candidate. Recent local-election strength is aggregated at local-authority
+level from Democracy Club candidate/result exports and mapped to constituencies via ONS
+ward-PCON-LAD lookups. Parliamentary by-election deltas are exact-name matched and
+recency weighted.
 
-1. REGRADIENTING: correct only the part of each party's constituency
-   distribution aligned with previous-election local strength.  This is distinct
-   from the existing generic dispersion layer and is motivated by the attenuation
-   / unwinding problem documented by public UK MRP practitioners.
-2. PLACE + COMPETITION RESIDUAL PERSISTENCE: transport shrunk residual effects
-   from the previous honestly predicted election by region and by a structural
-   competition cell (region, prior winner, runner-up, prior-margin band).  This is
-   a low-dimensional proxy for persistent place/spatial effects; it is explicitly
-   NOT a full ICAR adjacency model.
+The strength grid is fixed in source and selected ONLY on the 2019 general election.
+For the 2024 benchmark, all local election dates stop at 2 May 2024 and all by-elections
+stop before 4 July 2024. The 2024 labels never choose a coefficient. National general-
+election targets are re-imposed after every local adjustment.
 
-Data
-----
-- BES 2010-2019 Constituency Results with Census and Candidate Data
-- BES 2024 Constituency Results with Census and Candidate Data
-Both are downloaded through the Figshare API.
-
-Selection discipline
---------------------
-The new v0.9.14 strength grid is fixed in source.  The experiment uses the
-honestly generated 2017 residuals to construct the place profile used for 2019,
-and ONLY the 2019 result may rank/select the experimental strengths.  After that
-selection, residuals are rolled forward through 2019 and the selected candidate
-is scored on 2024.  No 2024 label selects a strength, threshold, candidate or
-live configuration.
-
-The canonical core remains guarded at:
-- 2019: 583/632 correct, seat absolute error 42
-- 2024 benchmark: 494/632 correct, seat absolute error 176, Reform 39 vs 5 actual
-
-Research gate
--------------
-A v0.9.14 experimental candidate is considered numerically interesting only if
-it reaches >=506/632 correct (>=80%) on the 2024 benchmark AND does not exceed
-the canonical seat absolute error of 176.  Even then, v0.9.14 stays shadow-only
-and cannot be promoted without a fresh independent validation election/data set.
+Canonical regression guards remain 583/632 and seat error 42 in 2019; 494/632 and
+seat error 176 in 2024. Research gate: >=506/632 and seat error <=176. Shadow only.
 """
 from __future__ import annotations
 
+import io
 import json
 import math
 import re
@@ -71,10 +44,10 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v0914-place-regradient.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v0914.json"
-DIAGNOSTIC_OUT=DATA/"error-structure-v0914.json"
-SWEEP_OUT=DATA/"place-regradient-sweep-v0914.json"
+BACKTEST_OUT=DATA/"backtest-v0915-local-strength.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v0915.json"
+DIAGNOSTIC_OUT=DATA/"error-structure-v0915.json"
+SWEEP_OUT=DATA/"local-strength-sweep-v0915.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -87,7 +60,7 @@ FLOOR_MAIN=.18
 FLOOR_SMALL=.03
 RAKE_ITERATIONS=80
 
-# v0.9.14 shadow research grids.  These are fixed ex ante; only the 2019
+# v0.9.15 shadow research grids.  These are fixed ex ante; only the 2019
 # election may select among them.  The 2024 result is never used to choose a
 # strength, threshold or live candidate.
 REGRADE_PARTIES=("lab","con","ld","green","snp","pc")
@@ -100,6 +73,29 @@ REGRADE_MAX_SEAT_SHIFT=7.5
 PLACE_REGION_PRIOR_N=14.0
 PLACE_COMP_PRIOR_N=10.0
 PLACE_MAX_SEAT_SHIFT=6.0
+
+# v0.9.15 genuinely new information: recent local-election and parliamentary
+# by-election strength. The source dates and the parameter grid are fixed ex ante.
+# 2019 alone may select strengths; 2024 is score-only.
+DC_EXPORT_URL="https://candidates.democracyclub.org.uk/data/export_csv/"
+LOCAL_DATES_2019=("2017-05-04","2018-05-03","2019-05-02")
+LOCAL_DATES_2024=("2019-05-02","2021-05-06","2022-05-05","2023-05-04","2024-05-02")
+LOCAL_STRENGTH_GRID=(0.0,0.25,0.50,0.75,1.00)
+BYELECTION_STRENGTH_GRID=(0.0,0.15,0.30,0.50)
+LOCAL_RECENCY_HALF_LIFE_YEARS=2.5
+BYELECTION_RECENCY_HALF_LIFE_YEARS=0.75
+LOCAL_MAX_SEAT_SHIFT=8.0
+BYELECTION_MAX_SEAT_SHIFT=8.0
+ONS_LOOKUPS={
+    "2019":{
+        "query":"https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/WD19_PCON19_LAD19_UK_LU_2b79d5f36feb42938063932a4d4a3533/FeatureServer/0/query",
+        "pcon":"PCON19NM","lad":"LAD19NM",
+    },
+    "2024":{
+        "query":"https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/WD24_PCON24_LAD24_UTLA24_UK_LU/FeatureServer/0/query",
+        "pcon":"PCON24NM","lad":"LAD24NM",
+    },
+}
 
 REGION_KEYS=(
     "north_east","north_west","yorkshire","east_midlands","west_midlands",
@@ -181,7 +177,7 @@ ROUTING_STRENGTH_GRID=(0.0,0.20,0.40,0.60,0.80)
 UNWIND_STRENGTH_GRID=(0.0,0.15,0.30,0.45,0.60)
 
 
-# v0.9.14 latent Reform/Brexit geography. These values are fixed a priori and
+# v0.9.15 latent Reform/Brexit geography. These values are fixed a priori and
 # are NOT tuned on 2024. 2015 UKIP is the donor because it contested almost the
 # whole country and predates both the 2019 Brexit Party withdrawal strategy and
 # the 2024 benchmark. The latent prior changes geography only: nat_shares()
@@ -747,7 +743,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v0914-bes-integrity",
+        "version":"uk-v0915-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -1205,7 +1201,7 @@ def evaluate_ref_structural_sweep(
         reverse=True,
     )
     return {
-        "version":"uk-v0914-place-regradient-sweep",
+        "version":"uk-v0915-local-strength-sweep",
         "status":"ok",
         "generated_at":utcnow().isoformat(),
         "diagnostic_only":True,
@@ -1248,7 +1244,7 @@ def row_context(row:pd.Series,nat_base:dict[str,float],nat_target:dict[str,float
     f["other_competitive"]=1.0 if "other" in rankable else 0.0
     f["margin"]=margin
     f["turnout"]=float(row.get("turnout",0.0))/100.0
-    # v0.9.14 isolation rule: latent-prior metadata is deliberately NOT added
+    # v0.9.15 isolation rule: latent-prior metadata is deliberately NOT added
     # as ML features. When activation is zero, the residual/contest models must
     # have exactly the same feature space as v0.9.10. The latent layer changes
     # geography only through local["ref"] / base_prediction when activated.
@@ -2504,13 +2500,13 @@ def build_reform_diagnostics(
         raise RuntimeError("Reform diagnostic does not cover all 632 GB seats")
 
     return {
-        "version":"uk-v0914-place-regradient-sweep",
+        "version":"uk-v0915-local-strength-sweep",
         "status":"ok",
         "generated_at":utcnow().isoformat(),
         "diagnostic_only":True,
         "used_for_parameter_selection":False,
         "changes_production_model":False,
-        "source_model":"uk-v0914-place-regradient-sweep",
+        "source_model":"uk-v0915-local-strength-sweep",
         "benchmark":"2019_notional_to_2024",
         "benchmark_role":"development_diagnostic_not_pristine_holdout",
         "interpretation_warning":(
@@ -2689,7 +2685,7 @@ def live_projection(
 
 
 def experimental_rake(rows:pd.DataFrame,election:dict[str,Any],target:dict[str,float])->pd.DataFrame:
-    """Vectorised raking for the v0.9.14 shadow sweep only."""
+    """Vectorised raking for the v0.9.15 shadow sweep only."""
     target=normalize_target(target);df=election["frame"]
     arr=rows.loc[:,PARTIES].to_numpy(dtype=float,copy=True)
     w=df["weight"].to_numpy(dtype=float);den=float(w.sum()) or 1.0
@@ -2912,7 +2908,7 @@ def build_error_structure(rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,A
             })
     pair_rows=[{"predicted":a,"actual":b,"count":int(n)} for (a,b),n in pairs.most_common()]
     return {
-        "version":"uk-v0914-place-regradient-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0915-local-strength-sweep","status":"ok","generated_at":utcnow().isoformat(),
         "canonical_candidate":"frozen_v0910_equivalent","total_seats":len(actual["frame"]),"wrong_seats":len(wrong),
         "correct_seats":len(actual["frame"])-len(wrong),"confusion_pairs":pair_rows,
         "regions":{r:{**v,"accuracy":1.0-v["wrong"]/v["n"] if v["n"] else None} for r,v in sorted(regions.items())},
@@ -2930,7 +2926,7 @@ def _apply_structural_config(
     return b,{"regradient":gmeta,"place":pmeta}
 
 
-def evaluate_place_regradient_sweep(
+def evaluate_local_strength_sweep(
     dev_rows:pd.DataFrame,val_rows:pd.DataFrame,hold_rows:pd.DataFrame,
     e15:dict[str,Any],e17:dict[str,Any],e19:dict[str,Any],e19n:dict[str,Any],e24:dict[str,Any],
     t10_15:dict[str,Any],t15_17:dict[str,Any],t17_19:dict[str,Any],
@@ -2982,7 +2978,7 @@ def evaluate_place_regradient_sweep(
     baseline19=evaluate_rows(val_rows,e19,e17);baseline24=evaluate_rows(hold_rows,e24,e19n)
     selected_gate=bool(selected_2024["correct_winners"]>=506 and selected_2024["seat_abs_error_sum"]<=176)
     return {
-        "version":"uk-v0914-place-regradient-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0915-local-strength-sweep","status":"ok","generated_at":utcnow().isoformat(),
         "shadow_only":True,"uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
         "selection_policy":"grid fixed in source; rank by 2019 correct winners, then seat error, then share MAE; 2024 labels never select strengths",
         "methods":{
@@ -3015,6 +3011,277 @@ def evaluate_place_regradient_sweep(
     }
 
 
+
+def _truthy(v:Any)->bool:
+    return str(v or "").strip().lower() in {"1","true","yes","y","t"}
+
+
+def _authority_key(v:Any)->str:
+    k=nkey(v)
+    # Organisation labels and ONS LAD names differ mostly by administrative suffixes.
+    suffixes=("metropolitanboroughcouncil","citycouncil","boroughcouncil","districtcouncil","countycouncil",
+              "council","borough","district")
+    changed=True
+    while changed:
+        changed=False
+        for suffix in suffixes:
+            if k.endswith(suffix) and len(k)>len(suffix)+3:
+                k=k[:-len(suffix)];changed=True;break
+    return k
+
+
+def _place_key(v:Any)->str:
+    k=nkey(v).replace("saint","st")
+    return k.replace("the","") if k.startswith("the") else k
+
+
+def _dc_csv(params:list[tuple[str,str]],label:str)->pd.DataFrame:
+    headers={"User-Agent":"modello-uk/0.9.15 research; public election data"}
+    r=requests.get(DC_EXPORT_URL,params=params,headers=headers,timeout=120)
+    r.raise_for_status()
+    text=r.text
+    if len(text)<100 or "votes_cast" not in text:
+        raise RuntimeError(f"Democracy Club {label}: unexpected/empty CSV response ({len(text)} bytes)")
+    df=pd.read_csv(io.StringIO(text),low_memory=False)
+    if "votes_cast" not in df.columns or "party_name" not in df.columns:
+        raise RuntimeError(f"Democracy Club {label}: required result columns missing: {list(df.columns)}")
+    return df
+
+
+def fetch_dc_local_results(dates:tuple[str,...])->tuple[pd.DataFrame,dict[str,Any]]:
+    frames=[];meta=[]
+    for date in dates:
+        params=[("election_date",date),("election_id","^local.*"),("format","csv"),
+                ("field_group","results"),("field_group","election")]
+        df=_dc_csv(params,f"local {date}")
+        df["_requested_date"]=date
+        frames.append(df);meta.append({"date":date,"rows":int(len(df))})
+    out=pd.concat(frames,ignore_index=True,sort=False)
+    return out,{"source":"Democracy Club candidates/results CSV export","url":DC_EXPORT_URL,
+                "requested_dates":list(dates),"downloads":meta,"rows":int(len(out))}
+
+
+def fetch_dc_byelections()->tuple[pd.DataFrame,dict[str,Any]]:
+    params=[("election_id","^parl.*"),("by_election","True"),("format","csv"),
+            ("field_group","results"),("field_group","election")]
+    df=_dc_csv(params,"parliamentary by-elections")
+    return df,{"source":"Democracy Club parliamentary by-election CSV export","url":DC_EXPORT_URL,"rows":int(len(df))}
+
+
+def _aggregate_ballots(df:pd.DataFrame,organisation_field:str|None)->pd.DataFrame:
+    work=df.copy()
+    work["votes_cast"]=pd.to_numeric(work["votes_cast"],errors="coerce")
+    work=work[work["votes_cast"].notna() & (work["votes_cast"]>=0)].copy()
+    if "cancelled_poll" in work.columns:
+        work=work[~work["cancelled_poll"].map(_truthy)].copy()
+    if work.empty:return pd.DataFrame()
+    work["_party"]=work["party_name"].map(lambda x:canonical_party_label(x,allow_blank=True))
+    work=work[work["_party"].isin(PARTIES)].copy()
+    if "ballot_paper_id" not in work.columns:
+        raise RuntimeError("Democracy Club results missing ballot_paper_id")
+    records=[]
+    for ballot,bg in work.groupby("ballot_paper_id",sort=False):
+        party_votes=bg.groupby("_party")["votes_cast"].mean().to_dict()
+        den=float(sum(party_votes.values()))
+        if den<=0:continue
+        rec={"ballot_paper_id":str(ballot),"effective_votes":den,
+             "election_date":str(bg["election_date"].iloc[0]) if "election_date" in bg else str(bg["_requested_date"].iloc[0])}
+        if organisation_field and organisation_field in bg.columns:
+            rec["organisation_name"]=str(bg[organisation_field].dropna().iloc[0]) if bg[organisation_field].notna().any() else ""
+        if "post_label" in bg.columns:
+            rec["post_label"]=str(bg["post_label"].dropna().iloc[0]) if bg["post_label"].notna().any() else ""
+        for p in PARTIES:rec[p]=float(party_votes.get(p,0.0))/den*100.0
+        records.append(rec)
+    return pd.DataFrame(records)
+
+
+def aggregate_local_profiles(raw:pd.DataFrame)->tuple[dict[str,dict[str,Any]],dict[str,Any]]:
+    org_field="organisation_name" if "organisation_name" in raw.columns else None
+    ballots=_aggregate_ballots(raw,org_field)
+    if ballots.empty or "organisation_name" not in ballots.columns:
+        raise RuntimeError("No usable local-election ballots/organisation names from Democracy Club")
+    ballots=ballots[ballots["organisation_name"].astype(str).str.len()>0].copy()
+    # National contemporaneous benchmark for each local election date removes midterm mood.
+    daily_nat={}
+    for date,dg in ballots.groupby("election_date"):
+        w=dg["effective_votes"].to_numpy(float);den=float(w.sum()) or 1.0
+        daily_nat[str(date)]={p:float(np.sum(dg[p].to_numpy(float)*w)/den) for p in PARTIES}
+    profiles={};coverage=[]
+    for (date,org),g in ballots.groupby(["election_date","organisation_name"]):
+        w=g["effective_votes"].to_numpy(float);den=float(w.sum()) or 1.0
+        shares={p:float(np.sum(g[p].to_numpy(float)*w)/den) for p in PARTIES}
+        key=_authority_key(org)
+        if not key:continue
+        rec={"authority":str(org),"date":str(date),"wards":int(len(g)),"effective_votes":den,
+             "shares":shares,"relative":{p:shares[p]-daily_nat[str(date)].get(p,0.0) for p in PARTIES}}
+        old=profiles.get(key)
+        if old is None or rec["date"]>old["date"]:profiles[key]=rec
+        coverage.append(key)
+    return profiles,{"authorities_latest":len(profiles),"ballots":int(len(ballots)),"daily_national":daily_nat,
+                     "authority_keys_seen":len(set(coverage))}
+
+
+def fetch_ons_ward_lookup(year:str)->tuple[list[dict[str,str]],dict[str,Any]]:
+    spec=ONS_LOOKUPS[year];url=spec["query"]
+    headers={"User-Agent":"modello-uk/0.9.15 research"}
+    ids=requests.get(url,params={"where":"1=1","returnIdsOnly":"true","f":"json"},headers=headers,timeout=120)
+    ids.raise_for_status();ij=ids.json()
+    object_ids=ij.get("objectIds") or []
+    if not object_ids:raise RuntimeError(f"ONS {year} lookup returned no object IDs: {ij}")
+    rows=[]
+    for i in range(0,len(object_ids),800):
+        batch=object_ids[i:i+800]
+        params={"objectIds":",".join(map(str,batch)),"outFields":f"{spec['pcon']},{spec['lad']}",
+                "returnGeometry":"false","f":"json"}
+        r=requests.get(url,params=params,headers=headers,timeout=120);r.raise_for_status();j=r.json()
+        if "error" in j:raise RuntimeError(f"ONS {year} lookup error: {j['error']}")
+        for feat in j.get("features",[]):
+            a=feat.get("attributes",{});pcon=str(a.get(spec["pcon"]) or "");lad=str(a.get(spec["lad"]) or "")
+            if pcon and lad:rows.append({"pcon":pcon,"lad":lad})
+    if len(rows)<5000:raise RuntimeError(f"ONS {year} lookup unexpectedly small: {len(rows)}")
+    return rows,{"source":"ONS Open Geography Portal ward-PCON-LAD lookup","year":year,"url":url,"rows":len(rows)}
+
+
+def build_local_advantage_profile(base:dict[str,Any],raw_local:pd.DataFrame,lookup_rows:list[dict[str,str]],target_date:str)->dict[str,Any]:
+    profiles,agg_meta=aggregate_local_profiles(raw_local)
+    by_pcon=defaultdict(Counter)
+    for r in lookup_rows:by_pcon[_place_key(r["pcon"])][_authority_key(r["lad"])]+=1
+    base_nat=nat_shares(base);target_dt=datetime.fromisoformat(target_date+"T00:00:00+00:00")
+    seat_profile={};matched=0;weighted_coverage=[]
+    for idx,row in base["frame"].iterrows():
+        counts=by_pcon.get(_place_key(row["name"]),Counter());total=sum(counts.values())
+        if not total:continue
+        rel={p:0.0 for p in PARTIES};used=0.0;conf_num=0.0;date_num=0.0
+        for lad,n in counts.items():
+            pr=profiles.get(lad)
+            if not pr:continue
+            wt=float(n);used+=wt
+            age=max(0.0,(target_dt-datetime.fromisoformat(pr["date"]+"T00:00:00+00:00")).total_seconds()/31557600.0)
+            recency=.5**(age/LOCAL_RECENCY_HALF_LIFE_YEARS)
+            ward_conf=min(1.0,math.sqrt(max(1,pr["wards"])/8.0))
+            conf_num+=wt*recency*ward_conf;date_num+=wt*age
+            for p in PARTIES:rel[p]+=wt*float(pr["relative"].get(p,0.0))
+        if used<=0:continue
+        for p in PARTIES:rel[p]/=used
+        coverage=used/max(1.0,float(total));confidence=coverage*(conf_num/used)
+        adv={}
+        for p in PARTIES:
+            baseline_relative=float(row[p])-float(base_nat[p])
+            adv[p]=clamp(rel[p]-baseline_relative,-30.0,30.0)
+        seat_profile[str(idx)]={"confidence":float(confidence),"coverage":float(coverage),"advantage":adv,
+                                "mean_age_years":float(date_num/used if used else 0.0)}
+        matched+=1;weighted_coverage.append(coverage)
+    return {"seats":seat_profile,"matched_seats":matched,"total_seats":len(base["frame"]),
+            "mean_authority_coverage":float(np.mean(weighted_coverage)) if weighted_coverage else 0.0,
+            "aggregation":agg_meta,"target_date":target_date}
+
+
+def build_byelection_profile(raw:pd.DataFrame,base:dict[str,Any],after_date:str,before_date:str)->dict[str,Any]:
+    ballots=_aggregate_ballots(raw,None)
+    if ballots.empty:return {"seats":{},"matched_seats":0,"source_ballots":0}
+    ballots["_date"]=pd.to_datetime(ballots["election_date"],errors="coerce",utc=True)
+    lo=pd.Timestamp(after_date,tz="UTC");hi=pd.Timestamp(before_date,tz="UTC")
+    ballots=ballots[(ballots["_date"]>lo)&(ballots["_date"]<hi)].copy()
+    base_by_name={_place_key(r["name"]):idx for idx,r in base["frame"].iterrows()}
+    hi_dt=datetime.fromisoformat(before_date+"T00:00:00+00:00")
+    seats={}
+    for _,r in ballots.sort_values("_date").iterrows():
+        key=_place_key(r.get("post_label",""));idx=base_by_name.get(key)
+        if idx is None:continue
+        brow=base["frame"].loc[idx]
+        age=max(0.0,(hi_dt-r["_date"].to_pydatetime()).total_seconds()/31557600.0)
+        conf=.5**(age/BYELECTION_RECENCY_HALF_LIFE_YEARS)
+        delta={p:clamp(float(r[p])-float(brow[p]),-35.0,35.0) for p in PARTIES}
+        seats[str(idx)]={"confidence":float(conf),"date":str(r["election_date"]),"post_label":str(r.get("post_label","")),"delta":delta}
+    return {"seats":seats,"matched_seats":len(seats),"source_ballots":int(len(ballots)),
+            "window":{"after":after_date,"before":before_date}}
+
+
+def apply_local_election_strength(canonical:pd.DataFrame,base:dict[str,Any],target:dict[str,float],
+                                  local_profile:dict[str,Any],bye_profile:dict[str,Any],
+                                  local_strength:float,bye_strength:float)->tuple[pd.DataFrame,dict[str,Any]]:
+    if local_strength==0.0 and bye_strength==0.0:
+        return canonical.copy(),{"local_strength":0.0,"byelection_strength":0.0,"adjusted_seats":0,"mean_abs_shift":0.0}
+    out=canonical.copy().astype(float);shifts=[];adjusted=0
+    for idx,row in base["frame"].iterrows():
+        lp=local_profile.get("seats",{}).get(str(idx));bp=bye_profile.get("seats",{}).get(str(idx))
+        changed=False
+        for p in MAIN_PARTIES:
+            if not allowed(p,str(row["country"])):continue
+            delta=0.0
+            if lp:
+                delta+=local_strength*float(lp["confidence"])*float(lp["advantage"].get(p,0.0))
+            if bp:
+                delta+=bye_strength*float(bp["confidence"])*float(bp["delta"].get(p,0.0))
+            delta=clamp(delta,-(LOCAL_MAX_SEAT_SHIFT+BYELECTION_MAX_SEAT_SHIFT),LOCAL_MAX_SEAT_SHIFT+BYELECTION_MAX_SEAT_SHIFT)
+            if abs(delta)>1e-9:
+                out.at[idx,p]=max(.0001,float(out.at[idx,p])+delta);shifts.append(abs(delta));changed=True
+        if changed:adjusted+=1
+        vals={p:(max(.0001,float(out.at[idx,p])) if allowed(p,str(row["country"])) else 0.0) for p in PARTIES}
+        den=sum(vals.values()) or 1.0
+        for p in PARTIES:out.at[idx,p]=vals[p]/den*100.0
+    out=experimental_rake(out,base,target)
+    return out,{"local_strength":local_strength,"byelection_strength":bye_strength,"adjusted_seats":adjusted,
+                "mean_abs_pre_rake_shift":float(np.mean(shifts)) if shifts else 0.0}
+
+
+def evaluate_local_strength_sweep(val_rows:pd.DataFrame,hold_rows:pd.DataFrame,e17:dict[str,Any],e19:dict[str,Any],
+                                  e19n:dict[str,Any],e24:dict[str,Any])->dict[str,Any]:
+    # Sources are fetched once. All dates are fixed and strictly pre-election.
+    raw19,src19=fetch_dc_local_results(LOCAL_DATES_2019)
+    raw24,src24=fetch_dc_local_results(LOCAL_DATES_2024)
+    bye_raw,bye_src=fetch_dc_byelections()
+    ons19,ons19_meta=fetch_ons_ward_lookup("2019");ons24,ons24_meta=fetch_ons_ward_lookup("2024")
+    local19=build_local_advantage_profile(e17,raw19,ons19,"2019-12-12")
+    local24=build_local_advantage_profile(e19n,raw24,ons24,"2024-07-04")
+    bye19=build_byelection_profile(bye_raw,e17,"2017-06-08","2019-12-12")
+    bye24=build_byelection_profile(bye_raw,e19n,"2019-12-12","2024-07-04")
+    # Fail loudly if external data could not cover enough constituencies to be meaningful.
+    if local19["matched_seats"]<300 or local24["matched_seats"]<300:
+        raise RuntimeError(f"Local-strength coverage too low: 2019={local19['matched_seats']} 2024={local24['matched_seats']}")
+    candidates=[];cache={}
+    target19=nat_shares(e19);target24=nat_shares(e24)
+    for ls in LOCAL_STRENGTH_GRID:
+        for bs in BYELECTION_STRENGTH_GRID:
+            rows,meta=apply_local_election_strength(val_rows,e17,target19,local19,bye19,ls,bs)
+            m=evaluate_rows(rows,e19,e17);cid=f"l{ls:.2f}_b{bs:.2f}"
+            candidates.append({"id":cid,"local_strength":ls,"byelection_strength":bs,"validation_2019":m,"meta_2019":meta})
+            cache[cid]=rows
+    candidates.sort(key=lambda x:score_tuple(x["validation_2019"]),reverse=True)
+    selected=candidates[0];selected_rows24,meta24=apply_local_election_strength(
+        hold_rows,e19n,target24,local24,bye24,selected["local_strength"],selected["byelection_strength"])
+    selected24=evaluate_rows(selected_rows24,e24,e19n)
+    # Ex-post 2024 sweep is diagnostic only: it cannot alter selected strengths.
+    benchmark=[]
+    for ls in LOCAL_STRENGTH_GRID:
+        for bs in BYELECTION_STRENGTH_GRID:
+            rows,meta=apply_local_election_strength(hold_rows,e19n,target24,local24,bye24,ls,bs)
+            m=evaluate_rows(rows,e24,e19n);benchmark.append({"id":f"l{ls:.2f}_b{bs:.2f}","local_strength":ls,
+                "byelection_strength":bs,"benchmark_2024":m,"meta_2024":meta,
+                "research_gate":bool(m["correct_winners"]>=506 and m["seat_abs_error_sum"]<=176)})
+    benchmark.sort(key=lambda x:score_tuple(x["benchmark_2024"]),reverse=True)
+    baseline19=evaluate_rows(val_rows,e19,e17);baseline24=evaluate_rows(hold_rows,e24,e19n)
+    gate=bool(selected24["correct_winners"]>=506 and selected24["seat_abs_error_sum"]<=176)
+    return {
+        "version":"uk-v0915-local-strength-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "shadow_only":True,"uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
+        "candidate_count":len(candidates),"grid":{"local_strength":list(LOCAL_STRENGTH_GRID),"byelection_strength":list(BYELECTION_STRENGTH_GRID)},
+        "temporal_policy":{"validation_2019":{"local_dates":list(LOCAL_DATES_2019),"by_elections_after":"2017-06-08","cutoff":"2019-12-12"},
+                           "benchmark_2024":{"local_dates":list(LOCAL_DATES_2024),"by_elections_after":"2019-12-12","cutoff":"2024-07-04"}},
+        "method":"local-authority party strength is demeaned by same-day national local-election support and differenced against general-election baseline geography; parliamentary by-election deltas are exact-name matched and recency-weighted; national GE target is restored by raking",
+        "baseline":{"validation_2019":baseline19,"benchmark_2024":baseline24},
+        "selected_pre2024":{"id":selected["id"],"local_strength":selected["local_strength"],"byelection_strength":selected["byelection_strength"],
+                            "validation_2019":selected["validation_2019"],"benchmark_2024":selected24,"meta_2024":meta24,"research_gate":gate},
+        "pre2024_validation_ranking":candidates,
+        "benchmark_2024_diagnostic":{"ranking":benchmark,"best_expost":benchmark[0],
+                                     "passing_research_gate":[x["id"] for x in benchmark if x["research_gate"]],
+                                     "warning":"2024 ranking is diagnostic only and cannot select parameters"},
+        "coverage":{"local_2019":{k:v for k,v in local19.items() if k!="seats"},"local_2024":{k:v for k,v in local24.items() if k!="seats"},
+                    "byelections_2019":{k:v for k,v in bye19.items() if k!="seats"},"byelections_2024":{k:v for k,v in bye24.items() if k!="seats"}},
+        "sources":{"local_2019":src19,"local_2024":src24,"byelections":bye_src,"ons_2019":ons19_meta,"ons_2024":ons24_meta},
+        "research_gate_definition":"selected-on-2019 candidate must reach >=506/632 correct in 2024 AND seat_abs_error_sum <=176; informational only"
+    }
+
 def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[str,Any],hold_base:dict[str,Any])->tuple[bool,list[str]]:
     reasons=[]
     if holdout["winner_accuracy"]<.80:
@@ -3031,8 +3298,8 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v0914-place-regradient-sweep",
-        "model_type":"constituency-residual-place-regradient-sweep-v8",
+        "version":"uk-v0915-local-strength-sweep",
+        "model_type":"constituency-residual-local-strength-sweep-v9",
         "status":"error",
         "approved":False,
         "publication_ready":False,
@@ -3048,28 +3315,28 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v0914-place-regradient-sweep-live","approved":False,"status":"error",
+        "version":"uk-v0915-local-strength-sweep-live","approved":False,"status":"error",
         "diagnostic_only":True,"changes_production_model":False,"changes_candidate_model":False,"shadow_only":True,
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v0914-place-regradient-sweep-backtest","status":"error","error":str(exc)
+        "version":"uk-v0915-local-strength-sweep-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     DIAGNOSTIC_OUT.write_text(json.dumps({
-        "version":"uk-v0914-place-regradient-sweep","status":"error",
+        "version":"uk-v0915-local-strength-sweep","status":"error",
         "diagnostic_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"parameter_updates":{},
-        "source_model":"uk-v0914-place-regradient-sweep",
+        "source_model":"uk-v0915-local-strength-sweep",
         "error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     SWEEP_OUT.write_text(json.dumps({
-        "version":"uk-v0914-place-regradient-sweep","status":"error",
+        "version":"uk-v0915-local-strength-sweep","status":"error",
         "diagnostic_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v0914-bes-integrity","status":"failed",
+            "version":"uk-v0915-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -3184,11 +3451,8 @@ def main()->int:
             validation,holdout,validation_base,holdout_base
         )
         error_structure=build_error_structure(hold_rows,e24,e19n)
-        place_sweep=evaluate_place_regradient_sweep(
-            dev_routed,val_rows,hold_rows,e15,e17,e19,e19n,e24,
-            t10_15,t15_17,t17_19,validation_base,holdout_base
-        )
-        # v0.9.14 is research-only.  The canonical candidate remains the
+        local_sweep=evaluate_local_strength_sweep(val_rows,hold_rows,e17,e19,e19n,e24)
+        # v0.9.15 is research-only.  The canonical candidate remains the
         # frozen v0.9.10-equivalent baseline.  All new strengths are selected
         # on 2019 only; the 2024 benchmark can score but cannot promote them.
         approved=False
@@ -3226,8 +3490,8 @@ def main()->int:
         )
 
         model_payload={
-            "version":"uk-v0914-place-regradient-sweep",
-            "model_type":"constituency-residual-place-regradient-sweep-v8",
+            "version":"uk-v0915-local-strength-sweep",
+            "model_type":"constituency-residual-local-strength-sweep-v9",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -3237,16 +3501,16 @@ def main()->int:
             "changes_candidate_model":False,
             "shadow_only":True,
             "candidate_gate_passed":candidate_gate_passed,
-            "promotion_blocked_reason":"v0.9.14 is shadow research; 2019 may select experimental strengths but 2024 cannot promote them",
+            "promotion_blocked_reason":"v0.9.15 is shadow research; 2019 selects local/by-election strengths; 2024 cannot select or promote them",
             "canonical_candidate":"frozen_v0910_equivalent",
-            "place_regradient_sweep":{
-                "output":"data/place-regradient-sweep-v0914.json",
-                "selected_pre2024":place_sweep["selected_pre2024"],
-                "benchmark_2024_pre2024_shortlist":place_sweep["benchmark_2024_pre2024_shortlist"],
-                "selection_policy":place_sweep["selection_policy"],
+            "local_strength_sweep":{
+                "output":"data/local-strength-sweep-v0915.json",
+                "selected_pre2024":local_sweep["selected_pre2024"],
+                "benchmark_2024_diagnostic":local_sweep["benchmark_2024_diagnostic"],
+                "selection_policy":"grid fixed in source; rank/select only on 2019; 2024 score-only",
             },
             "error_structure":{
-                "output":"data/error-structure-v0914.json",
+                "output":"data/error-structure-v0915.json",
                 "wrong_seats":error_structure["wrong_seats"],
                 "largest_error_pair":error_structure["largest_error_pair"],
             },
@@ -3330,7 +3594,7 @@ def main()->int:
             "features":{
                 "historical_demographics":[c.replace("demo_","") for c in e19["demo_columns"]],
                 "current_demographics":[c.replace("demo_","") for c in e24["demo_columns"]],
-                "notes":"v0.9.14 keeps the canonical candidate identical to v0.9.10. Shadow experiments add historical regradienting and rolling place/competition residual persistence. Strengths are selected on 2019 only; 2024 is score-only. Final raking always enforces the national target.",
+                "notes":"v0.9.15 keeps the canonical candidate identical to v0.9.10. Shadow experiments add recent local-election and parliamentary by-election strength signals. Strengths are selected on 2019 only; 2024 is score-only. Final raking always enforces the national target.",
             },
             "integrity":{
                 "version":integrity.get("version"),
@@ -3342,15 +3606,15 @@ def main()->int:
                 "current_bes":curr_meta,
             },
             "note":(
-                "v0.9.14 keeps the canonical candidate frozen at the v0.9.10-equivalent model and evaluates regradient plus rolling place/competition residual corrections in one shadow sweep. "
-                "Experimental strengths are selected on 2019 only. The 2024 benchmark scores the pre-selected candidate and a bounded pre-2024 shortlist for research only; it selects nothing for live use."
+                "v0.9.15 keeps the canonical candidate frozen at the v0.9.10-equivalent model and evaluates recent local-election strength plus recency-weighted parliamentary by-election residuals in one shadow sweep. "
+                "Local/by-election strengths are selected on 2019 only. The 2024 benchmark scores the pre-selected candidate and the fixed grid for diagnostics only; it selects nothing for live use."
             )
         }
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v0914-place-regradient-sweep-live",
-            "model_type":"constituency-residual-place-regradient-sweep-v8",
+            "version":"uk-v0915-local-strength-sweep-live",
+            "model_type":"constituency-residual-local-strength-sweep-v9",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -3360,10 +3624,10 @@ def main()->int:
             "changes_candidate_model":False,
             "shadow_only":True,
             "candidate_gate_passed":candidate_gate_passed,
-            "place_regradient_sweep":{
-                "output":"data/place-regradient-sweep-v0914.json",
-                "selected_pre2024_id":place_sweep["selected_pre2024"]["id"],
-                "selected_pre2024_benchmark_2024":place_sweep["selected_pre2024"]["benchmark_2024"],
+            "local_strength_sweep":{
+                "output":"data/local-strength-sweep-v0915.json",
+                "selected_pre2024_id":local_sweep["selected_pre2024"]["id"],
+                "selected_pre2024_benchmark_2024":local_sweep["selected_pre2024"]["benchmark_2024"],
                 "uses_2024_for_parameter_selection":False,
             },
             "generated_at":utcnow().isoformat(),
@@ -3390,20 +3654,20 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v0914-place-regradient-sweep-backtest",
+            "version":"uk-v0915-local-strength-sweep-backtest",
             "status":"ok",
             "diagnostic_only":True,
             "used_for_parameter_selection":False,
             "shadow_only":True,
             "changes_production_model":False,
             "changes_candidate_model":False,
-            "place_regradient_sweep":{
-                "output":"data/place-regradient-sweep-v0914.json",
-                "selected_pre2024":place_sweep["selected_pre2024"],
+            "local_strength_sweep":{
+                "output":"data/local-strength-sweep-v0915.json",
+                "selected_pre2024":local_sweep["selected_pre2024"],
                 "uses_2024_for_parameter_selection":False,
             },
             "error_structure":{
-                "output":"data/error-structure-v0914.json",
+                "output":"data/error-structure-v0915.json",
                 "wrong_seats":error_structure["wrong_seats"],
                 "largest_error_pair":error_structure["largest_error_pair"],
             },
@@ -3426,18 +3690,18 @@ def main()->int:
             encoding="utf-8"
         )
         SWEEP_OUT.write_text(
-            json.dumps(place_sweep,ensure_ascii=False,indent=2),
+            json.dumps(local_sweep,ensure_ascii=False,indent=2),
             encoding="utf-8"
         )
 
-        print("v0.9.14 selected share spec:",selected_spec)
-        print("v0.9.14 pre-2024 selected structural config:",place_sweep["selected_pre2024"]["id"])
-        print("v0.9.14 selected config 2019:",place_sweep["selected_pre2024"]["validation_2019"])
-        print("v0.9.14 selected config 2024 benchmark:",place_sweep["selected_pre2024"]["benchmark_2024"])
-        print("v0.9.14 best 2024 result within pre-2024 shortlist (NOT selectable):",place_sweep["benchmark_2024_pre2024_shortlist"]["best_by_2024_diagnostic"])
-        print("v0.9.14 largest canonical error pair:",error_structure["largest_error_pair"])
-        print("v0.9.14 selected party strengths:",selected_party_strengths)
-        print("v0.9.14 incumbent routing:",selected_routing)
+        print("v0.9.15 selected share spec:",selected_spec)
+        print("v0.9.15 pre-2024 selected local-strength config:",local_sweep["selected_pre2024"]["id"])
+        print("v0.9.15 selected config 2019:",local_sweep["selected_pre2024"]["validation_2019"])
+        print("v0.9.15 selected config 2024 benchmark:",local_sweep["selected_pre2024"]["benchmark_2024"])
+        print("v0.9.15 best 2024 result in fixed grid (NOT selectable):",local_sweep["benchmark_2024_diagnostic"]["best_expost"])
+        print("v0.9.15 largest canonical error pair:",error_structure["largest_error_pair"])
+        print("v0.9.15 selected party strengths:",selected_party_strengths)
+        print("v0.9.15 incumbent routing:",selected_routing)
         print("2017 routing audit:",routing_tuning["selected_audit"])
         print("2017 scenario:",national_scenario_metrics(e15,t15_17["target"]))
         print("2019 scenario:",national_scenario_metrics(e17,t17_19["target"]))
@@ -3467,7 +3731,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.14 diagnostic build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.15 diagnostic build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # A broken research build must not be deployed. The previously deployed
         # production/fallback remains untouched because this workflow stops before
