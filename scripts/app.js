@@ -8,6 +8,7 @@ const CONFIG = {
   geometryDisplayLocal: 'data/constituencies-map.geojson',
   geometryLocal: 'data/constituencies-2024.geojson',
   modelParamsLocal: 'data/model-params.json',
+  mrpLiteLocal: 'data/mrp-lite-live.json',
   subnationalLocal: 'data/subnational-polls.json',
   territorialBaselineLocal: 'data/territorial-baseline.json',
   niLocal: 'data/ni-2024.json',
@@ -23,7 +24,7 @@ const CONFIG = {
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v081-20260826-ni-palette-mcux',
+  cacheVersion: 'uk-v09-20260826-mrp-lite-shadow',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
@@ -69,7 +70,7 @@ const OFFLINE = new URLSearchParams(location.search).get('offline') === '1';
 const state = {
   polls:[], pollSource:'', average:null, latestAverage:null,
   constituencies:[], constituencyIndex:new Map(), byId:new Map(), geometry:null, ni:null,
-  modelParams:null, subnational:[], territorialBaseline:null, geographicTargets:null,
+  modelParams:null, mrpLite:null, subnational:[], territorialBaseline:null, geographicTargets:null,
   mapPaths:new Map(), selectedPath:null,
   central:null, mc:null, selectedSeat:null, mapMode:'central', coalition:new Set(),
 };
@@ -372,6 +373,46 @@ function buildGeographicTargets(gbTarget){
 }
 
 
+function mrpLiteActive(){
+  const m=state.mrpLite;
+  return m?.version==='uk-v09-mrp-lite-live'
+    && m?.model_type==='constituency-residual-ml-v1'
+    && m?.status==='ok'
+    && m?.approved===true
+    && Number(m?.holdout_accuracy)>=.80
+    && Array.isArray(m?.seats)
+    && m.seats.length===632;
+}
+function buildMrpLiteCentral(target,geo){
+  const lookup=new Map(state.mrpLite.seats.map(s=>[String(s.id),s]));
+  const totals=Object.fromEntries(SEAT_ORDER.map(p=>[p,0]));
+  const seats=[];
+  for(const c of state.constituencies){
+    if(/northern ireland/i.test(c.country||''))continue;
+    const m=lookup.get(String(c.id));
+    if(!m)throw new Error(`MRP-lite: manca il collegio ${c.id}`);
+    const projected={};
+    for(const p of PARTY_ORDER)projected[p]=Number(m.projected?.[p])||0;
+    const winner=SEAT_MODEL_PARTIES.filter(p=>partyAllowed(p,c))
+      .reduce((best,p)=>projected[p]>(projected[best]??-1)?p:best,'other');
+    totals[winner]=(totals[winner]||0)+1;
+    seats.push({...c,projected,centralWinner:winner,modelZone:zoneForSeat(c),mrpLite:true});
+  }
+  const niCentral=buildNiCentral();
+  for(const [p,n] of Object.entries(niCentral.totals||{}))totals[p]=(totals[p]||0)+n;
+  seats.push(...niCentral.seats);
+  if(!niCentral.seats.length)totals.other+=CONFIG.niSeats;
+  const central={target,geographic:geo,seats,totals,ni:niCentral.meta,mrpLite:{
+    holdoutAccuracy:Number(state.mrpLite.holdout_accuracy)||0,
+    holdoutSeatError:Number(state.mrpLite.holdout_seat_abs_error)||0,
+    selectedSpec:state.mrpLite.selected_spec?.name||state.mrpLite.selected_spec||'ML'
+  }};
+  state.geographicTargets=geo;
+  state.central=central;
+  state.byId=new Map(seats.map(s=>[s.id,s]));
+  return central;
+}
+
 function partialRakeModelActive(){
   return state.modelParams?.model_type==='partial-raked-v1'
     && state.modelParams?.approved===true
@@ -612,6 +653,7 @@ function buildNiCentral(){
 
 function buildCentral(){
   const target=normalizeTargets(state.average.values),geo=buildGeographicTargets(target),initial=[];
+  if(mrpLiteActive())return buildMrpLiteCentral(target,geo);
   for(const c of state.constituencies){
     if(/northern ireland/i.test(c.country||''))continue;
     const zone=zoneForSeat(c),zoneTarget=geo.targets[zone]||geo.targets.England||target,zoneBase=geo.baselines[zone]||geo.baselines.England||BASE_GB;
@@ -662,10 +704,11 @@ function fingerprint(){
     .map(x=>`${x.country}|${x.date}|${x.pollster}|${x.lab}|${x.con}|${x.ref}|${x.snp}|${x.pc}`)
     .join(';');
   const ni=state.ni?.meta?.generated_at||state.ni?.meta?.version||'ni-fallback';
+  const mrp=state.mrpLite?.generated_at||state.mrpLite?.version||'mrp-fallback';
   const cal=state.modelParams
     ? `${state.modelParams.version||'model'}:${state.modelParams.model_type||''}:${state.modelParams.rake_strength??''}`
     : 'fallback';
-  return `${CONFIG.cacheVersion}:${hashString(p+'|'+sp+'|'+state.constituencies.length+'|'+cal+'|'+ni)}`;
+  return `${CONFIG.cacheVersion}:${hashString(p+'|'+sp+'|'+state.constituencies.length+'|'+cal+'|'+ni+'|'+mrp)}`;
 }
 function mcCacheKey(){return `focusamerica:${fingerprint()}`;}
 function saveMcCache(summary){
@@ -682,7 +725,7 @@ function loadMcCache(){
 function prepareSeatModel(){
   const seats=state.central.seats,target=state.central.target,geo=state.central.geographic;
   const regions=[...new Set(seats.map(s=>s.isNorthernIreland?'Northern Ireland':(s.modelZone||s.region||s.country||'Other')))],regionIndex=new Map(regions.map((r,i)=>[r,i]));
-  const centreAlreadyTransformed=partialRakeModelActive()||transferModelActive();
+  const centreAlreadyTransformed=mrpLiteActive()||partialRakeModelActive()||transferModelActive();
   const models=seats.map(s=>{
     const zone=s.isNorthernIreland?'Northern Ireland':(s.modelZone||zoneForSeat(s));
     if(s.isNorthernIreland){
@@ -719,7 +762,7 @@ async function runMonteCarlo(force=false){
   const partyIndex=new Map(SEAT_ORDER.map((p,i)=>[p,i])),dists=SEAT_ORDER.map(()=>new Uint16Array(N)),wins=new Uint32Array(nSeats*P),rng=mulberry32(hashString(fingerprint()));
   let hung=0,labMaj=0,conMaj=0,refMaj=0,labWorkMaj=0,conWorkMaj=0,refWorkMaj=0;
   const workThresholds=new Uint16Array(N),largestCounts=Object.fromEntries(SEAT_ORDER.map(p=>[p,0]));
-  $('#mcStatus').textContent='Calcolo in corso';$('#mcProgress').value=0;const centreAlreadyTransformed=partialRakeModelActive()||transferModelActive();
+  $('#mcStatus').textContent='Calcolo in corso';$('#mcProgress').value=0;const centreAlreadyTransformed=mrpLiteActive()||partialRakeModelActive()||transferModelActive();
   for(let start=0;start<N;start+=CONFIG.mcBatch){
     const end=Math.min(N,start+CONFIG.mcBatch);
     for(let sim=start;sim<end;sim++){
@@ -785,7 +828,7 @@ function renderCentral(){
   $('#projectionTitle').textContent='Proiezione centrale · provvisoria';
   const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales;
   const sub=[sm?.polls?`Scozia: ${sm.polls} poll`:null,wm?.polls?`Galles: ${wm.polls} poll`:null].filter(Boolean).join(' · ');
-  $('#projectionSubtitle').textContent=`${partialRakeModelActive()?`Raking parziale validato (α=${partialRakeStrength().toFixed(2)}) 2024 → oggi`:transferModelActive()?'Modello trasferimenti 2024 → oggi':'Fallback prudente 2024 → oggi: swing regolarizzato'}${sub?` · ${sub}`:''}${state.central?.ni?.signalWeight?` · NI: tracker Assembly ×${state.central.ni.signalWeight.toFixed(2)}`:' · NI: baseline 2024'} · Monte Carlo in corso: emiciclo e mappa mostrano il centro deterministico fino al completamento.`;
+  $('#projectionSubtitle').textContent=`${mrpLiteActive()?`MRP-lite constituency-level · holdout 2024 ${(state.central.mrpLite.holdoutAccuracy*100).toFixed(1)}% · ${state.central.mrpLite.selectedSpec}`:partialRakeModelActive()?`Raking parziale validato (α=${partialRakeStrength().toFixed(2)}) 2024 → oggi`:transferModelActive()?'Modello trasferimenti 2024 → oggi':'Fallback prudente 2024 → oggi: swing regolarizzato'}${sub?` · ${sub}`:''}${state.central?.ni?.signalWeight?` · NI: tracker Assembly ×${state.central.ni.signalWeight.toFixed(2)}`:' · NI: baseline 2024'} · Monte Carlo in corso: emiciclo e mappa mostrano il centro deterministico fino al completamento.`;
   renderSeats(totals,null);
   $('#kpiLargest').textContent=PARTY[Object.entries(totals).sort((a,b)=>b[1]-a[1])[0][0]]?.short||'—';
   $('#kpiLargestMeta').textContent='proiezione centrale provvisoria';
@@ -917,15 +960,15 @@ async function init(force=false){
   $('#refreshBtn').disabled=true;
   try{
     if(force){try{localStorage.removeItem(mcCacheKey());}catch(_){ }}
-    const [polls,constituencies,geometry,ni,modelParams,subnational,territorialBaseline]=await Promise.all([
+    const [polls,constituencies,geometry,ni,modelParams,mrpLite,subnational,territorialBaseline]=await Promise.all([
       loadPolls(),loadConstituencies(),loadGeometry(),fetchJson(CONFIG.niLocal,5000).catch(()=>null),
-      loadModelParams(),loadSubnationalPolls(),loadTerritorialBaseline()
+      loadModelParams(),fetchJson(CONFIG.mrpLiteLocal,8000).catch(()=>null),loadSubnationalPolls(),loadTerritorialBaseline()
     ]);
     state.polls=polls;state.average=calculateAverage(polls);state.latestAverage=latestPollAverage(polls);
     state.constituencies=constituencies;state.constituencyIndex=new Map(constituencies.map(c=>[c.id,c]));
-    state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;state.subnational=subnational;state.territorialBaseline=territorialBaseline;
+    state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;state.mrpLite=mrpLite;state.subnational=subnational;state.territorialBaseline=territorialBaseline;
     renderPolls();renderCoalitionButtons();
-    if(constituencies.length===650){buildCentral();renderCentral();renderMap();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource} · seat model: ${partialRakeModelActive()?`raking α=${partialRakeStrength().toFixed(2)}`:'fallback prudente'} · poll subnazionali: ${state.subnational.length} · NI: ${niModuleReady()?'18 collegi simulati':'fallback fisso'}`;await runMonteCarlo(force);}else{
+    if(constituencies.length===650){buildCentral();renderCentral();renderMap();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource} · seat model: ${mrpLiteActive()?`MRP-lite ${(Number(state.mrpLite.holdout_accuracy)*100).toFixed(1)}% holdout`:(partialRakeModelActive()?`raking α=${partialRakeStrength().toFixed(2)}`:'fallback prudente')} · poll subnazionali: ${state.subnational.length} · NI: ${niModuleReady()?'18 collegi simulati':'fallback fisso'}`;await runMonteCarlo(force);}else{
       setStatus('Sondaggi caricati · manca la baseline territoriale','error');showError('La dashboard nazionale è attiva, ma i 650 risultati di collegio non sono ancora nello snapshot locale e il browser non è riuscito a recuperarli direttamente. Esegui la GitHub Action “Update UK election data”: genererà automaticamente baseline e geometrie.');renderMap();
     }
   }catch(err){console.error(err);setStatus('Errore di caricamento','error');showError(`Errore: ${err.message||err}`);}finally{$('#refreshBtn').disabled=false;}

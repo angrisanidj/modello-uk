@@ -1,2 +1,7 @@
 requests==2.32.5
 beautifulsoup4==4.13.5
+numpy>=2.0,<3
+pandas>=2.2,<3
+scikit-learn>=1.6,<2
+openpyxl>=3.1,<4
+pyreadstat>=1.2,<2
