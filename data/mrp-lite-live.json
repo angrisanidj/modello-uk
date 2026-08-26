@@ -1,6 +1,6 @@
 {
-  "version": "uk-v0917-error-audit-live",
-  "model_type": "constituency-residual-error-audit-v11",
+  "version": "uk-v0918-ld-target-sweep-live",
+  "model_type": "constituency-residual-ld-target-v12",
   "status": "ok",
   "approved": false,
   "publication_ready": false,
@@ -12,7 +12,7 @@
   "candidate_gate_passed": false,
   "best_shadow_reference": {
     "version": "v0.9.15",
-    "output": "data/v0915-reference-v0917.json",
+    "output": "data/v0915-reference-v0918.json",
     "parameters": {
       "local_strength": 0.25,
       "confidence_floor": 0.0,
@@ -116,13 +116,219 @@
     },
     "uses_2024_for_parameter_selection": false
   },
-  "remaining_error_audit": {
-    "output": "data/error-audit-v0917.json",
-    "wrong_seats": 131,
-    "minimum_net_recoveries_for_80pct": 5
+  "ld_target_experiment": {
+    "output": "data/ld-target-sweep-v0918.json",
+    "selected_pre2024": {
+      "id": "ld_s0.00_f0.65",
+      "strength": 0.0,
+      "score_floor": 0.65,
+      "validation_2019": {
+        "winner_accuracy": 0.9256329113924051,
+        "correct_winners": 585,
+        "gb_seats": 632,
+        "predicted_seats": {
+          "lab": 198,
+          "con": 350,
+          "ref": 0,
+          "ld": 31,
+          "green": 1,
+          "snp": 49,
+          "pc": 3,
+          "other": 0
+        },
+        "actual_seats": {
+          "lab": 202,
+          "con": 365,
+          "ref": 0,
+          "ld": 11,
+          "green": 1,
+          "snp": 48,
+          "pc": 4,
+          "other": 1
+        },
+        "seat_error": {
+          "lab": -4,
+          "con": -15,
+          "ref": 0,
+          "ld": 20,
+          "green": 0,
+          "snp": 1,
+          "pc": -1,
+          "other": -1
+        },
+        "seat_abs_error_sum": 42,
+        "share_mae": 2.7168953972049072,
+        "winner_source": "official_BES_WinnerXX",
+        "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+        "regional_accuracy": {
+          "east_england": {
+            "correct": 55,
+            "n": 58,
+            "accuracy": 0.9482758620689655
+          },
+          "east_midlands": {
+            "correct": 46,
+            "n": 46,
+            "accuracy": 1.0
+          },
+          "london": {
+            "correct": 69,
+            "n": 73,
+            "accuracy": 0.9452054794520548
+          },
+          "north_east": {
+            "correct": 25,
+            "n": 29,
+            "accuracy": 0.8620689655172413
+          },
+          "north_west": {
+            "correct": 65,
+            "n": 75,
+            "accuracy": 0.8666666666666667
+          },
+          "scotland": {
+            "correct": 56,
+            "n": 59,
+            "accuracy": 0.9491525423728814
+          },
+          "south_east": {
+            "correct": 77,
+            "n": 84,
+            "accuracy": 0.9166666666666666
+          },
+          "south_west": {
+            "correct": 49,
+            "n": 55,
+            "accuracy": 0.8909090909090909
+          },
+          "wales": {
+            "correct": 36,
+            "n": 40,
+            "accuracy": 0.9
+          },
+          "west_midlands": {
+            "correct": 55,
+            "n": 59,
+            "accuracy": 0.9322033898305084
+          },
+          "yorkshire": {
+            "correct": 52,
+            "n": 54,
+            "accuracy": 0.9629629629629629
+          }
+        }
+      },
+      "benchmark_2024": {
+        "winner_accuracy": 0.7927215189873418,
+        "correct_winners": 501,
+        "gb_seats": 632,
+        "predicted_seats": {
+          "lab": 346,
+          "con": 152,
+          "ref": 39,
+          "ld": 55,
+          "green": 9,
+          "snp": 22,
+          "pc": 4,
+          "other": 5
+        },
+        "actual_seats": {
+          "lab": 411,
+          "con": 121,
+          "ref": 5,
+          "ld": 72,
+          "green": 4,
+          "snp": 9,
+          "pc": 4,
+          "other": 6
+        },
+        "seat_error": {
+          "lab": -65,
+          "con": 31,
+          "ref": 34,
+          "ld": -17,
+          "green": 5,
+          "snp": 13,
+          "pc": 0,
+          "other": -1
+        },
+        "seat_abs_error_sum": 166,
+        "share_mae": 5.556807618048258,
+        "winner_source": "official_BES_WinnerXX",
+        "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+        "regional_accuracy": {
+          "east_england": {
+            "correct": 50,
+            "n": 61,
+            "accuracy": 0.819672131147541
+          },
+          "east_midlands": {
+            "correct": 36,
+            "n": 47,
+            "accuracy": 0.7659574468085106
+          },
+          "london": {
+            "correct": 68,
+            "n": 75,
+            "accuracy": 0.9066666666666666
+          },
+          "north_east": {
+            "correct": 15,
+            "n": 27,
+            "accuracy": 0.5555555555555556
+          },
+          "north_west": {
+            "correct": 68,
+            "n": 73,
+            "accuracy": 0.9315068493150684
+          },
+          "scotland": {
+            "correct": 42,
+            "n": 57,
+            "accuracy": 0.7368421052631579
+          },
+          "south_east": {
+            "correct": 71,
+            "n": 91,
+            "accuracy": 0.7802197802197802
+          },
+          "south_west": {
+            "correct": 42,
+            "n": 58,
+            "accuracy": 0.7241379310344828
+          },
+          "wales": {
+            "correct": 23,
+            "n": 32,
+            "accuracy": 0.71875
+          },
+          "west_midlands": {
+            "correct": 49,
+            "n": 57,
+            "accuracy": 0.8596491228070176
+          },
+          "yorkshire": {
+            "correct": 37,
+            "n": 54,
+            "accuracy": 0.6851851851851852
+          }
+        }
+      },
+      "meta_2024": {
+        "strength": 0.0,
+        "score_floor": 0.65,
+        "adjusted_seats": 0,
+        "mean_score": 0.0,
+        "mean_abs_pre_rake_shift": 0.0,
+        "national_target_preserved": true
+      },
+      "research_gate": false
+    },
+    "research_gate_passed": false,
+    "applied_to_live": false
   },
-  "generated_at": "2026-08-26T22:56:49.893891+00:00",
-  "model_version": "uk-v0917-error-audit",
+  "generated_at": "2026-08-26T23:09:44.701053+00:00",
+  "model_version": "uk-v0918-ld-target-sweep",
   "selected_spec": {
     "name": "hgb_d2_g100",
     "kind": "hgb",
@@ -156,21 +362,21 @@
     "decline_profile": {
       "lab": {
         "base_share": 34.637492641681085,
-        "target_share": 25.86085610213281,
-        "absolute_drop": 8.776636539548274,
-        "relative_drop": 0.253385446525852,
-        "activation": 0.76692723262926
+        "target_share": 25.860856102132797,
+        "absolute_drop": 8.776636539548289,
+        "relative_drop": 0.2533854465258524,
+        "activation": 0.7669272326292619
       },
       "con": {
         "base_share": 24.361376406999767,
-        "target_share": 20.33488727453426,
-        "absolute_drop": 4.026489132465507,
-        "relative_drop": 0.1652816764207368,
-        "activation": 0.32640838210368395
+        "target_share": 20.334887274534253,
+        "absolute_drop": 4.026489132465514,
+        "relative_drop": 0.16528167642073707,
+        "activation": 0.32640838210368534
       },
       "ref": {
         "base_share": 14.69027274835441,
-        "target_share": 24.62350989669175,
+        "target_share": 24.623509896691758,
         "absolute_drop": 0.0,
         "relative_drop": 0.0,
         "activation": 0.0
@@ -184,30 +390,30 @@
       },
       "green": {
         "base_share": 6.906327262348596,
-        "target_share": 10.922586780316298,
+        "target_share": 10.922586780316307,
         "absolute_drop": 0.0,
         "relative_drop": 0.0,
         "activation": 0.0
       },
       "snp": {
         "base_share": 2.5856972118660697,
-        "target_share": 2.917465662303745,
+        "target_share": 2.9174656623037443,
         "absolute_drop": 0.0,
         "relative_drop": 0.0,
         "activation": 0.0
       },
       "pc": {
         "base_share": 0.6950213168269145,
-        "target_share": 1.108463383179905,
+        "target_share": 1.1084633831799058,
         "absolute_drop": 0.0,
         "relative_drop": 0.0,
         "activation": 0.0
       },
       "other": {
         "base_share": 3.568672291692681,
-        "target_share": 3.5672978345492337,
-        "absolute_drop": 0.0013744571434473052,
-        "relative_drop": 0.0003851452392103443,
+        "target_share": 3.567297834549235,
+        "absolute_drop": 0.001374457143445973,
+        "relative_drop": 0.000385145239209971,
         "activation": 0.0
       }
     },
@@ -226,32 +432,32 @@
       "other": 3.568672291692681
     },
     "target_national": {
-      "lab": 25.86085610213281,
-      "con": 20.33488727453426,
-      "ref": 24.62350989669175,
+      "lab": 25.860856102132797,
+      "con": 20.334887274534253,
+      "ref": 24.623509896691758,
       "ld": 10.664933066291995,
-      "green": 10.922586780316298,
-      "snp": 2.917465662303745,
-      "pc": 1.108463383179905,
-      "other": 3.5672978345492337
+      "green": 10.922586780316307,
+      "snp": 2.9174656623037443,
+      "pc": 1.1084633831799058,
+      "other": 3.567297834549235
     },
     "deltas": {
-      "lab": -8.776636539548274,
-      "con": -4.026489132465507,
-      "ref": 9.93323714833734,
+      "lab": -8.776636539548289,
+      "con": -4.026489132465514,
+      "ref": 9.933237148337348,
       "ld": -1.8902070539384752,
-      "green": 4.016259517967701,
-      "snp": 0.33176845043767544,
-      "pc": 0.4134420663529904,
-      "other": -0.0013744571434473052
+      "green": 4.01625951796771,
+      "snp": 0.33176845043767456,
+      "pc": 0.4134420663529913,
+      "other": -0.001374457143445973
     },
-    "turnover": 14.694707183095705,
-    "system_activation": 0.724558931924642,
-    "con_drop": 4.026489132465507,
-    "ref_rise": 9.93323714833734
+    "turnover": 14.694707183095725,
+    "system_activation": 0.7245589319246437,
+    "con_drop": 4.026489132465514,
+    "ref_rise": 9.933237148337348
   },
   "effective_party_strengths": {
-    "lab": 0.09080901588906554,
+    "lab": 0.09080901588906569,
     "con": 0.0,
     "ref": 0.0,
     "ld": 0.0,
@@ -262,26 +468,26 @@
   },
   "development_benchmark_2024_accuracy": 0.7816455696202531,
   "target_gb": {
-    "lab": 25.86085610213281,
-    "con": 20.33488727453426,
-    "ref": 24.62350989669175,
+    "lab": 25.860856102132797,
+    "con": 20.334887274534253,
+    "ref": 24.623509896691758,
     "ld": 10.664933066291995,
-    "green": 10.922586780316298,
-    "snp": 2.917465662303745,
-    "pc": 1.108463383179905,
-    "other": 3.5672978345492337
+    "green": 10.922586780316307,
+    "snp": 2.9174656623037443,
+    "pc": 1.1084633831799058,
+    "other": 3.567297834549235
   },
   "poll_meta": {
     "effective_polls": 30,
     "raw_average": {
-      "lab": 25.552259004727244,
-      "con": 20.092231456636835,
-      "ref": 24.32967802770619,
-      "ld": 10.537668625575707,
-      "green": 10.792247762796764,
-      "snp": 2.882651600788856,
-      "pc": 1.0952361109937587,
-      "other": 3.5247293382482834
+      "lab": 25.552259004727205,
+      "con": 20.092231456636807,
+      "ref": 24.329678027706173,
+      "ld": 10.537668625575696,
+      "green": 10.792247762796762,
+      "snp": 2.8826516007888525,
+      "pc": 1.0952361109937585,
+      "other": 3.524729338248281
     }
   },
   "holdout_accuracy": 0.7816455696202531,
@@ -17505,39 +17711,39 @@
           "other": 3.568672291692681
         },
         "target_national": {
-          "lab": 25.86085610213281,
-          "con": 20.33488727453426,
-          "ref": 24.62350989669175,
+          "lab": 25.860856102132797,
+          "con": 20.334887274534253,
+          "ref": 24.623509896691758,
           "ld": 10.664933066291995,
-          "green": 10.922586780316298,
-          "snp": 2.917465662303745,
-          "pc": 1.108463383179905,
-          "other": 3.5672978345492337
+          "green": 10.922586780316307,
+          "snp": 2.9174656623037443,
+          "pc": 1.1084633831799058,
+          "other": 3.567297834549235
         },
         "deltas": {
-          "lab": -8.776636539548274,
-          "con": -4.026489132465507,
-          "ref": 9.93323714833734,
+          "lab": -8.776636539548289,
+          "con": -4.026489132465514,
+          "ref": 9.933237148337348,
           "ld": -1.8902070539384752,
-          "green": 4.016259517967701,
-          "snp": 0.33176845043767544,
-          "pc": 0.4134420663529904,
-          "other": -0.0013744571434473052
+          "green": 4.01625951796771,
+          "snp": 0.33176845043767456,
+          "pc": 0.4134420663529913,
+          "other": -0.001374457143445973
         },
-        "turnover": 14.694707183095705,
-        "system_activation": 0.724558931924642,
-        "con_drop": 4.026489132465507,
-        "ref_rise": 9.93323714833734
+        "turnover": 14.694707183095725,
+        "system_activation": 0.7245589319246437,
+        "con_drop": 4.026489132465514,
+        "ref_rise": 9.933237148337348
       },
       "lab": {
-        "beta": 1.3335727821988217,
-        "structural_beta": 1.41325123535323,
-        "raw_beta": 1.41325123535323,
-        "activation": 0.8071912523472493,
-        "current_mean": 25.9886989075015,
-        "current_sd": 8.689589892060141,
+        "beta": 1.3335727821988228,
+        "structural_beta": 1.4132512353532307,
+        "raw_beta": 1.4132512353532307,
+        "activation": 0.8071912523472506,
+        "current_mean": 25.98869890750149,
+        "current_sd": 8.689589892060134,
         "target_relative_sd": 0.47253514665646507,
-        "desired_sd": 12.280573649666936,
+        "desired_sd": 12.28057364966693,
         "bounds": [
           0.65,
           1.45
@@ -17546,44 +17752,44 @@
           {
             "year": "10",
             "national_share": 29.663601026451854,
-            "weight": 0.8248875458312053,
+            "weight": 0.8248875458312048,
             "relative_sd": 0.5148834514173245
           },
           {
             "year": "15",
             "national_share": 31.178963356931966,
-            "weight": 0.861393645971186,
+            "weight": 0.8613936459711853,
             "relative_sd": 0.5116340643668754
           },
           {
             "year": "17",
             "national_share": 41.02281537799781,
-            "weight": 0.6479262392894252,
+            "weight": 0.6479262392894246,
             "relative_sd": 0.4249352366193729
           },
           {
             "year": "19",
             "national_share": 32.98368496631836,
-            "weight": 0.9663798276339768,
+            "weight": 0.966379827633976,
             "relative_sd": 0.5167081687114708
           },
           {
             "year": "24",
             "national_share": 34.637492641681085,
-            "weight": 0.9816573424859251,
+            "weight": 0.9816573424859242,
             "relative_sd": 0.3905729061465706
           }
         ]
       },
       "con": {
         "beta": 0.8762317014334705,
-        "structural_beta": 0.8119550358036364,
-        "raw_beta": 0.8119550358036364,
-        "activation": 0.6581845948147058,
-        "current_mean": 19.550461310871125,
-        "current_sd": 10.136791680929596,
+        "structural_beta": 0.8119550358036367,
+        "raw_beta": 0.8119550358036367,
+        "activation": 0.6581845948147074,
+        "current_mean": 19.550461310871118,
+        "current_sd": 10.13679168092959,
         "target_relative_sd": 0.4209935981227471,
-        "desired_sd": 8.230619052223194,
+        "desired_sd": 8.230619052223192,
         "bounds": [
           0.65,
           1.45
@@ -17592,44 +17798,44 @@
           {
             "year": "10",
             "national_share": 36.97061319203565,
-            "weight": 0.43237208773342145,
+            "weight": 0.4323720877334213,
             "relative_sd": 0.40776925238518413
           },
           {
             "year": "15",
             "national_share": 37.776482148321605,
-            "weight": 0.4697577296032222,
+            "weight": 0.46975772960322204,
             "relative_sd": 0.44067771862571287
           },
           {
             "year": "17",
             "national_share": 43.536931978815836,
-            "weight": 0.4256954143239897,
+            "weight": 0.42569541432398944,
             "relative_sd": 0.3610580046196813
           },
           {
             "year": "19",
             "national_share": 44.72525214179367,
-            "weight": 0.44946541250016436,
+            "weight": 0.4494654125001642,
             "relative_sd": 0.38214451296042085
           },
           {
             "year": "24",
             "national_share": 24.361376406999767,
-            "weight": 1.1498513398593602,
+            "weight": 1.1498513398593597,
             "relative_sd": 0.4552995090245467
           }
         ]
       },
       "ref": {
-        "beta": 0.9208770058498259,
-        "structural_beta": 0.9208770058498259,
-        "raw_beta": 0.9208770058498259,
+        "beta": 0.9208770058498267,
+        "structural_beta": 0.9208770058498267,
+        "raw_beta": 0.9208770058498267,
         "activation": 1.0,
-        "current_mean": 25.411499615414254,
-        "current_sd": 15.486325202222963,
+        "current_mean": 25.411499615414257,
+        "current_sd": 15.486325202222952,
         "target_relative_sd": 0.5612026444590174,
-        "desired_sd": 14.261000783839782,
+        "desired_sd": 14.261000783839783,
         "bounds": [
           0.35,
           1.15
@@ -17644,19 +17850,19 @@
           {
             "year": "15",
             "national_share": 12.884754749441136,
-            "weight": 0.45556121700109325,
+            "weight": 0.45556121700109303,
             "relative_sd": 0.4936388549657329
           },
           {
             "year": "17",
             "national_share": 1.892422007291617,
-            "weight": 0.04310263232033211,
+            "weight": 0.04310263232033207,
             "relative_sd": 1.0864939512775365
           },
           {
             "year": "19",
             "national_share": 2.135029308755465,
-            "weight": 0.05426830379680642,
+            "weight": 0.0542683037968064,
             "relative_sd": 1.6854870409603417
           },
           {
@@ -17668,10 +17874,10 @@
         ]
       },
       "ld": {
-        "beta": 0.9199427350880651,
+        "beta": 0.9199427350880649,
         "structural_beta": 0.8615103558097706,
         "raw_beta": 0.8615103558097706,
-        "activation": 0.5780740168699422,
+        "activation": 0.5780740168699434,
         "current_mean": 9.917578386254533,
         "current_sd": 11.723362159902651,
         "target_relative_sd": 1.0183733883729673,
@@ -17714,14 +17920,14 @@
         ]
       },
       "green": {
-        "beta": 0.9717149308916168,
-        "structural_beta": 0.9570005673680647,
-        "raw_beta": 0.9570005673680647,
-        "activation": 0.6578009842710382,
-        "current_mean": 11.07808336632564,
-        "current_sd": 10.8638933301258,
-        "target_relative_sd": 0.9384973679075049,
-        "desired_sd": 10.396752080756524,
+        "beta": 0.9717149308916169,
+        "structural_beta": 0.957000567368065,
+        "raw_beta": 0.957000567368065,
+        "activation": 0.6578009842710397,
+        "current_mean": 11.078083366325648,
+        "current_sd": 10.863893330125803,
+        "target_relative_sd": 0.9384973679075048,
+        "desired_sd": 10.396752080756531,
         "bounds": [
           0.55,
           1.55
@@ -17730,43 +17936,43 @@
           {
             "year": "10",
             "national_share": 0.9722085744705792,
-            "weight": 0.053562903325523936,
+            "weight": 0.05356290332552387,
             "relative_sd": 1.7985135977042541
           },
           {
             "year": "15",
             "national_share": 3.8386597313317115,
-            "weight": 0.2809531561796408,
+            "weight": 0.28095315617964045,
             "relative_sd": 0.7855788122899763
           },
           {
             "year": "17",
             "national_share": 1.6507835561999813,
-            "weight": 0.11414785215521857,
+            "weight": 0.11414785215521842,
             "relative_sd": 1.6216837010729797
           },
           {
             "year": "19",
             "national_share": 2.766993191590922,
-            "weight": 0.2274805577447346,
+            "weight": 0.22748055774473433,
             "relative_sd": 1.157985135165309
           },
           {
             "year": "24",
             "national_share": 6.906327262348596,
-            "weight": 0.7970021179340389,
+            "weight": 0.7970021179340379,
             "relative_sd": 0.7741120235598484
           }
         ]
       },
       "snp": {
-        "beta": 1.0203353072635701,
-        "structural_beta": 1.0391340121219967,
-        "raw_beta": 1.0391340121219967,
-        "activation": 0.5196325692386622,
-        "current_mean": 33.852562026659406,
-        "current_sd": 5.697416397272722,
-        "target_relative_sd": 0.17488718150683152,
+        "beta": 1.0203353072635704,
+        "structural_beta": 1.0391340121219972,
+        "raw_beta": 1.0391340121219972,
+        "activation": 0.5196325692386634,
+        "current_mean": 33.8525620266594,
+        "current_sd": 5.697416397272719,
+        "target_relative_sd": 0.17488718150683155,
         "desired_sd": 5.920379159627656,
         "bounds": [
           0.65,
@@ -17776,44 +17982,44 @@
           {
             "year": "10",
             "national_share": 1.6935979937500634,
-            "weight": 0.5308021663063258,
+            "weight": 0.5308021663063259,
             "relative_sd": 0.4293939480567907
           },
           {
             "year": "15",
             "national_share": 4.85144776974019,
-            "weight": 0.5901729001045684,
+            "weight": 0.5901729001045682,
             "relative_sd": 0.138930002196451
           },
           {
             "year": "17",
             "national_share": 3.1140731310625234,
-            "weight": 1.1447686259637855,
+            "weight": 1.144768625963785,
             "relative_sd": 0.1271057137791138
           },
           {
             "year": "19",
             "national_share": 3.9800641196601325,
-            "weight": 0.9237774987806863,
+            "weight": 0.9237774987806862,
             "relative_sd": 0.12455770088276212
           },
           {
             "year": "24",
             "national_share": 2.5856972118660697,
-            "weight": 1.2790966341007088,
+            "weight": 1.2790966341007093,
             "relative_sd": 0.16497407329430164
           }
         ]
       },
       "pc": {
-        "beta": 1.2029377694132093,
-        "structural_beta": 1.3882525016572886,
-        "raw_beta": 1.3882525016572886,
-        "activation": 0.5226953298354865,
-        "current_mean": 23.652985228140714,
-        "current_sd": 15.55178339102036,
+        "beta": 1.20293776941321,
+        "structural_beta": 1.3882525016572889,
+        "raw_beta": 1.3882525016572889,
+        "activation": 0.5226953298354877,
+        "current_mean": 23.65298522814073,
+        "current_sd": 15.551783391020368,
         "target_relative_sd": 0.9127728271749059,
-        "desired_sd": 21.589802197816287,
+        "desired_sd": 21.5898021978163,
         "bounds": [
           0.65,
           1.65
@@ -17822,44 +18028,44 @@
           {
             "year": "10",
             "national_share": 0.5700541877875557,
-            "weight": 0.558643991443265,
+            "weight": 0.5586439914432646,
             "relative_sd": 0.8867237102541986
           },
           {
             "year": "15",
             "national_share": 0.60609574127213,
-            "weight": 0.6560031718412765,
+            "weight": 0.656003171841276,
             "relative_sd": 0.8146331631550142
           },
           {
             "year": "17",
             "national_share": 0.5239115351293505,
-            "weight": 0.6504429267051579,
+            "weight": 0.6504429267051575,
             "relative_sd": 0.9827672256255279
           },
           {
             "year": "19",
             "national_share": 0.4909967379543378,
-            "weight": 0.6808550904634215,
+            "weight": 0.6808550904634211,
             "relative_sd": 1.135677665889194
           },
           {
             "year": "24",
             "national_share": 0.6950213168269145,
-            "weight": 0.9681112107094803,
+            "weight": 0.9681112107094793,
             "relative_sd": 0.7905129662531869
           }
         ]
       },
       "other": {
-        "beta": 1.0369780115451028,
-        "structural_beta": 1.0729000233158017,
-        "raw_beta": 1.0729000233158017,
-        "activation": 0.5072427944901287,
-        "current_mean": 3.80290062436066,
-        "current_sd": 6.7763004919027585,
+        "beta": 1.036978011545103,
+        "structural_beta": 1.072900023315802,
+        "raw_beta": 1.072900023315802,
+        "activation": 0.5072427944901299,
+        "current_mean": 3.802900624360662,
+        "current_sd": 6.776300491902761,
         "target_relative_sd": 1.9117756875331506,
-        "desired_sd": 7.270292955757348,
+        "desired_sd": 7.270292955757353,
         "bounds": [
           0.8,
           1.2
@@ -17868,31 +18074,31 @@
           {
             "year": "10",
             "national_share": 3.4004793523122308,
-            "weight": 0.9419268003888428,
+            "weight": 0.9419268003888422,
             "relative_sd": 1.160683673963441
           },
           {
             "year": "15",
             "national_share": 0.8050155203125664,
-            "weight": 0.22077310578155734,
+            "weight": 0.22077310578155723,
             "relative_sd": 2.2777103684022255
           },
           {
             "year": "17",
             "national_share": 0.7034257614079996,
-            "weight": 0.21770544809378575,
+            "weight": 0.21770544809378564,
             "relative_sd": 3.0710838697173086
           },
           {
             "year": "19",
             "national_share": 1.076204365999441,
-            "weight": 0.3510794499812283,
+            "weight": 0.3510794499812281,
             "relative_sd": 2.9473667763888356
           },
           {
             "year": "24",
             "national_share": 3.568672291692681,
-            "weight": 1.4792858149981691,
+            "weight": 1.47928581499817,
             "relative_sd": 1.9190242556326051
           }
         ]
@@ -17908,21 +18114,21 @@
       "decline_profile": {
         "lab": {
           "base_share": 34.637492641681085,
-          "target_share": 25.86085610213281,
-          "absolute_drop": 8.776636539548274,
-          "relative_drop": 0.253385446525852,
-          "activation": 0.76692723262926
+          "target_share": 25.860856102132797,
+          "absolute_drop": 8.776636539548289,
+          "relative_drop": 0.2533854465258524,
+          "activation": 0.7669272326292619
         },
         "con": {
           "base_share": 24.361376406999767,
-          "target_share": 20.33488727453426,
-          "absolute_drop": 4.026489132465507,
-          "relative_drop": 0.1652816764207368,
-          "activation": 0.32640838210368395
+          "target_share": 20.334887274534253,
+          "absolute_drop": 4.026489132465514,
+          "relative_drop": 0.16528167642073707,
+          "activation": 0.32640838210368534
         },
         "ref": {
           "base_share": 14.69027274835441,
-          "target_share": 24.62350989669175,
+          "target_share": 24.623509896691758,
           "absolute_drop": 0.0,
           "relative_drop": 0.0,
           "activation": 0.0
@@ -17936,30 +18142,30 @@
         },
         "green": {
           "base_share": 6.906327262348596,
-          "target_share": 10.922586780316298,
+          "target_share": 10.922586780316307,
           "absolute_drop": 0.0,
           "relative_drop": 0.0,
           "activation": 0.0
         },
         "snp": {
           "base_share": 2.5856972118660697,
-          "target_share": 2.917465662303745,
+          "target_share": 2.9174656623037443,
           "absolute_drop": 0.0,
           "relative_drop": 0.0,
           "activation": 0.0
         },
         "pc": {
           "base_share": 0.6950213168269145,
-          "target_share": 1.108463383179905,
+          "target_share": 1.1084633831799058,
           "absolute_drop": 0.0,
           "relative_drop": 0.0,
           "activation": 0.0
         },
         "other": {
           "base_share": 3.568672291692681,
-          "target_share": 3.5672978345492337,
-          "absolute_drop": 0.0013744571434473052,
-          "relative_drop": 0.0003851452392103443,
+          "target_share": 3.567297834549235,
+          "absolute_drop": 0.001374457143445973,
+          "relative_drop": 0.000385145239209971,
           "activation": 0.0
         }
       },
