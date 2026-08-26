@@ -58,7 +58,7 @@ jobs:
               "builder":"modello-uk v0.9.19 — Liberal Democrat local-footprint validation",
               "builder_integrity":"bes-integrity-v0919.json",
               "app":"uk-v0919-20260827-ld-footprint",
-              "index":"Versione 0.9.18 · targeting Liberal Democrats",
+              "index":"Versione 0.9.19 · validazione footprint Liberal Democrats (shadow)",
           }
           observed={"builder":builder,"builder_integrity":builder,"app":app,"index":index}
           for key,needle in required.items():
@@ -232,5 +232,3 @@ jobs:
           path: "."
 
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
