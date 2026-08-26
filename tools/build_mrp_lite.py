@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.3 — GB-first official-winner constituency MRP-lite / hybrid residual model
+modello-uk v0.9.4 — robust official-party label parser / hybrid residual model
 
 Purpose
 -------
@@ -79,8 +79,8 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v093-mrp-lite.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v093.json"
+BACKTEST_OUT=DATA/"backtest-v094-mrp-lite.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v094.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -112,7 +112,7 @@ MODEL_SPECS=(
     {"name":"hybrid_a5_d2_w40","kind":"hybrid","alpha":5.0,"depth":2,"leaf":24,"l2":2.0,"hgb_weight":.40,"gamma":.85},
 )
 
-UA="FocusAmerica-UK-election-model/0.9.3 (+https://angrisanidj.github.io/modello-uk/)"
+UA="FocusAmerica-UK-election-model/0.9.4 (+https://angrisanidj.github.io/modello-uk/)"
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -325,33 +325,64 @@ def winner_col(df:pd.DataFrame,yy:str)->str|None:
 def second_col(df:pd.DataFrame,yy:str)->str|None:
     return find_col(df,f"Second{yy}",f"SecondParty{yy}",f"RunnerUp{yy}")
 
-def canonical_party_label(value:Any,allow_blank:bool=False)->str|None:
+def canonical_party_label(
+    value:Any,
+    allow_blank:bool=False,
+    unknown_sink:set[str]|None=None
+)->str|None:
+    """Map raw BES WinnerXX/SecondXX labels into model party families.
+
+    The model intentionally aggregates all independents, Speaker and minor
+    parties into `other`. Unknown GB labels are therefore safely bucketed into
+    `other` *and recorded*. Historical expected-winner counts remain a hard
+    integrity gate, so a misspelled/misparsed major party cannot silently pass.
+    """
     if value is None or (isinstance(value,float) and np.isnan(value)):
         if allow_blank:return None
         raise ValueError("Missing official winner label")
+
     s=str(value).strip()
     if not s or s.lower() in {"nan","none","na","n/a"}:
         if allow_blank:return None
         raise ValueError(f"Missing official winner label: {value!r}")
+
     k=nkey(s)
 
     mapping={
-        "con":"con","conservative":"con","conservatives":"con","conservativeparty":"con",
-        "lab":"lab","labour":"lab","labourparty":"lab",
-        "ld":"ld","libdem":"ld","libdems":"ld","liberaldemocrat":"ld","liberaldemocrats":"ld",
-        "green":"green","greenparty":"green","greens":"green",
+        "con":"con","cons":"con","conservative":"con","conservatives":"con",
+        "conservativeparty":"con",
+
+        "lab":"lab","labour":"lab","labourparty":"lab","labcoop":"lab",
+        "labourcoop":"lab","labourcooperative":"lab",
+
+        "ld":"ld","libdem":"ld","libdems":"ld","liberaldemocrat":"ld",
+        "liberaldemocrats":"ld",
+
+        "green":"green","grn":"green","greenparty":"green","greens":"green",
+
         "snp":"snp","scottishnationalparty":"snp",
+
         "pc":"pc","plaid":"pc","plaidcymru":"pc",
-        "ukip":"ref","ukindependenceparty":"ref","unitedkingdomindependenceparty":"ref",
-        "brexit":"ref","brexitparty":"ref","reform":"ref","reformuk":"ref",
-        "spk":"other","speaker":"other","thespeaker":"other",
-        "ind":"other","independent":"other","independents":"other",
+
+        "ukip":"ref","ukindependenceparty":"ref",
+        "unitedkingdomindependenceparty":"ref",
+        "brexit":"ref","brexitparty":"ref",
+        "reform":"ref","reformuk":"ref",
+
+        # Speaker labels used in historical constituency datasets.
+        "spk":"other","spkr":"other","speaker":"other",
+        "thespeaker":"other","commonspeaker":"other",
+        "speakerofhouseofcommons":"other","speakerofcommons":"other",
+
+        "ind":"other","inds":"other","independent":"other",
+        "independents":"other",
+
         "other":"other","others":"other","minor":"other","minorparty":"other",
     }
-    if k in mapping:return mapping[k]
+    if k in mapping:
+        return mapping[k]
 
-    # Some source labels include annotations such as "Lab gain" or
-    # "Conservative hold". Parse the party token but never guess numbers.
+    # Annotated/long-form labels.
     if "conservative" in k:return "con"
     if "labour" in k:return "lab"
     if "liberal" in k and "democrat" in k:return "ld"
@@ -359,10 +390,14 @@ def canonical_party_label(value:Any,allow_blank:bool=False)->str|None:
     if "plaid" in k:return "pc"
     if "green" in k:return "green"
     if "ukip" in k or "brexit" in k or "reform" in k:return "ref"
-    if "speaker" in k or "independent" in k:return "other"
+    if "speaker" in k or k.startswith("spkr") or k.startswith("spk"):return "other"
+    if "independent" in k:return "other"
 
-    if allow_blank:return None
-    raise ValueError(f"Unrecognised official party label: {value!r}")
+    # For this model every unmodelled GB minor party belongs to `other`.
+    # Record it so the integrity report exposes exactly what was encountered.
+    if unknown_sink is not None:
+        unknown_sink.add(s)
+    return "other"
 
 def competitive_parties(row:pd.Series)->list[str]:
     """Parties allowed to WIN the seat without pooling unrelated 'Other' votes.
@@ -411,9 +446,16 @@ def extract_election(df:pd.DataFrame,yy:str)->dict[str,Any]:
     if wc is None:
         raise RuntimeError(f"Election {yy}: BES dataset has no official Winner{yy} column")
     sc=second_col(source,yy)
-    data["actual_winner"]=source[wc].map(lambda v:canonical_party_label(v,allow_blank=False))
+
+    unknown_winner_labels=set()
+    unknown_second_labels=set()
+    data["actual_winner"]=source[wc].map(
+        lambda v:canonical_party_label(v,allow_blank=False,unknown_sink=unknown_winner_labels)
+    )
     if sc is not None:
-        data["actual_second"]=source[sc].map(lambda v:canonical_party_label(v,allow_blank=True))
+        data["actual_second"]=source[sc].map(
+            lambda v:canonical_party_label(v,allow_blank=True,unknown_sink=unknown_second_labels)
+        )
     else:
         data["actual_second"]=None
 
@@ -495,6 +537,10 @@ def extract_election(df:pd.DataFrame,yy:str)->dict[str,Any]:
         "frame":data,
         "share_source":share_source,
         "ni_filtered_before_party_parsing":True,
+        "unknown_winner_labels":sorted(unknown_winner_labels),
+        "unknown_second_labels":sorted(unknown_second_labels),
+        "raw_winner_labels":sorted({str(x) for x in source[wc].dropna().unique()}),
+        "raw_second_labels":sorted({str(x) for x in source[sc].dropna().unique()}) if sc is not None else [],
     }
 
 EXPECTED_COUNTRIES_OLD={"England":533,"Scotland":59,"Wales":40}
@@ -554,6 +600,10 @@ def integrity_record(label:str,election:dict[str,Any],boundary:str,expected_winn
         "official_winner_source":True,
         "gb_rows":int(len(df)),
         "ni_filtered_before_party_parsing":bool(election.get("ni_filtered_before_party_parsing")),
+        "unknown_winner_labels":election.get("unknown_winner_labels",[]),
+        "unknown_second_labels":election.get("unknown_second_labels",[]),
+        "raw_winner_labels":election.get("raw_winner_labels",[]),
+        "raw_second_labels":election.get("raw_second_labels",[]),
         "other_winner_seats":int((df["actual_winner"]=="other").sum()),
         "other_runnerup_seats":int((df["actual_second"]=="other").sum()),
         "errors":errors,
@@ -563,7 +613,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v093-bes-integrity",
+        "version":"uk-v094-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -1029,7 +1079,7 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v093-mrp-lite",
+        "version":"uk-v094-mrp-lite",
         "model_type":"constituency-residual-ml-v1",
         "status":"error",
         "approved":False,
@@ -1041,15 +1091,15 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v093-mrp-lite-live","approved":False,"status":"error",
+        "version":"uk-v094-mrp-lite-live","approved":False,"status":"error",
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v093-mrp-lite-backtest","status":"error","error":str(exc)
+        "version":"uk-v094-mrp-lite-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v093-bes-integrity","status":"failed",
+            "version":"uk-v094-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -1122,7 +1172,7 @@ def main()->int:
         live=live_projection(e24,target_now,models_live,names_live,selected_spec)
 
         model_payload={
-            "version":"uk-v093-mrp-lite",
+            "version":"uk-v094-mrp-lite",
             "model_type":"constituency-residual-ml-v1",
             "status":"ok",
             "approved":approved,
@@ -1181,7 +1231,7 @@ def main()->int:
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v093-mrp-lite-live",
+            "version":"uk-v094-mrp-lite-live",
             "model_type":"constituency-residual-ml-v1",
             "status":"ok",
             "approved":approved,
@@ -1198,7 +1248,7 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v093-mrp-lite-backtest",
+            "version":"uk-v094-mrp-lite-backtest",
             "status":"ok",
             "selected_spec":selected_spec,
             "approved_for_live":approved,
@@ -1209,7 +1259,7 @@ def main()->int:
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
-        print("v0.9.3 selected spec:",selected_spec)
+        print("v0.9.4 selected spec:",selected_spec)
         print(
             "2019 validation:",
             f"baseline {validation_base['winner_accuracy']:.2%}/{validation_base['seat_abs_error_sum']}",
@@ -1229,7 +1279,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.3 shadow build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.4 shadow build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # Shadow failure must not break the existing production model.
         raise SystemExit(0)
