@@ -27,7 +27,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Fonte sondaggi: —</span>
-      <span class="badge">Versione 0.9.4 · robust BES party-label parser</span>
+      <span class="badge">Versione 0.9.5 · RUK + validator fix</span>
     </div>
   </section>
   <div id="errorBox" class="errorbox"></div>
@@ -48,7 +48,7 @@
       <div class="explain compact">
         <p><strong>632 collegi GB</strong> sono simulati singolarmente con il risultato 2024 come baseline e swing regolarizzato.</p>
         <p><strong>18 collegi dell’Irlanda del Nord</strong> sono simulati separatamente con partiti, candidati e risultati Westminster 2024 reali. In assenza di polling Westminster recente, il tracker Assembly di LucidTalk entra soltanto come segnale debole.</p>
-        <p class="warning"><strong>Beta:</strong> la v0.9.4 mantiene il filtro GB-first e rende robusta la lettura delle etichette ufficiali BES: include anche “Spkr” per lo Speaker e registra nel report tutte le eventuali etichette minori non modellate. Queste vengono aggregate in “Other”, mentre i conteggi storici ufficiali restano un hard gate contro qualsiasi classificazione errata dei partiti principali.</p>
+        <p class="warning"><strong>Beta:</strong> la v0.9.5 mantiene il parser GB-first e aggiunge l’abbreviazione ufficiale “RUK” per Reform UK. Corregge inoltre il validator della GitHub Action, che nella v0.9.4 caricava il backtest v094 ma tentava erroneamente di leggere una variabile v092. I gate storici e statistici restano invariati.</p>
       </div>
     </article>
   </section>
@@ -100,7 +100,7 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.4"></script>
+<script src="scripts/app.js?v=0.9.5"></script>
 <script src="scripts/map-performance.js"></script>
 </body>
 </html>

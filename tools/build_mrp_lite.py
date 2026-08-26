@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.4 — robust official-party label parser / hybrid residual model
+modello-uk v0.9.5 — robust official-party label parser / hybrid residual model
 
 Purpose
 -------
@@ -79,8 +79,8 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v094-mrp-lite.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v094.json"
+BACKTEST_OUT=DATA/"backtest-v095-mrp-lite.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v095.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -112,7 +112,7 @@ MODEL_SPECS=(
     {"name":"hybrid_a5_d2_w40","kind":"hybrid","alpha":5.0,"depth":2,"leaf":24,"l2":2.0,"hgb_weight":.40,"gamma":.85},
 )
 
-UA="FocusAmerica-UK-election-model/0.9.4 (+https://angrisanidj.github.io/modello-uk/)"
+UA="FocusAmerica-UK-election-model/0.9.5 (+https://angrisanidj.github.io/modello-uk/)"
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -349,7 +349,7 @@ def canonical_party_label(
     k=nkey(s)
 
     mapping={
-        "con":"con","cons":"con","conservative":"con","conservatives":"con",
+        "c":"con","con":"con","cons":"con","conservative":"con","conservatives":"con",
         "conservativeparty":"con",
 
         "lab":"lab","labour":"lab","labourparty":"lab","labcoop":"lab",
@@ -367,7 +367,7 @@ def canonical_party_label(
         "ukip":"ref","ukindependenceparty":"ref",
         "unitedkingdomindependenceparty":"ref",
         "brexit":"ref","brexitparty":"ref",
-        "reform":"ref","reformuk":"ref",
+        "ruk":"ref","reform":"ref","reformuk":"ref",
 
         # Speaker labels used in historical constituency datasets.
         "spk":"other","spkr":"other","speaker":"other",
@@ -613,7 +613,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v094-bes-integrity",
+        "version":"uk-v095-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -1079,7 +1079,7 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v094-mrp-lite",
+        "version":"uk-v095-mrp-lite",
         "model_type":"constituency-residual-ml-v1",
         "status":"error",
         "approved":False,
@@ -1091,15 +1091,15 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v094-mrp-lite-live","approved":False,"status":"error",
+        "version":"uk-v095-mrp-lite-live","approved":False,"status":"error",
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v094-mrp-lite-backtest","status":"error","error":str(exc)
+        "version":"uk-v095-mrp-lite-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v094-bes-integrity","status":"failed",
+            "version":"uk-v095-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -1172,7 +1172,7 @@ def main()->int:
         live=live_projection(e24,target_now,models_live,names_live,selected_spec)
 
         model_payload={
-            "version":"uk-v094-mrp-lite",
+            "version":"uk-v095-mrp-lite",
             "model_type":"constituency-residual-ml-v1",
             "status":"ok",
             "approved":approved,
@@ -1231,7 +1231,7 @@ def main()->int:
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v094-mrp-lite-live",
+            "version":"uk-v095-mrp-lite-live",
             "model_type":"constituency-residual-ml-v1",
             "status":"ok",
             "approved":approved,
@@ -1248,7 +1248,7 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v094-mrp-lite-backtest",
+            "version":"uk-v095-mrp-lite-backtest",
             "status":"ok",
             "selected_spec":selected_spec,
             "approved_for_live":approved,
@@ -1259,7 +1259,7 @@ def main()->int:
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
-        print("v0.9.4 selected spec:",selected_spec)
+        print("v0.9.5 selected spec:",selected_spec)
         print(
             "2019 validation:",
             f"baseline {validation_base['winner_accuracy']:.2%}/{validation_base['seat_abs_error_sum']}",
@@ -1279,7 +1279,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.4 shadow build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.5 shadow build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # Shadow failure must not break the existing production model.
         raise SystemExit(0)
