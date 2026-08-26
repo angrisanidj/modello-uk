@@ -27,7 +27,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Fonte sondaggi: —</span>
-      <span class="badge">Versione 0.9.2 · official winners + Other candidate fix</span>
+      <span class="badge">Versione 0.9.3 · GB-first BES parser fix</span>
     </div>
   </section>
   <div id="errorBox" class="errorbox"></div>
@@ -48,7 +48,7 @@
       <div class="explain compact">
         <p><strong>632 collegi GB</strong> sono simulati singolarmente con il risultato 2024 come baseline e swing regolarizzato.</p>
         <p><strong>18 collegi dell’Irlanda del Nord</strong> sono simulati separatamente con partiti, candidati e risultati Westminster 2024 reali. In assenza di polling Westminster recente, il tracker Assembly di LucidTalk entra soltanto come segnale debole.</p>
-        <p class="warning"><strong>Beta:</strong> la v0.9.2 usa direttamente le variabili ufficiali BES WinnerXX/SecondXX per vincitore e competizione locale. “Other” resta una quota aggregata di voto e non viene più trattato come un unico super-candidato: può competere per il seggio solo dove un indipendente/Speaker/altro era già vincitore o secondo nella baseline. Il modello resta in shadow mode fino al superamento del gate.</p>
+        <p class="warning"><strong>Beta:</strong> la v0.9.3 filtra l’Irlanda del Nord prima di interpretare WinnerXX/SecondXX e qualsiasi variabile di partito. Il modello GB lavora quindi esclusivamente sui 632 collegi di England, Scotland e Wales; restano attivi il fix “Other” e tutti gli integrity gate storici.</p>
       </div>
     </article>
   </section>
@@ -100,7 +100,7 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.2"></script>
+<script src="scripts/app.js?v=0.9.3"></script>
 <script src="scripts/map-performance.js"></script>
 </body>
 </html>

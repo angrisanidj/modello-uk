@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.2 — official-winner constituency MRP-lite / hybrid residual model
+modello-uk v0.9.3 — GB-first official-winner constituency MRP-lite / hybrid residual model
 
 Purpose
 -------
@@ -79,8 +79,8 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v092-mrp-lite.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v092.json"
+BACKTEST_OUT=DATA/"backtest-v093-mrp-lite.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v093.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -112,7 +112,7 @@ MODEL_SPECS=(
     {"name":"hybrid_a5_d2_w40","kind":"hybrid","alpha":5.0,"depth":2,"leaf":24,"l2":2.0,"hgb_weight":.40,"gamma":.85},
 )
 
-UA="FocusAmerica-UK-election-model/0.9.2 (+https://angrisanidj.github.io/modello-uk/)"
+UA="FocusAmerica-UK-election-model/0.9.3 (+https://angrisanidj.github.io/modello-uk/)"
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -389,40 +389,53 @@ def extract_election(df:pd.DataFrame,yy:str)->dict[str,Any]:
     if cc is None:raise RuntimeError("BES dataset has no Country column")
     if rc is None:raise RuntimeError("BES dataset has no Region column")
 
-    data=pd.DataFrame(index=df.index)
-    data["id"]=df[ic].astype(str) if ic else [f"row-{i}" for i in range(len(df))]
-    data["name"]=df[nc].astype(str)
-    data["country"]=df[cc].map(normalize_country)
-    data["region"]=[region_key(df.loc[i,rc],data.loc[i,"country"]) for i in df.index]
+    # IMPORTANT: this model is GB-only. Remove Northern Ireland immediately,
+    # before WinnerXX / SecondXX or any party field is interpreted.
+    countries=df[cc].map(normalize_country)
+    gb_index=countries[countries!="Northern Ireland"].index
+    if len(gb_index)!=632:
+        counts={k:int(v) for k,v in Counter(countries).items()}
+        raise RuntimeError(
+            f"Election {yy}: expected exactly 632 GB rows after NI exclusion, "
+            f"got {len(gb_index)}; country counts={counts}"
+        )
 
-    wc=winner_col(df,yy)
+    source=df.loc[gb_index].copy()
+    data=pd.DataFrame(index=gb_index)
+    data["id"]=source[ic].astype(str) if ic else [f"row-{i}" for i in range(len(source))]
+    data["name"]=source[nc].astype(str)
+    data["country"]=countries.loc[gb_index]
+    data["region"]=[region_key(source.loc[i,rc],data.loc[i,"country"]) for i in gb_index]
+
+    wc=winner_col(source,yy)
     if wc is None:
         raise RuntimeError(f"Election {yy}: BES dataset has no official Winner{yy} column")
-    sc=second_col(df,yy)
-    data["actual_winner"]=df[wc].map(lambda v:canonical_party_label(v,allow_blank=False))
+    sc=second_col(source,yy)
+    data["actual_winner"]=source[wc].map(lambda v:canonical_party_label(v,allow_blank=False))
     if sc is not None:
-        data["actual_second"]=df[sc].map(lambda v:canonical_party_label(v,allow_blank=True))
+        data["actual_second"]=source[sc].map(lambda v:canonical_party_label(v,allow_blank=True))
     else:
         data["actual_second"]=None
 
-    tv=total_vote_col(df,yy)
-    total_votes=pd.to_numeric(df[tv],errors="coerce").fillna(0.0) if tv else pd.Series(0.0,index=df.index)
+    tv=total_vote_col(source,yy)
+    total_votes=(
+        pd.to_numeric(source[tv],errors="coerce").fillna(0.0)
+        if tv else pd.Series(0.0,index=source.index)
+    )
 
-    # Prefer actual vote counts whenever the source provides enough of them.
-    vote_cols={p:party_vote_cols(df,p,yy) for p in MAIN_PARTIES}
+    # Prefer vote counts, avoiding all sparse-share unit ambiguities.
+    vote_cols={p:party_vote_cols(source,p,yy) for p in MAIN_PARTIES}
     has_vote_basis=bool(tv and vote_cols["lab"] and vote_cols["con"] and vote_cols["ld"])
 
     if has_vote_basis:
         known_votes={}
         for p in MAIN_PARTIES:
-            known_votes[p]=sum_numeric_cols(df,vote_cols[p]).clip(lower=0.0)
+            known_votes[p]=sum_numeric_cols(source,vote_cols[p]).clip(lower=0.0)
 
         den=total_votes.replace(0,np.nan)
         for p in MAIN_PARTIES:
             data[p]=(known_votes[p]/den*100.0).replace([np.inf,-np.inf],np.nan).fillna(0.0)
 
-        # "other" is the residual of all valid candidate votes. This captures
-        # Speaker/independents/minor parties and prevents double counting.
         known_sum=sum(known_votes.values())
         other_votes=(total_votes-known_sum).clip(lower=0.0)
         data["other"]=(other_votes/den*100.0).replace([np.inf,-np.inf],np.nan).fillna(0.0)
@@ -430,21 +443,21 @@ def extract_election(df:pd.DataFrame,yy:str)->dict[str,Any]:
         share_source="vote_counts"
     else:
         for p in MAIN_PARTIES:
-            cols=party_share_cols(df,p,yy)
+            cols=party_share_cols(source,p,yy)
             if cols:
                 series=sum(
-                    (normalize_share_series(df[c]) for c in cols),
-                    start=pd.Series(0.0,index=df.index,dtype=float)
+                    (normalize_share_series(source[c]) for c in cols),
+                    start=pd.Series(0.0,index=source.index,dtype=float)
                 )
                 data[p]=series
             else:
                 data[p]=0.0
 
-        other_cols=party_share_cols(df,"other",yy)
+        other_cols=party_share_cols(source,"other",yy)
         if other_cols:
             data["other"]=sum(
-                (normalize_share_series(df[c]) for c in other_cols),
-                start=pd.Series(0.0,index=df.index,dtype=float)
+                (normalize_share_series(source[c]) for c in other_cols),
+                start=pd.Series(0.0,index=source.index,dtype=float)
             )
         else:
             data["other"]=(100.0-data[list(MAIN_PARTIES)].sum(axis=1)).clip(lower=0.0)
@@ -452,10 +465,10 @@ def extract_election(df:pd.DataFrame,yy:str)->dict[str,Any]:
         data["weight"]=total_votes.clip(lower=1.0) if tv else 1.0
         share_source="published_shares"
 
-    tc=turnout_col(df,yy)
-    data["turnout"]=normalize_share_series(df[tc]) if tc else 0.0
+    tc=turnout_col(source,yy)
+    data["turnout"]=normalize_share_series(source[tc]) if tc else 0.0
 
-    # Enforce geography and normalise each constituency.
+    # Enforce party geography and normalize each GB constituency.
     for idx,row in data.iterrows():
         country=row["country"];vals={};total=0.0
         for p in PARTIES:
@@ -465,20 +478,24 @@ def extract_election(df:pd.DataFrame,yy:str)->dict[str,Any]:
             raise RuntimeError(f"Election {yy}: zero party-share total in {row['name']}")
         for p in PARTIES:data.at[idx,p]=vals[p]/total*100.0
 
-    data=data[data["country"]!="Northern Ireland"].copy()
-
     if data["actual_winner"].isna().any():
         bad=data.loc[data["actual_winner"].isna(),["id","name"]].head(5).to_dict("records")
-        raise RuntimeError(f"Election {yy}: missing official winners after GB filter: {bad}")
+        raise RuntimeError(f"Election {yy}: missing official GB winners: {bad}")
     if len(data)!=632:
         raise RuntimeError(f"Election {yy}: expected exactly 632 GB seats, got {len(data)}")
     if data["id"].duplicated().any():
         raise RuntimeError(f"Election {yy}: duplicate constituency IDs")
+
     row_sums=data[list(PARTIES)].sum(axis=1)
     if float((row_sums-100.0).abs().max())>.02:
         raise RuntimeError(f"Election {yy}: constituency shares do not sum to 100")
 
-    return {"year":yy,"frame":data,"share_source":share_source}
+    return {
+        "year":yy,
+        "frame":data,
+        "share_source":share_source,
+        "ni_filtered_before_party_parsing":True,
+    }
 
 EXPECTED_COUNTRIES_OLD={"England":533,"Scotland":59,"Wales":40}
 EXPECTED_COUNTRIES_NEW={"England":543,"Scotland":57,"Wales":32}
@@ -535,6 +552,8 @@ def integrity_record(label:str,election:dict[str,Any],boundary:str,expected_winn
         "english_regions":english,
         "winner_counts":winners,
         "official_winner_source":True,
+        "gb_rows":int(len(df)),
+        "ni_filtered_before_party_parsing":bool(election.get("ni_filtered_before_party_parsing")),
         "other_winner_seats":int((df["actual_winner"]=="other").sum()),
         "other_runnerup_seats":int((df["actual_second"]=="other").sum()),
         "errors":errors,
@@ -544,7 +563,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v092-bes-integrity",
+        "version":"uk-v093-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -1010,7 +1029,7 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v092-mrp-lite",
+        "version":"uk-v093-mrp-lite",
         "model_type":"constituency-residual-ml-v1",
         "status":"error",
         "approved":False,
@@ -1022,15 +1041,15 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v092-mrp-lite-live","approved":False,"status":"error",
+        "version":"uk-v093-mrp-lite-live","approved":False,"status":"error",
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v092-mrp-lite-backtest","status":"error","error":str(exc)
+        "version":"uk-v093-mrp-lite-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v092-bes-integrity","status":"failed",
+            "version":"uk-v093-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -1103,7 +1122,7 @@ def main()->int:
         live=live_projection(e24,target_now,models_live,names_live,selected_spec)
 
         model_payload={
-            "version":"uk-v092-mrp-lite",
+            "version":"uk-v093-mrp-lite",
             "model_type":"constituency-residual-ml-v1",
             "status":"ok",
             "approved":approved,
@@ -1162,7 +1181,7 @@ def main()->int:
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v092-mrp-lite-live",
+            "version":"uk-v093-mrp-lite-live",
             "model_type":"constituency-residual-ml-v1",
             "status":"ok",
             "approved":approved,
@@ -1179,7 +1198,7 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v092-mrp-lite-backtest",
+            "version":"uk-v093-mrp-lite-backtest",
             "status":"ok",
             "selected_spec":selected_spec,
             "approved_for_live":approved,
@@ -1190,7 +1209,7 @@ def main()->int:
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
-        print("v0.9.2 selected spec:",selected_spec)
+        print("v0.9.3 selected spec:",selected_spec)
         print(
             "2019 validation:",
             f"baseline {validation_base['winner_accuracy']:.2%}/{validation_base['seat_abs_error_sum']}",
@@ -1210,7 +1229,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.2 shadow build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.3 shadow build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # Shadow failure must not break the existing production model.
         raise SystemExit(0)
