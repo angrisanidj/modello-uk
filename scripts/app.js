@@ -23,11 +23,14 @@ const CONFIG = {
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v071-20260826-mcfix',
+  cacheVersion: 'uk-v08-20260826-ni',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
   localNoise: 0.055,
+  niSwingLambda: 0.55,
+  niNationalNoise: 0.050,
+  niLocalNoise: 0.100,
 };
 
 const PARTY_ORDER = ['lab','con','ref','ld','green','snp','pc','rb','other'];
@@ -43,8 +46,21 @@ const PARTY = {
   snp:{name:'SNP',short:'SNP',color:'#f6e642',text:'#111'},
   pc:{name:'Plaid Cymru',short:'PC',color:'#005b54'},
   rb:{name:'Restore Britain',short:'RB',color:'#8752cc'},
-  other:{name:'Altri / NI',short:'Altri',color:'#7c8491'},
+  other:{name:'Altri',short:'Altri',color:'#7c8491'},
+  sf:{name:'Sinn Féin',short:'SF',color:'#326760',abstentionist:true},
+  dup:{name:'Democratic Unionist Party',short:'DUP',color:'#d46a4c'},
+  alliance:{name:'Alliance Party',short:'Alliance',color:'#f6cb2f',text:'#111'},
+  sdlp:{name:'SDLP',short:'SDLP',color:'#2aa82c'},
+  uup:{name:'Ulster Unionist Party',short:'UUP',color:'#48a5ee'},
+  tuv:{name:'Traditional Unionist Voice',short:'TUV',color:'#0d3a67'},
+  aontu:{name:'Aontú',short:'Aontú',color:'#6b2d5c'},
+  pbp:{name:'People Before Profit',short:'PBP',color:'#e31b23'},
+  ni_green:{name:'Green Party NI',short:'Green NI',color:'#3a9d23'},
+  ind:{name:'Independent',short:'Ind',color:'#9aa1aa'},
+  ni_other:{name:'Altri NI',short:'Altri NI',color:'#616977'},
 };
+const NI_ORDER=['sf','dup','alliance','sdlp','uup','tuv','aontu','pbp','ni_green','ind','ni_other'];
+const SEAT_ORDER=['lab','con','ref','ld','green','snp','pc','rb','sf','dup','alliance','sdlp','uup','tuv','aontu','pbp','ni_green','ind','ni_other','other'];
 
 const BASE_GB = {lab:34.6,con:24.4,ref:14.7,ld:12.6,green:6.6,snp:2.6,pc:0.7,rb:0,other:3.8};
 const MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
@@ -570,38 +586,49 @@ function projectedShares(seat,target,geoBase){
   }
   if(sum<=0)return raw; for(const p of PARTY_ORDER)raw[p]=raw[p]/sum*100; return raw;
 }
-function buildCentral(){
-  const target=normalizeTargets(state.average.values),geo=buildGeographicTargets(target);
+function niModuleReady(){
+  return state.ni?.meta?.version==='uk-v08-ni-constituency'&&Array.isArray(state.ni?.constituencies)&&state.ni.constituencies.length===18;
+}
+function niNormalize(raw){
+  const out={};let total=0;for(const p of NI_ORDER){const v=Math.max(.0001,Number(raw?.[p])||0);out[p]=v;total+=v;}
+  if(total<=0)return out;for(const p of NI_ORDER)out[p]=out[p]/total*100;return out;
+}
+function buildNiCentral(){
+  if(!niModuleReady())return {seats:[],totals:{other:CONFIG.niSeats},meta:{mode:'fixed fallback',signalWeight:0,workingThreshold:322}};
+  const base=state.ni.national_2024||{},target=state.ni.target_shares||base,seats=[],totals=Object.fromEntries(NI_ORDER.map(p=>[p,0]));
+  for(const seat of state.ni.constituencies){
+    const eligible=(seat.eligible_parties||Object.keys(seat.shares||{})).filter(p=>NI_ORDER.includes(p)),raw={};
+    for(const p of NI_ORDER){
+      if(!eligible.includes(p)){raw[p]=0;continue;}
+      const local=Math.max(.05,Number(seat.shares?.[p])||.05),bn=Math.max(.05,Number(base[p])||.05),tn=Math.max(.05,Number(target[p])||.05);
+      raw[p]=local*Math.pow(Math.max(.12,tn/bn),CONFIG.niSwingLambda);
+    }
+    const projected=niNormalize(raw),winner=eligible.reduce((best,p)=>(projected[p]||0)>(projected[best]??-1)?p:best,eligible[0]||'ni_other');
+    totals[winner]=(totals[winner]||0)+1;seats.push({...seat,projected,centralWinner:winner,modelZone:'Northern Ireland',isNorthernIreland:true});
+  }
+  const sfSeats=totals.sf||0;
+  return {seats,totals,meta:{mode:state.ni.meta?.mode||'NI module',signalWeight:Number(state.ni.meta?.signal_weight)||0,sfSeats,workingThreshold:Math.floor((650-sfSeats)/2)+1}};
+}
 
-  // First build the same cautious constituency centre used by the fallback.
-  const initial=[];
+function buildCentral(){
+  const target=normalizeTargets(state.average.values),geo=buildGeographicTargets(target),initial=[];
   for(const c of state.constituencies){
     if(/northern ireland/i.test(c.country||''))continue;
-    const zone=zoneForSeat(c);
-    const zoneTarget=geo.targets[zone]||geo.targets.England||target;
-    const zoneBase=geo.baselines[zone]||geo.baselines.England||BASE_GB;
+    const zone=zoneForSeat(c),zoneTarget=geo.targets[zone]||geo.targets.England||target,zoneBase=geo.baselines[zone]||geo.baselines.England||BASE_GB;
     initial.push({seat:c,shares:projectedShares(c,zoneTarget,zoneBase),zone});
   }
-
   let items=initial;
   if(partialRakeModelActive())items=applyPartialRaking(initial,target);
-  else if(transferModelActive()){
-    // Backward-compatible dead branch: v0.6 was rejected, but keeping the
-    // implementation makes old cached/model files harmless during deployment.
-    const legacy=buildTransferCentral(target,geo);
-    state.geographicTargets=geo;state.central=legacy;state.byId=new Map(legacy.seats.map(s=>[s.id,s]));return legacy;
-  }
-
-  const totals=Object.fromEntries(PARTY_ORDER.map(p=>[p,0])),seats=[];
+  else if(transferModelActive()){const legacy=buildTransferCentral(target,geo);state.geographicTargets=geo;state.central=legacy;state.byId=new Map(legacy.seats.map(s=>[s.id,s]));return legacy;}
+  const totals=Object.fromEntries(SEAT_ORDER.map(p=>[p,0])),seats=[];
   for(let i=0;i<items.length;i++){
     const item=items[i],c=item.seat,shares=item.shares,zone=initial[i]?.zone||zoneForSeat(c);
     const winner=SEAT_MODEL_PARTIES.filter(p=>partyAllowed(p,c)).reduce((best,p)=>shares[p]>(shares[best]??-1)?p:best,'other');
     totals[winner]++;seats.push({...c,projected:shares,centralWinner:winner,modelZone:zone});
   }
-  totals.other+=CONFIG.niSeats;
-  const central={target,geographic:geo,seats,totals};
-  state.geographicTargets=geo;state.central=central;state.byId=new Map(seats.map(s=>[s.id,s]));
-  return central;
+  const niCentral=buildNiCentral();for(const [p,n] of Object.entries(niCentral.totals||{}))totals[p]=(totals[p]||0)+n;
+  seats.push(...niCentral.seats);if(!niCentral.seats.length)totals.other+=CONFIG.niSeats;
+  const central={target,geographic:geo,seats,totals,ni:niCentral.meta};state.geographicTargets=geo;state.central=central;state.byId=new Map(seats.map(s=>[s.id,s]));return central;
 }
 
 function hashString(str){
@@ -634,10 +661,11 @@ function fingerprint(){
   const sp=state.subnational.slice(0,24)
     .map(x=>`${x.country}|${x.date}|${x.pollster}|${x.lab}|${x.con}|${x.ref}|${x.snp}|${x.pc}`)
     .join(';');
+  const ni=state.ni?.meta?.generated_at||state.ni?.meta?.version||'ni-fallback';
   const cal=state.modelParams
     ? `${state.modelParams.version||'model'}:${state.modelParams.model_type||''}:${state.modelParams.rake_strength??''}`
     : 'fallback';
-  return `${CONFIG.cacheVersion}:${hashString(p+'|'+sp+'|'+state.constituencies.length+'|'+cal)}`;
+  return `${CONFIG.cacheVersion}:${hashString(p+'|'+sp+'|'+state.constituencies.length+'|'+cal+'|'+ni)}`;
 }
 function mcCacheKey(){return `focusamerica:${fingerprint()}`;}
 function saveMcCache(summary){
@@ -653,200 +681,65 @@ function loadMcCache(){
 
 function prepareSeatModel(){
   const seats=state.central.seats,target=state.central.target,geo=state.central.geographic;
-  const regions=[...new Set(seats.map(s=>s.modelZone||s.region||s.country||'Other'))];
-  const regionIndex=new Map(regions.map((r,i)=>[r,i]));
+  const regions=[...new Set(seats.map(s=>s.isNorthernIreland?'Northern Ireland':(s.modelZone||s.region||s.country||'Other')))],regionIndex=new Map(regions.map((r,i)=>[r,i]));
   const centreAlreadyTransformed=partialRakeModelActive()||transferModelActive();
-
   const models=seats.map(s=>{
-    const zone=s.modelZone||zoneForSeat(s);
-    const zoneTarget=geo.targets[zone]||target;
-    const zoneBase=geo.baselines[zone]||BASE_GB;
-
-    const candidates=SEAT_MODEL_PARTIES
-      .filter(p=>partyAllowed(p,s))
-      .map(p=>{
-        if(centreAlreadyTransformed){
-          const central=Math.max(.03,s.projected?.[p]||.03);
-          return {p,baseLog:Math.log(central),centralShift:0,central};
-        }
-
-        let base=s.shares?.[p]||0;
-        const nat=Math.max(.05,Number(zoneBase[p])||Number(BASE_GB[p])||.2);
-        if(p==='ref'&&base<.18&&refMissingPrior()>0){
-          base=Math.max(base,nat*refMissingPrior());
-        }
-        if(['lab','con','ref','ld','green'].includes(p))base=Math.max(base,.18);
-        else base=Math.max(base,.03);
-
-        const lambda=lambdaFor(p);
-        const ratio=Math.max(.08,(zoneTarget[p]||.05)/nat);
-        return {
-          p,
-          baseLog:Math.log(base),
-          centralShift:lambda*Math.log(ratio),
-          central:s.projected[p]||0
-        };
-      })
-      .sort((a,b)=>b.central-a.central)
-      .slice(0,5);
-
-    return {id:s.id,region:regionIndex.get(zone),candidates};
+    const zone=s.isNorthernIreland?'Northern Ireland':(s.modelZone||zoneForSeat(s));
+    if(s.isNorthernIreland){
+      const candidates=NI_ORDER.filter(p=>(s.projected?.[p]||0)>.001).map(p=>({p,baseLog:Math.log(Math.max(.03,s.projected[p]||.03)),centralShift:0,central:s.projected[p]||0})).sort((a,b)=>b.central-a.central);
+      return {id:s.id,region:regionIndex.get(zone),candidates,ni:true};
+    }
+    const zoneTarget=geo.targets[zone]||target,zoneBase=geo.baselines[zone]||BASE_GB;
+    const candidates=SEAT_MODEL_PARTIES.filter(p=>partyAllowed(p,s)).map(p=>{
+      if(centreAlreadyTransformed){const central=Math.max(.03,s.projected?.[p]||.03);return {p,baseLog:Math.log(central),centralShift:0,central};}
+      let base=s.shares?.[p]||0;const nat=Math.max(.05,Number(zoneBase[p])||Number(BASE_GB[p])||.2);
+      if(p==='ref'&&base<.18&&refMissingPrior()>0)base=Math.max(base,nat*refMissingPrior());
+      if(['lab','con','ref','ld','green'].includes(p))base=Math.max(base,.18);else base=Math.max(base,.03);
+      const lambda=lambdaFor(p),ratio=Math.max(.08,(zoneTarget[p]||.05)/nat);return {p,baseLog:Math.log(base),centralShift:lambda*Math.log(ratio),central:s.projected[p]||0};
+    }).sort((a,b)=>b.central-a.central).slice(0,5);
+    return {id:s.id,region:regionIndex.get(zone),candidates,ni:false};
   });
-
   return {models,regions,target};
 }
 
 async function runMonteCarlo(force=false){
   if(!state.central?.seats?.length)return;
-
-  if(!force){
-    const cached=loadMcCache();
-    if(cached){
-      state.mc=cached;
-      renderMc();
-      applyMapColors();
-      return;
-    }
-  }
-
-  const {models,regions,target}=prepareSeatModel();
-  const P=PARTY_ORDER.length;
-  const N=CONFIG.mcSims;
-  const nSeats=models.length;
-  const partyIndex=new Map(PARTY_ORDER.map((p,i)=>[p,i]));
-
-  const dists=PARTY_ORDER.map(()=>new Uint16Array(N));
-  const wins=new Uint32Array(nSeats*P);
-  const rng=mulberry32(hashString(fingerprint()));
-
-  let hung=0,labMaj=0,conMaj=0,refMaj=0;
-  const largestCounts=Object.fromEntries(PARTY_ORDER.map(p=>[p,0]));
-
-  $('#mcStatus').textContent='Calcolo in corso';
-  $('#mcProgress').value=0;
-
-  const centreAlreadyTransformed=partialRakeModelActive()||transferModelActive();
-
+  if(!force){const cached=loadMcCache();if(cached){state.mc=cached;renderMc();applyMapColors();return;}}
+  const {models,regions,target}=prepareSeatModel(),P=SEAT_ORDER.length,N=CONFIG.mcSims,nSeats=models.length;
+  const partyIndex=new Map(SEAT_ORDER.map((p,i)=>[p,i])),dists=SEAT_ORDER.map(()=>new Uint16Array(N)),wins=new Uint32Array(nSeats*P),rng=mulberry32(hashString(fingerprint()));
+  let hung=0,labMaj=0,conMaj=0,refMaj=0,labWorkMaj=0,conWorkMaj=0,refWorkMaj=0;
+  const workThresholds=new Uint16Array(N),largestCounts=Object.fromEntries(SEAT_ORDER.map(p=>[p,0]));
+  $('#mcStatus').textContent='Calcolo in corso';$('#mcProgress').value=0;const centreAlreadyTransformed=partialRakeModelActive()||transferModelActive();
   for(let start=0;start<N;start+=CONFIG.mcBatch){
     const end=Math.min(N,start+CONFIG.mcBatch);
-
     for(let sim=start;sim<end;sim++){
-      const drawn={};
-      let sum=0;
-
-      for(const p of PARTY_ORDER){
-        const sigma=CONFIG.nationalSigma[p]||.8;
-        drawn[p]=Math.max(.05,target[p]+normalApprox(rng)*sigma);
-        sum+=drawn[p];
-      }
+      const drawn={};let sum=0;
+      for(const p of PARTY_ORDER){const sigma=CONFIG.nationalSigma[p]||.8;drawn[p]=Math.max(.05,target[p]+normalApprox(rng)*sigma);sum+=drawn[p];}
       for(const p of PARTY_ORDER)drawn[p]=drawn[p]/sum*100;
-
-      const natShift={};
-      for(const p of PARTY_ORDER){
-        const elastic=centreAlreadyTransformed?CONFIG.swingLambda:lambdaFor(p);
-        natShift[p]=elastic*Math.log(
-          Math.max(.05,drawn[p])/Math.max(.05,target[p]||.05)
-        );
-      }
-
-      const regNoise=Array.from(
-        {length:regions.length},
-        ()=>Object.fromEntries(
-          PARTY_ORDER.map(p=>[p,logistic(rng)*CONFIG.regionNoise])
-        )
-      );
-
-      const counts=new Uint16Array(P);
-
+      const natShift={};for(const p of PARTY_ORDER){const elastic=centreAlreadyTransformed?CONFIG.swingLambda:lambdaFor(p);natShift[p]=elastic*Math.log(Math.max(.05,drawn[p])/Math.max(.05,target[p]||.05));}
+      const regNoise=Array.from({length:regions.length},()=>Object.fromEntries(PARTY_ORDER.map(p=>[p,logistic(rng)*CONFIG.regionNoise])));
+      const niPartyNoise=Object.fromEntries(NI_ORDER.map(p=>[p,logistic(rng)*CONFIG.niNationalNoise])),counts=new Uint16Array(P);
       for(let si=0;si<nSeats;si++){
-        const m=models[si];
-        let bestP='other',bestScore=-Infinity;
-
-        for(const cand of m.candidates){
-          const score=
-            cand.baseLog+
-            cand.centralShift+
-            natShift[cand.p]+
-            regNoise[m.region][cand.p]+
-            logistic(rng)*CONFIG.localNoise;
-
-          if(score>bestScore){
-            bestScore=score;
-            bestP=cand.p;
-          }
+        const model=models[si];let bestP=model.ni?'ni_other':'other',bestScore=-Infinity;
+        for(const cand of model.candidates){
+          const score=model.ni?cand.baseLog+niPartyNoise[cand.p]+logistic(rng)*CONFIG.niLocalNoise:cand.baseLog+cand.centralShift+natShift[cand.p]+regNoise[model.region][cand.p]+logistic(rng)*CONFIG.localNoise;
+          if(score>bestScore){bestScore=score;bestP=cand.p;}
         }
-
-        const pi=partyIndex.get(bestP);
-        counts[pi]++;
-        wins[si*P+pi]++;
+        const pi=partyIndex.get(bestP);if(pi==null)continue;counts[pi]++;wins[si*P+pi]++;
       }
-
-      // NI remains a fixed 18-seat bucket until v0.8 replaces it
-      // with constituency-level Northern Ireland simulations.
-      counts[partyIndex.get('other')]+=CONFIG.niSeats;
-
-      let largest='lab',largestN=-1;
-      for(let pi=0;pi<P;pi++){
-        dists[pi][sim]=counts[pi];
-        if(counts[pi]>largestN){
-          largestN=counts[pi];
-          largest=PARTY_ORDER[pi];
-        }
-      }
-      largestCounts[largest]++;
-
-      const lm=counts[partyIndex.get('lab')]>=CONFIG.majority;
-      const cm=counts[partyIndex.get('con')]>=CONFIG.majority;
-      const rm=counts[partyIndex.get('ref')]>=CONFIG.majority;
-
-      if(lm)labMaj++;
-      if(cm)conMaj++;
-      if(rm)refMaj++;
-      if(!lm&&!cm&&!rm)hung++;
+      const sf=counts[partyIndex.get('sf')]||0,threshold=Math.floor((650-sf)/2)+1;workThresholds[sim]=threshold;
+      let largest='lab',largestN=-1;for(let pi=0;pi<P;pi++){dists[pi][sim]=counts[pi];if(counts[pi]>largestN){largestN=counts[pi];largest=SEAT_ORDER[pi];}}largestCounts[largest]++;
+      const lab=counts[partyIndex.get('lab')]||0,con=counts[partyIndex.get('con')]||0,ref=counts[partyIndex.get('ref')]||0,lm=lab>=CONFIG.majority,cm=con>=CONFIG.majority,rm=ref>=CONFIG.majority;
+      if(lm)labMaj++;if(cm)conMaj++;if(rm)refMaj++;if(!lm&&!cm&&!rm)hung++;if(lab>=threshold)labWorkMaj++;if(con>=threshold)conWorkMaj++;if(ref>=threshold)refWorkMaj++;
     }
-
-    $('#mcProgress').value=end;
-    $('#mcCount').textContent=`${fmt0(end)} / ${fmt0(N)}`;
-    await sleepFrame();
+    $('#mcProgress').value=end;$('#mcCount').textContent=`${fmt0(end)} / ${fmt0(N)}`;await sleepFrame();
   }
-
   const medians={},intervals={},distPlain={};
-  for(let pi=0;pi<P;pi++){
-    const p=PARTY_ORDER[pi];
-    const arr=Array.from(dists[pi]).sort((a,b)=>a-b);
-    medians[p]=quantileSorted(arr,.5);
-    intervals[p]=[quantileSorted(arr,.1),quantileSorted(arr,.9)];
-    distPlain[p]=Array.from(dists[pi]);
-  }
-
-  const seatProb={};
-  for(let si=0;si<nSeats;si++){
-    const obj={};
-    for(let pi=0;pi<P;pi++){
-      obj[PARTY_ORDER[pi]]=wins[si*P+pi]/N;
-    }
-    seatProb[models[si].id]=obj;
-  }
-
-  const summary={
-    sims:N,
-    medians,
-    intervals,
-    labMaj:labMaj/N,
-    conMaj:conMaj/N,
-    refMaj:refMaj/N,
-    hung:hung/N,
-    largest:Object.fromEntries(PARTY_ORDER.map(p=>[p,largestCounts[p]/N])),
-    seatProb,
-    dist:distPlain,
-    fingerprint:fingerprint()
-  };
-
-  state.mc=summary;
-  saveMcCache(summary);
-  $('#mcStatus').textContent='Completato';
-  renderMc();
-  applyMapColors();
+  for(let pi=0;pi<P;pi++){const p=SEAT_ORDER[pi],arr=Array.from(dists[pi]).sort((a,b)=>a-b);medians[p]=quantileSorted(arr,.5);intervals[p]=[quantileSorted(arr,.1),quantileSorted(arr,.9)];distPlain[p]=Array.from(dists[pi]);}
+  const seatProb={};for(let si=0;si<nSeats;si++){const obj={};for(let pi=0;pi<P;pi++)obj[SEAT_ORDER[pi]]=wins[si*P+pi]/N;seatProb[models[si].id]=obj;}
+  const workArr=Array.from(workThresholds).sort((a,b)=>a-b);
+  const summary={sims:N,medians,intervals,labMaj:labMaj/N,conMaj:conMaj/N,refMaj:refMaj/N,labWorkMaj:labWorkMaj/N,conWorkMaj:conWorkMaj/N,refWorkMaj:refWorkMaj/N,workingThreshold:quantileSorted(workArr,.5),hung:hung/N,largest:Object.fromEntries(SEAT_ORDER.map(p=>[p,largestCounts[p]/N])),seatProb,dist:distPlain,fingerprint:fingerprint()};
+  state.mc=summary;saveMcCache(summary);$('#mcStatus').textContent='Completato';renderMc();applyMapColors();
 }
 
 function quantileSorted(arr,q){
@@ -855,19 +748,20 @@ function quantileSorted(arr,q){
 }
 
 function renderCentral(){
-  const totals=state.central.totals; $('#projectionTitle').textContent='Proiezione centrale'; const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales; const sub=[sm?.polls?`Scozia: ${sm.polls} poll`:null,wm?.polls?`Galles: ${wm.polls} poll`:null].filter(Boolean).join(' · '); $('#projectionSubtitle').textContent=`${partialRakeModelActive()?`Raking parziale validato (α=${partialRakeStrength().toFixed(2)}) 2024 → oggi`:transferModelActive()?'Modello trasferimenti 2024 → oggi':'Fallback prudente 2024 → oggi: swing regolarizzato'}${sub?` · ${sub}`:''}.`;
-  renderSeats(totals,null); $('#kpiLargest').textContent=PARTY[Object.entries(totals).sort((a,b)=>b[1]-a[1])[0][0]].short; $('#kpiLargestMeta').textContent='proiezione centrale';
+  const totals=state.central.totals; $('#projectionTitle').textContent='Proiezione centrale'; const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales; const sub=[sm?.polls?`Scozia: ${sm.polls} poll`:null,wm?.polls?`Galles: ${wm.polls} poll`:null].filter(Boolean).join(' · '); $('#projectionSubtitle').textContent=`${partialRakeModelActive()?`Raking parziale validato (α=${partialRakeStrength().toFixed(2)}) 2024 → oggi`:transferModelActive()?'Modello trasferimenti 2024 → oggi':'Fallback prudente 2024 → oggi: swing regolarizzato'}${sub?` · ${sub}`:''}${state.central?.ni?.signalWeight?` · NI: tracker Assembly ×${state.central.ni.signalWeight.toFixed(2)}`:' · NI: baseline 2024'}.`;
+  renderSeats(totals,null); $('#kpiLargest').textContent=PARTY[Object.entries(totals).sort((a,b)=>b[1]-a[1])[0][0]]?.short||'—'; $('#kpiLargestMeta').textContent='proiezione centrale';
 }
 function renderMc(){
   const m=state.mc;if(!m)return; renderSeats(m.medians,m.intervals); $('#projectionTitle').textContent='Distribuzione dei seggi';$('#projectionSubtitle').textContent='Mediana delle 50.000 simulazioni; intervallo centrale 80% tra parentesi.';
   $('#probLabMaj').textContent=pctFmt(m.labMaj*100);$('#probConMaj').textContent=pctFmt(m.conMaj*100);$('#probRefMaj').textContent=pctFmt(m.refMaj*100);$('#probHung').textContent=pctFmt(m.hung*100);
-  const largest=Object.entries(m.largest).sort((a,b)=>b[1]-a[1])[0];$('#kpiLargest').textContent=PARTY[largest[0]].short;$('#kpiLargestMeta').textContent=`${pctFmt(largest[1]*100)} di essere il primo partito`;
-  const maj=Math.max(m.labMaj,m.conMaj,m.refMaj);$('#kpiMajority').textContent=pctFmt(maj*100);const who=m.labMaj===maj?'Labour':m.conMaj===maj?'Conservative':'Reform';$('#kpiMajorityMeta').textContent=`${who} · soglia 326`;
+  if($('#probLabWorkMaj'))$('#probLabWorkMaj').textContent=pctFmt((m.labWorkMaj||0)*100);if($('#probConWorkMaj'))$('#probConWorkMaj').textContent=pctFmt((m.conWorkMaj||0)*100);if($('#probRefWorkMaj'))$('#probRefWorkMaj').textContent=pctFmt((m.refWorkMaj||0)*100);if($('#workingThreshold'))$('#workingThreshold').textContent=fmt0(m.workingThreshold||326);
+  const largest=Object.entries(m.largest).sort((a,b)=>b[1]-a[1])[0];$('#kpiLargest').textContent=PARTY[largest[0]]?.short||largest[0];$('#kpiLargestMeta').textContent=`${pctFmt(largest[1]*100)} di essere il primo partito`;
+  const maj=Math.max(m.labMaj,m.conMaj,m.refMaj);$('#kpiMajority').textContent=pctFmt(maj*100);const who=m.labMaj===maj?'Labour':m.conMaj===maj?'Conservative':'Reform';$('#kpiMajorityMeta').textContent=`${who} · 326 assoluta · ~${fmt0(m.workingThreshold||326)} operativa`;
   $('#mcStatus').textContent='Completato';$('#mcCount').textContent=`${fmt0(m.sims)} / ${fmt0(m.sims)}`;$('#mcProgress').value=m.sims; updateCoalition();
 }
 function renderSeats(totals,intervals){
-  const sum=PARTY_ORDER.reduce((s,p)=>s+(totals[p]||0),0)||650; $('#seatStrip').innerHTML=PARTY_ORDER.filter(p=>(totals[p]||0)>0).map(p=>`<span style="width:${(totals[p]/sum)*100}%;background:${PARTY[p].color}" title="${PARTY[p].name}: ${fmt0(totals[p])}"></span>`).join('');
-  $('#seatTable').innerHTML=PARTY_ORDER.filter(p=>(totals[p]||0)>0).map(p=>`<div class="seat-row"><div class="left"><i class="party-dot" style="background:${PARTY[p].color}"></i>${PARTY[p].short}</div><strong>${fmt0(totals[p])}${intervals?.[p]?` <small>${fmt0(intervals[p][0])}–${fmt0(intervals[p][1])}</small>`:''}</strong></div>`).join('');
+  const sum=SEAT_ORDER.reduce((s,p)=>s+(totals[p]||0),0)||650; $('#seatStrip').innerHTML=SEAT_ORDER.filter(p=>(totals[p]||0)>0).map(p=>`<span style="width:${(totals[p]/sum)*100}%;background:${PARTY[p].color}" title="${PARTY[p].name}: ${fmt0(totals[p])}"></span>`).join('');
+  $('#seatTable').innerHTML=SEAT_ORDER.filter(p=>(totals[p]||0)>0).map(p=>`<div class="seat-row"><div class="left"><i class="party-dot" style="background:${PARTY[p].color}"></i>${PARTY[p].short}</div><strong>${fmt0(totals[p])}${intervals?.[p]?` <small>${fmt0(intervals[p][0])}–${fmt0(intervals[p][1])}</small>`:''}</strong></div>`).join('');
   renderHemicycle(totals);
 }
 function hemicyclePoints(){
@@ -876,7 +770,7 @@ function hemicyclePoints(){
 }
 const hemiPts=hemicyclePoints();
 function renderHemicycle(totals){
-  const seats=[];for(const p of PARTY_ORDER){for(let i=0;i<Math.round(totals[p]||0);i++)seats.push(p);}while(seats.length<650)seats.push('other');if(seats.length>650)seats.length=650;
+  const seats=[];for(const p of SEAT_ORDER){for(let i=0;i<Math.round(totals[p]||0);i++)seats.push(p);}while(seats.length<650)seats.push('other');if(seats.length>650)seats.length=650;
   $('#hemicycle').innerHTML=hemiPts.map((pt,i)=>`<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="3.7" fill="${PARTY[seats[i]||'other'].color}" opacity=".96"><title>${PARTY[seats[i]||'other'].name}</title></circle>`).join('');
 }
 
@@ -923,7 +817,7 @@ function renderMap(){
   applyMapColors();
   map.dispatchEvent(new CustomEvent('maprendered'));
 }
-function partyColorFrom2024(id){const c=state.constituencyIndex.get(id);return PARTY[c?.winner2024||'other'].color;}
+function partyColorFrom2024(id){const c=state.byId.get(id)||state.constituencyIndex.get(id);return PARTY[c?.winner2024||'other']?.color||PARTY.other.color;}
 function selectSeat(id){
   state.selectedSeat=id;
   if(state.selectedPath)state.selectedPath.classList.remove('selected');
@@ -933,8 +827,8 @@ function selectSeat(id){
 }
 function renderDetail(id){
   const seat=state.byId.get(id)||state.constituencies.find(x=>x.id===id);if(!seat)return;$('#detailName').textContent=seat.name;$('#detailRegion').textContent=[seat.region,seat.country].filter(Boolean).join(' · ');
-  const proj=seat.projected||{},prob=state.mc?.seatProb?.[id];const rows=PARTY_ORDER.filter(p=>(proj[p]||0)>.15).sort((a,b)=>(proj[b]||0)-(proj[a]||0)).slice(0,6);
-  $('#detailBody').innerHTML=`<div class="detail-stat"><span>Vincitore 2024</span><strong>${escapeHtml(seat.winner2024_name||PARTY[seat.winner2024]?.name||'Altro')}</strong></div><div class="detail-stat"><span>Proiezione centrale</span><strong>${PARTY[seat.centralWinner||seat.winner2024]?.name||'—'}</strong></div><div class="detail-score">${rows.map(p=>`<div><span>${PARTY[p].short}</span><span class="mini-track"><i style="width:${clamp((proj[p]||0)*2,0,100)}%;background:${PARTY[p].color}"></i></span><strong>${prob?pctFmt(prob[p]*100):pctFmt(proj[p]||0)}</strong></div>`).join('')}</div><p class="small-note">${prob?'Valori a destra = probabilità di vittoria Monte Carlo.':'Valori a destra = quota centrale stimata; probabilità disponibili dopo il Monte Carlo.'}</p>`;
+  const proj=seat.projected||{},prob=state.mc?.seatProb?.[id];const rows=Object.keys(proj).filter(p=>PARTY[p]&&(proj[p]||0)>.15).sort((a,b)=>(proj[b]||0)-(proj[a]||0)).slice(0,7);const niNote=seat.isNorthernIreland?' NI: candidature 2024 mantenute; tracker Assembly usato solo come segnale debole.':'';
+  $('#detailBody').innerHTML=`<div class="detail-stat"><span>Vincitore 2024</span><strong>${escapeHtml(seat.winner2024_name||PARTY[seat.winner2024]?.name||'Altro')}</strong></div><div class="detail-stat"><span>Proiezione centrale</span><strong>${PARTY[seat.centralWinner||seat.winner2024]?.name||'—'}</strong></div><div class="detail-score">${rows.map(p=>`<div><span>${PARTY[p].short}</span><span class="mini-track"><i style="width:${clamp((proj[p]||0)*2,0,100)}%;background:${PARTY[p].color}"></i></span><strong>${prob?pctFmt((prob[p]||0)*100):pctFmt(proj[p]||0)}</strong></div>`).join('')}</div><p class="small-note">${prob?'Valori a destra = probabilità di vittoria Monte Carlo.':'Valori a destra = quota centrale stimata; probabilità disponibili dopo il Monte Carlo.'}${niNote}</p>`;
 }
 function applyMapColors(){
   if(!state.mapPaths?.size)return;
@@ -948,12 +842,12 @@ function applyMapColors(){
 function mixWithDark(hex,prob){const h=hex.replace('#','');const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);const k=.35+.65*clamp(prob,0,1);return `rgb(${Math.round(r*k)},${Math.round(g*k)},${Math.round(b*k)})`;}
 
 function renderCoalitionButtons(){
-  const ps=['lab','con','ref','ld','green','snp','pc','rb'];$('#coalitionButtons').innerHTML=ps.map(p=>`<button data-party="${p}"><i class="party-dot" style="background:${PARTY[p].color}"></i>${PARTY[p].short}</button>`).join('');
+  const ps=['lab','con','ref','ld','green','snp','pc','rb','dup','alliance','sdlp','uup','tuv'];$('#coalitionButtons').innerHTML=ps.map(p=>`<button data-party="${p}"><i class="party-dot" style="background:${PARTY[p].color}"></i>${PARTY[p].short}</button>`).join('');
   $$('#coalitionButtons button').forEach(b=>b.addEventListener('click',()=>{const p=b.dataset.party;state.coalition.has(p)?state.coalition.delete(p):state.coalition.add(p);b.classList.toggle('selected',state.coalition.has(p));updateCoalition();}));
 }
 function updateCoalition(){
-  const totals=state.mc?.medians||state.central?.totals||{};const seats=[...state.coalition].reduce((s,p)=>s+(totals[p]||0),0);$('#coalSeats').textContent=fmt0(seats);$('#coalDistance').textContent=seats>=CONFIG.majority?`+${fmt0(seats-CONFIG.majority)}`:`−${fmt0(CONFIG.majority-seats)}`;
-  if(!state.mc?.dist||!state.coalition.size){$('#coalProb').textContent=state.coalition.size?'—':'—';return;}let yes=0;for(let i=0;i<state.mc.sims;i++){let s=0;for(const p of state.coalition)s+=state.mc.dist[p]?.[i]||0;if(s>=CONFIG.majority)yes++;}$('#coalProb').textContent=pctFmt(yes/state.mc.sims*100);
+  const totals=state.mc?.medians||state.central?.totals||{};const seats=[...state.coalition].reduce((s,p)=>s+(totals[p]||0),0);const threshold=state.mc?.workingThreshold||state.central?.ni?.workingThreshold||CONFIG.majority;$('#coalSeats').textContent=fmt0(seats);$('#coalDistance').textContent=seats>=threshold?`+${fmt0(seats-threshold)}`:`−${fmt0(threshold-seats)}`;
+  if(!state.mc?.dist||!state.coalition.size){$('#coalProb').textContent='—';return;}let yes=0;for(let i=0;i<state.mc.sims;i++){let s=0;for(const p of state.coalition)s+=state.mc.dist[p]?.[i]||0;const sf=state.mc.dist.sf?.[i]||0;const t=Math.floor((650-sf)/2)+1;if(s>=t)yes++;}$('#coalProb').textContent=pctFmt(yes/state.mc.sims*100);
 }
 
 function bindUi(){
@@ -979,7 +873,7 @@ async function init(force=false){
     state.constituencies=constituencies;state.constituencyIndex=new Map(constituencies.map(c=>[c.id,c]));
     state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;state.subnational=subnational;state.territorialBaseline=territorialBaseline;
     renderPolls();renderCoalitionButtons();
-    if(constituencies.length===650){buildCentral();renderCentral();renderMap();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource} · seat model: ${partialRakeModelActive()?`raking α=${partialRakeStrength().toFixed(2)}`:'fallback prudente'} · poll subnazionali: ${state.subnational.length}`;await runMonteCarlo(force);}else{
+    if(constituencies.length===650){buildCentral();renderCentral();renderMap();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource} · seat model: ${partialRakeModelActive()?`raking α=${partialRakeStrength().toFixed(2)}`:'fallback prudente'} · poll subnazionali: ${state.subnational.length} · NI: ${niModuleReady()?'18 collegi simulati':'fallback fisso'}`;await runMonteCarlo(force);}else{
       setStatus('Sondaggi caricati · manca la baseline territoriale','error');showError('La dashboard nazionale è attiva, ma i 650 risultati di collegio non sono ancora nello snapshot locale e il browser non è riuscito a recuperarli direttamente. Esegui la GitHub Action “Update UK election data”: genererà automaticamente baseline e geometrie.');renderMap();
     }
   }catch(err){console.error(err);setStatus('Errore di caricamento','error');showError(`Errore: ${err.message||err}`);}finally{$('#refreshBtn').disabled=false;}

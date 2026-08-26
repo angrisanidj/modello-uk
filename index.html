@@ -27,7 +27,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Fonte sondaggi: —</span>
-      <span class="badge">Versione 0.7.1 · raking parziale</span>
+      <span class="badge">Versione 0.8 · Northern Ireland</span>
     </div>
   </section>
   <div id="errorBox" class="errorbox"></div>
@@ -47,8 +47,8 @@
       <div class="cardhead"><div><h3>Come leggere il dato</h3><p>Il voto nazionale non viene convertito direttamente in seggi.</p></div></div>
       <div class="explain compact">
         <p><strong>632 collegi GB</strong> sono simulati singolarmente con il risultato 2024 come baseline e swing regolarizzato.</p>
-        <p><strong>18 collegi dell’Irlanda del Nord</strong> restano in un modulo separato, perché i normali Westminster polls non ne descrivono il sistema partitico.</p>
-        <p class="warning"><strong>Beta:</strong> la v0.7 testa un raking nazionale parziale: α è scelto soltanto sui cicli di training 2010→2015 e 2015→2017 e può entrare live solo se non peggiora né accuratezza dei collegi né errore sui seggi nella validazione 2019 e nel holdout 2024. Se il gate fallisce, resta attivo il fallback prudente.</p>
+        <p><strong>18 collegi dell’Irlanda del Nord</strong> sono simulati separatamente con partiti, candidati e risultati Westminster 2024 reali. In assenza di polling Westminster recente, il tracker Assembly di LucidTalk entra soltanto come segnale debole.</p>
+        <p class="warning"><strong>Beta:</strong> il seat model GB resta sul fallback prudente perché il raking v0.7 non ha superato il gate. La v0.8 aggiunge i 18 collegi NI alla Monte Carlo; mantiene la struttura delle candidature 2024 e usa il movimento del tracker Assembly 2024→2026 con peso 25%, non come sostituto di un vero sondaggio Westminster.</p>
       </div>
     </article>
   </section>
@@ -66,10 +66,10 @@
         <div><span>Labour majority</span><strong id="probLabMaj">—</strong></div>
         <div><span>Conservative majority</span><strong id="probConMaj">—</strong></div>
         <div><span>Reform majority</span><strong id="probRefMaj">—</strong></div>
-        <div><span>Hung Parliament</span><strong id="probHung">—</strong></div>
+        <div><span>Hung Parliament</span><strong id="probHung">—</strong></div><div><span>Labour working majority</span><strong id="probLabWorkMaj">—</strong></div><div><span>Conservative working majority</span><strong id="probConWorkMaj">—</strong></div><div><span>Reform working majority</span><strong id="probRefWorkMaj">—</strong></div>
       </div>
       <div class="mc-progress"><div><span id="mcStatus">Monte Carlo non avviato</span><span id="mcCount">0 / 50.000</span></div><progress id="mcProgress" value="0" max="50000"></progress></div>
-      <div class="small-note">Seed deterministico: se i sondaggi e la baseline non cambiano, la distribuzione resta identica. Il risultato viene salvato in cache nel browser.</div>
+      <div class="small-note">Seed deterministico. La maggioranza assoluta resta 326; la soglia operativa indicativa esclude i seggi Sinn Féin astensionisti ed è circa <strong id="workingThreshold">—</strong>. Speaker e Deputy Speakers non sono ancora corretti separatamente.</div>
     </article>
   </section>
   <div class="section-title"><div><div class="section-kicker">Territorio</div><h2>Mappa dei collegi</h2><p>Il colore indica il vincitore centrale; dopo il Monte Carlo il pannello mostra anche la probabilità di vittoria.</p></div></div>
@@ -100,7 +100,7 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.7.1"></script>
+<script src="scripts/app.js?v=0.8"></script>
 <script src="scripts/map-performance.js"></script>
 </body>
 </html>
