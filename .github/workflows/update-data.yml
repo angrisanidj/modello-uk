@@ -47,10 +47,10 @@ jobs:
       - name: Calibrate legacy partial-raking benchmark
         run: python tools/build_backtest.py
 
-      - name: Build v0.9 MRP-lite shadow model
+      - name: Build v0.9.1 corrected MRP-lite shadow model
         run: python tools/build_mrp_lite.py
 
-      - name: Validate datasets and model gates
+      - name: Validate BES integrity, datasets and model gates
         run: |
           python - <<'PY'
           import json
@@ -65,12 +65,13 @@ jobs:
           territorial=load("data/territorial-baseline.json")
           geo=load("data/constituencies-2024.geojson")
           display=load("data/constituencies-map.geojson")
-          legacy=load("data/backtest-2024-territorial.json")
           params=load("data/model-params.json")
           ni=load("data/ni-2024.json")
+
+          integrity=load("data/bes-integrity-v091.json")
           mrp=load("data/mrp-lite-model.json")
           live=load("data/mrp-lite-live.json")
-          v09=load("data/backtest-v09-mrp-lite.json")
+          v091=load("data/backtest-v091-mrp-lite.json")
 
           n_polls=len(polls.get("polls",[]))
           n_const=len(constituencies.get("constituencies",[]))
@@ -83,9 +84,15 @@ jobs:
           print(f"Constituencies: {n_const}")
           print(f"Legacy GB model: {params.get('version')} approved={params.get('approved')}")
           print(f"NI module: {ni.get('meta',{}).get('version')} seats={len(ni_seats)}")
-          print(f"v0.9 status: {mrp.get('status')}")
-          print(f"v0.9 approved: {mrp.get('approved')}")
-          print(f"v0.9 publication_ready: {mrp.get('publication_ready')}")
+          print(f"BES integrity: {integrity.get('status')}")
+          for check in integrity.get("checks",[]):
+              print(
+                  check.get("label"),
+                  "countries=",check.get("countries"),
+                  "regions=",check.get("english_regions"),
+                  "winners=",check.get("winner_counts"),
+                  "source=",check.get("share_source"),
+              )
 
           if n_polls<10:
               raise SystemExit("ERROR: too few national polls")
@@ -104,33 +111,46 @@ jobs:
           if {k:ni_winners.get(k,0) for k in expected_ni}!=expected_ni:
               raise SystemExit(f"ERROR: NI winner check failed: {dict(ni_winners)}")
 
-          if mrp.get("version")!="uk-v09-mrp-lite":
-              raise SystemExit(f"ERROR: unexpected v0.9 model version {mrp.get('version')}")
-          if live.get("version")!="uk-v09-mrp-lite-live":
-              raise SystemExit(f"ERROR: unexpected v0.9 live version {live.get('version')}")
-          if v09.get("version")!="uk-v09-mrp-lite-backtest":
-              raise SystemExit("ERROR: unexpected v0.9 backtest version")
+          # Unlike v0.9, parser integrity is a HARD deployment gate.
+          if integrity.get("version")!="uk-v091-bes-integrity":
+              raise SystemExit("ERROR: unexpected BES integrity version")
+          if integrity.get("status")!="passed":
+              raise SystemExit("ERROR: BES integrity failed: "+str(integrity.get("errors")))
+
+          if mrp.get("version")!="uk-v091-mrp-lite":
+              raise SystemExit(f"ERROR: unexpected v0.9.1 model version {mrp.get('version')}")
+          if live.get("version")!="uk-v091-mrp-lite-live":
+              raise SystemExit(f"ERROR: unexpected v0.9.1 live version {live.get('version')}")
+          if v091.get("version")!="uk-v091-mrp-lite-backtest":
+              raise SystemExit("ERROR: unexpected v0.9.1 backtest version")
+
+          print(f"v0.9.1 status: {mrp.get('status')}")
+          print(f"v0.9.1 approved: {mrp.get('approved')}")
+          print(f"v0.9.1 publication_ready: {mrp.get('publication_ready')}")
 
           if mrp.get("status")=="ok":
               val=mrp.get("validation_2019",{}).get("candidate",{})
+              val_base=mrp.get("validation_2019",{}).get("baseline",{})
               hold=mrp.get("holdout_2024",{}).get("candidate",{})
               base=mrp.get("holdout_2024",{}).get("baseline",{})
+              print("2019 baseline:",val_base)
               print("2019 candidate:",val)
               print("2024 baseline:",base)
               print("2024 candidate:",hold)
               print("Selected spec:",mrp.get("selected_spec"))
               if val.get("gb_seats")!=632 or hold.get("gb_seats")!=632:
-                  raise SystemExit("ERROR: v0.9 did not evaluate 632 GB seats")
+                  raise SystemExit("ERROR: v0.9.1 did not evaluate 632 GB seats")
               if mrp.get("approved"):
                   if float(hold.get("winner_accuracy",0))<.80:
-                      raise SystemExit("ERROR: approved v0.9 below 80% holdout accuracy")
+                      raise SystemExit("ERROR: approved v0.9.1 below 80% holdout accuracy")
                   if len(live.get("seats",[]))!=632:
-                      raise SystemExit("ERROR: approved v0.9 live file does not contain 632 GB seats")
+                      raise SystemExit("ERROR: approved v0.9.1 live file does not contain 632 GB seats")
               else:
-                  print("v0.9 failed the hard gate: production remains on fallback. This is VALID.")
+                  print("v0.9.1 failed the model gate: production remains on fallback. This is VALID.")
           else:
-              print("WARNING: v0.9 shadow build unavailable:",mrp.get("error"))
-              print("Production remains on fallback; deployment continues intentionally.")
+              # Integrity passed, so an ML-only shadow failure may safely fall back.
+              print("WARNING: v0.9.1 ML shadow build unavailable:",mrp.get("error"))
+              print("Production remains on fallback.")
 
           print("Dataset/model validation passed.")
           PY
@@ -143,7 +163,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data and v0.9 shadow model"
+            git commit -m "chore: update UK data and corrected v0.9.1 backtest"
             git push
           fi
 
