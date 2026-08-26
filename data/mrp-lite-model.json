@@ -1,23 +1,61 @@
 {
-  "version": "uk-v0912-ref-latent-potential",
-  "model_type": "constituency-residual-ref-latent-potential-v6",
+  "version": "uk-v0913-reform-structural-sweep",
+  "model_type": "constituency-residual-reform-structural-sweep-v7",
   "status": "ok",
   "approved": false,
   "publication_ready": false,
-  "diagnostic_only": false,
+  "diagnostic_only": true,
   "used_for_parameter_selection": false,
   "changes_production_model": false,
-  "changes_candidate_model": true,
+  "changes_candidate_model": false,
   "shadow_only": true,
   "candidate_gate_passed": false,
-  "promotion_blocked_reason": "2024-inspired hypothesis requires fresh external validation",
+  "promotion_blocked_reason": "2024 structural sweep is diagnostic-only and cannot select a live candidate",
+  "canonical_candidate": "frozen_v0910_equivalent",
   "ref_latent_donor": {
     "donor_year": "15",
     "training_seats": 614,
     "ridge_alpha": 20.0,
-    "in_sample_mae_pp": 1.5904862481929456,
+    "in_sample_mae_pp": 1.5904862481929525,
     "uses_2024": false,
     "parameter_tuning": false
+  },
+  "ref_2019_calibration": {
+    "base_year": "19",
+    "training_seats": 336,
+    "ridge_alpha": 10.0,
+    "in_sample_mae_pp": 1.1945748123552402,
+    "uses_2024": false,
+    "parameter_tuning": false,
+    "features": [
+      "latent_log",
+      "share_con",
+      "share_lab",
+      "share_ld",
+      "share_green",
+      "leave",
+      "winner_con",
+      "second_con"
+    ]
+  },
+  "reform_structural_sweep": {
+    "output": "data/reform-structural-sweep-v0913.json",
+    "best_development_variant": "baseline_v0910",
+    "passing_variants": [],
+    "development_ranking": [
+      "baseline_v0910",
+      "calibrated_con_norm_strong",
+      "calibrated_con_strong",
+      "calibrated_all_strong",
+      "calibrated_all_half",
+      "calibrated_con_half",
+      "calibrated_con_current",
+      "calibrated_all_current",
+      "calibrated_con_norm_current",
+      "calibrated_all_norm_current",
+      "raw_latent_v0912"
+    ],
+    "selection_policy": "No sweep variant is selected or promoted from the 2024 development benchmark."
   },
   "ref_latent_activation": {
     "coverage_zero": 0.75,
@@ -44,7 +82,7 @@
       "principal_coverage": 0.5316455696202531,
       "activation": 0.6238698010849911,
       "imputed_seats": 296,
-      "mean_effective_ref_prior_pp": 5.318884942021532,
+      "mean_effective_ref_prior_pp": 2.249879998963248,
       "observed_national_share_unchanged": true,
       "target_enforced_by_raking": true
     },
@@ -61,7 +99,7 @@
       "target_enforced_by_raking": true
     }
   },
-  "generated_at": "2026-08-26T20:32:18.699796+00:00",
+  "generated_at": "2026-08-26T20:59:50.528217+00:00",
   "selected_spec": {
     "name": "hgb_d2_g100",
     "kind": "hgb",
@@ -738,28 +776,28 @@
         "other": 3.568672291692681
       },
       "target_national": {
-        "lab": 25.860856102132807,
-        "con": 20.33488727453426,
+        "lab": 25.860856102132797,
+        "con": 20.334887274534285,
         "ref": 24.62350989669174,
-        "ld": 10.664933066291997,
-        "green": 10.92258678031631,
-        "snp": 2.917465662303746,
-        "pc": 1.108463383179905,
-        "other": 3.5672978345492345
+        "ld": 10.664933066291995,
+        "green": 10.922586780316305,
+        "snp": 2.9174656623037474,
+        "pc": 1.1084633831799058,
+        "other": 3.567297834549235
       },
       "deltas": {
-        "lab": -8.776636539548278,
-        "con": -4.026489132465507,
+        "lab": -8.776636539548289,
+        "con": -4.026489132465482,
         "ref": 9.93323714833733,
-        "ld": -1.8902070539384734,
-        "green": 4.016259517967714,
-        "snp": 0.33176845043767633,
-        "pc": 0.4134420663529904,
-        "other": -0.001374457143446417
+        "ld": -1.8902070539384752,
+        "green": 4.0162595179677085,
+        "snp": 0.33176845043767766,
+        "pc": 0.4134420663529913,
+        "other": -0.001374457143445973
       },
-      "turnover": 14.694707183095707,
-      "system_activation": 0.7245589319246423,
-      "con_drop": 4.026489132465507,
+      "turnover": 14.6947071830957,
+      "system_activation": 0.7245589319246416,
+      "con_drop": 4.026489132465482,
       "ref_rise": 9.93323714833733
     }
   },
@@ -777,43 +815,40 @@
     "max_validation_seat_error_increase": 30
   },
   "gate_failures": [
-    "holdout_2024_accuracy_below_80pct",
-    "holdout_seat_error_above_200"
+    "holdout_2024_accuracy_below_80pct"
   ],
   "reform_diagnostics": {
-    "version": "uk-v0912-ref-latent-potential",
+    "version": "uk-v0913-reform-structural-sweep",
     "counts": {
-      "predicted_reform_wins": 21,
+      "predicted_reform_wins": 39,
       "actual_reform_wins": 5,
-      "precision": 0.047619047619047616,
-      "recall": 0.2,
+      "precision": 0.0,
+      "recall": 0.0,
       "cohorts": {
-        "correct_non_reform": 482,
-        "false_negative": 4,
-        "false_positive": 20,
-        "other_winner_error": 125,
-        "true_positive": 1
+        "correct_non_reform": 494,
+        "false_negative": 5,
+        "false_positive": 39,
+        "other_winner_error": 94
       },
       "false_positive_actual_winners": {
-        "lab": 20
+        "lab": 39
       },
       "false_positive_regions": {
-        "yorkshire": 12,
-        "east_midlands": 1,
-        "wales": 1,
-        "north_east": 4,
-        "north_west": 1,
-        "south_east": 1
+        "yorkshire": 15,
+        "east_midlands": 3,
+        "wales": 8,
+        "north_east": 10,
+        "north_west": 3
       }
     },
     "binary_confusion": {
-      "true_positive": 1,
-      "false_positive": 20,
-      "false_negative": 4,
-      "true_negative": 607,
+      "true_positive": 0,
+      "false_positive": 39,
+      "false_negative": 5,
+      "true_negative": 588,
       "total": 632
     },
-    "output": "data/reform-diagnostics-v0912.json"
+    "output": "data/reform-diagnostics-v0913.json"
   },
   "development_2017": {
     "candidate": {
@@ -851,7 +886,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.9589578523955873,
+      "share_mae": 2.958957852288145,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -2297,7 +2332,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.620772793346298,
+      "share_mae": 2.620772793463433,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -2393,7 +2428,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.620772793346298,
+      "share_mae": 2.620772793463433,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -2849,15 +2884,15 @@
   "holdout_2024": {
     "evaluation_label": "development_benchmark_not_pristine_holdout",
     "baseline": {
-      "winner_accuracy": 0.6234177215189873,
-      "correct_winners": 394,
+      "winner_accuracy": 0.6819620253164557,
+      "correct_winners": 431,
       "gb_seats": 632,
       "predicted_seats": {
-        "lab": 275,
-        "con": 139,
-        "ref": 134,
+        "lab": 279,
+        "con": 234,
+        "ref": 34,
         "ld": 38,
-        "green": 1,
+        "green": 2,
         "snp": 38,
         "pc": 4,
         "other": 3
@@ -2873,29 +2908,29 @@
         "other": 6
       },
       "seat_error": {
-        "lab": -136,
-        "con": 18,
-        "ref": 129,
+        "lab": -132,
+        "con": 113,
+        "ref": 29,
         "ld": -34,
-        "green": -3,
+        "green": -2,
         "snp": 29,
         "pc": 0,
         "other": -3
       },
-      "seat_abs_error_sum": 352,
-      "share_mae": 5.593618585085717,
+      "seat_abs_error_sum": 342,
+      "share_mae": 6.227473441823144,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
         "east_england": {
-          "correct": 27,
+          "correct": 36,
           "n": 61,
-          "accuracy": 0.4426229508196721
+          "accuracy": 0.5901639344262295
         },
         "east_midlands": {
-          "correct": 23,
+          "correct": 29,
           "n": 47,
-          "accuracy": 0.48936170212765956
+          "accuracy": 0.6170212765957447
         },
         "london": {
           "correct": 70,
@@ -2908,9 +2943,9 @@
           "accuracy": 0.6296296296296297
         },
         "north_west": {
-          "correct": 63,
+          "correct": 64,
           "n": 73,
-          "accuracy": 0.863013698630137
+          "accuracy": 0.8767123287671232
         },
         "scotland": {
           "correct": 28,
@@ -2918,14 +2953,14 @@
           "accuracy": 0.49122807017543857
         },
         "south_east": {
-          "correct": 49,
+          "correct": 59,
           "n": 91,
-          "accuracy": 0.5384615384615384
+          "accuracy": 0.6483516483516484
         },
         "south_west": {
-          "correct": 26,
+          "correct": 29,
           "n": 58,
-          "accuracy": 0.4482758620689655
+          "accuracy": 0.5
         },
         "wales": {
           "correct": 26,
@@ -2933,30 +2968,30 @@
           "accuracy": 0.8125
         },
         "west_midlands": {
-          "correct": 35,
+          "correct": 39,
           "n": 57,
-          "accuracy": 0.6140350877192983
+          "accuracy": 0.6842105263157895
         },
         "yorkshire": {
-          "correct": 30,
+          "correct": 34,
           "n": 54,
-          "accuracy": 0.5555555555555556
+          "accuracy": 0.6296296296296297
         }
       }
     },
     "share_only_candidate": {
-      "winner_accuracy": 0.7753164556962026,
-      "correct_winners": 490,
+      "winner_accuracy": 0.7278481012658228,
+      "correct_winners": 460,
       "gb_seats": 632,
       "predicted_seats": {
-        "lab": 332,
-        "con": 193,
-        "ref": 21,
+        "lab": 310,
+        "con": 177,
+        "ref": 61,
         "ld": 47,
-        "green": 9,
-        "snp": 22,
+        "green": 8,
+        "snp": 20,
         "pc": 4,
-        "other": 4
+        "other": 5
       },
       "actual_seats": {
         "lab": 411,
@@ -2969,64 +3004,64 @@
         "other": 6
       },
       "seat_error": {
-        "lab": -79,
-        "con": 72,
-        "ref": 16,
+        "lab": -101,
+        "con": 56,
+        "ref": 56,
         "ld": -25,
-        "green": 5,
-        "snp": 13,
+        "green": 4,
+        "snp": 11,
         "pc": 0,
-        "other": -2
+        "other": -1
       },
-      "seat_abs_error_sum": 212,
-      "share_mae": 4.938781902886764,
+      "seat_abs_error_sum": 254,
+      "share_mae": 6.055746350496494,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
         "east_england": {
-          "correct": 47,
+          "correct": 45,
           "n": 61,
-          "accuracy": 0.7704918032786885
+          "accuracy": 0.7377049180327869
         },
         "east_midlands": {
-          "correct": 33,
+          "correct": 30,
           "n": 47,
-          "accuracy": 0.7021276595744681
+          "accuracy": 0.6382978723404256
         },
         "london": {
-          "correct": 67,
+          "correct": 68,
           "n": 75,
-          "accuracy": 0.8933333333333333
+          "accuracy": 0.9066666666666666
         },
         "north_east": {
-          "correct": 20,
+          "correct": 10,
           "n": 27,
-          "accuracy": 0.7407407407407407
+          "accuracy": 0.37037037037037035
         },
         "north_west": {
-          "correct": 70,
+          "correct": 61,
           "n": 73,
-          "accuracy": 0.958904109589041
+          "accuracy": 0.8356164383561644
         },
         "scotland": {
-          "correct": 40,
+          "correct": 42,
           "n": 57,
-          "accuracy": 0.7017543859649122
+          "accuracy": 0.7368421052631579
         },
         "south_east": {
-          "correct": 64,
+          "correct": 69,
           "n": 91,
-          "accuracy": 0.7032967032967034
+          "accuracy": 0.7582417582417582
         },
         "south_west": {
-          "correct": 36,
+          "correct": 39,
           "n": 58,
-          "accuracy": 0.6206896551724138
+          "accuracy": 0.6724137931034483
         },
         "wales": {
-          "correct": 30,
+          "correct": 20,
           "n": 32,
-          "accuracy": 0.9375
+          "accuracy": 0.625
         },
         "west_midlands": {
           "correct": 44,
@@ -3034,23 +3069,23 @@
           "accuracy": 0.7719298245614035
         },
         "yorkshire": {
-          "correct": 39,
+          "correct": 32,
           "n": 54,
-          "accuracy": 0.7222222222222222
+          "accuracy": 0.5925925925925926
         }
       }
     },
     "pre_routing_candidate": {
-      "winner_accuracy": 0.7642405063291139,
-      "correct_winners": 483,
+      "winner_accuracy": 0.7816455696202531,
+      "correct_winners": 494,
       "gb_seats": 632,
       "predicted_seats": {
-        "lab": 322,
-        "con": 199,
-        "ref": 21,
-        "ld": 52,
+        "lab": 340,
+        "con": 156,
+        "ref": 39,
+        "ld": 56,
         "green": 9,
-        "snp": 20,
+        "snp": 23,
         "pc": 4,
         "other": 5
       },
@@ -3065,44 +3100,44 @@
         "other": 6
       },
       "seat_error": {
-        "lab": -89,
-        "con": 78,
-        "ref": 16,
-        "ld": -20,
+        "lab": -71,
+        "con": 35,
+        "ref": 34,
+        "ld": -16,
         "green": 5,
-        "snp": 11,
+        "snp": 14,
         "pc": 0,
         "other": -1
       },
-      "seat_abs_error_sum": 220,
-      "share_mae": 5.311900524222349,
+      "seat_abs_error_sum": 176,
+      "share_mae": 5.6491790539373365,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
         "east_england": {
-          "correct": 44,
+          "correct": 46,
           "n": 61,
-          "accuracy": 0.7213114754098361
+          "accuracy": 0.7540983606557377
         },
         "east_midlands": {
-          "correct": 31,
+          "correct": 33,
           "n": 47,
-          "accuracy": 0.6595744680851063
+          "accuracy": 0.7021276595744681
         },
         "london": {
-          "correct": 67,
+          "correct": 68,
           "n": 75,
-          "accuracy": 0.8933333333333333
+          "accuracy": 0.9066666666666666
         },
         "north_east": {
-          "correct": 21,
+          "correct": 15,
           "n": 27,
-          "accuracy": 0.7777777777777778
+          "accuracy": 0.5555555555555556
         },
         "north_west": {
-          "correct": 69,
+          "correct": 68,
           "n": 73,
-          "accuracy": 0.9452054794520548
+          "accuracy": 0.9315068493150684
         },
         "scotland": {
           "correct": 41,
@@ -3110,43 +3145,43 @@
           "accuracy": 0.7192982456140351
         },
         "south_east": {
-          "correct": 63,
+          "correct": 71,
           "n": 91,
-          "accuracy": 0.6923076923076923
+          "accuracy": 0.7802197802197802
         },
         "south_west": {
-          "correct": 36,
+          "correct": 43,
           "n": 58,
-          "accuracy": 0.6206896551724138
+          "accuracy": 0.7413793103448276
         },
         "wales": {
-          "correct": 30,
+          "correct": 23,
           "n": 32,
-          "accuracy": 0.9375
+          "accuracy": 0.71875
         },
         "west_midlands": {
-          "correct": 43,
+          "correct": 49,
           "n": 57,
-          "accuracy": 0.7543859649122807
+          "accuracy": 0.8596491228070176
         },
         "yorkshire": {
-          "correct": 38,
+          "correct": 37,
           "n": 54,
-          "accuracy": 0.7037037037037037
+          "accuracy": 0.6851851851851852
         }
       }
     },
     "candidate": {
-      "winner_accuracy": 0.7642405063291139,
-      "correct_winners": 483,
+      "winner_accuracy": 0.7816455696202531,
+      "correct_winners": 494,
       "gb_seats": 632,
       "predicted_seats": {
-        "lab": 322,
-        "con": 199,
-        "ref": 21,
-        "ld": 52,
+        "lab": 340,
+        "con": 156,
+        "ref": 39,
+        "ld": 56,
         "green": 9,
-        "snp": 20,
+        "snp": 23,
         "pc": 4,
         "other": 5
       },
@@ -3161,44 +3196,44 @@
         "other": 6
       },
       "seat_error": {
-        "lab": -89,
-        "con": 78,
-        "ref": 16,
-        "ld": -20,
+        "lab": -71,
+        "con": 35,
+        "ref": 34,
+        "ld": -16,
         "green": 5,
-        "snp": 11,
+        "snp": 14,
         "pc": 0,
         "other": -1
       },
-      "seat_abs_error_sum": 220,
-      "share_mae": 5.311900524222349,
+      "seat_abs_error_sum": 176,
+      "share_mae": 5.6491790539373365,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
         "east_england": {
-          "correct": 44,
+          "correct": 46,
           "n": 61,
-          "accuracy": 0.7213114754098361
+          "accuracy": 0.7540983606557377
         },
         "east_midlands": {
-          "correct": 31,
+          "correct": 33,
           "n": 47,
-          "accuracy": 0.6595744680851063
+          "accuracy": 0.7021276595744681
         },
         "london": {
-          "correct": 67,
+          "correct": 68,
           "n": 75,
-          "accuracy": 0.8933333333333333
+          "accuracy": 0.9066666666666666
         },
         "north_east": {
-          "correct": 21,
+          "correct": 15,
           "n": 27,
-          "accuracy": 0.7777777777777778
+          "accuracy": 0.5555555555555556
         },
         "north_west": {
-          "correct": 69,
+          "correct": 68,
           "n": 73,
-          "accuracy": 0.9452054794520548
+          "accuracy": 0.9315068493150684
         },
         "scotland": {
           "correct": 41,
@@ -3206,29 +3241,29 @@
           "accuracy": 0.7192982456140351
         },
         "south_east": {
-          "correct": 63,
+          "correct": 71,
           "n": 91,
-          "accuracy": 0.6923076923076923
+          "accuracy": 0.7802197802197802
         },
         "south_west": {
-          "correct": 36,
+          "correct": 43,
           "n": 58,
-          "accuracy": 0.6206896551724138
+          "accuracy": 0.7413793103448276
         },
         "wales": {
-          "correct": 30,
+          "correct": 23,
           "n": 32,
-          "accuracy": 0.9375
+          "accuracy": 0.71875
         },
         "west_midlands": {
-          "correct": 43,
+          "correct": 49,
           "n": 57,
-          "accuracy": 0.7543859649122807
+          "accuracy": 0.8596491228070176
         },
         "yorkshire": {
-          "correct": 38,
+          "correct": 37,
           "n": 54,
-          "accuracy": 0.7037037037037037
+          "accuracy": 0.6851851851851852
         }
       }
     },
@@ -3270,14 +3305,14 @@
         "ref_rise": 12.626344296327819
       },
       "lab": {
-        "beta": 0.9986022822421028,
-        "structural_beta": 0.9983556261671798,
-        "raw_beta": 0.9983556261671798,
+        "beta": 1.1113187563170346,
+        "structural_beta": 1.130963242725923,
+        "raw_beta": 1.130963242725923,
         "activation": 0.85,
-        "current_mean": 35.18516609640859,
-        "current_sd": 17.36786484229416,
+        "current_mean": 34.94481041286941,
+        "current_sd": 15.226717604700193,
         "target_relative_sd": 0.49280158383522277,
-        "desired_sd": 17.339305579815534,
+        "desired_sd": 17.22085791828363,
         "bounds": [
           0.65,
           1.45
@@ -3310,14 +3345,14 @@
         ]
       },
       "con": {
-        "beta": 0.9924203009507258,
-        "structural_beta": 0.9924203009507258,
-        "raw_beta": 0.9924203009507258,
+        "beta": 0.8021080138193358,
+        "structural_beta": 0.8021080138193358,
+        "raw_beta": 0.8021080138193358,
         "activation": 1.0,
-        "current_mean": 24.06641612479202,
-        "current_sd": 9.67095960789425,
+        "current_mean": 23.951906482805963,
+        "current_sd": 11.908608539002358,
         "target_relative_sd": 0.3987987490443871,
-        "desired_sd": 9.597656644548724,
+        "desired_sd": 9.551990342571164,
         "bounds": [
           0.65,
           1.45
@@ -3350,14 +3385,14 @@
         ]
       },
       "ref": {
-        "beta": 1.0258760172931012,
-        "structural_beta": 1.0258760172931012,
-        "raw_beta": 1.0258760172931012,
+        "beta": 0.6683483834327281,
+        "structural_beta": 0.6683483834327281,
+        "raw_beta": 0.6683483834327281,
         "activation": 1.0,
-        "current_mean": 14.995550179112078,
-        "current_sd": 9.567794526702398,
+        "current_mean": 15.47969609887028,
+        "current_sd": 15.160161960780618,
         "target_relative_sd": 0.6545522389038066,
-        "desired_sd": 9.815370943332189,
+        "desired_sd": 10.132269739066063,
         "bounds": [
           0.35,
           1.15
@@ -3390,14 +3425,14 @@
         ]
       },
       "ld": {
-        "beta": 1.0511115982664962,
-        "structural_beta": 1.0601312920782309,
-        "raw_beta": 1.0601312920782309,
+        "beta": 1.0028372276741764,
+        "structural_beta": 1.0033379149107957,
+        "raw_beta": 1.0033379149107957,
         "activation": 0.85,
-        "current_mean": 12.013838742241322,
-        "current_sd": 10.678943561509724,
+        "current_mean": 11.964300283135707,
+        "current_sd": 11.23689253222455,
         "target_relative_sd": 0.9423367899960449,
-        "desired_sd": 11.321082235893808,
+        "desired_sd": 11.274400323358872,
         "bounds": [
           0.65,
           1.85
@@ -3430,14 +3465,14 @@
         ]
       },
       "green": {
-        "beta": 0.9999595802843916,
-        "structural_beta": 0.9999527379193925,
-        "raw_beta": 0.9999527379193925,
+        "beta": 1.0652114153878331,
+        "structural_beta": 1.0762505901932928,
+        "raw_beta": 1.0762505901932928,
         "activation": 0.8552250575703658,
-        "current_mean": 6.819825011363477,
-        "current_sd": 7.722219730700399,
+        "current_mean": 6.769200841677192,
+        "current_sd": 7.121515022001292,
         "target_relative_sd": 1.1322658205544192,
-        "desired_sd": 7.721854762529018,
+        "desired_sd": 7.6645347454992905,
         "bounds": [
           0.55,
           1.55
@@ -3470,14 +3505,14 @@
         ]
       },
       "snp": {
-        "beta": 1.2764936172054009,
-        "structural_beta": 1.3675365738197618,
-        "raw_beta": 1.3675365738197618,
+        "beta": 1.1956573187636255,
+        "structural_beta": 1.2600827509436598,
+        "raw_beta": 1.2600827509436598,
         "activation": 0.7522887160095038,
-        "current_mean": 29.174975057629716,
-        "current_sd": 4.101125855589759,
+        "current_mean": 29.135438804293855,
+        "current_sd": 4.444818692579279,
         "target_relative_sd": 0.1922345979826352,
-        "desired_sd": 5.608439601356857,
+        "desired_sd": 5.600839365591099,
         "bounds": [
           0.65,
           1.65
@@ -3510,14 +3545,14 @@
         ]
       },
       "pc": {
-        "beta": 1.0668430704183962,
-        "structural_beta": 1.0944576879171466,
-        "raw_beta": 1.0944576879171466,
+        "beta": 1.0703869024870947,
+        "structural_beta": 1.0994655695342028,
+        "raw_beta": 1.0994655695342028,
         "activation": 0.7076509270164179,
-        "current_mean": 14.11566239579033,
-        "current_sd": 12.372000490621438,
+        "current_mean": 14.023199337662252,
+        "current_sd": 12.234975832447345,
         "target_relative_sd": 0.9592628863037644,
-        "desired_sd": 13.540631051875343,
+        "desired_sd": 13.451934671858929,
         "bounds": [
           0.65,
           1.65
@@ -3552,12 +3587,12 @@
       "other": {
         "beta": 1.1575155956701075,
         "structural_beta": 1.2,
-        "raw_beta": 1.3436884619169163,
+        "raw_beta": 1.2264070374755283,
         "activation": 0.7875779783505382,
-        "current_mean": 3.5731994553385524,
-        "current_sd": 5.067415551527988,
+        "current_mean": 3.552328933410524,
+        "current_sd": 5.5195845193429385,
         "target_relative_sd": 1.905582907820455,
-        "desired_sd": 6.809027808326505,
+        "desired_sd": 6.769257298463161,
         "bounds": [
           0.8,
           1.2
@@ -3660,8 +3695,8 @@
       "correct": 41,
       "accuracy": 0.7192982456140351,
       "predicted_seats": {
-        "snp": 20,
-        "con": 8,
+        "snp": 23,
+        "con": 5,
         "lab": 24,
         "ld": 5
       },
@@ -3672,8 +3707,8 @@
         "ld": 6
       }
     },
-    "accuracy_gain_pp": 14.082278481012656,
-    "seat_error_improvement": 132
+    "accuracy_gain_pp": 9.968354430379744,
+    "seat_error_improvement": 166
   },
   "internal_selection_2017": {
     "baseline": {
@@ -3829,7 +3864,7 @@
         "winner_accuracy": 0.8686708860759493,
         "correct_winners": 549,
         "seat_abs_error_sum": 98,
-        "share_mae": 3.053361340715711
+        "share_mae": 3.05336134071576
       },
       {
         "spec": {
@@ -3845,7 +3880,7 @@
         "winner_accuracy": 0.865506329113924,
         "correct_winners": 547,
         "seat_abs_error_sum": 108,
-        "share_mae": 3.146246092494248
+        "share_mae": 3.1462460924942883
       },
       {
         "spec": {
@@ -3861,7 +3896,7 @@
         "winner_accuracy": 0.8639240506329114,
         "correct_winners": 546,
         "seat_abs_error_sum": 106,
-        "share_mae": 3.2158979434403334
+        "share_mae": 3.2158979434403556
       },
       {
         "spec": {
@@ -3873,7 +3908,7 @@
         "winner_accuracy": 0.8575949367088608,
         "correct_winners": 542,
         "seat_abs_error_sum": 120,
-        "share_mae": 3.3233081486371443
+        "share_mae": 3.323308148637162
       },
       {
         "spec": {
@@ -3885,7 +3920,7 @@
         "winner_accuracy": 0.8560126582278481,
         "correct_winners": 541,
         "seat_abs_error_sum": 118,
-        "share_mae": 3.2031419738098257
+        "share_mae": 3.2031419738092843
       },
       {
         "spec": {
@@ -3897,7 +3932,7 @@
         "winner_accuracy": 0.8528481012658228,
         "correct_winners": 539,
         "seat_abs_error_sum": 122,
-        "share_mae": 3.258940799793759
+        "share_mae": 3.2589407997938085
       },
       {
         "spec": {
@@ -3909,7 +3944,7 @@
         "winner_accuracy": 0.8386075949367089,
         "correct_winners": 530,
         "seat_abs_error_sum": 144,
-        "share_mae": 3.8024517743158213
+        "share_mae": 3.8024517743159674
       },
       {
         "spec": {
@@ -3921,7 +3956,7 @@
         "winner_accuracy": 0.8354430379746836,
         "correct_winners": 528,
         "seat_abs_error_sum": 152,
-        "share_mae": 3.829211149727902
+        "share_mae": 3.8292111497279393
       }
     ]
   },
@@ -4589,10 +4624,10 @@
       "routine",
       "leave"
     ],
-    "notes": "v0.9.12 adds a structural missing-candidate prior for the Reform family. A fixed Ridge model is trained only on the broadly contested 2015 UKIP cross-section. In a later baseline, if the principal Reform-family vehicle has low candidate coverage and Reform is rising sharply nationally, local zeroes are blended toward the 2015-derived latent geography. Observed historical national shares are never rewritten and final raking still enforces the supplied national target. The incumbent-routing layer remains separately selected on 2015->2017."
+    "notes": "v0.9.13 keeps the canonical candidate identical to v0.9.10 and runs a diagnostic sweep. The 2015 UKIP donor is calibrated to observed 2019 Brexit support only in constituencies where the principal vehicle stood; missing-seat variants are then scored on 2024 without selecting any live parameter. Final raking always enforces the national target."
   },
   "integrity": {
-    "version": "uk-v0912-bes-integrity",
+    "version": "uk-v0913-bes-integrity",
     "status": "passed",
     "checks": [
       {
@@ -4959,5 +4994,5 @@
       "file_size": 1407419
     }
   },
-  "note": "v0.9.12 changes only the Reform geographic prior under low candidate coverage plus a large national Reform rise. The latent donor is fitted on 2015 UKIP only; 2024 labels only score the hypothesis. 2019 remains temporal validation; fresh external validation is required for promotion."
+  "note": "v0.9.13 keeps the canonical candidate frozen at the v0.9.10-equivalent model and evaluates multiple pre-2024 structural Reform geographies in one shadow sweep. The 2015 donor and 2019 contested-seat calibration use no 2024 labels. The 2024 benchmark ranks variants for research only and selects nothing for live use."
 }
