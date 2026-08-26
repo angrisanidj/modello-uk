@@ -12,6 +12,7 @@ La scelta è motivata anche da modelli britannici pubblici: Survation ha descrit
 
 - Democracy Club, CSV export di candidati e risultati: `https://candidates.democracyclub.org.uk/data/export_csv/`
 - ONS Open Geography Portal, ward → Westminster constituency → local authority lookup 2019 e 2024.
+  - Hotfix: per il 2019 usa come endpoint primario il FeatureServer ONS ripubblicato `WD19_PCON19_LAD19_UTLA19...e5a0...`; il vecchio endpoint LAD-only resta configurato solo come fallback.
 - BES/Figshare per il modello generale e i backtest, come nelle versioni precedenti.
 
 La build fallisce se le fonti locali non vengono scaricate o se il mapping copre meno di 300 collegi GB: non viene interpretata l'assenza di dati come assenza di effetto locale.

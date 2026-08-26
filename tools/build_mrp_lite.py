@@ -88,11 +88,19 @@ LOCAL_MAX_SEAT_SHIFT=8.0
 BYELECTION_MAX_SEAT_SHIFT=8.0
 ONS_LOOKUPS={
     "2019":{
-        "query":"https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/WD19_PCON19_LAD19_UK_LU_2b79d5f36feb42938063932a4d4a3533/FeatureServer/0/query",
+        # ONS republished the Dec-2019 lookup under a new FeatureServer item.
+        # Keep the older LAD-only endpoint as a fallback because data.gov.uk may
+        # continue to advertise it even when the ArcGIS service itself returns 404.
+        "queries":(
+            "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/WD19_PCON19_LAD19_UTLA19_UK_LU_e5a0b74eff43407b86dcc7a4300ceb25/FeatureServer/0/query",
+            "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/WD19_PCON19_LAD19_UK_LU_2b79d5f36feb42938063932a4d4a3533/FeatureServer/0/query",
+        ),
         "pcon":"PCON19NM","lad":"LAD19NM",
     },
     "2024":{
-        "query":"https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/WD24_PCON24_LAD24_UTLA24_UK_LU/FeatureServer/0/query",
+        "queries":(
+            "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/WD24_PCON24_LAD24_UTLA24_UK_LU/FeatureServer/0/query",
+        ),
         "pcon":"PCON24NM","lad":"LAD24NM",
     },
 }
@@ -3122,24 +3130,33 @@ def aggregate_local_profiles(raw:pd.DataFrame)->tuple[dict[str,dict[str,Any]],di
 
 
 def fetch_ons_ward_lookup(year:str)->tuple[list[dict[str,str]],dict[str,Any]]:
-    spec=ONS_LOOKUPS[year];url=spec["query"]
+    spec=ONS_LOOKUPS[year]
     headers={"User-Agent":"modello-uk/0.9.15 research"}
-    ids=requests.get(url,params={"where":"1=1","returnIdsOnly":"true","f":"json"},headers=headers,timeout=120)
-    ids.raise_for_status();ij=ids.json()
-    object_ids=ij.get("objectIds") or []
-    if not object_ids:raise RuntimeError(f"ONS {year} lookup returned no object IDs: {ij}")
-    rows=[]
-    for i in range(0,len(object_ids),800):
-        batch=object_ids[i:i+800]
-        params={"objectIds":",".join(map(str,batch)),"outFields":f"{spec['pcon']},{spec['lad']}",
-                "returnGeometry":"false","f":"json"}
-        r=requests.get(url,params=params,headers=headers,timeout=120);r.raise_for_status();j=r.json()
-        if "error" in j:raise RuntimeError(f"ONS {year} lookup error: {j['error']}")
-        for feat in j.get("features",[]):
-            a=feat.get("attributes",{});pcon=str(a.get(spec["pcon"]) or "");lad=str(a.get(spec["lad"]) or "")
-            if pcon and lad:rows.append({"pcon":pcon,"lad":lad})
-    if len(rows)<5000:raise RuntimeError(f"ONS {year} lookup unexpectedly small: {len(rows)}")
-    return rows,{"source":"ONS Open Geography Portal ward-PCON-LAD lookup","year":year,"url":url,"rows":len(rows)}
+    urls=list(spec.get("queries") or ([spec["query"]] if spec.get("query") else []))
+    failures=[]
+    for url in urls:
+        try:
+            ids=requests.get(url,params={"where":"1=1","returnIdsOnly":"true","f":"json"},headers=headers,timeout=120)
+            ids.raise_for_status();ij=ids.json()
+            if "error" in ij:raise RuntimeError(str(ij["error"]))
+            object_ids=ij.get("objectIds") or []
+            if not object_ids:raise RuntimeError(f"returned no object IDs: {ij}")
+            rows=[]
+            for i in range(0,len(object_ids),800):
+                batch=object_ids[i:i+800]
+                params={"objectIds":",".join(map(str,batch)),"outFields":f"{spec['pcon']},{spec['lad']}",
+                        "returnGeometry":"false","f":"json"}
+                r=requests.get(url,params=params,headers=headers,timeout=120);r.raise_for_status();j=r.json()
+                if "error" in j:raise RuntimeError(f"lookup error: {j['error']}")
+                for feat in j.get("features",[]):
+                    a=feat.get("attributes",{});pcon=str(a.get(spec["pcon"]) or "");lad=str(a.get(spec["lad"]) or "")
+                    if pcon and lad:rows.append({"pcon":pcon,"lad":lad})
+            if len(rows)<5000:raise RuntimeError(f"lookup unexpectedly small: {len(rows)}")
+            return rows,{"source":"ONS Open Geography Portal ward-PCON-LAD lookup","year":year,
+                         "url":url,"rows":len(rows),"fallbacks_tried":len(failures)}
+        except Exception as exc:
+            failures.append({"url":url,"error":str(exc)})
+    raise RuntimeError(f"ONS {year} lookup unavailable from all configured endpoints: {failures}")
 
 
 def build_local_advantage_profile(base:dict[str,Any],raw_local:pd.DataFrame,lookup_rows:list[dict[str,str]],target_date:str)->dict[str,Any]:
