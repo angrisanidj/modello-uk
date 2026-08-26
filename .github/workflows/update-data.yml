@@ -41,6 +41,9 @@ jobs:
       - name: Update election data
         run: python tools/build_data.py
 
+      - name: Build territorial backtest
+        run: python tools/build_backtest.py
+
       - name: Validate datasets
         run: |
           python - <<'PY'
@@ -56,14 +59,30 @@ jobs:
           geo = json.loads(
               Path("data/constituencies-2024.geojson").read_text(encoding="utf-8")
           )
+          backtest = json.loads(
+              Path("data/backtest-2024-territorial.json").read_text(encoding="utf-8")
+          )
 
           n_polls = len(polls.get("polls", []))
           n_const = len(constituencies.get("constituencies", []))
           n_geo = len(geo.get("features", []))
+          bt_current = backtest.get("current_lambda_0_82", {})
+          bt_best = backtest.get("best_lambda_by_winner_accuracy", {})
 
           print(f"Polls: {n_polls}")
           print(f"Constituencies: {n_const}")
           print(f"GeoJSON features: {n_geo}")
+          print(
+              "Backtest current λ=0.82:",
+              f"accuracy={bt_current.get('winner_accuracy')}",
+              f"seat_abs_error={bt_current.get('seat_abs_error_sum')}"
+          )
+          print(
+              "Backtest best:",
+              f"lambda={bt_best.get('lambda')}",
+              f"accuracy={bt_best.get('winner_accuracy')}",
+              f"seat_abs_error={bt_best.get('seat_abs_error_sum')}"
+          )
 
           if n_polls < 10:
               raise SystemExit(f"ERROR: only {n_polls} polls")
@@ -78,6 +97,9 @@ jobs:
                   f"ERROR: expected at least 650 geometries, found {n_geo}"
               )
 
+          if bt_current.get("gb_seats") != 632:
+              raise SystemExit("ERROR: territorial backtest did not evaluate 632 GB seats")
+
           print("Dataset validation passed.")
           PY
 
@@ -89,7 +111,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK election data"
+            git commit -m "chore: update UK election data and backtest"
             git push
           fi
 
