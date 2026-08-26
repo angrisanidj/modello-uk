@@ -1,6 +1,6 @@
 {
-  "version": "uk-v06-transfer-raked",
-  "model_type": "transfer-raked-v1",
+  "version": "uk-v07-partial-raking",
+  "model_type": "partial-raked-v1",
   "approved": false,
   "training_elections": [
     "2010→2015",
@@ -9,118 +9,25 @@
   "validation_election": "2017→2019",
   "holdout_election": "2019 notional→2024",
   "common_lambda": 0.82,
-  "transfer_feature_parties": [
-    "lab",
-    "con",
-    "ref",
-    "ld",
-    "green",
-    "snp",
-    "pc"
-  ],
-  "transfer_target_parties": [
-    "lab",
-    "con",
-    "ref",
-    "ld",
-    "green",
-    "snp",
-    "pc",
-    "other"
-  ],
-  "transfer_coefficients": {
-    "lab": {
-      "lab": -0.979004,
-      "con": 6.376841,
-      "ref": 5.604191,
-      "ld": -1.135957,
-      "green": -3.849053,
-      "snp": 16.760365,
-      "pc": -1.719455
-    },
-    "con": {
-      "lab": -1.14765,
-      "con": -11.134189,
-      "ref": -2.42216,
-      "ld": 2.461617,
-      "green": 18.0,
-      "snp": 3.829808,
-      "pc": 1.74447
-    },
-    "ref": {
-      "lab": 0.861649,
-      "con": -0.084591,
-      "ref": -5.409836,
-      "ld": 2.637054,
-      "green": 0.030333,
-      "snp": -8.186942,
-      "pc": 0.134818
-    },
-    "ld": {
-      "lab": -0.195178,
-      "con": 1.527631,
-      "ref": 3.643486,
-      "ld": -3.783513,
-      "green": 6.932901,
-      "snp": 11.045597,
-      "pc": 1.455767
-    },
-    "green": {
-      "lab": 0.219414,
-      "con": 0.806632,
-      "ref": -0.961453,
-      "ld": -0.356453,
-      "green": -18.0,
-      "snp": -3.606734,
-      "pc": -0.238747
-    },
-    "snp": {
-      "lab": 1.277151,
-      "con": 2.446752,
-      "ref": -1.387498,
-      "ld": 0.169094,
-      "green": -5.337324,
-      "snp": -18.0,
-      "pc": -1.108772
-    },
-    "pc": {
-      "lab": -0.077036,
-      "con": -0.178552,
-      "ref": -0.013535,
-      "ld": 0.055953,
-      "green": 0.099484,
-      "snp": 0.164,
-      "pc": -0.797875
-    },
-    "other": {
-      "lab": 0.040654,
-      "con": 0.239476,
-      "ref": 0.946804,
-      "ld": -0.047795,
-      "green": 4.1047,
-      "snp": 1.446493,
-      "pc": 0.529795
-    }
-  },
-  "transfer_ridge": 0.3,
-  "rake_iterations": 36,
+  "rake_strength": 0.125,
+  "rake_iterations": 40,
   "validation": {
     "common_accuracy": 0.9177215189873418,
-    "raked_accuracy": 0.9145569620253164,
-    "transfer_accuracy": 0.9082278481012658,
+    "partial_accuracy": 0.9145569620253164,
+    "full_accuracy": 0.9145569620253164,
     "common_seat_abs_error": 44,
-    "raked_seat_abs_error": 44,
-    "transfer_seat_abs_error": 50,
-    "transfer_share_mae": 2.7160996794826966
+    "partial_seat_abs_error": 42,
+    "full_seat_abs_error": 44,
+    "partial_share_mae": 2.5999895386950973
   },
   "holdout": {
     "common_accuracy": 0.6835443037974683,
-    "raked_accuracy": 0.7104430379746836,
-    "transfer_accuracy": 0.6677215189873418,
+    "partial_accuracy": 0.685126582278481,
+    "full_accuracy": 0.7104430379746836,
     "common_seat_abs_error": 340,
-    "raked_seat_abs_error": 264,
-    "transfer_seat_abs_error": 348,
-    "transfer_share_mae": 7.573743620588588
+    "partial_seat_abs_error": 334,
+    "full_seat_abs_error": 264,
+    "partial_share_mae": 6.118515976252576
   },
-  "note": "The transfer matrix is trained only on 2010→2015 and 2015→2017. It redistributes local vote according to cross-party exposure, then rakes constituency shares back to the supplied national target. It is used live only when approved=true after unseen 2019 and 2024 gates."
+  "note": "Rake strength is selected only on 2010→2015 and 2015→2017. alpha=0 is no raking; alpha=1 is full raking. Live use requires non-worsening winner accuracy AND seat error on unseen 2019 and 2024."
 }
