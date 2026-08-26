@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.8 — party-specific territorial calibration / hybrid residual model
+modello-uk v0.9.9 — scenario-aware party calibration / hybrid residual model
 
 Purpose
 -------
@@ -79,8 +79,8 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v098-party-calibration.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v098.json"
+BACKTEST_OUT=DATA/"backtest-v099-scenario-aware.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v099.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -152,7 +152,18 @@ DISPERSION_BOUNDS={
 DISPERSION_SIMILARITY_TAU=0.70
 
 
-UA="FocusAmerica-UK-election-model/0.9.8 (+https://angrisanidj.github.io/modello-uk/)"
+# v0.9.9 scenario activation.
+# "Turnover" is total variation in the national party vector between baseline
+# and target.  The correction is deliberately weak in low-change elections and
+# strong only once the system experiences a large reallocation of votes.
+SCENARIO_TURNOVER_LOW=6.0
+SCENARIO_TURNOVER_HIGH=18.0
+SCENARIO_OWN_CHANGE_FULL=8.0
+SCENARIO_CON_DROP_FULL=15.0
+SCENARIO_REF_RISE_FULL=8.0
+
+
+UA="FocusAmerica-UK-election-model/0.9.9 (+https://angrisanidj.github.io/modello-uk/)"
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -653,7 +664,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v098-bes-integrity",
+        "version":"uk-v099-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -1279,6 +1290,74 @@ def _eligible_party_shares(election:dict[str,Any],party:str)->np.ndarray:
     return np.asarray(vals,dtype=float)
 
 
+
+def national_scenario_metrics(
+    base:dict[str,Any],
+    target:dict[str,float]
+)->dict[str,Any]:
+    base_nat=nat_shares(base)
+    deltas={p:float(target.get(p,0.0))-float(base_nat.get(p,0.0)) for p in PARTIES}
+    turnover=.5*sum(abs(v) for v in deltas.values())
+
+    if SCENARIO_TURNOVER_HIGH<=SCENARIO_TURNOVER_LOW:
+        system_activation=1.0
+    else:
+        system_activation=clamp(
+            (turnover-SCENARIO_TURNOVER_LOW)/
+            (SCENARIO_TURNOVER_HIGH-SCENARIO_TURNOVER_LOW),
+            0.0,1.0
+        )
+
+    con_drop=max(0.0,-deltas["con"])
+    ref_rise=max(0.0,deltas["ref"])
+    return {
+        "base_national":base_nat,
+        "target_national":{p:float(target.get(p,0.0)) for p in PARTIES},
+        "deltas":deltas,
+        "turnover":float(turnover),
+        "system_activation":float(system_activation),
+        "con_drop":float(con_drop),
+        "ref_rise":float(ref_rise),
+    }
+
+
+def party_scenario_activation(
+    base:dict[str,Any],
+    target:dict[str,float],
+    party:str,
+    metrics:dict[str,Any]|None=None
+)->float:
+    """How much of the structural calibration should be active in this scenario.
+
+    No election outcome is used: only baseline national shares and the target
+    national vote vector.  Low-turnover elections stay near the raw share model;
+    major realignments allow the territorial/FPTP corrections to engage.
+    """
+    m=metrics or national_scenario_metrics(base,target)
+    system=float(m["system_activation"])
+    own=clamp(
+        abs(float(m["deltas"].get(party,0.0)))/SCENARIO_OWN_CHANGE_FULL,
+        0.0,1.0
+    )
+    activation=0.70*system+0.30*own
+
+    con_collapse=clamp(float(m["con_drop"])/SCENARIO_CON_DROP_FULL,0.0,1.0)
+    ref_surge=clamp(float(m["ref_rise"])/SCENARIO_REF_RISE_FULL,0.0,1.0)
+
+    if party=="ref":
+        # Reform/UKIP geography matters most when it is surging and/or taking
+        # votes in a Conservative-collapse environment.
+        activation=max(activation,ref_surge,0.90*con_collapse)
+    elif party in {"lab","ld"}:
+        # Tactical/efficient anti-Conservative geography should not be applied
+        # with the same force when Conservative support is stable.
+        activation=max(activation,0.85*con_collapse)
+    elif party=="con":
+        activation=max(activation,con_collapse)
+
+    return clamp(float(activation),0.0,1.0)
+
+
 def historical_party_dispersion(
     history:list[dict[str,Any]],
     target:dict[str,float]
@@ -1324,10 +1403,11 @@ def calibrate_party_dispersion(
     target:dict[str,float],
     history:list[dict[str,Any]]
 )->tuple[pd.DataFrame,dict[str,Any]]:
-    """Match each party's spread to its own prior-election concentration."""
+    """Party-specific dispersion, attenuated by the national swing scenario."""
     out=rows.copy().astype(float)
     profile=historical_party_dispersion(history,target)
-    meta={}
+    scenario=national_scenario_metrics(base,target)
+    meta={"_scenario":scenario}
 
     for p in PARTIES:
         indexes=[
@@ -1335,7 +1415,7 @@ def calibrate_party_dispersion(
             if allowed(p,str(row["country"]))
         ]
         if len(indexes)<20:
-            meta[p]={"beta":1.0,"reason":"too_few_seats"}
+            meta[p]={"beta":1.0,"activation":0.0,"reason":"too_few_seats"}
             continue
 
         vals=np.asarray([float(out.at[idx,p]) for idx in indexes],dtype=float)
@@ -1345,10 +1425,14 @@ def calibrate_party_dispersion(
         desired_sd=desired_rel*max(0.35,mean)
         raw_beta=desired_sd/max(0.05,sd)
         lo,hi=DISPERSION_BOUNDS[p]
-        beta=clamp(raw_beta,lo,hi)
+        structural_beta=clamp(raw_beta,lo,hi)
 
         if float(target.get(p,0.0))<0.45:
-            beta=1.0
+            structural_beta=1.0
+
+        activation=party_scenario_activation(base,target,p,scenario)
+        # Interpolate toward "do nothing" in stable elections.
+        beta=1.0+activation*(structural_beta-1.0)
 
         adjusted=np.maximum(mean+beta*(vals-mean),0.0001)
         for idx,v in zip(indexes,adjusted):
@@ -1356,7 +1440,9 @@ def calibrate_party_dispersion(
 
         meta[p]={
             "beta":float(beta),
+            "structural_beta":float(structural_beta),
             "raw_beta":float(raw_beta),
+            "activation":float(activation),
             "current_mean":mean,
             "current_sd":sd,
             "target_relative_sd":desired_rel,
@@ -1386,6 +1472,13 @@ def calibrate_with_party_strengths(
     strengths:dict[str,float]
 )->pd.DataFrame:
     out=rows.copy().astype(float)
+    scenario=national_scenario_metrics(base,target)
+    effective_strengths={
+        p:float(strengths.get(p,0.0))*party_scenario_activation(
+            base,target,p,scenario
+        )
+        for p in PARTIES
+    }
     for idx,row in base["frame"].iterrows():
         parties=competitive_parties(row)
         share_sum=sum(max(.01,float(out.at[idx,p])) for p in parties) or 1.0
@@ -1393,7 +1486,7 @@ def calibrate_with_party_strengths(
 
         factors={}
         for p in parties:
-            strength=float(strengths.get(p,0.0))
+            strength=float(effective_strengths.get(p,0.0))
             if strength<=0:
                 factors[p]=1.0
                 continue
@@ -1488,6 +1581,13 @@ def tune_party_strengths(
             } for x in global_candidates
         ],
         "selected_scale":selected["scale"],
+        "development_scenario":national_scenario_metrics(base,target),
+        "effective_selected_strengths":{
+            p:selected["strengths"].get(p,0.0)*party_scenario_activation(
+                base,target,p,national_scenario_metrics(base,target)
+            )
+            for p in PARTIES
+        },
     },scores
 
 
@@ -1651,8 +1751,8 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v098-party-calibration",
-        "model_type":"constituency-residual-party-calibration-v3",
+        "version":"uk-v099-scenario-aware",
+        "model_type":"constituency-residual-scenario-aware-v4",
         "status":"error",
         "approved":False,
         "publication_ready":False,
@@ -1663,15 +1763,15 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v098-party-calibration-live","approved":False,"status":"error",
+        "version":"uk-v099-scenario-aware-live","approved":False,"status":"error",
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v098-party-calibration-backtest","status":"error","error":str(exc)
+        "version":"uk-v099-scenario-aware-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v098-bes-integrity","status":"failed",
+            "version":"uk-v099-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -1795,8 +1895,8 @@ def main()->int:
         )
 
         model_payload={
-            "version":"uk-v098-party-calibration",
-            "model_type":"constituency-residual-party-calibration-v3",
+            "version":"uk-v099-scenario-aware",
+            "model_type":"constituency-residual-scenario-aware-v4",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -1804,6 +1904,17 @@ def main()->int:
             "selected_spec":selected_spec,
             "selected_party_strengths":selected_party_strengths,
             "party_contest_classifier":PARTY_CONTEST_BASE_SPEC,
+            "scenario_activation":{
+                "turnover_low":SCENARIO_TURNOVER_LOW,
+                "turnover_high":SCENARIO_TURNOVER_HIGH,
+                "own_change_full":SCENARIO_OWN_CHANGE_FULL,
+                "con_drop_full":SCENARIO_CON_DROP_FULL,
+                "ref_rise_full":SCENARIO_REF_RISE_FULL,
+                "development_2017":national_scenario_metrics(e15,t15_17["target"]),
+                "validation_2019":national_scenario_metrics(e17,t17_19["target"]),
+                "benchmark_2024":national_scenario_metrics(e19n,t19n_24["target"]),
+                "live":national_scenario_metrics(e24,target_now),
+            },
             "evaluation_status":{
                 "development_2017":"parameter_selection",
                 "validation_2019":"temporal_validation",
@@ -1859,7 +1970,7 @@ def main()->int:
             "features":{
                 "historical_demographics":[c.replace("demo_","") for c in e19["demo_columns"]],
                 "current_demographics":[c.replace("demo_","") for c in e24["demo_columns"]],
-                "notes":"Stage 1 predicts local vote shares. Stage 2 calibrates each party's geographic dispersion from prior actual elections at similar national support levels. Stage 3 applies a frozen pooled FPTP classifier with party-specific strengths selected on 2017. Final raking preserves national party targets. 2019 is temporal validation; 2024 is explicitly a development benchmark after earlier v0.9.x iteration.",
+                "notes":"Stage 1 predicts local vote shares. Stage 2 calibrates each party's geographic dispersion from prior elections, but the correction is scenario-aware: its activation rises with national vote turnover, own-party movement, Conservative collapse and Reform surge where relevant. Stage 3 applies the frozen FPTP classifier with the same scenario attenuation. Final raking preserves national targets. 2019 is temporal validation; 2024 is a development benchmark.",
             },
             "integrity":{
                 "version":integrity.get("version"),
@@ -1871,15 +1982,15 @@ def main()->int:
                 "current_bes":curr_meta,
             },
             "note":(
-                "2024 was not used to choose model family or hyperparameters. "
-                "The live refit includes 2024 only after the holdout score is frozen."
+                "The v0.9.9 scenario activation uses only baseline and target national shares. "
+                "2019 remains temporal validation; 2024 is retained as a development benchmark, not a pristine holdout."
             )
         }
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v098-party-calibration-live",
-            "model_type":"constituency-residual-party-calibration-v3",
+            "version":"uk-v099-scenario-aware-live",
+            "model_type":"constituency-residual-scenario-aware-v4",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -1888,6 +1999,13 @@ def main()->int:
             "selected_spec":selected_spec,
             "selected_party_strengths":selected_party_strengths,
             "party_contest_classifier":PARTY_CONTEST_BASE_SPEC,
+            "scenario":national_scenario_metrics(e24,target_now),
+            "effective_party_strengths":{
+                p:selected_party_strengths.get(p,0.0)*party_scenario_activation(
+                    e24,target_now,p,national_scenario_metrics(e24,target_now)
+                )
+                for p in PARTIES
+            },
             "development_benchmark_2024_accuracy":holdout["winner_accuracy"],
             "target_gb":target_now,
             "poll_meta":poll_meta,
@@ -1898,7 +2016,7 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v098-party-calibration-backtest",
+            "version":"uk-v099-scenario-aware-backtest",
             "status":"ok",
             "selected_spec":selected_spec,
             "selected_party_strengths":selected_party_strengths,
@@ -1913,8 +2031,11 @@ def main()->int:
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
-        print("v0.9.8 selected share spec:",selected_spec)
-        print("v0.9.8 selected party strengths:",selected_party_strengths)
+        print("v0.9.9 selected share spec:",selected_spec)
+        print("v0.9.9 selected party strengths:",selected_party_strengths)
+        print("2017 scenario:",national_scenario_metrics(e15,t15_17["target"]))
+        print("2019 scenario:",national_scenario_metrics(e17,t17_19["target"]))
+        print("2024 scenario:",national_scenario_metrics(e19n,t19n_24["target"]))
         print(
             "2019 validation:",
             f"baseline {validation_base['winner_accuracy']:.2%}/{validation_base['seat_abs_error_sum']}",
@@ -1936,7 +2057,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.8 shadow build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.9 shadow build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # Shadow failure must not break the existing production model.
         raise SystemExit(0)
