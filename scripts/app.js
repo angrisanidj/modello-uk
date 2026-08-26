@@ -5,7 +5,9 @@ const CONFIG = {
   pollsLocal: 'data/polls.json',
   pollsFallback: 'data/polls-fallback.json',
   constituencyLocal: 'data/constituencies-2024.json',
+  geometryDisplayLocal: 'data/constituencies-map.geojson',
   geometryLocal: 'data/constituencies-2024.geojson',
+  modelParamsLocal: 'data/model-params.json',
   niLocal: 'data/ni-2024.json',
   commonsCandidateCsv: 'https://researchbriefings.files.parliament.uk/documents/CBP-10009/HoC-GE2024-results-by-candidate.csv',
   wikiApi: 'https://en.wikipedia.org/w/api.php?action=parse&page=Opinion_polling_for_the_next_United_Kingdom_general_election&prop=text&format=json&origin=*',
@@ -17,7 +19,7 @@ const CONFIG = {
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v02-20260826-sharefix',
+  cacheVersion: 'uk-v04-20260826-calibrated-map',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
@@ -46,7 +48,8 @@ const OFFLINE = new URLSearchParams(location.search).get('offline') === '1';
 
 const state = {
   polls:[], pollSource:'', average:null, latestAverage:null,
-  constituencies:[], byId:new Map(), geometry:null, ni:null,
+  constituencies:[], constituencyIndex:new Map(), byId:new Map(), geometry:null, ni:null,
+  modelParams:null, mapPaths:new Map(), selectedPath:null,
   central:null, mc:null, selectedSeat:null, mapMode:'central', coalition:new Set(),
 };
 
@@ -179,9 +182,24 @@ async function loadConstituencies(){
   return [];
 }
 async function loadGeometry(){
+  try { const j=await fetchJson(CONFIG.geometryDisplayLocal,5000); if(j?.features?.length>=650)return j; } catch(_){ }
   try { const j=await fetchJson(CONFIG.geometryLocal,8000); if(j?.features?.length>=650)return j; } catch(_){ }
   if(!OFFLINE) try { const j=await fetchJson(CONFIG.onsGeo,18000); if(j?.features?.length>=650)return j; } catch(_){ }
   return null;
+}
+async function loadModelParams(){
+  try{
+    const j=await fetchJson(CONFIG.modelParamsLocal,5000);
+    return j?.approved ? j : null;
+  }catch(_){ return null; }
+}
+function lambdaFor(p){
+  const v=state.modelParams?.lambdas?.[p];
+  return Number.isFinite(v)?v:CONFIG.swingLambda;
+}
+function refMissingPrior(){
+  const v=state.modelParams?.ref_missing_prior;
+  return Number.isFinite(v)?v:0;
 }
 
 function calculateAverage(polls){
@@ -223,9 +241,11 @@ function projectedShares(seat,target){
   for(const p of PARTY_ORDER){
     if(!partyAllowed(p,seat)){raw[p]=0;continue;}
     let base=seat.shares?.[p]||0;
+    const natBase=BASE_GB[p]||.2;
+    if(p==='ref' && base<.18 && refMissingPrior()>0) base=Math.max(base,natBase*refMissingPrior());
     if(['lab','con','ref','ld','green'].includes(p))base=Math.max(base,.18); else base=Math.max(base,.03);
-    const natBase=BASE_GB[p]||.2, ratio=Math.max(.08,target[p]/natBase);
-    raw[p]=base*Math.pow(ratio,CONFIG.swingLambda); sum+=raw[p];
+    const ratio=Math.max(.08,target[p]/natBase);
+    raw[p]=base*Math.pow(ratio,lambdaFor(p)); sum+=raw[p];
   }
   if(sum<=0)return raw; for(const p of PARTY_ORDER)raw[p]=raw[p]/sum*100; return raw;
 }
@@ -244,7 +264,7 @@ function hashString(str){ let h=2166136261>>>0; for(let i=0;i<str.length;i++){h^
 function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
 function logistic(rng){const u=clamp(rng(),1e-7,1-1e-7);return Math.log(u/(1-u))/Math.PI*Math.sqrt(3);}
 function normalApprox(rng){return (rng()+rng()+rng()+rng()+rng()+rng()-3)*Math.SQRT2;}
-function fingerprint(){ const p=state.polls.slice(0,40).map(x=>`${x.date}|${x.pollster}|${x.lab}|${x.con}|${x.ref}|${x.ld}|${x.green}|${x.rb}`).join(';'); return `${CONFIG.cacheVersion}:${hashString(p+'|'+state.constituencies.length)}`; }
+function fingerprint(){ const p=state.polls.slice(0,40).map(x=>`${x.date}|${x.pollster}|${x.lab}|${x.con}|${x.ref}|${x.ld}|${x.green}|${x.rb}`).join(';'); const cal=state.modelParams?.version||'fallback'; return `${CONFIG.cacheVersion}:${hashString(p+'|'+state.constituencies.length+'|'+cal)}`; }
 function mcCacheKey(){return `focusamerica:${fingerprint()}`;}
 function saveMcCache(summary){ try{localStorage.setItem(mcCacheKey(),JSON.stringify(summary));}catch(_){ } }
 function loadMcCache(){ try{const x=JSON.parse(localStorage.getItem(mcCacheKey())||'null');if(x?.sims===CONFIG.mcSims&&x?.medians)return x;}catch(_){ }return null; }
@@ -254,8 +274,11 @@ function prepareSeatModel(){
   const regions=[...new Set(seats.map(s=>s.region||s.country||'Other'))]; const regionIndex=new Map(regions.map((r,i)=>[r,i]));
   const models=seats.map(s=>{
     const candidates=SEAT_MODEL_PARTIES.filter(p=>partyAllowed(p,s)).map(p=>{
-      let base=s.shares?.[p]||0; if(['lab','con','ref','ld','green'].includes(p))base=Math.max(base,.18); else base=Math.max(base,.03);
-      const nat=BASE_GB[p]||.2, lambda=CONFIG.swingLambda;
+      let base=s.shares?.[p]||0;
+      const nat=BASE_GB[p]||.2;
+      if(p==='ref' && base<.18 && refMissingPrior()>0)base=Math.max(base,nat*refMissingPrior());
+      if(['lab','con','ref','ld','green'].includes(p))base=Math.max(base,.18); else base=Math.max(base,.03);
+      const lambda=lambdaFor(p);
       return {p,baseLog:Math.log(base),lambda,nat,central:s.projected[p]||0};
     }).sort((a,b)=>b.central-a.central).slice(0,5);
     return {id:s.id,region:regionIndex.get(s.region||s.country||'Other'),candidates};
@@ -277,7 +300,7 @@ async function runMonteCarlo(force=false){
       const drawn={}; let sum=0;
       for(const p of PARTY_ORDER){const sigma=CONFIG.nationalSigma[p]||.8;drawn[p]=Math.max(.05,target[p]+normalApprox(rng)*sigma);sum+=drawn[p];}
       for(const p of PARTY_ORDER)drawn[p]=drawn[p]/sum*100;
-      const natShift={}; for(const p of PARTY_ORDER)natShift[p]=CONFIG.swingLambda*Math.log(Math.max(.05,drawn[p])/(BASE_GB[p]||.2));
+      const natShift={}; for(const p of PARTY_ORDER)natShift[p]=lambdaFor(p)*Math.log(Math.max(.05,drawn[p])/(BASE_GB[p]||.2));
       const regNoise=Array.from({length:regions.length},()=>Object.fromEntries(PARTY_ORDER.map(p=>[p,logistic(rng)*CONFIG.regionNoise])));
       const counts=new Uint16Array(P);
       for(let si=0;si<nSeats;si++){
@@ -334,28 +357,48 @@ function geometryCode(props){return props.PCON24CD||props.PCON24CDH||props.PCONC
 function geometryName(props){return props.PCON24NM||props.PCONNM||props.NAME||props.name||'';}
 function eachCoord(geom,fn){if(!geom)return;if(geom.type==='Polygon'){for(const ring of geom.coordinates)for(const c of ring)fn(c);}else if(geom.type==='MultiPolygon'){for(const poly of geom.coordinates)for(const ring of poly)for(const c of ring)fn(c);}}
 function pathForGeometry(geom,project){
-  if(!geom)return''; const polyPath=poly=>poly.map(ring=>ring.map((c,i)=>`${i?'L':'M'}${project(c)[0].toFixed(2)},${project(c)[1].toFixed(2)}`).join(' ')+' Z').join(' ');
+  if(!geom)return''; const polyPath=poly=>poly.map(ring=>ring.map((c,i)=>`${i?'L':'M'}${project(c)[0].toFixed(1)},${project(c)[1].toFixed(1)}`).join(' ')+' Z').join(' ');
   return geom.type==='Polygon'?polyPath(geom.coordinates):geom.type==='MultiPolygon'?geom.coordinates.map(polyPath).join(' '):'';
 }
 function renderMap(){
+  const map=$('#ukMap');
   if(!state.geometry?.features?.length){$('#mapEmpty').style.display='grid';$('#mapMeta').textContent='Geometrie non disponibili: esegui la build dati.';return;}
   const features=state.geometry.features; let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
   for(const f of features)eachCoord(f.geometry,c=>{minX=Math.min(minX,c[0]);maxX=Math.max(maxX,c[0]);minY=Math.min(minY,c[1]);maxY=Math.max(maxY,c[1]);});
   const pad=24,W=640,H=760,s=Math.min((W-2*pad)/(maxX-minX),(H-2*pad)/(maxY-minY));const project=c=>[pad+(c[0]-minX)*s,H-pad-(c[1]-minY)*s];
-  $('#ukMap').innerHTML=features.map(f=>{const id=geometryCode(f.properties||{}), name=geometryName(f.properties||{}), seat=state.byId.get(id);const fill=seat?PARTY[seat.centralWinner]?.color:partyColorFrom2024(id);return `<path class="constituency" data-id="${escapeHtml(id)}" d="${pathForGeometry(f.geometry,project)}" fill="${fill||'#414957'}"><title>${escapeHtml(seat?.name||name||id)}</title></path>`;}).join('');
-  $('#mapEmpty').style.display='none'; $('#mapMeta').textContent=`${features.length} geometrie ONS · BGC 20 m`;
-  $$('#ukMap .constituency').forEach(el=>el.addEventListener('click',()=>selectSeat(el.dataset.id)));
+  map.innerHTML=features.map(f=>{
+    const id=geometryCode(f.properties||{}),name=geometryName(f.properties||{}),seat=state.byId.get(id);
+    const fill=seat?PARTY[seat.centralWinner]?.color:partyColorFrom2024(id);
+    const label=seat?.name||name||id;
+    return `<path class="constituency" data-id="${escapeHtml(id)}" data-map-name="${escapeHtml(label)}" d="${pathForGeometry(f.geometry,project)}" fill="${fill||'#414957'}"></path>`;
+  }).join('');
+  state.mapPaths=new Map(Array.from(map.querySelectorAll('path.constituency')).map(el=>[el.dataset.id,el]));
+  $('#mapEmpty').style.display='none';
+  const reduced=state.geometry?.meta?.vertices_after;
+  $('#mapMeta').textContent=reduced?`${features.length} collegi · geometria web ottimizzata`:`${features.length} geometrie ONS · BGC 20 m`;
   applyMapColors();
+  map.dispatchEvent(new CustomEvent('maprendered'));
 }
-function partyColorFrom2024(id){const c=state.constituencies.find(x=>x.id===id);return PARTY[c?.winner2024||'other'].color;}
-function selectSeat(id){state.selectedSeat=id;$$('#ukMap .constituency').forEach(x=>x.classList.toggle('selected',x.dataset.id===id));renderDetail(id);}
+function partyColorFrom2024(id){const c=state.constituencyIndex.get(id);return PARTY[c?.winner2024||'other'].color;}
+function selectSeat(id){
+  state.selectedSeat=id;
+  if(state.selectedPath)state.selectedPath.classList.remove('selected');
+  state.selectedPath=state.mapPaths.get(id)||null;
+  if(state.selectedPath)state.selectedPath.classList.add('selected');
+  renderDetail(id);
+}
 function renderDetail(id){
   const seat=state.byId.get(id)||state.constituencies.find(x=>x.id===id);if(!seat)return;$('#detailName').textContent=seat.name;$('#detailRegion').textContent=[seat.region,seat.country].filter(Boolean).join(' · ');
   const proj=seat.projected||{},prob=state.mc?.seatProb?.[id];const rows=PARTY_ORDER.filter(p=>(proj[p]||0)>.15).sort((a,b)=>(proj[b]||0)-(proj[a]||0)).slice(0,6);
   $('#detailBody').innerHTML=`<div class="detail-stat"><span>Vincitore 2024</span><strong>${escapeHtml(seat.winner2024_name||PARTY[seat.winner2024]?.name||'Altro')}</strong></div><div class="detail-stat"><span>Proiezione centrale</span><strong>${PARTY[seat.centralWinner||seat.winner2024]?.name||'—'}</strong></div><div class="detail-score">${rows.map(p=>`<div><span>${PARTY[p].short}</span><span class="mini-track"><i style="width:${clamp((proj[p]||0)*2,0,100)}%;background:${PARTY[p].color}"></i></span><strong>${prob?pctFmt(prob[p]*100):pctFmt(proj[p]||0)}</strong></div>`).join('')}</div><p class="small-note">${prob?'Valori a destra = probabilità di vittoria Monte Carlo.':'Valori a destra = quota centrale stimata; probabilità disponibili dopo il Monte Carlo.'}</p>`;
 }
 function applyMapColors(){
-  if(!$('#ukMap'))return; for(const el of $$('#ukMap .constituency')){const id=el.dataset.id,seat=state.byId.get(id);if(!seat)continue;if(state.mapMode==='central'||!state.mc?.seatProb?.[id])el.setAttribute('fill',PARTY[seat.centralWinner].color);else{const probs=state.mc.seatProb[id],best=Object.entries(probs).sort((a,b)=>b[1]-a[1])[0];el.setAttribute('fill',mixWithDark(PARTY[best[0]].color,best[1]));}}
+  if(!state.mapPaths?.size)return;
+  for(const [id,el] of state.mapPaths){
+    const seat=state.byId.get(id);if(!seat)continue;
+    if(state.mapMode==='central'||!state.mc?.seatProb?.[id])el.setAttribute('fill',PARTY[seat.centralWinner].color);
+    else{const probs=state.mc.seatProb[id],best=Object.entries(probs).sort((a,b)=>b[1]-a[1])[0];el.setAttribute('fill',mixWithDark(PARTY[best[0]].color,best[1]));}
+  }
   if(state.selectedSeat)renderDetail(state.selectedSeat);
 }
 function mixWithDark(hex,prob){const h=hex.replace('#','');const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);const k=.35+.65*clamp(prob,0,1);return `rgb(${Math.round(r*k)},${Math.round(g*k)},${Math.round(b*k)})`;}
@@ -371,6 +414,10 @@ function updateCoalition(){
 
 function bindUi(){
   $('#refreshBtn').addEventListener('click',()=>init(true));
+  $('#ukMap').addEventListener('click',event=>{
+    const path=event.target instanceof Element?event.target.closest('path.constituency'):null;
+    if(path&&$('#ukMap').contains(path))selectSeat(path.dataset.id);
+  });
   $('#mapCentralBtn').addEventListener('click',()=>{state.mapMode='central';$('#mapCentralBtn').classList.add('active');$('#mapProbBtn').classList.remove('active');applyMapColors();});
   $('#mapProbBtn').addEventListener('click',()=>{state.mapMode='prob';$('#mapProbBtn').classList.add('active');$('#mapCentralBtn').classList.remove('active');applyMapColors();});
   $$('[data-window]').forEach(btn=>btn.addEventListener('click',()=>{ $$('[data-window]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const use=btn.dataset.window==='latest'?state.latestAverage:state.average.values;const old=state.average.values;state.average.values=use;renderPolls();state.average.values=old;}));
@@ -380,9 +427,11 @@ async function init(force=false){
   clearError();setStatus('Caricamento dati…','loading');$('#refreshBtn').disabled=true;
   try{
     if(force){try{localStorage.removeItem(mcCacheKey());}catch(_){ }}
-    const [polls,constituencies,geometry,ni]=await Promise.all([loadPolls(),loadConstituencies(),loadGeometry(),fetchJson(CONFIG.niLocal,5000).catch(()=>null)]);
-    state.polls=polls;state.average=calculateAverage(polls);state.latestAverage=latestPollAverage(polls);state.constituencies=constituencies;state.geometry=geometry;state.ni=ni;renderPolls();renderCoalitionButtons();
-    if(constituencies.length===650){buildCentral();renderCentral();renderMap();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource}`;await runMonteCarlo(force);}else{
+    const [polls,constituencies,geometry,ni,modelParams]=await Promise.all([loadPolls(),loadConstituencies(),loadGeometry(),fetchJson(CONFIG.niLocal,5000).catch(()=>null),loadModelParams()]);
+    state.polls=polls;state.average=calculateAverage(polls);state.latestAverage=latestPollAverage(polls);
+    state.constituencies=constituencies;state.constituencyIndex=new Map(constituencies.map(c=>[c.id,c]));
+    state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;renderPolls();renderCoalitionButtons();
+    if(constituencies.length===650){buildCentral();renderCentral();renderMap();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource} · calibrazione: ${state.modelParams?'storica validata':'fallback prudente'}`;await runMonteCarlo(force);}else{
       setStatus('Sondaggi caricati · manca la baseline territoriale','error');showError('La dashboard nazionale è attiva, ma i 650 risultati di collegio non sono ancora nello snapshot locale e il browser non è riuscito a recuperarli direttamente. Esegui la GitHub Action “Update UK election data”: genererà automaticamente baseline e geometrie.');renderMap();
     }
   }catch(err){console.error(err);setStatus('Errore di caricamento','error');showError(`Errore: ${err.message||err}`);}finally{$('#refreshBtn').disabled=false;}

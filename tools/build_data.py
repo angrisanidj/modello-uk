@@ -5,6 +5,7 @@ Sources:
 - Polls: English Wikipedia via MediaWiki API
 - 2024 constituency results: House of Commons Library candidate CSV
 - Boundaries: ONS ArcGIS FeatureServer, July 2024 BGC (20m generalised)
+- Display map: additionally generates a much lighter simplified GeoJSON
 
 Designed for GitHub Actions. It deliberately keeps data acquisition separate from
 model logic so the client can fall back to the last valid snapshot.
@@ -36,7 +37,7 @@ ONS_GEOJSON = (
     "Westminster_Parliamentary_Constituencies_July_2024_Boundaries_UK_BGC/"
     "FeatureServer/0/query"
 )
-UA = "FocusAmerica-UK-election-model/0.1 (+https://angrisanidj.github.io/)"
+UA = "FocusAmerica-UK-election-model/0.4 (+https://angrisanidj.github.io/)"
 
 PARTY_MAP = {
     "lab": "lab", "labour": "lab", "labour party": "lab", "labour and co-operative party": "lab",
@@ -306,6 +307,151 @@ def fetch_geometry() -> dict[str, Any]:
     return geo
 
 
+
+MAP_SIMPLIFY_TOLERANCE = 0.0025  # degrees; ~sub-pixel at the dashboard map scale
+MAP_COORD_DECIMALS = 5
+
+
+def _sq_seg_dist(p: list[float], a: list[float], b: list[float]) -> float:
+    """Squared 2D distance from p to segment a-b in lon/lat space."""
+    x, y = a[0], a[1]
+    dx, dy = b[0] - x, b[1] - y
+    if dx or dy:
+        t = ((p[0] - x) * dx + (p[1] - y) * dy) / (dx * dx + dy * dy)
+        if t > 1:
+            x, y = b[0], b[1]
+        elif t > 0:
+            x += dx * t
+            y += dy * t
+    dx, dy = p[0] - x, p[1] - y
+    return dx * dx + dy * dy
+
+
+def _simplify_open(points: list[list[float]], tolerance: float) -> list[list[float]]:
+    """Iterative Douglas-Peucker: avoids recursion on long coastline rings."""
+    n = len(points)
+    if n <= 2:
+        return points[:]
+    sq_tol = tolerance * tolerance
+    keep = [False] * n
+    keep[0] = keep[-1] = True
+    stack = [(0, n - 1)]
+    while stack:
+        first, last = stack.pop()
+        max_dist = sq_tol
+        index = -1
+        a, b = points[first], points[last]
+        for i in range(first + 1, last):
+            d = _sq_seg_dist(points[i], a, b)
+            if d > max_dist:
+                index, max_dist = i, d
+        if index >= 0:
+            keep[index] = True
+            if index - first > 1:
+                stack.append((first, index))
+            if last - index > 1:
+                stack.append((index, last))
+    return [p for i, p in enumerate(points) if keep[i]]
+
+
+def _round_point(p: list[float]) -> list[float]:
+    return [round(float(p[0]), MAP_COORD_DECIMALS), round(float(p[1]), MAP_COORD_DECIMALS)]
+
+
+def _simplify_ring(ring: list[list[float]]) -> list[list[float]]:
+    if len(ring) <= 5:
+        return [_round_point(p) for p in ring]
+    closed = ring[0][:2] == ring[-1][:2]
+    core = ring[:-1] if closed else ring[:]
+    if len(core) < 4:
+        return [_round_point(p) for p in ring]
+
+    # Treat a ring as a closed chain by rotating to a stable point far from the
+    # centroid, then simplify the two arcs separately. This avoids the usual
+    # Douglas-Peucker problem where identical first/last points collapse a ring.
+    cx = sum(p[0] for p in core) / len(core)
+    cy = sum(p[1] for p in core) / len(core)
+    anchor = max(range(len(core)), key=lambda i: (core[i][0]-cx)**2 + (core[i][1]-cy)**2)
+    rotated = core[anchor:] + core[:anchor]
+    half = max(2, len(rotated)//2)
+    a = _simplify_open(rotated[:half+1], MAP_SIMPLIFY_TOLERANCE)
+    b = _simplify_open(rotated[half:] + [rotated[0]], MAP_SIMPLIFY_TOLERANCE)
+    simplified = a[:-1] + b[:-1]
+
+    # A polygon ring needs at least three unique vertices + closure.
+    unique = []
+    for p in simplified:
+        if not unique or p[:2] != unique[-1][:2]:
+            unique.append(p)
+    if len(unique) < 3:
+        unique = core
+    rounded = [_round_point(p) for p in unique]
+    if rounded[0] != rounded[-1]:
+        rounded.append(rounded[0][:])
+    return rounded
+
+
+def _vertex_count_geometry(geom: dict[str, Any] | None) -> int:
+    if not geom:
+        return 0
+    if geom.get("type") == "Polygon":
+        return sum(len(r) for r in geom.get("coordinates", []))
+    if geom.get("type") == "MultiPolygon":
+        return sum(len(r) for p in geom.get("coordinates", []) for r in p)
+    return 0
+
+
+def simplify_geometry_for_web(geo: dict[str, Any]) -> tuple[dict[str, Any], dict[str, int]]:
+    """Create a minimal-property, reduced-vertex map file for browser rendering."""
+    before = 0
+    after = 0
+    features = []
+    for feature in geo.get("features", []):
+        geom = feature.get("geometry") or {}
+        before += _vertex_count_geometry(geom)
+        typ = geom.get("type")
+        if typ == "Polygon":
+            coords = [_simplify_ring(r) for r in geom.get("coordinates", [])]
+        elif typ == "MultiPolygon":
+            coords = [[_simplify_ring(r) for r in poly] for poly in geom.get("coordinates", [])]
+        else:
+            coords = geom.get("coordinates", [])
+        new_geom = {"type": typ, "coordinates": coords}
+        after += _vertex_count_geometry(new_geom)
+
+        props = feature.get("properties") or {}
+        code = (
+            props.get("PCON24CD") or props.get("PCON24CDH")
+            or props.get("PCONCD") or props.get("GSS_CODE")
+            or props.get("code") or props.get("id") or ""
+        )
+        name = (
+            props.get("PCON24NM") or props.get("PCONNM")
+            or props.get("NAME") or props.get("name") or ""
+        )
+        features.append({
+            "type": "Feature",
+            "properties": {"PCON24CD": code, "PCON24NM": name},
+            "geometry": new_geom,
+        })
+
+    if len(features) < 650:
+        raise RuntimeError(f"Simplified map has only {len(features)} features")
+    if before and after >= before:
+        raise RuntimeError("Map simplification did not reduce the vertex count")
+
+    return {
+        "type": "FeatureCollection",
+        "features": features,
+        "meta": {
+            "source": "ONS BGC 20m; display-only simplification by build_data.py",
+            "tolerance_degrees": MAP_SIMPLIFY_TOLERANCE,
+            "coordinate_decimals": MAP_COORD_DECIMALS,
+            "vertices_before": before,
+            "vertices_after": after,
+        },
+    }, {"vertices_before": before, "vertices_after": after}
+
 def write_json(path: Path, obj: Any) -> None:
     path.write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"wrote {path.relative_to(ROOT)}")
@@ -342,7 +488,17 @@ def main() -> int:
         geo = fetch_geometry()
         geo["meta"] = {"source": "ONS — Westminster Parliamentary Constituencies (July 2024) BGC", "generated_at": stamp}
         write_json(DATA / "constituencies-2024.geojson", geo)
-        status["features"] = len(geo.get("features", [])); successes += 1
+
+        display_geo, map_stats = simplify_geometry_for_web(geo)
+        display_geo["meta"]["generated_at"] = stamp
+        write_json(DATA / "constituencies-map.geojson", display_geo)
+
+        status["features"] = len(geo.get("features", []))
+        status["map_features"] = len(display_geo.get("features", []))
+        status.update(map_stats)
+        status["map_display_bytes"] = (DATA / "constituencies-map.geojson").stat().st_size
+        status["map_full_bytes"] = (DATA / "constituencies-2024.geojson").stat().st_size
+        successes += 1
     except Exception as exc:
         status["geometry_error"] = str(exc)
         print(f"warning: geometry not refreshed: {exc}", file=sys.stderr)
