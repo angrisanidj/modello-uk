@@ -47,10 +47,10 @@ jobs:
       - name: Calibrate legacy partial-raking benchmark
         run: python tools/build_backtest.py
 
-      - name: Build v0.9.10 incumbent-routing shadow model
+      - name: Build v0.9.11 Reform error diagnostics (shadow only)
         run: python tools/build_mrp_lite.py
 
-      - name: Validate BES integrity and v0.9.10 incumbent-routing gates
+      - name: Validate BES integrity and v0.9.11 diagnostic safeguards
         run: |
           python - <<'PY'
           import json
@@ -68,10 +68,11 @@ jobs:
           params=load("data/model-params.json")
           ni=load("data/ni-2024.json")
 
-          integrity=load("data/bes-integrity-v0910.json")
+          integrity=load("data/bes-integrity-v0911.json")
           mrp=load("data/mrp-lite-model.json")
           live=load("data/mrp-lite-live.json")
-          backtest=load("data/backtest-v0910-incumbent-routing.json")
+          backtest=load("data/backtest-v0911-reform-diagnostics.json")
+          diagnostic=load("data/reform-diagnostics-v0911.json")
 
           n_polls=len(polls.get("polls",[]))
           n_const=len(constituencies.get("constituencies",[]))
@@ -115,7 +116,7 @@ jobs:
               raise SystemExit(f"ERROR: NI winner check failed: {dict(ni_winners)}")
 
           # Unlike v0.9, parser integrity is a HARD deployment gate.
-          if integrity.get("version")!="uk-v0910-bes-integrity":
+          if integrity.get("version")!="uk-v0911-bes-integrity":
               raise SystemExit("ERROR: unexpected BES integrity version")
           if integrity.get("status")!="passed":
               raise SystemExit("ERROR: BES integrity failed: "+str(integrity.get("errors")))
@@ -125,22 +126,44 @@ jobs:
               if check.get("ni_filtered_before_party_parsing") is not True:
                   raise SystemExit(f"ERROR: {check.get('label')} parsed parties before filtering NI")
 
-          if mrp.get("version")!="uk-v0910-incumbent-routing":
-              raise SystemExit(f"ERROR: unexpected v0.9.10 model version {mrp.get('version')}")
-          if live.get("version")!="uk-v0910-incumbent-routing-live":
-              raise SystemExit(f"ERROR: unexpected v0.9.10 live version {live.get('version')}")
-          if backtest.get("version")!="uk-v0910-incumbent-routing-backtest":
+          if mrp.get("version")!="uk-v0911-reform-diagnostics":
+              raise SystemExit(f"ERROR: unexpected v0.9.11 model version {mrp.get('version')}")
+          if live.get("version")!="uk-v0911-reform-diagnostics-live":
+              raise SystemExit(f"ERROR: unexpected v0.9.11 live version {live.get('version')}")
+          if backtest.get("version")!="uk-v0911-reform-diagnostics-backtest":
               raise SystemExit(
-                  f"ERROR: unexpected v0.9.10 backtest version {backtest.get('version')}"
+                  f"ERROR: unexpected v0.9.11 backtest version {backtest.get('version')}"
               )
+          if diagnostic.get("version")!="uk-v0911-reform-diagnostics":
+              raise SystemExit(f"ERROR: unexpected Reform diagnostic version {diagnostic.get('version')}")
 
-          print(f"v0.9.10 status: {mrp.get('status')}")
-          print(f"v0.9.10 approved: {mrp.get('approved')}")
-          print(f"v0.9.10 publication_ready: {mrp.get('publication_ready')}")
+          print(f"v0.9.11 status: {mrp.get('status')}")
+          print(f"v0.9.11 diagnostic-only: {mrp.get('diagnostic_only')}")
+          print(f"Underlying candidate gate passed: {mrp.get('candidate_gate_passed')}")
+          print(f"v0.9.11 approved: {mrp.get('approved')}")
+          print(f"v0.9.11 publication_ready: {mrp.get('publication_ready')}")
 
           if mrp.get("status")=="ok":
               if mrp.get("model_type")!="constituency-residual-incumbent-routing-v5":
-                  raise SystemExit(f"ERROR: unexpected v0.9.10 model type {mrp.get('model_type')}")
+                  raise SystemExit(f"ERROR: unexpected preserved v0.9.10 model type {mrp.get('model_type')}")
+              if mrp.get("diagnostic_only") is not True or live.get("diagnostic_only") is not True:
+                  raise SystemExit("ERROR: v0.9.11 must remain diagnostic-only")
+              if mrp.get("used_for_parameter_selection") is not False:
+                  raise SystemExit("ERROR: 2024 diagnostics marked as parameter selection")
+              if mrp.get("changes_production_model") is not False:
+                  raise SystemExit("ERROR: diagnostic build claims to change production")
+              if mrp.get("approved") is not False or live.get("approved") is not False:
+                  raise SystemExit("ERROR: diagnostic-only v0.9.11 cannot activate live")
+              if diagnostic.get("status")!="ok":
+                  raise SystemExit(f"ERROR: Reform diagnostic failed: {diagnostic.get('error')}")
+              if diagnostic.get("diagnostic_only") is not True:
+                  raise SystemExit("ERROR: Reform report is not marked diagnostic-only")
+              if diagnostic.get("used_for_parameter_selection") is not False:
+                  raise SystemExit("ERROR: Reform report may not select parameters")
+              if diagnostic.get("changes_production_model") is not False:
+                  raise SystemExit("ERROR: Reform report may not change the live model")
+              if diagnostic.get("parameter_updates") not in ({},None):
+                  raise SystemExit("ERROR: diagnostic report contains parameter updates")
               strengths=mrp.get("selected_party_strengths")
               if not isinstance(strengths,dict):
                   raise SystemExit("ERROR: missing party-specific FPTP strengths")
@@ -178,23 +201,32 @@ jobs:
                   raise SystemExit("ERROR: missing selected incumbent-routing parameters")
               if "route_strength" not in routing or "unwind_strength" not in routing:
                   raise SystemExit(f"ERROR: incomplete incumbent routing {routing}")
+              if abs(float(routing["route_strength"]))>1e-12 or abs(float(routing["unwind_strength"]))>1e-12:
+                  raise SystemExit(f"ERROR: v0.9.11 no longer preserves the rejected zero-strength routing {routing}")
               print("Selected incumbent routing:",routing)
               if val.get("gb_seats")!=632 or hold.get("gb_seats")!=632:
-                  raise SystemExit("ERROR: v0.9.10 did not evaluate 632 GB seats")
+                  raise SystemExit("ERROR: v0.9.11 did not evaluate 632 GB seats")
               if val.get("winner_source")!="official_BES_WinnerXX" or hold.get("winner_source")!="official_BES_WinnerXX":
-                  raise SystemExit("ERROR: v0.9.10 evaluation is not using official BES WinnerXX")
+                  raise SystemExit("ERROR: v0.9.11 evaluation is not using official BES WinnerXX")
               if hold.get("other_prediction_rule")!="eligible_only_if_baseline_winner_or_runner_up":
                   raise SystemExit("ERROR: pooled Other is still being treated as a universal seat candidate")
-              if mrp.get("approved"):
-                  if float(hold.get("winner_accuracy",0))<.80:
-                      raise SystemExit("ERROR: approved v0.9.10 below 80% holdout accuracy")
-                  if len(live.get("seats",[]))!=632:
-                      raise SystemExit("ERROR: approved v0.9.10 live file does not contain 632 GB seats")
-              else:
-                  print("v0.9.10 failed the model gate: production remains on fallback. This is VALID.")
+              confusion=diagnostic.get("binary_confusion",{})
+              counts=diagnostic.get("counts",{})
+              if confusion.get("total")!=632:
+                  raise SystemExit(f"ERROR: Reform diagnostic covers {confusion.get('total')} seats")
+              if sum(int(confusion.get(k,0)) for k in ("true_positive","false_positive","false_negative","true_negative"))!=632:
+                  raise SystemExit("ERROR: invalid Reform confusion matrix")
+              if counts.get("predicted_reform_wins")!=hold.get("predicted_seats",{}).get("ref"):
+                  raise SystemExit("ERROR: Reform predicted-seat count does not match backtest")
+              if counts.get("actual_reform_wins")!=hold.get("actual_seats",{}).get("ref"):
+                  raise SystemExit("ERROR: Reform actual-seat count does not match BES")
+              if len(diagnostic.get("false_positive_seats",[]))!=confusion.get("false_positive"):
+                  raise SystemExit("ERROR: false-positive seat list does not match confusion matrix")
+              print("Reform diagnostic counts:",counts)
+              print("v0.9.11 is diagnostic-only: production remains on fallback. This is REQUIRED.")
           else:
               # Integrity passed, so an ML-only shadow failure may safely fall back.
-              print("WARNING: v0.9.10 ML shadow build unavailable:",mrp.get("error"))
+              print("WARNING: v0.9.11 diagnostic build unavailable:",mrp.get("error"))
               print("Production remains on fallback.")
 
           print("Dataset/model validation passed.")
@@ -208,7 +240,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data and v0.9.10 incumbent routing"
+            git commit -m "chore: update UK data and v0.9.11 Reform diagnostics"
             git push
           fi
 
