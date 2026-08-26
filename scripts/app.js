@@ -23,7 +23,7 @@ const CONFIG = {
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v05-20260826-hierarchical',
+  cacheVersion: 'uk-v06-20260826-transfer',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
@@ -175,6 +175,7 @@ function constituenciesFromCandidateCsv(text){
       delete c.reportedShare;
       x.shares[c.party]=(x.shares[c.party]||0)+c.share;
     }
+    x.valid_votes=totalVotes;
     const shareTotal=Object.values(x.shares).reduce((a,b)=>a+b,0);
     if(Math.abs(shareTotal-100)>.5)throw new Error(`Quote voto non sommano a 100 per ${x.name}`);
     x.candidates.sort((a,b)=>b.votes-a.votes);
@@ -354,6 +355,137 @@ function buildGeographicTargets(gbTarget){
   };
 }
 
+
+function transferModelActive(){
+  return state.modelParams?.model_type==='transfer-raked-v1'
+    && state.modelParams?.approved===true
+    && state.modelParams?.transfer_coefficients;
+}
+function transferCountryForSeat(seat){
+  if(/scotland/i.test(seat.country||''))return 'Scotland';
+  if(/wales/i.test(seat.country||''))return 'Wales';
+  return 'England';
+}
+function modelTargetWithoutRB(values,zone){
+  const out={};let total=0;
+  for(const p of SEAT_MODEL_PARTIES){
+    if(!allowedInZone(p,zone)){out[p]=0;continue;}
+    const v=Math.max(.0001,Number(values?.[p])||0);
+    out[p]=v;total+=v;
+  }
+  if(total<=0)return out;
+  for(const p of SEAT_MODEL_PARTIES)out[p]=(out[p]||0)/total*100;
+  return out;
+}
+function normalizeSeatRow(raw,seat){
+  const out={};let total=0;
+  for(const p of SEAT_MODEL_PARTIES){
+    if(!partyAllowed(p,seat)){out[p]=0;continue;}
+    const v=Math.max(.0001,Number(raw?.[p])||0);
+    out[p]=v;total+=v;
+  }
+  for(const p of PARTY_ORDER){
+    if(p==='rb'){out[p]=0;continue;}
+    if(out[p]==null)out[p]=0;
+  }
+  if(total<=0){out.other=100;return out;}
+  for(const p of SEAT_MODEL_PARTIES)out[p]=(out[p]||0)/total*100;
+  return out;
+}
+function weightedTargetFromRows(items){
+  const totals=Object.fromEntries(SEAT_MODEL_PARTIES.map(p=>[p,0]));
+  let den=0;
+  for(const item of items){
+    const w=Math.max(1,Number(item.seat.valid_votes)||1);den+=w;
+    for(const p of SEAT_MODEL_PARTIES)totals[p]+=w*(item.shares[p]||0)/100;
+  }
+  if(den<=0)return totals;
+  for(const p of SEAT_MODEL_PARTIES)totals[p]=totals[p]/den*100;
+  return totals;
+}
+function rakeTransferRows(items,target,iterations=28){
+  for(let iter=0;iter<iterations;iter++){
+    const current=weightedTargetFromRows(items);
+    let maxErr=0;const mult={};
+    for(const p of SEAT_MODEL_PARTIES){
+      const desired=Number(target[p])||0;
+      maxErr=Math.max(maxErr,Math.abs((current[p]||0)-desired));
+      mult[p]=clamp(desired/Math.max(.01,current[p]||0),.45,2.20);
+    }
+    if(maxErr<.02)break;
+    for(const item of items){
+      const raw={};
+      for(const p of SEAT_MODEL_PARTIES)raw[p]=partyAllowed(p,item.seat)?(item.shares[p]||0)*mult[p]:0;
+      item.shares=normalizeSeatRow(raw,item.seat);
+    }
+  }
+  return items;
+}
+function transferFeatureVector(seat,baseNat,targetNat){
+  const sources=state.modelParams?.transfer_feature_parties||['lab','con','ref','ld','green','snp','pc'];
+  return sources.map(p=>{
+    const nationalMove=((targetNat[p]||0)-(baseNat[p]||0))/10;
+    const localExposure=((seat.shares?.[p]||0)-(baseNat[p]||0))/20;
+    return nationalMove*localExposure;
+  });
+}
+function transferProjectGroup(seats,targetRaw,baseRaw){
+  if(!seats.length)return [];
+  const zone=transferCountryForSeat(seats[0]);
+  const target=modelTargetWithoutRB(targetRaw,zone);
+  const base=modelTargetWithoutRB(baseRaw,zone);
+  const items=seats.map(seat=>{
+    const raw={};
+    for(const p of SEAT_MODEL_PARTIES){
+      if(!partyAllowed(p,seat)){raw[p]=0;continue;}
+      let b=seat.shares?.[p]||0;
+      const floor=['lab','con','ref','ld','green'].includes(p)?.18:.03;
+      b=Math.max(b,floor);
+      raw[p]=b*Math.pow(Math.max(.08,(target[p]||.01)/Math.max(.01,base[p]||.01)),CONFIG.swingLambda);
+    }
+    return {seat,shares:normalizeSeatRow(raw,seat)};
+  });
+  rakeTransferRows(items,target,Number(state.modelParams?.rake_iterations)||36);
+
+  const coeff=state.modelParams?.transfer_coefficients||{};
+  const sources=state.modelParams?.transfer_feature_parties||['lab','con','ref','ld','green','snp','pc'];
+  for(const item of items){
+    const features=transferFeatureVector(item.seat,base,target);
+    const raw={...item.shares};
+    for(const p of SEAT_MODEL_PARTIES){
+      if(!partyAllowed(p,item.seat)){raw[p]=0;continue;}
+      let correction=0;
+      const row=coeff[p]||{};
+      for(let i=0;i<sources.length;i++)correction+=(Number(row[sources[i]])||0)*(features[i]||0);
+      raw[p]=Math.max(.0001,(raw[p]||0)+correction);
+    }
+    item.shares=normalizeSeatRow(raw,item.seat);
+  }
+  return rakeTransferRows(items,target,Number(state.modelParams?.rake_iterations)||36);
+}
+function buildTransferCentral(target,geo){
+  const gbSeats=state.constituencies.filter(c=>!/northern ireland/i.test(c.country||''));
+  const groups=new Map([['England',[]],['Scotland',[]],['Wales',[]]]);
+  for(const c of gbSeats)groups.get(transferCountryForSeat(c)).push(c);
+
+  const seats=[];const totals=Object.fromEntries(PARTY_ORDER.map(p=>[p,0]));
+  for(const country of ['England','Scotland','Wales']){
+    const group=groups.get(country)||[];
+    const zoneTarget=geo.targets[country]||target;
+    const zoneBase=geo.baselines[country]||BASE_GB;
+    for(const item of transferProjectGroup(group,zoneTarget,zoneBase)){
+      const shares=item.shares;
+      const winner=SEAT_MODEL_PARTIES
+        .filter(p=>partyAllowed(p,item.seat))
+        .reduce((best,p)=>shares[p]>(shares[best]??-1)?p:best,'other');
+      totals[winner]++;
+      seats.push({...item.seat,projected:shares,centralWinner:winner,modelZone:item.seat.region||country});
+    }
+  }
+  totals.other+=CONFIG.niSeats;
+  return {target,geographic:geo,seats,totals};
+}
+
 function renderPolls(){
   const a=state.average.values; const ordered=PARTY_ORDER.map(p=>[p,a[p]]).sort((x,y)=>y[1]-x[1]);
   $('#voteBars').innerHTML=ordered.map(([p,v])=>`<div class="vote-row"><div class="party-label"><i class="party-dot" style="background:${PARTY[p].color}"></i>${PARTY[p].short}</div><div class="bar-track"><div class="bar-fill" style="background:${PARTY[p].color};width:${clamp(v/35*100,0,100)}%"></div></div><div class="vote-val">${pctFmt(v)}</div></div>`).join('');
@@ -386,21 +518,27 @@ function projectedShares(seat,target,geoBase){
   if(sum<=0)return raw; for(const p of PARTY_ORDER)raw[p]=raw[p]/sum*100; return raw;
 }
 function buildCentral(){
-  const target=normalizeTargets(state.average.values),geo=buildGeographicTargets(target),seats=[];
-  const totals=Object.fromEntries(PARTY_ORDER.map(p=>[p,0]));
-  for(const c of state.constituencies){
-    if(/northern ireland/i.test(c.country))continue;
-    const zone=zoneForSeat(c);
-    const zoneTarget=geo.targets[zone]||geo.targets.England||target;
-    const zoneBase=geo.baselines[zone]||geo.baselines.England||BASE_GB;
-    const shares=projectedShares(c,zoneTarget,zoneBase);
-    const winner=SEAT_MODEL_PARTIES.reduce((best,p)=>shares[p]>(shares[best]??-1)?p:best,SEAT_MODEL_PARTIES[0]);
-    totals[winner]++;
-    seats.push({...c,projected:shares,centralWinner:winner,modelZone:zone});
+  const target=normalizeTargets(state.average.values),geo=buildGeographicTargets(target);
+  let central;
+  if(transferModelActive()){
+    central=buildTransferCentral(target,geo);
+  }else{
+    const seats=[];const totals=Object.fromEntries(PARTY_ORDER.map(p=>[p,0]));
+    for(const c of state.constituencies){
+      if(/northern ireland/i.test(c.country))continue;
+      const zone=zoneForSeat(c);
+      const zoneTarget=geo.targets[zone]||geo.targets.England||target;
+      const zoneBase=geo.baselines[zone]||geo.baselines.England||BASE_GB;
+      const shares=projectedShares(c,zoneTarget,zoneBase);
+      const winner=SEAT_MODEL_PARTIES.reduce((best,p)=>shares[p]>(shares[best]??-1)?p:best,SEAT_MODEL_PARTIES[0]);
+      totals[winner]++;
+      seats.push({...c,projected:shares,centralWinner:winner,modelZone:zone});
+    }
+    totals.other+=CONFIG.niSeats;
+    central={target,geographic:geo,seats,totals};
   }
-  totals.other+=CONFIG.niSeats;
   state.geographicTargets=geo;
-  state.central={target,geographic:geo,seats,totals}; state.byId=new Map(seats.map(s=>[s.id,s]));
+  state.central=central;state.byId=new Map(central.seats.map(s=>[s.id,s]));
   return state.central;
 }
 
@@ -422,6 +560,10 @@ function prepareSeatModel(){
     const zoneTarget=geo.targets[zone]||target;
     const zoneBase=geo.baselines[zone]||BASE_GB;
     const candidates=SEAT_MODEL_PARTIES.filter(p=>partyAllowed(p,s)).map(p=>{
+      if(transferModelActive()){
+        const central=Math.max(.03,s.projected?.[p]||.03);
+        return {p,baseLog:Math.log(central),centralShift:0,central};
+      }
       let base=s.shares?.[p]||0;
       const nat=Math.max(.05,Number(zoneBase[p])||Number(BASE_GB[p])||.2);
       if(p==='ref' && base<.18 && refMissingPrior()>0)base=Math.max(base,nat*refMissingPrior());
@@ -448,7 +590,7 @@ async function runMonteCarlo(force=false){
       const drawn={}; let sum=0;
       for(const p of PARTY_ORDER){const sigma=CONFIG.nationalSigma[p]||.8;drawn[p]=Math.max(.05,target[p]+normalApprox(rng)*sigma);sum+=drawn[p];}
       for(const p of PARTY_ORDER)drawn[p]=drawn[p]/sum*100;
-      const natShift={}; for(const p of PARTY_ORDER)natShift[p]=lambdaFor(p)*Math.log(Math.max(.05,drawn[p])/Math.max(.05,target[p]||.05));
+      const natShift={}; for(const p of PARTY_ORDER){const elastic=transferModelActive()?CONFIG.swingLambda:lambdaFor(p);natShift[p]=elastic*Math.log(Math.max(.05,drawn[p])/Math.max(.05,target[p]||.05));}
       const regNoise=Array.from({length:regions.length},()=>Object.fromEntries(PARTY_ORDER.map(p=>[p,logistic(rng)*CONFIG.regionNoise])));
       const counts=new Uint16Array(P);
       for(let si=0;si<nSeats;si++){
@@ -476,7 +618,7 @@ async function runMonteCarlo(force=false){
 function quantileSorted(arr,q){const i=Math.floor((arr.length-1)*q);return arr[i];}
 
 function renderCentral(){
-  const totals=state.central.totals; $('#projectionTitle').textContent='Proiezione centrale'; const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales; const sub=[sm?.polls?`Scozia: ${sm.polls} poll`:null,wm?.polls?`Galles: ${wm.polls} poll`:null].filter(Boolean).join(' · '); $('#projectionSubtitle').textContent=`Modello gerarchico 2024 → oggi: GB → nazioni → regioni → collegi${sub?` · ${sub}`:''}.`;
+  const totals=state.central.totals; $('#projectionTitle').textContent='Proiezione centrale'; const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales; const sub=[sm?.polls?`Scozia: ${sm.polls} poll`:null,wm?.polls?`Galles: ${wm.polls} poll`:null].filter(Boolean).join(' · '); $('#projectionSubtitle').textContent=`${transferModelActive()?'Modello trasferimenti 2024 → oggi: target nazionale → competizione locale → collegi':'Fallback prudente 2024 → oggi: swing regolarizzato'}${sub?` · ${sub}`:''}.`;
   renderSeats(totals,null); $('#kpiLargest').textContent=PARTY[Object.entries(totals).sort((a,b)=>b[1]-a[1])[0][0]].short; $('#kpiLargestMeta').textContent='proiezione centrale';
 }
 function renderMc(){
