@@ -1,22 +1,29 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.18 — Liberal Democrat target-seat concentration sweep (shadow research)
+modello-uk v0.9.19 — Liberal Democrat local-footprint validation (shadow research)
 
-Freezes the best pre-2024-selected local-election signal found so far: the v0.9.15
-reference configuration local_strength=0.25, byelection_strength=0.  That configuration
-must reproduce 585/632 with seat error 42 on the 2019 validation election and 501/632
-with seat error 166 on the 2024 development benchmark.
+This release does not promote or alter the live/canonical model. It starts from the
+frozen v0.9.15 local-election reference (585/632, seat error 42 in 2019; 501/632,
+seat error 166 in the 2024 development benchmark) and asks whether the v0.9.18
+Liberal Democrat target-seat effect can be justified without selecting parameters on 2024.
 
-v0.9.18 keeps the production/canonical candidate frozen and starts from the pre-2024-selected
-v0.9.15 local-election reference.  It tests whether Liberal Democrat support is too diffuse
-across constituencies by concentrating a fixed national LD vote target into historically and
-pre-election-identifiable target seats.  The target score uses only prior LD position/share,
-pre-election model competitiveness and local-election strength; it contains no region hard-code.
+The new hypothesis is independently motivated by the Liberal Democrats' own 2019
+election review, which states that high local-government representation was a fundamental
+pre-qualification for target-seat status but was ignored in 2019. v0.9.19 therefore adds
+a hard pre-election local-footprint gate to the LD concentration rule.
 
-Strength and score-floor are selected on the 2019 temporal validation election only.  The 2024
-benchmark is score-only and cannot select parameters or promote the model.  Because the hypothesis
-was nominated from the v0.9.17 audit of 2024 errors, v0.9.18 remains shadow research even if the
-numerical gate is passed.
+Parameter selection uses historical evidence only:
+- 2017: an honest deterministic proportional-swing reference from the 2015 election,
+  combined with local-election results available before 8 June 2017. The project's
+  canonical 2017 fitted candidate is deliberately NOT used because 2017 selected earlier
+  model/calibration parameters.
+- 2019: the frozen pre-2024-selected v0.9.15 reference and local-election data available
+  before 12 December 2019.
+- 2024: score-only benchmark after the 2017+2019 selection is locked.
+
+No region label or realised 2024 outcome enters the target score or local-footprint gate.
+Even a numerical success remains shadow research because the LD-target hypothesis was
+originally nominated from the v0.9.17 audit of 2024 errors.
 """
 from __future__ import annotations
 
@@ -47,10 +54,10 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v0918-ld-target.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v0918.json"
-DIAGNOSTIC_OUT=DATA/"ld-target-sweep-v0918.json"
-SWEEP_OUT=DATA/"v0915-reference-v0918.json"
+BACKTEST_OUT=DATA/"backtest-v0919-ld-footprint-validation.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v0919.json"
+DIAGNOSTIC_OUT=DATA/"ld-footprint-validation-v0919.json"
+SWEEP_OUT=DATA/"v0915-reference-v0919.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -78,6 +85,7 @@ PLACE_MAX_SEAT_SHIFT=6.0
 # Local-election source constants reused to reproduce the frozen v0.9.15 reference.
 # v0.9.18 performs no strength sweep and keeps by-election strength at zero.
 DC_EXPORT_URL="https://candidates.democracyclub.org.uk/data/export_csv/"
+LOCAL_DATES_2017=("2016-05-05","2017-05-04")
 LOCAL_DATES_2019=("2017-05-04","2018-05-03","2019-05-02")
 LOCAL_DATES_2024=("2019-05-02","2021-05-06","2022-05-05","2023-05-04","2024-05-02")
 LOCAL_STRENGTH_GRID=(0.0,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.50)
@@ -94,6 +102,15 @@ V0915_REFERENCE={"local_strength":0.25,"confidence_floor":0.0,"margin_cap":None}
 LD_TARGET_STRENGTH_GRID=(0.0,0.10,0.15,0.20,0.25,0.30,0.40,0.50,0.65,0.80)
 LD_TARGET_SCORE_FLOOR_GRID=(0.35,0.50,0.65)
 LD_TARGET_MAX_SHIFT=8.0
+# v0.9.19 historical validation of the LD targeting hypothesis. Candidate settings
+# are selected ONLY from 2017 + 2019. The 2024 benchmark is never used to choose
+# strength or gates. A hard local-government footprint gate operationalises the
+# Liberal Democrats' own 2019 election review: strong local representation should
+# pre-qualify a target rather than broad national target lists.
+LD_HIST_STRENGTH_GRID=(0.0,0.20,0.40,0.60,0.80)
+LD_HIST_SCORE_FLOOR_GRID=(0.50,0.65)
+LD_HIST_LOCAL_ADV_FLOOR_GRID=(-1.5,0.0,2.0,4.0)
+LD_HIST_LOCAL_CONF_FLOOR_GRID=(0.0,0.35,0.55)
 ONS_LOOKUPS={
     "2019":{
         # Prefer ONS/Open Geography public Hub CSV downloads.  The underlying
@@ -215,7 +232,7 @@ REF_LATENT_MIN_TRAIN=450
 REF_CALIBRATION_RIDGE_ALPHA=10.0
 
 
-UA="FocusAmerica-UK-election-model/0.9.18 (+https://angrisanidj.github.io/modello-uk/)"
+UA="FocusAmerica-UK-election-model/0.9.19 (+https://angrisanidj.github.io/modello-uk/)"
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -766,7 +783,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v0918-bes-integrity",
+        "version":"uk-v0919-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -1224,7 +1241,7 @@ def evaluate_ref_structural_sweep(
         reverse=True,
     )
     return {
-        "version":"uk-v0918-ld-target-sweep",
+        "version":"uk-v0919-ld-footprint-validation",
         "status":"ok",
         "generated_at":utcnow().isoformat(),
         "diagnostic_only":True,
@@ -2523,13 +2540,13 @@ def build_reform_diagnostics(
         raise RuntimeError("Reform diagnostic does not cover all 632 GB seats")
 
     return {
-        "version":"uk-v0918-ld-target-sweep",
+        "version":"uk-v0919-ld-footprint-validation",
         "status":"ok",
         "generated_at":utcnow().isoformat(),
         "diagnostic_only":True,
         "used_for_parameter_selection":False,
         "changes_production_model":False,
-        "source_model":"uk-v0918-ld-target-sweep",
+        "source_model":"uk-v0919-ld-footprint-validation",
         "benchmark":"2019_notional_to_2024",
         "benchmark_role":"development_diagnostic_not_pristine_holdout",
         "interpretation_warning":(
@@ -2931,7 +2948,7 @@ def build_error_structure(rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,A
             })
     pair_rows=[{"predicted":a,"actual":b,"count":int(n)} for (a,b),n in pairs.most_common()]
     return {
-        "version":"uk-v0918-ld-target-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
         "canonical_candidate":"frozen_v0910_equivalent","total_seats":len(actual["frame"]),"wrong_seats":len(wrong),
         "correct_seats":len(actual["frame"])-len(wrong),"confusion_pairs":pair_rows,
         "regions":{r:{**v,"accuracy":1.0-v["wrong"]/v["n"] if v["n"] else None} for r,v in sorted(regions.items())},
@@ -3061,7 +3078,7 @@ def build_remaining_error_audit(
 
     local_available=sum(1 for r in wrong if r["local_profile"]["available"])
     return {
-        "version":"uk-v0918-ld-target-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
         "diagnostic_only":True,"shadow_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"changes_candidate_model":False,
         "source_candidate":"v0.9.15 reference local_strength=0.25 byelection_strength=0",
@@ -3121,7 +3138,7 @@ def evaluate_v0915_reference(
     if m24["correct_winners"]!=501 or m24["seat_abs_error_sum"]!=166:
         raise RuntimeError(f"v0.9.15 reference 2024 regression failed: {m24}")
     report={
-        "version":"uk-v0918-ld-target-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
         "diagnostic_only":True,"shadow_only":True,"uses_2024_for_parameter_selection":False,
         "parameter_selection_election":"2019","reference_parameters":dict(V0915_REFERENCE),
         "method":"frozen v0.9.15 local-authority advantage; local_strength=0.25, confidence_floor=0, no margin cap, by-election strength=0",
@@ -3195,7 +3212,7 @@ def evaluate_local_strength_sweep(
     baseline19=evaluate_rows(val_rows,e19,e17);baseline24=evaluate_rows(hold_rows,e24,e19n)
     selected_gate=bool(selected_2024["correct_winners"]>=506 and selected_2024["seat_abs_error_sum"]<=176)
     return {
-        "version":"uk-v0918-ld-target-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
         "shadow_only":True,"uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
         "selection_policy":"grid fixed in source; rank by 2019 correct winners, then seat error, then share MAE; 2024 labels never select strengths",
         "methods":{
@@ -3253,7 +3270,7 @@ def _place_key(v:Any)->str:
 
 
 def _dc_csv(params:list[tuple[str,str]],label:str)->pd.DataFrame:
-    headers={"User-Agent":"modello-uk/0.9.18 research; public election data"}
+    headers={"User-Agent":"modello-uk/0.9.19 research; public election data"}
     r=requests.get(DC_EXPORT_URL,params=params,headers=headers,timeout=120)
     r.raise_for_status()
     text=r.text
@@ -3341,7 +3358,7 @@ def aggregate_local_profiles(raw:pd.DataFrame)->tuple[dict[str,dict[str,Any]],di
 def fetch_ons_ward_lookup(year:str)->tuple[list[dict[str,str]],dict[str,Any]]:
     spec=ONS_LOOKUPS[year]
     headers={
-        "User-Agent":"modello-uk/0.9.18 research",
+        "User-Agent":"modello-uk/0.9.19 research",
         "Accept":"text/csv,application/octet-stream,application/json;q=0.8,*/*;q=0.5",
     }
     failures=[]
@@ -3571,7 +3588,7 @@ def evaluate_local_strength_sweep(val_rows:pd.DataFrame,hold_rows:pd.DataFrame,e
     baseline19=evaluate_rows(val_rows,e19,e17);baseline24=evaluate_rows(hold_rows,e24,e19n)
     gate=bool(selected24["correct_winners"]>=506 and selected24["seat_abs_error_sum"]<=166)
     return {
-        "version":"uk-v0918-ld-target-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
         "shadow_only":True,"uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
         "candidate_count":len(candidates),
         "grid":{"local_strength":list(LOCAL_STRENGTH_GRID),"confidence_floor":list(LOCAL_CONFIDENCE_FLOOR_GRID),
@@ -3692,7 +3709,7 @@ def evaluate_ld_target_sweep(
     benchmark.sort(key=lambda x:score_tuple(x["benchmark_2024"]),reverse=True)
     gate=bool(selected24["correct_winners"]>=506 and selected24["seat_abs_error_sum"]<=166)
     return {
-        "version":"uk-v0918-ld-target-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
         "diagnostic_only":True,"shadow_only":True,"used_for_parameter_selection":True,"uses_2024_for_parameter_selection":False,"changes_production_model":False,"changes_candidate_model":False,
         "hypothesis_origin":"nominated by v0.9.17 2024 error audit; therefore numerical success on 2024 is not sufficient for promotion",
         "parameter_selection_election":"2019","candidate_count":len(candidates),
@@ -3710,6 +3727,150 @@ def evaluate_ld_target_sweep(
     }
 
 
+
+def apply_ld_target_footprint_gate(
+    rows:pd.DataFrame,base:dict[str,Any],target:dict[str,float],local_profile:dict[str,Any],
+    strength:float,score_floor:float,local_adv_floor:float,local_conf_floor:float
+)->tuple[pd.DataFrame,dict[str,Any]]:
+    """LD concentration with an explicit ex-ante local-government footprint gate."""
+    st=float(strength); floor=float(score_floor); adv_floor=float(local_adv_floor); conf_floor=float(local_conf_floor)
+    if st<=1e-12:
+        return rows.copy().astype(float),{
+            "strength":0.0,"score_floor":floor,"local_adv_floor":adv_floor,"local_conf_floor":conf_floor,
+            "eligible_seats":0,"adjusted_seats":0,"missing_local_profile":0,
+            "national_target_preserved":True,"top_adjustments":[]
+        }
+    out=rows.copy().astype(float); adjusted=0; eligible=0; missing=0; seat_audit=[]
+    for idx,brow in base["frame"].iterrows():
+        if not allowed("ld",str(brow["country"])): continue
+        lp=local_profile.get("seats",{}).get(str(idx))
+        if not lp:
+            missing+=1; continue
+        confidence=float(lp.get("confidence") or 0.0)
+        adv=float((lp.get("advantage") or {}).get("ld",0.0))
+        if confidence+1e-12<conf_floor or adv+1e-12<adv_floor: continue
+        info=ld_target_score(brow,rows.loc[idx],lp)
+        score=float(info["score"])
+        if score+1e-12<floor: continue
+        eligible+=1
+        delta=clamp(st*score*LD_TARGET_MAX_SHIFT,0.0,LD_TARGET_MAX_SHIFT)
+        if delta<=1e-12: continue
+        out.at[idx,"ld"]=max(.0001,float(out.at[idx,"ld"])+delta)
+        adjusted+=1
+        seat_audit.append({"id":str(brow["id"]),"name":str(brow["name"]),"delta_ld_pre_rake":float(delta),**info})
+        vals={p:(max(.0001,float(out.at[idx,p])) if allowed(p,str(brow["country"])) else 0.0) for p in PARTIES}
+        den=sum(vals.values()) or 1.0
+        for p in PARTIES: out.at[idx,p]=vals[p]/den*100.0
+    out=experimental_rake(out,base,target)
+    return out,{
+        "strength":st,"score_floor":floor,"local_adv_floor":adv_floor,"local_conf_floor":conf_floor,
+        "eligible_seats":eligible,"adjusted_seats":adjusted,"missing_local_profile":missing,
+        "national_target_preserved":True,
+        "top_adjustments":sorted(seat_audit,key=lambda x:x["delta_ld_pre_rake"],reverse=True)[:30]
+    }
+
+
+def evaluate_ld_footprint_validation(
+    reference19:pd.DataFrame,reference24:pd.DataFrame,
+    e15:dict[str,Any],e17:dict[str,Any],e19:dict[str,Any],e19n:dict[str,Any],e24:dict[str,Any],
+    local19:dict[str,Any],local24:dict[str,Any]
+)->dict[str,Any]:
+    """Select LD footprint-gated settings on 2017+2019 only; score 2024 after lock."""
+    # 2017 deliberately uses a deterministic no-fit reference. The canonical 2017
+    # candidate selected earlier model/calibration parameters on 2017 and is not an
+    # independent validation base for this new hypothesis.
+    target17=nat_shares(e17); target19=nat_shares(e19); target24=nat_shares(e24)
+    reference17=base_prediction(e15,target17)
+    raw17,src17=fetch_dc_local_results(LOCAL_DATES_2017)
+    ons19,ons19_meta=fetch_ons_ward_lookup("2019")
+    local17=build_local_advantage_profile(e15,raw17,ons19,"2017-06-08")
+    if local17["matched_seats"]<250:
+        raise RuntimeError(f"2017 LD validation local coverage too low: {local17['matched_seats']}")
+    base17=evaluate_rows(reference17,e17,e15); base19=evaluate_rows(reference19,e19,e17); base24=evaluate_rows(reference24,e24,e19n)
+
+    candidates=[]
+    for st in LD_HIST_STRENGTH_GRID:
+        for floor in LD_HIST_SCORE_FLOOR_GRID:
+            for adv_floor in LD_HIST_LOCAL_ADV_FLOOR_GRID:
+                for conf_floor in LD_HIST_LOCAL_CONF_FLOOR_GRID:
+                    r17,m17meta=apply_ld_target_footprint_gate(reference17,e15,target17,local17,st,floor,adv_floor,conf_floor)
+                    r19,m19meta=apply_ld_target_footprint_gate(reference19,e17,target19,local19,st,floor,adv_floor,conf_floor)
+                    m17=evaluate_rows(r17,e17,e15); m19=evaluate_rows(r19,e19,e17)
+                    d17=int(m17["correct_winners"]-base17["correct_winners"]); d19=int(m19["correct_winners"]-base19["correct_winners"])
+                    se17=int(base17["seat_abs_error_sum"]-m17["seat_abs_error_sum"]); se19=int(base19["seat_abs_error_sum"]-m19["seat_abs_error_sum"])
+                    # Guard against buying a combined gain by materially breaking either election.
+                    admissible=bool(
+                        m17["correct_winners"]>=base17["correct_winners"]-2 and
+                        m19["correct_winners"]>=base19["correct_winners"]-2 and
+                        m17["seat_abs_error_sum"]<=base17["seat_abs_error_sum"]+8 and
+                        m19["seat_abs_error_sum"]<=base19["seat_abs_error_sum"]+4
+                    )
+                    candidates.append({
+                        "id":f"ldh_s{st:.2f}_f{floor:.2f}_a{adv_floor:+.1f}_q{conf_floor:.2f}",
+                        "strength":st,"score_floor":floor,"local_adv_floor":adv_floor,"local_conf_floor":conf_floor,
+                        "validation_2017":m17,"validation_2019":m19,
+                        "winner_gain_2017":d17,"winner_gain_2019":d19,"winner_gain_sum":d17+d19,
+                        "seat_error_improvement_2017":se17,"seat_error_improvement_2019":se19,
+                        "seat_error_improvement_sum":se17+se19,"admissible":admissible,
+                        "meta_2017":m17meta,"meta_2019":m19meta,
+                    })
+    admissible=[x for x in candidates if x["admissible"]]
+    if not admissible: raise RuntimeError("No admissible v0.9.19 historical LD-footprint candidate")
+    admissible.sort(key=lambda x:(x["winner_gain_sum"],x["seat_error_improvement_sum"],x["winner_gain_2019"],-x["strength"],x["local_adv_floor"],x["local_conf_floor"],x["score_floor"]),reverse=True)
+    selected=admissible[0]
+    selected_rows,selected_meta=apply_ld_target_footprint_gate(
+        reference24,e19n,target24,local24,selected["strength"],selected["score_floor"],selected["local_adv_floor"],selected["local_conf_floor"]
+    )
+    selected24=evaluate_rows(selected_rows,e24,e19n)
+
+    benchmark=[]
+    for x in candidates:
+        r,meta=apply_ld_target_footprint_gate(reference24,e19n,target24,local24,x["strength"],x["score_floor"],x["local_adv_floor"],x["local_conf_floor"])
+        m=evaluate_rows(r,e24,e19n)
+        benchmark.append({
+            "id":x["id"],"strength":x["strength"],"score_floor":x["score_floor"],
+            "local_adv_floor":x["local_adv_floor"],"local_conf_floor":x["local_conf_floor"],
+            "historically_admissible":x["admissible"],"benchmark_2024":m,"meta_2024":meta,
+            "research_gate":bool(m["correct_winners"]>=506 and m["seat_abs_error_sum"]<=166),
+        })
+    benchmark.sort(key=lambda x:score_tuple(x["benchmark_2024"]),reverse=True)
+    gate=bool(selected24["correct_winners"]>=506 and selected24["seat_abs_error_sum"]<=166)
+    return {
+        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
+        "diagnostic_only":True,"shadow_only":True,"used_for_parameter_selection":True,
+        "parameter_selection_elections":["2017","2019"],"uses_2024_for_parameter_selection":False,
+        "changes_production_model":False,"changes_candidate_model":False,
+        "hypothesis_origin":"v0.9.17 audit plus independent Liberal Democrat 2019 election review evidence on local-government representation as target-seat pre-qualification",
+        "historical_reference_policy":{
+            "2017":"deterministic proportional-swing reference from 2015; avoids reusing canonical parameters selected on 2017",
+            "2019":"frozen pre-2024-selected v0.9.15 local-strength reference",
+            "2024":"score-only benchmark after historical selection lock",
+        },
+        "grid":{
+            "strength":list(LD_HIST_STRENGTH_GRID),"score_floor":list(LD_HIST_SCORE_FLOOR_GRID),
+            "local_adv_floor":list(LD_HIST_LOCAL_ADV_FLOOR_GRID),"local_conf_floor":list(LD_HIST_LOCAL_CONF_FLOOR_GRID),
+            "max_pre_rake_shift_pp":LD_TARGET_MAX_SHIFT,
+        },
+        "candidate_count":len(candidates),"admissible_count":len(admissible),
+        "baseline_reference":{"validation_2017":base17,"validation_2019":base19,"benchmark_2024":base24},
+        "selected_historical":{**{k:selected[k] for k in ("id","strength","score_floor","local_adv_floor","local_conf_floor","winner_gain_2017","winner_gain_2019","winner_gain_sum","seat_error_improvement_sum")},
+                              "validation_2017":selected["validation_2017"],"validation_2019":selected["validation_2019"],
+                              "benchmark_2024":selected24,"meta_2024":selected_meta,"research_gate":gate},
+        "historical_ranking":admissible[:40],
+        "benchmark_2024_diagnostic":{
+            "ranking":benchmark,
+            "best_expost":benchmark[0],
+            "passing_research_gate":[x["id"] for x in benchmark if x["research_gate"]],
+            "passing_and_historically_admissible":[x["id"] for x in benchmark if x["research_gate"] and x["historically_admissible"]],
+            "warning":"2024 ranking is diagnostic only and cannot select parameters",
+        },
+        "coverage":{"local_2017":{k:v for k,v in local17.items() if k!="seats"},"local_2019":{k:v for k,v in local19.items() if k!="seats"},"local_2024":{k:v for k,v in local24.items() if k!="seats"}},
+        "sources":{"local_2017":src17,"ons_2017_mapping":ons19_meta},
+        "research_gate_definition":"historically selected candidate must reach >=506/632 correct in 2024 AND seat_abs_error_sum <=166; informational only",
+        "promotion_policy":"always shadow in v0.9.19; even historical support plus 2024 success does not make the audit-inspired 2024 benchmark a pristine holdout",
+        "parameter_updates":{},
+    }
+
 def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[str,Any],hold_base:dict[str,Any])->tuple[bool,list[str]]:
     reasons=[]
     if holdout["winner_accuracy"]<.80:
@@ -3726,8 +3887,8 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v0918-ld-target-sweep",
-        "model_type":"constituency-residual-ld-target-v12",
+        "version":"uk-v0919-ld-footprint-validation",
+        "model_type":"constituency-residual-ld-footprint-v13",
         "status":"error",
         "approved":False,
         "publication_ready":False,
@@ -3743,28 +3904,28 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v0918-ld-target-sweep-live","approved":False,"status":"error",
+        "version":"uk-v0919-ld-footprint-validation-live","approved":False,"status":"error",
         "diagnostic_only":True,"changes_production_model":False,"changes_candidate_model":False,"shadow_only":True,
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v0918-ld-target-sweep-backtest","status":"error","error":str(exc)
+        "version":"uk-v0919-ld-footprint-validation-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     DIAGNOSTIC_OUT.write_text(json.dumps({
-        "version":"uk-v0918-ld-target-sweep","status":"error",
+        "version":"uk-v0919-ld-footprint-validation","status":"error",
         "diagnostic_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"parameter_updates":{},
-        "source_model":"uk-v0918-ld-target-sweep",
+        "source_model":"uk-v0919-ld-footprint-validation",
         "error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     SWEEP_OUT.write_text(json.dumps({
-        "version":"uk-v0918-ld-target-sweep","status":"error",
+        "version":"uk-v0919-ld-footprint-validation","status":"error",
         "diagnostic_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v0918-bes-integrity","status":"failed",
+            "version":"uk-v0919-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -3879,10 +4040,10 @@ def main()->int:
             validation,holdout,validation_base,holdout_base
         )
         reference,v0915_val_rows,v0915_hold_rows,local19,local24=evaluate_v0915_reference(val_rows,hold_rows,e17,e19,e19n,e24)
-        ld_target=evaluate_ld_target_sweep(v0915_val_rows,v0915_hold_rows,e17,e19,e19n,e24,local19,local24)
-        ld_target_gate_passed=bool(ld_target["selected_pre2024"]["research_gate"])
-        # v0.9.18 remains shadow-only. The canonical candidate is frozen, and the
-        # LD-target hypothesis was nominated from the 2024 audit, so 2024 cannot promote it.
+        ld_validation=evaluate_ld_footprint_validation(v0915_val_rows,v0915_hold_rows,e15,e17,e19,e19n,e24,local19,local24)
+        ld_validation_gate_passed=bool(ld_validation["selected_historical"]["research_gate"])
+        # v0.9.19 remains shadow-only. Parameters are selected on 2017+2019 only;
+        # 2024 is score-only and cannot promote this audit-inspired hypothesis.
         approved=False
         publication_ready=False
 
@@ -3918,8 +4079,8 @@ def main()->int:
         )
 
         model_payload={
-            "version":"uk-v0918-ld-target-sweep",
-            "model_type":"constituency-residual-ld-target-v12",
+            "version":"uk-v0919-ld-footprint-validation",
+            "model_type":"constituency-residual-ld-footprint-v13",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -3929,22 +4090,22 @@ def main()->int:
             "changes_candidate_model":False,
             "shadow_only":True,
             "candidate_gate_passed":candidate_gate_passed,
-            "ld_target_research_gate_passed":ld_target_gate_passed,
-            "promotion_blocked_reason":"v0.9.18 is shadow-only because the LD-target hypothesis was nominated from the 2024 audit; 2024 cannot independently promote it",
+            "ld_footprint_research_gate_passed":ld_validation_gate_passed,
+            "promotion_blocked_reason":"v0.9.19 is shadow-only; parameters are selected on 2017+2019 and 2024 remains a non-pristine audit-inspired benchmark",
             "canonical_candidate":"frozen_v0910_equivalent",
             "best_shadow_reference":{
                 "version":"v0.9.15",
-                "output":"data/v0915-reference-v0918.json",
+                "output":"data/v0915-reference-v0919.json",
                 "parameters":reference["reference_parameters"],
                 "validation_2019":reference["validation_2019"],
                 "benchmark_2024":reference["benchmark_2024"],
                 "uses_2024_for_parameter_selection":False,
             },
-            "ld_target_experiment":{
-                "output":"data/ld-target-sweep-v0918.json",
-                "selected_pre2024":ld_target["selected_pre2024"],
-                "best_expost_2024":ld_target["benchmark_2024_diagnostic"]["best_expost"],
-                "research_gate_passed":ld_target_gate_passed,
+            "ld_footprint_validation":{
+                "output":"data/ld-footprint-validation-v0919.json",
+                "selected_historical":ld_validation["selected_historical"],
+                "best_expost_2024":ld_validation["benchmark_2024_diagnostic"]["best_expost"],
+                "research_gate_passed":ld_validation_gate_passed,
                 "uses_2024_for_parameter_selection":False,
             },
             "generated_at":utcnow().isoformat(),
@@ -4027,7 +4188,7 @@ def main()->int:
             "features":{
                 "historical_demographics":[c.replace("demo_","") for c in e19["demo_columns"]],
                 "current_demographics":[c.replace("demo_","") for c in e24["demo_columns"]],
-                "notes":"v0.9.18 keeps the canonical candidate frozen and starts from the pre-2024-selected v0.9.15 local-election reference. It tests a Liberal Democrat target-seat concentration rule selected only on 2019; region and 2024 outcomes are excluded from the score.",
+                "notes":"v0.9.19 keeps the canonical candidate frozen and validates a Liberal Democrat target-seat rule with an explicit local-government footprint gate. Candidate settings are selected on 2017+2019 only; region and 2024 outcomes are excluded.",
             },
             "integrity":{
                 "version":integrity.get("version"),
@@ -4039,15 +4200,15 @@ def main()->int:
                 "current_bes":curr_meta,
             },
             "note":(
-                "v0.9.18 keeps the canonical candidate frozen and reproduces the v0.9.15 local-strength reference exactly. "
-                "LD target concentration parameters are selected on 2019 only; the 2024 benchmark is diagnostic and cannot promote this audit-inspired hypothesis."
+                "v0.9.19 keeps the canonical candidate frozen and reproduces the v0.9.15 local-strength reference exactly. "
+                "LD footprint-gated targeting parameters are selected on 2017+2019 only; the 2024 benchmark is diagnostic."
             )
         }
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v0918-ld-target-sweep-live",
-            "model_type":"constituency-residual-ld-target-v12",
+            "version":"uk-v0919-ld-footprint-validation-live",
+            "model_type":"constituency-residual-ld-footprint-v13",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -4059,15 +4220,15 @@ def main()->int:
             "candidate_gate_passed":candidate_gate_passed,
             "best_shadow_reference":{
                 "version":"v0.9.15",
-                "output":"data/v0915-reference-v0918.json",
+                "output":"data/v0915-reference-v0919.json",
                 "parameters":reference["reference_parameters"],
                 "benchmark_2024":reference["benchmark_2024"],
                 "uses_2024_for_parameter_selection":False,
             },
-            "ld_target_experiment":{
-                "output":"data/ld-target-sweep-v0918.json",
-                "selected_pre2024":ld_target["selected_pre2024"],
-                "research_gate_passed":ld_target_gate_passed,
+            "ld_footprint_validation":{
+                "output":"data/ld-footprint-validation-v0919.json",
+                "selected_historical":ld_validation["selected_historical"],
+                "research_gate_passed":ld_validation_gate_passed,
                 "applied_to_live":False,
             },
             "generated_at":utcnow().isoformat(),
@@ -4094,7 +4255,7 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v0918-ld-target-sweep-backtest",
+            "version":"uk-v0919-ld-footprint-validation-backtest",
             "status":"ok",
             "diagnostic_only":True,
             "used_for_parameter_selection":False,
@@ -4103,17 +4264,17 @@ def main()->int:
             "changes_candidate_model":False,
             "best_shadow_reference":{
                 "version":"v0.9.15",
-                "output":"data/v0915-reference-v0918.json",
+                "output":"data/v0915-reference-v0919.json",
                 "parameters":reference["reference_parameters"],
                 "validation_2019":reference["validation_2019"],
                 "benchmark_2024":reference["benchmark_2024"],
                 "uses_2024_for_parameter_selection":False,
             },
-            "ld_target_experiment":{
-                "output":"data/ld-target-sweep-v0918.json",
-                "selected_pre2024":ld_target["selected_pre2024"],
-                "best_expost_2024":ld_target["benchmark_2024_diagnostic"]["best_expost"],
-                "research_gate_passed":ld_target_gate_passed,
+            "ld_footprint_validation":{
+                "output":"data/ld-footprint-validation-v0919.json",
+                "selected_historical":ld_validation["selected_historical"],
+                "best_expost_2024":ld_validation["benchmark_2024_diagnostic"]["best_expost"],
+                "research_gate_passed":ld_validation_gate_passed,
                 "uses_2024_for_parameter_selection":False,
             },
             "selected_spec":selected_spec,
@@ -4131,7 +4292,7 @@ def main()->int:
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
         DIAGNOSTIC_OUT.write_text(
-            json.dumps(ld_target,ensure_ascii=False,indent=2),
+            json.dumps(ld_validation,ensure_ascii=False,indent=2),
             encoding="utf-8"
         )
         SWEEP_OUT.write_text(
@@ -4139,14 +4300,14 @@ def main()->int:
             encoding="utf-8"
         )
 
-        print("v0.9.18 selected share spec:",selected_spec)
+        print("v0.9.19 selected share spec:",selected_spec)
         print("v0.9.15 reference 2019 regression:",reference["validation_2019"])
         print("v0.9.15 reference 2024 benchmark:",reference["benchmark_2024"])
-        print("v0.9.18 LD selected on 2019:",ld_target["selected_pre2024"])
-        print("v0.9.18 LD best 2024 ex-post diagnostic:",ld_target["benchmark_2024_diagnostic"]["best_expost"])
-        print("v0.9.18 LD passing research gate:",ld_target["benchmark_2024_diagnostic"]["passing_research_gate"])
-        print("v0.9.18 selected party strengths:",selected_party_strengths)
-        print("v0.9.18 incumbent routing:",selected_routing)
+        print("v0.9.19 LD footprint selected on 2017+2019:",ld_validation["selected_historical"])
+        print("v0.9.19 LD best 2024 ex-post diagnostic:",ld_validation["benchmark_2024_diagnostic"]["best_expost"])
+        print("v0.9.19 LD passing research gate:",ld_validation["benchmark_2024_diagnostic"]["passing_research_gate"])
+        print("v0.9.19 selected party strengths:",selected_party_strengths)
+        print("v0.9.19 incumbent routing:",selected_routing)
         print("2017 routing audit:",routing_tuning["selected_audit"])
         print("2017 scenario:",national_scenario_metrics(e15,t15_17["target"]))
         print("2019 scenario:",national_scenario_metrics(e17,t17_19["target"]))
@@ -4175,7 +4336,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.18 LD-target shadow build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.19 LD-footprint validation build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # A broken research build must not be deployed. The previously deployed
         # production/fallback remains untouched because this workflow stops before

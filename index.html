@@ -27,7 +27,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Fonte sondaggi: —</span>
-      <span class="badge">Versione 0.9.18 · targeting Liberal Democrats (shadow)</span>
+      <span class="badge">Versione 0.9.19 · validazione footprint Liberal Democrats (shadow)</span>
     </div>
   </section>
   <div id="errorBox" class="errorbox"></div>
@@ -48,7 +48,7 @@
       <div class="explain compact">
         <p><strong>632 collegi GB</strong> sono simulati singolarmente con il risultato 2024 come baseline e swing regolarizzato.</p>
         <p><strong>18 collegi dell’Irlanda del Nord</strong> sono simulati separatamente con partiti, candidati e risultati Westminster 2024 reali. In assenza di polling Westminster recente, il tracker Assembly di LucidTalk entra soltanto come segnale debole.</p>
-        <p class="warning"><strong>Beta:</strong> la v0.9.18 mantiene congelato il candidato canonico e parte dal riferimento shadow v0.9.15. Testa una concentrazione territoriale del voto Liberal Democrat nei collegi identificabili ex ante come target, senza cambiare il target nazionale LD e senza usare la regione come regola. Forza e soglia vengono selezionate solo sul 2019; il 2024 resta benchmark diagnostico e non può promuovere automaticamente il modello.</p>
+        <p class="warning"><strong>Beta:</strong> la v0.9.19 mantiene congelato il candidato canonico e valida il targeting Liberal Democrat con un requisito esplicito di forza nel governo locale. I parametri sono scelti soltanto usando 2017 e 2019; il 2024 resta benchmark diagnostico e non può selezionare o promuovere il modello.</p>
       </div>
     </article>
   </section>
@@ -92,7 +92,7 @@
   <section class="card poll-table-card"><div class="table-scroll"><table><thead><tr><th>Data</th><th>Istituto</th><th>Area</th><th>n</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>Green</th><th>SNP</th><th>PC</th><th>RB</th></tr></thead><tbody id="pollTableBody"></tbody></table></div></section>
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La calibrazione territoriale viene stimata su elezioni precedenti e verificata su elezioni non usate nel fit.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Stage 13 · concentrazione territoriale Liberal Democrat</p></div></div><div class="explain"><p><strong>Riferimento shadow congelato:</strong> v0.9.15, forza locale 0,25 e by-election a zero, con 585/632 nel 2019 e 501/632 nel 2024, errore seggi 166.</p><p><strong>Esperimento:</strong> la v0.9.18 costruisce un target score LD usando soltanto ruolo e quota LD nell’elezione precedente, competitività prevista e segnale delle elezioni locali. Il voto LD viene concentrato nei target e poi il raking ripristina esattamente il totale nazionale.</p><p class="warning"><strong>Disciplina anti-overfitting:</strong> nessuna regione è hard-coded. Forza e soglia sono selezionate solo sul 2019. Poiché l’ipotesi nasce dall’audit 2024, anche un eventuale superamento di 506/632 resta shadow finché non esiste una validazione indipendente.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Stage 14 · validazione storica del targeting Liberal Democrat</p></div></div><div class="explain"><p><strong>Riferimento shadow congelato:</strong> v0.9.15, forza locale 0,25 e by-election a zero, con 585/632 nel 2019 e 501/632 nel 2024, errore seggi 166.</p><p><strong>Esperimento:</strong> la v0.9.19 aggiunge al target score LD un hard gate di forza locale: il collegio deve mostrare una presenza Liberal Democrat sufficiente nelle elezioni locali pre-elettorali. Il voto nazionale LD resta invariato grazie al raking.</p><p class="warning"><strong>Disciplina anti-overfitting:</strong> nessuna regione è hard-coded. Forza, target score e soglie di footprint locale sono selezionati esclusivamente su 2017+2019. Il 2017 usa un riferimento deterministico che non ha visto il risultato 2017. Il 2024 resta score-only e, poiché l’ipotesi nasce dall’audit 2024, anche un eventuale superamento di 506/632 rimane shadow.</p></div></article>
     <article class="card"><div class="cardhead"><div><h3>Pipeline e backstop</h3><p>Il sito non dipende da una singola richiesta live.</p></div></div><div class="pipeline"><span>Wikipedia / MediaWiki</span><b>→</b><span>snapshot validato</span><b>→</b><span>media</span><b>→</b><span>632 collegi GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>Se l’aggiornamento live fallisce, resta disponibile l’ultimo snapshot valido. La GitHub Action aggiorna dati e backtest, riproduce la v0.9.15 come riferimento shadow e genera l’audit completo dei 131 errori residui, verificando automaticamente che il risultato 2024 non possa selezionare parametri né attivare un modello sperimentale.</p></div></article>
   </section>
   <footer>
@@ -100,7 +100,7 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.18"></script>
+<script src="scripts/app.js?v=0.9.19"></script>
 <script src="scripts/map-performance.js"></script>
 </body>
 </html>

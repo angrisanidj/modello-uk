@@ -24,7 +24,7 @@ const CONFIG = {
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v0918-20260827-ld-target',
+  cacheVersion: 'uk-v0919-20260827-ld-footprint',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
@@ -385,7 +385,7 @@ function mrpLiteActive(){
 }
 function shadowDiagnosticsReady(){
   const m=state.mrpLite;
-  return m?.version==='uk-v0918-ld-target-sweep-live'
+  return m?.version==='uk-v0919-ld-footprint-validation-live'
     && m?.status==='ok'
     && m?.shadow_only===true
     && m?.approved===false;
@@ -480,7 +480,7 @@ function transferModelActive(){
     && state.modelParams?.transfer_coefficients;
 }
 function productionModelLabel(){
-  const diagnostic=shadowDiagnosticsReady()?' · v0.9.18 targeting LD in shadow':'';
+  const diagnostic=shadowDiagnosticsReady()?' · v0.9.19 validazione footprint LD in shadow':'';
   if(mrpLiteActive())return `MRP-lite + incumbent routing · benchmark 2024 ${(Number(state.mrpLite.holdout_accuracy)*100).toFixed(1)}%${diagnostic}`;
   if(partialRakeModelActive())return `Raking parziale validato (α=${partialRakeStrength().toFixed(2)}) 2024 → oggi${diagnostic}`;
   if(transferModelActive())return `Modello trasferimenti 2024 → oggi${diagnostic}`;
