@@ -47,10 +47,10 @@ jobs:
       - name: Calibrate legacy partial-raking benchmark
         run: python tools/build_backtest.py
 
-      - name: Build v0.9.6 metadata-preserving MRP-lite shadow model
+      - name: Build v0.9.7 MRP-lite + FPTP contestability shadow model
         run: python tools/build_mrp_lite.py
 
-      - name: Validate BES integrity and v0.9.6 model gates
+      - name: Validate BES integrity and v0.9.7 FPTP model gates
         run: |
           python - <<'PY'
           import json
@@ -68,10 +68,10 @@ jobs:
           params=load("data/model-params.json")
           ni=load("data/ni-2024.json")
 
-          integrity=load("data/bes-integrity-v096.json")
+          integrity=load("data/bes-integrity-v097.json")
           mrp=load("data/mrp-lite-model.json")
           live=load("data/mrp-lite-live.json")
-          backtest=load("data/backtest-v096-mrp-lite.json")
+          backtest=load("data/backtest-v097-mrp-lite.json")
 
           n_polls=len(polls.get("polls",[]))
           n_const=len(constituencies.get("constituencies",[]))
@@ -115,7 +115,7 @@ jobs:
               raise SystemExit(f"ERROR: NI winner check failed: {dict(ni_winners)}")
 
           # Unlike v0.9, parser integrity is a HARD deployment gate.
-          if integrity.get("version")!="uk-v096-bes-integrity":
+          if integrity.get("version")!="uk-v097-bes-integrity":
               raise SystemExit("ERROR: unexpected BES integrity version")
           if integrity.get("status")!="passed":
               raise SystemExit("ERROR: BES integrity failed: "+str(integrity.get("errors")))
@@ -125,45 +125,54 @@ jobs:
               if check.get("ni_filtered_before_party_parsing") is not True:
                   raise SystemExit(f"ERROR: {check.get('label')} parsed parties before filtering NI")
 
-          if mrp.get("version")!="uk-v096-mrp-lite":
-              raise SystemExit(f"ERROR: unexpected v0.9.6 model version {mrp.get('version')}")
-          if live.get("version")!="uk-v096-mrp-lite-live":
-              raise SystemExit(f"ERROR: unexpected v0.9.6 live version {live.get('version')}")
-          if backtest.get("version")!="uk-v096-mrp-lite-backtest":
+          if mrp.get("version")!="uk-v097-mrp-lite":
+              raise SystemExit(f"ERROR: unexpected v0.9.7 model version {mrp.get('version')}")
+          if live.get("version")!="uk-v097-mrp-lite-live":
+              raise SystemExit(f"ERROR: unexpected v0.9.7 live version {live.get('version')}")
+          if backtest.get("version")!="uk-v097-mrp-lite-backtest":
               raise SystemExit(
-                  f"ERROR: unexpected v0.9.6 backtest version {backtest.get('version')}"
+                  f"ERROR: unexpected v0.9.7 backtest version {backtest.get('version')}"
               )
 
-          print(f"v0.9.6 status: {mrp.get('status')}")
-          print(f"v0.9.6 approved: {mrp.get('approved')}")
-          print(f"v0.9.6 publication_ready: {mrp.get('publication_ready')}")
+          print(f"v0.9.7 status: {mrp.get('status')}")
+          print(f"v0.9.7 approved: {mrp.get('approved')}")
+          print(f"v0.9.7 publication_ready: {mrp.get('publication_ready')}")
 
           if mrp.get("status")=="ok":
+              if mrp.get("model_type")!="constituency-residual-ml-fptp-v2":
+                  raise SystemExit(f"ERROR: unexpected v0.9.7 model type {mrp.get('model_type')}")
+              if not isinstance(mrp.get("selected_contest_spec"),dict):
+                  raise SystemExit("ERROR: missing selected FPTP contestability spec")
               val=mrp.get("validation_2019",{}).get("candidate",{})
               val_base=mrp.get("validation_2019",{}).get("baseline",{})
               hold=mrp.get("holdout_2024",{}).get("candidate",{})
               base=mrp.get("holdout_2024",{}).get("baseline",{})
+              val_share=mrp.get("validation_2019",{}).get("share_only_candidate",{})
+              hold_share=mrp.get("holdout_2024",{}).get("share_only_candidate",{})
               print("2019 baseline:",val_base)
-              print("2019 candidate:",val)
+              print("2019 share-only:",val_share)
+              print("2019 FPTP candidate:",val)
               print("2024 baseline:",base)
-              print("2024 candidate:",hold)
-              print("Selected spec:",mrp.get("selected_spec"))
+              print("2024 share-only:",hold_share)
+              print("2024 FPTP candidate:",hold)
+              print("Selected share spec:",mrp.get("selected_spec"))
+              print("Selected FPTP spec:",mrp.get("selected_contest_spec"))
               if val.get("gb_seats")!=632 or hold.get("gb_seats")!=632:
-                  raise SystemExit("ERROR: v0.9.6 did not evaluate 632 GB seats")
+                  raise SystemExit("ERROR: v0.9.7 did not evaluate 632 GB seats")
               if val.get("winner_source")!="official_BES_WinnerXX" or hold.get("winner_source")!="official_BES_WinnerXX":
-                  raise SystemExit("ERROR: v0.9.6 evaluation is not using official BES WinnerXX")
+                  raise SystemExit("ERROR: v0.9.7 evaluation is not using official BES WinnerXX")
               if hold.get("other_prediction_rule")!="eligible_only_if_baseline_winner_or_runner_up":
                   raise SystemExit("ERROR: pooled Other is still being treated as a universal seat candidate")
               if mrp.get("approved"):
                   if float(hold.get("winner_accuracy",0))<.80:
-                      raise SystemExit("ERROR: approved v0.9.6 below 80% holdout accuracy")
+                      raise SystemExit("ERROR: approved v0.9.7 below 80% holdout accuracy")
                   if len(live.get("seats",[]))!=632:
-                      raise SystemExit("ERROR: approved v0.9.6 live file does not contain 632 GB seats")
+                      raise SystemExit("ERROR: approved v0.9.7 live file does not contain 632 GB seats")
               else:
-                  print("v0.9.6 failed the model gate: production remains on fallback. This is VALID.")
+                  print("v0.9.7 failed the model gate: production remains on fallback. This is VALID.")
           else:
               # Integrity passed, so an ML-only shadow failure may safely fall back.
-              print("WARNING: v0.9.6 ML shadow build unavailable:",mrp.get("error"))
+              print("WARNING: v0.9.7 ML shadow build unavailable:",mrp.get("error"))
               print("Production remains on fallback.")
 
           print("Dataset/model validation passed.")
@@ -177,7 +186,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data and corrected v0.9.6 backtest"
+            git commit -m "chore: update UK data and v0.9.7 FPTP backtest"
             git push
           fi
 
@@ -190,5 +199,3 @@ jobs:
           path: "."
 
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
