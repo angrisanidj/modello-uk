@@ -143,6 +143,17 @@ jobs:
           print(f"v0.9.11 approved: {mrp.get('approved')}")
           print(f"v0.9.11 publication_ready: {mrp.get('publication_ready')}")
 
+          # v0.9.11 is a diagnostic release: production still falls back, but
+          # the release itself must NOT deploy if its diagnostics failed.
+          for label,payload in (
+              ("model",mrp),("live shadow",live),("backtest",backtest),
+              ("Reform diagnostic",diagnostic),
+          ):
+              if payload.get("status")!="ok":
+                  raise SystemExit(
+                      f"ERROR: v0.9.11 {label} build failed: {payload.get('error')}"
+                  )
+
           if mrp.get("status")=="ok":
               if mrp.get("model_type")!="constituency-residual-incumbent-routing-v5":
                   raise SystemExit(f"ERROR: unexpected preserved v0.9.10 model type {mrp.get('model_type')}")
@@ -210,6 +221,50 @@ jobs:
                   raise SystemExit("ERROR: v0.9.11 evaluation is not using official BES WinnerXX")
               if hold.get("other_prediction_rule")!="eligible_only_if_baseline_winner_or_runner_up":
                   raise SystemExit("ERROR: pooled Other is still being treated as a universal seat candidate")
+
+              # Frozen v0.9.10 regression guard.  The diagnostic release is
+              # valid only if it is analysing exactly the previously accepted
+              # v0.9.10 candidate behaviour, not a silently changed rerun.
+              expected_regression={
+                  "validation_2019_correct_winners":583,
+                  "validation_2019_seat_abs_error_sum":42,
+                  "benchmark_2024_correct_winners":494,
+                  "benchmark_2024_seat_abs_error_sum":176,
+                  "benchmark_2024_predicted_reform_seats":39,
+                  "benchmark_2024_actual_reform_seats":5,
+              }
+              observed_regression={
+                  "validation_2019_correct_winners":val.get("correct_winners"),
+                  "validation_2019_seat_abs_error_sum":val.get("seat_abs_error_sum"),
+                  "benchmark_2024_correct_winners":hold.get("correct_winners"),
+                  "benchmark_2024_seat_abs_error_sum":hold.get("seat_abs_error_sum"),
+                  "benchmark_2024_predicted_reform_seats":hold.get("predicted_seats",{}).get("ref"),
+                  "benchmark_2024_actual_reform_seats":hold.get("actual_seats",{}).get("ref"),
+              }
+              if observed_regression!=expected_regression:
+                  raise SystemExit(
+                      "ERROR: v0.9.11 no longer reproduces frozen v0.9.10 metrics: "
+                      f"expected={expected_regression} observed={observed_regression}"
+                  )
+              if val_pre.get("correct_winners")!=val.get("correct_winners") or val_pre.get("seat_abs_error_sum")!=val.get("seat_abs_error_sum"):
+                  raise SystemExit("ERROR: zero routing changed 2019 pre-routing metrics")
+              if hold_pre.get("correct_winners")!=hold.get("correct_winners") or hold_pre.get("seat_abs_error_sum")!=hold.get("seat_abs_error_sum"):
+                  raise SystemExit("ERROR: zero routing changed 2024 pre-routing metrics")
+              print("Frozen v0.9.10 regression guard: PASSED",observed_regression)
+
+              roles=diagnostic.get("feature_roles",{})
+              predictor_features=set(roles.get("predictors_ex_ante",[]))
+              outcome_features=set(roles.get("outcomes_2024_only",[]))
+              if not predictor_features or outcome_features!={"actual_ref_share","ref_share_error"}:
+                  raise SystemExit(f"ERROR: invalid diagnostic feature roles {roles}")
+              if predictor_features & outcome_features:
+                  raise SystemExit("ERROR: realised 2024 outcomes leaked into predictor feature set")
+              for comparison in diagnostic.get("feature_comparisons",[]):
+                  ranked={row.get("feature") for row in comparison.get("features",[])}
+                  leaked=ranked & outcome_features
+                  if leaked:
+                      raise SystemExit(f"ERROR: realised 2024 outcomes leaked into predictor ranking: {sorted(leaked)}")
+
               confusion=diagnostic.get("binary_confusion",{})
               counts=diagnostic.get("counts",{})
               if confusion.get("total")!=632:
@@ -224,11 +279,6 @@ jobs:
                   raise SystemExit("ERROR: false-positive seat list does not match confusion matrix")
               print("Reform diagnostic counts:",counts)
               print("v0.9.11 is diagnostic-only: production remains on fallback. This is REQUIRED.")
-          else:
-              # Integrity passed, so an ML-only shadow failure may safely fall back.
-              print("WARNING: v0.9.11 diagnostic build unavailable:",mrp.get("error"))
-              print("Production remains on fallback.")
-
           print("Dataset/model validation passed.")
           PY
 
