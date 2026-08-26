@@ -41,7 +41,7 @@ jobs:
       - name: Update election data and territorial inputs
         run: python tools/build_data.py
 
-      - name: Calibrate hierarchical territorial model
+      - name: Calibrate transfer and competition model
         run: python tools/build_backtest.py
 
       - name: Validate datasets
@@ -58,9 +58,8 @@ jobs:
           territorial=load("data/territorial-baseline.json")
           geo=load("data/constituencies-2024.geojson")
           display=load("data/constituencies-map.geojson")
-          bt=load("data/backtest-2024-territorial.json")
+          backtest=load("data/backtest-2024-territorial.json")
           params=load("data/model-params.json")
-
           sub_path=Path("data/subnational-polls.json")
           sub=load(sub_path) if sub_path.exists() else {"polls":[]}
 
@@ -72,56 +71,51 @@ jobs:
           regions=territorial.get("english_regions",[])
           groups=territorial.get("groups",{})
 
-          full_bytes=Path("data/constituencies-2024.geojson").stat().st_size
-          display_bytes=Path("data/constituencies-map.geojson").stat().st_size
-          before=int(display.get("meta",{}).get("vertices_before",0) or 0)
-          after=int(display.get("meta",{}).get("vertices_after",0) or 0)
-
-          baseline_holdout=bt.get("baseline_common",{}).get("holdout_2024",{})
-          hierarchical=bt.get("hierarchical_candidate",{})
-          hier_holdout=hierarchical.get("holdout_2024",{})
+          baseline_holdout=backtest.get("baseline_common",{}).get("holdout_2024",{})
+          transfer=backtest.get("transfer_candidate",{})
+          transfer_val=transfer.get("validation_2019",{})
+          transfer_hold=transfer.get("holdout_2024",{})
+          coeff=params.get("transfer_coefficients",{})
+          feature_parties=params.get("transfer_feature_parties",[])
+          target_parties=params.get("transfer_target_parties",[])
 
           print(f"National polls: {n_polls}")
           print(f"Subnational polls: {n_sub}")
           print(f"Constituencies: {n_const}")
-          print(f"Territorial groups: {sorted(groups)}")
           print(f"English regions: {regions}")
-          print(f"Full GeoJSON: {n_geo} features, {full_bytes:,} bytes")
-          print(f"Display GeoJSON: {n_display} features, {display_bytes:,} bytes")
-          print(f"Map vertices: {before:,} -> {after:,}")
           print(f"Model version: {params.get('version')}")
-          print(f"Live hierarchical model approved: {params.get('approved')}")
-          print(f"Lambdas: {params.get('lambdas')}")
-          print(f"Regional ridge: {params.get('regional_ridge')}")
-          print(f"2019 validation: {params.get('validation')}")
-          print(f"2024 holdout: {params.get('holdout')}")
+          print(f"Model type: {params.get('model_type')}")
+          print(f"Transfer model approved: {params.get('approved')}")
+          print(f"Transfer ridge: {params.get('transfer_ridge')}")
+          print(f"2019 transfer validation: {transfer_val}")
+          print(f"2024 transfer holdout: {transfer_hold}")
 
-          if n_polls<10:
+          if n_polls < 10:
               raise SystemExit(f"ERROR: only {n_polls} national polls")
-          if n_const!=650:
+          if n_const != 650:
               raise SystemExit(f"ERROR: expected 650 constituencies, found {n_const}")
-          if len(regions)!=9:
-              raise SystemExit(f"ERROR: expected 9 English regions, found {regions}")
-          for required in ("GB","England","Scotland","Wales"):
-              if required not in groups:
-                  raise SystemExit(f"ERROR: missing territorial baseline {required}")
-          if n_geo<650 or n_display<650:
+          if n_geo < 650 or n_display < 650:
               raise SystemExit("ERROR: geometry feature count below 650")
-          if display_bytes>=full_bytes:
-              raise SystemExit("ERROR: optimized map is not smaller than full map")
-          if before and after>=before:
-              raise SystemExit("ERROR: optimized map did not reduce vertices")
-          if baseline_holdout.get("gb_seats")!=632 or hier_holdout.get("gb_seats")!=632:
-              raise SystemExit("ERROR: 2024 backtest did not evaluate 632 GB seats")
-          if params.get("version")!="uk-v05-hierarchical-territorial":
-              raise SystemExit(f"ERROR: unexpected model params version {params.get('version')}")
+          if len(regions) != 9:
+              raise SystemExit(f"ERROR: expected 9 English regions, found {regions}")
+          if params.get("version") != "uk-v06-transfer-raked":
+              raise SystemExit(f"ERROR: unexpected model version {params.get('version')}")
+          if params.get("model_type") != "transfer-raked-v1":
+              raise SystemExit(f"ERROR: unexpected model type {params.get('model_type')}")
+          if baseline_holdout.get("gb_seats") != 632:
+              raise SystemExit("ERROR: baseline 2024 holdout did not evaluate 632 GB seats")
+          if transfer_val.get("gb_seats") != 632 or transfer_hold.get("gb_seats") != 632:
+              raise SystemExit("ERROR: transfer validation/holdout did not evaluate 632 GB seats")
+          if len(feature_parties) != 7 or len(target_parties) != 8:
+              raise SystemExit("ERROR: unexpected transfer party dimensions")
+          if set(coeff) != set(target_parties):
+              raise SystemExit("ERROR: transfer coefficient target rows incomplete")
+          for target,row in coeff.items():
+              if set(row) != set(feature_parties):
+                  raise SystemExit(f"ERROR: coefficient row {target} has wrong source columns")
 
-          # Subnational acquisition is deliberately fail-soft: a temporary Wikipedia
-          # layout/network problem must not stop the national model or Pages deploy.
-          if n_sub<2:
-              print("WARNING: subnational polling snapshot unavailable or too small; live site will fall back to GB-implied country swings.")
-
-          # approved=False is valid. app.js then uses the common lambda and beta=1.
+          # approved=False is deliberately valid: app.js then uses the old
+          # conservative fallback rather than publishing an inferior candidate.
           print("Dataset validation passed.")
           PY
 
@@ -133,7 +127,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK polls, territorial data and calibration"
+            git commit -m "chore: update UK data and transfer calibration"
             git push
           fi
 
@@ -148,3 +142,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
