@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.10 — incumbent-collapse challenger routing / hybrid residual model
+modello-uk v0.9.11 — Reform false-positive diagnostics (shadow only)
 
 Purpose
 -------
-This is deliberately a SHADOW model until it clears a hard historical gate.
+This is deliberately a SHADOW diagnostic build.  It preserves the v0.9.10
+candidate unchanged, measures where Reform is over-predicted in the 2024
+development benchmark, and cannot activate a new live model.
 
 Data:
 - BES 2010-2019 Constituency Results with Census and Candidate Data
@@ -22,8 +24,9 @@ Rolling-origin validation:
 4. Only after the holdout has been scored, refit on all known history including
    2024 to create today's live central projection.
 
-The 2024 holdout is NEVER used to select model family, hyperparameters, blend
-strength or the approval threshold.
+The 2024 benchmark is used only to describe errors.  It is NEVER used here to
+select a model family, hyperparameters, blend strength, routing strength,
+approval threshold or any production coefficient.
 
 Model structure
 ---------------
@@ -79,8 +82,9 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v0910-incumbent-routing.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v0910.json"
+BACKTEST_OUT=DATA/"backtest-v0911-reform-diagnostics.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v0911.json"
+DIAGNOSTIC_OUT=DATA/"reform-diagnostics-v0911.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -173,7 +177,7 @@ ROUTING_STRENGTH_GRID=(0.0,0.20,0.40,0.60,0.80)
 UNWIND_STRENGTH_GRID=(0.0,0.15,0.30,0.45,0.60)
 
 
-UA="FocusAmerica-UK-election-model/0.9.10 (+https://angrisanidj.github.io/modello-uk/)"
+UA="FocusAmerica-UK-election-model/0.9.11 (+https://angrisanidj.github.io/modello-uk/)"
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -674,7 +678,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v0910-bes-integrity",
+        "version":"uk-v0911-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -1849,6 +1853,296 @@ def country_accuracy(
         "actual_seats":dict(real),
     }
 
+
+def _finite(value:Any)->float|None:
+    try:
+        number=float(value)
+    except (TypeError,ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def _feature_summary(records:list[dict[str,Any]],features:list[str])->dict[str,Any]:
+    out={}
+    for feature in features:
+        values=[
+            float(record["features"][feature])
+            for record in records
+            if _finite(record.get("features",{}).get(feature)) is not None
+        ]
+        if not values:
+            continue
+        arr=np.asarray(values,dtype=float)
+        out[feature]={
+            "n":int(len(arr)),
+            "mean":float(arr.mean()),
+            "median":float(np.median(arr)),
+            "q25":float(np.quantile(arr,.25)),
+            "q75":float(np.quantile(arr,.75)),
+        }
+    return out
+
+
+def _feature_separation(
+    left:list[dict[str,Any]],
+    right:list[dict[str,Any]],
+    features:list[str],
+    left_label:str,
+    right_label:str,
+)->dict[str,Any]:
+    rows=[]
+    for feature in features:
+        a=np.asarray([
+            float(record["features"][feature])
+            for record in left
+            if _finite(record.get("features",{}).get(feature)) is not None
+        ],dtype=float)
+        b=np.asarray([
+            float(record["features"][feature])
+            for record in right
+            if _finite(record.get("features",{}).get(feature)) is not None
+        ],dtype=float)
+        if not len(a) or not len(b):
+            continue
+        va=float(a.var(ddof=1)) if len(a)>1 else 0.0
+        vb=float(b.var(ddof=1)) if len(b)>1 else 0.0
+        pooled=math.sqrt(max(0.0,(va+vb)/2.0))
+        difference=float(a.mean()-b.mean())
+        smd=(difference/pooled) if pooled>1e-12 else None
+        rows.append({
+            "feature":feature,
+            "left_mean":float(a.mean()),
+            "right_mean":float(b.mean()),
+            "difference":difference,
+            "standardized_mean_difference":smd,
+            "abs_standardized_mean_difference":abs(smd) if smd is not None else None,
+            "left_n":int(len(a)),
+            "right_n":int(len(b)),
+        })
+    rows.sort(
+        key=lambda row:(
+            row["abs_standardized_mean_difference"]
+            if row["abs_standardized_mean_difference"] is not None else -1.0,
+            abs(row["difference"]),
+        ),
+        reverse=True,
+    )
+    return {
+        "left":left_label,
+        "right":right_label,
+        "warning":"Exploratory 2024 comparison only; it is not a fitted rule and does not update model parameters.",
+        "features":rows,
+    }
+
+
+def build_reform_diagnostics(
+    rows:pd.DataFrame,
+    actual:dict[str,Any],
+    base:dict[str,Any],
+    contest_scores:pd.DataFrame|None,
+)->dict[str,Any]:
+    """Describe Reform winner errors without fitting anything to 2024."""
+    actual_df=actual["frame"]
+    base_df=base["frame"]
+    if not rows.index.equals(actual_df.index) or not rows.index.equals(base_df.index):
+        raise RuntimeError("Reform diagnostic indexes do not align")
+
+    demo_columns=list(actual.get("demo_columns",[]))
+    # Keep ex-ante predictors separate from realised 2024 outcomes.  The
+    # predictor set may be inspected when formulating a future hypothesis;
+    # observed Reform share and forecast error are outcome diagnostics only
+    # and must never rank candidate predictors or select a correction.
+    predictor_feature_names=[
+        "baseline_ref_share","baseline_con_share","baseline_lab_share",
+        "baseline_ld_share","baseline_green_share","baseline_turnout",
+        "baseline_winner_margin","predicted_ref_share",
+        "predicted_best_non_ref_share","predicted_ref_margin",
+        "predicted_ref_rank","contestability_ref",
+        *[column.replace("demo_","") for column in demo_columns],
+    ]
+    outcome_feature_names=["actual_ref_share","ref_share_error"]
+    all_feature_names=predictor_feature_names+outcome_feature_names
+    records=[]
+    binary=Counter()
+    cohorts=Counter()
+    false_positive_actual=Counter()
+    false_positive_regions=Counter()
+
+    for idx,actual_row in actual_df.iterrows():
+        base_row=base_df.loc[idx]
+        predicted_row=rows.loc[idx]
+        candidates=competitive_parties(base_row)
+        predicted_order=sorted(
+            candidates,key=lambda party:float(predicted_row[party]),reverse=True
+        )
+        predicted=predicted_order[0]
+        observed=str(actual_row["actual_winner"])
+        predicted_ref=(predicted=="ref")
+        observed_ref=(observed=="ref")
+        if predicted_ref and observed_ref:
+            binary_label="true_positive";cohort="true_positive"
+        elif predicted_ref and not observed_ref:
+            binary_label="false_positive";cohort="false_positive"
+        elif not predicted_ref and observed_ref:
+            binary_label="false_negative";cohort="false_negative"
+        else:
+            binary_label="true_negative"
+            cohort="correct_non_reform" if predicted==observed else "other_winner_error"
+        binary[binary_label]+=1
+        cohorts[cohort]+=1
+        if cohort=="false_positive":
+            false_positive_actual[observed]+=1
+            false_positive_regions[str(actual_row["region"])]+=1
+
+        non_ref=[party for party in candidates if party!="ref"]
+        best_non_ref=max(non_ref,key=lambda party:float(predicted_row[party]))
+        base_winner=str(base_row.get("actual_winner") or "")
+        base_second=str(base_row.get("actual_second") or "")
+        if base_second not in candidates or base_second==base_winner:
+            base_second=max(
+                (party for party in candidates if party!=base_winner),
+                key=lambda party:float(base_row[party]),
+            )
+        contestability=None
+        if contest_scores is not None and "ref" in contest_scores.columns:
+            contestability=_finite(contest_scores.at[idx,"ref"])
+
+        features={
+            "baseline_ref_share":float(base_row["ref"]),
+            "baseline_con_share":float(base_row["con"]),
+            "baseline_lab_share":float(base_row["lab"]),
+            "baseline_ld_share":float(base_row["ld"]),
+            "baseline_green_share":float(base_row["green"]),
+            "baseline_turnout":float(base_row.get("turnout",0.0)),
+            "baseline_winner_margin":float(base_row[base_winner])-float(base_row[base_second]),
+            "predicted_ref_share":float(predicted_row["ref"]),
+            "predicted_best_non_ref_share":float(predicted_row[best_non_ref]),
+            "predicted_ref_margin":float(predicted_row["ref"])-float(predicted_row[best_non_ref]),
+            "predicted_ref_rank":float(predicted_order.index("ref")+1),
+            "actual_ref_share":float(actual_row["ref"]),
+            "ref_share_error":float(predicted_row["ref"])-float(actual_row["ref"]),
+            "contestability_ref":contestability,
+        }
+        for column in demo_columns:
+            features[column.replace("demo_","")]=_finite(actual_row.get(column))
+
+        records.append({
+            "id":str(actual_row["id"]),
+            "name":str(actual_row["name"]),
+            "country":str(actual_row["country"]),
+            "region":str(actual_row["region"]),
+            "cohort":cohort,
+            "binary_ref_classification":binary_label,
+            "predicted_winner":predicted,
+            "actual_winner":observed,
+            "baseline_winner":base_winner,
+            "baseline_second":base_second,
+            "predicted_best_non_ref":best_non_ref,
+            "predicted_shares":{
+                party:round(float(predicted_row[party]),6) for party in PARTIES
+            },
+            "actual_shares":{
+                party:round(float(actual_row[party]),6) for party in PARTIES
+            },
+            "features":features,
+        })
+
+    tp=int(binary["true_positive"]);fp=int(binary["false_positive"])
+    fn=int(binary["false_negative"]);tn=int(binary["true_negative"])
+    groups={
+        label:[record for record in records if record["cohort"]==label]
+        for label in (
+            "true_positive","false_positive","false_negative",
+            "correct_non_reform","other_winner_error"
+        )
+    }
+    # Only ex-ante/predicted features enter the ranked comparisons.  Realised
+    # 2024 Reform share and prediction error remain visible below as outcomes,
+    # but cannot appear in the predictor ranking.
+    comparisons=[
+        _feature_separation(
+            groups["false_positive"],groups["true_positive"],predictor_feature_names,
+            "false_positive","true_positive"
+        ),
+        _feature_separation(
+            groups["false_positive"],groups["correct_non_reform"],predictor_feature_names,
+            "false_positive","correct_non_reform"
+        ),
+    ]
+    outcome_comparisons=[
+        _feature_separation(
+            groups["false_positive"],groups["true_positive"],outcome_feature_names,
+            "false_positive","true_positive"
+        ),
+        _feature_separation(
+            groups["false_positive"],groups["correct_non_reform"],outcome_feature_names,
+            "false_positive","correct_non_reform"
+        ),
+    ]
+    predicted_ref=tp+fp
+    actual_ref=tp+fn
+    if tp+fp+fn+tn!=632:
+        raise RuntimeError("Reform diagnostic does not cover all 632 GB seats")
+
+    return {
+        "version":"uk-v0911-reform-diagnostics",
+        "status":"ok",
+        "generated_at":utcnow().isoformat(),
+        "diagnostic_only":True,
+        "used_for_parameter_selection":False,
+        "changes_production_model":False,
+        "source_model":"uk-v0910-incumbent-routing",
+        "benchmark":"2019_notional_to_2024",
+        "benchmark_role":"development_diagnostic_not_pristine_holdout",
+        "interpretation_warning":(
+            "The 2024 labels are inspected only to describe failure modes. "
+            "No threshold, coefficient, feature set or approval decision is selected from this report."
+        ),
+        "binary_confusion":{
+            "true_positive":tp,"false_positive":fp,
+            "false_negative":fn,"true_negative":tn,
+            "total":632,
+        },
+        "counts":{
+            "predicted_reform_wins":predicted_ref,
+            "actual_reform_wins":actual_ref,
+            "precision":tp/predicted_ref if predicted_ref else None,
+            "recall":tp/actual_ref if actual_ref else None,
+            "cohorts":{label:int(count) for label,count in sorted(cohorts.items())},
+            "false_positive_actual_winners":dict(false_positive_actual),
+            "false_positive_regions":dict(false_positive_regions),
+        },
+        "feature_definitions":{
+            "demographics":"Within-wave percentile ranks centred on zero.",
+            "shares":"Percentage points.",
+            "predicted_ref_margin":"Predicted Reform share minus the strongest predicted non-Reform challenger.",
+            "ref_share_error":"Predicted Reform share minus observed Reform share.",
+            "contestability_ref":"Frozen v0.9.10 contestability score; diagnostic only.",
+        },
+        "feature_roles":{
+            "predictors_ex_ante":predictor_feature_names,
+            "outcomes_2024_only":outcome_feature_names,
+            "ranking_rule":"feature_comparisons contains predictors_ex_ante only; outcomes_2024_only are excluded from predictor ranking and parameter selection.",
+        },
+        "cohort_summaries":{
+            label:{
+                "count":len(group),
+                "predictors":_feature_summary(group,predictor_feature_names),
+                "outcomes_2024":_feature_summary(group,outcome_feature_names),
+                "all_features":_feature_summary(group,all_feature_names),
+            }
+            for label,group in groups.items()
+        },
+        "feature_comparisons":comparisons,
+        "outcome_diagnostics_2024":outcome_comparisons,
+        "reform_cases":[
+            record for record in records
+            if record["binary_ref_classification"]!="true_negative"
+        ],
+        "false_positive_seats":groups["false_positive"],
+        "parameter_updates":{},
+    }
+
 def evaluate_rows(rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,Any])->dict[str,Any]:
     df=actual["frame"];base_df=base["frame"]
     pred=Counter();real=Counter();correct=0
@@ -1989,11 +2283,14 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v0910-incumbent-routing",
+        "version":"uk-v0911-reform-diagnostics",
         "model_type":"constituency-residual-incumbent-routing-v5",
         "status":"error",
         "approved":False,
         "publication_ready":False,
+        "diagnostic_only":True,
+        "used_for_parameter_selection":False,
+        "changes_production_model":False,
         "generated_at":utcnow().isoformat(),
         "error":str(exc),
         "traceback_tail":traceback.format_exc().splitlines()[-12:],
@@ -2001,15 +2298,22 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v0910-incumbent-routing-live","approved":False,"status":"error",
+        "version":"uk-v0911-reform-diagnostics-live","approved":False,"status":"error",
+        "diagnostic_only":True,
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v0910-incumbent-routing-backtest","status":"error","error":str(exc)
+        "version":"uk-v0911-reform-diagnostics-backtest","status":"error","error":str(exc)
+    },ensure_ascii=False,indent=2),encoding="utf-8")
+    DIAGNOSTIC_OUT.write_text(json.dumps({
+        "version":"uk-v0911-reform-diagnostics","status":"error",
+        "diagnostic_only":True,"used_for_parameter_selection":False,
+        "changes_production_model":False,"parameter_updates":{},
+        "error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v0910-bes-integrity","status":"failed",
+            "version":"uk-v0911-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -2120,7 +2424,15 @@ def main()->int:
         )
         holdout=evaluate_rows(hold_rows,e24,e19n)
 
-        approved,reasons=approval_gate(validation,holdout,validation_base,holdout_base)
+        candidate_gate_passed,reasons=approval_gate(
+            validation,holdout,validation_base,holdout_base
+        )
+        reform_diagnostics=build_reform_diagnostics(
+            hold_rows,e24,e19n,hold_contest_scores
+        )
+        # v0.9.11 is intentionally diagnostic-only.  Even a future passing
+        # candidate gate cannot promote this build without a separate version.
+        approved=False
         publication_ready=False
 
         # Live refit can use 2024 only AFTER the holdout has been scored.
@@ -2155,11 +2467,15 @@ def main()->int:
         )
 
         model_payload={
-            "version":"uk-v0910-incumbent-routing",
+            "version":"uk-v0911-reform-diagnostics",
             "model_type":"constituency-residual-incumbent-routing-v5",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
+            "diagnostic_only":True,
+            "used_for_parameter_selection":False,
+            "changes_production_model":False,
+            "candidate_gate_passed":candidate_gate_passed,
             "generated_at":utcnow().isoformat(),
             "selected_spec":selected_spec,
             "selected_party_strengths":selected_party_strengths,
@@ -2191,6 +2507,12 @@ def main()->int:
                 "max_validation_seat_error_increase":30,
             },
             "gate_failures":reasons,
+            "reform_diagnostics":{
+                "version":reform_diagnostics["version"],
+                "counts":reform_diagnostics["counts"],
+                "binary_confusion":reform_diagnostics["binary_confusion"],
+                "output":"data/reform-diagnostics-v0911.json",
+            },
             "development_2017":{
                 "candidate":development_2017,
                 "dispersion":dev_dispersion,
@@ -2252,18 +2574,23 @@ def main()->int:
                 "current_bes":curr_meta,
             },
             "note":(
-                "The v0.9.9 scenario activation uses only baseline and target national shares. "
-                "2019 remains temporal validation; 2024 is retained as a development benchmark, not a pristine holdout."
+                "v0.9.11 does not change the v0.9.10 candidate or any live coefficient. "
+                "It uses 2024 labels only to diagnose Reform false positives. "
+                "2019 remains temporal validation; a separate future version and fresh validation are required for promotion."
             )
         }
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v0910-incumbent-routing-live",
+            "version":"uk-v0911-reform-diagnostics-live",
             "model_type":"constituency-residual-incumbent-routing-v5",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
+            "diagnostic_only":True,
+            "used_for_parameter_selection":False,
+            "changes_production_model":False,
+            "candidate_gate_passed":candidate_gate_passed,
             "generated_at":utcnow().isoformat(),
             "model_version":model_payload["version"],
             "selected_spec":selected_spec,
@@ -2288,25 +2615,38 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v0910-incumbent-routing-backtest",
+            "version":"uk-v0911-reform-diagnostics-backtest",
             "status":"ok",
+            "diagnostic_only":True,
+            "used_for_parameter_selection":False,
             "selected_spec":selected_spec,
             "selected_party_strengths":selected_party_strengths,
             "party_contest_classifier":PARTY_CONTEST_BASE_SPEC,
             "selected_incumbent_routing":selected_routing,
-            "approved_for_live":approved,
+            "approved_for_live":False,
+            "candidate_gate_passed":candidate_gate_passed,
             "publication_ready":publication_ready,
             "development_2017":model_payload["development_2017"],
             "validation_2019":{"baseline":validation_base,"share_only_candidate":validation_share_only,"pre_routing_candidate":validation_pre_route,"candidate":validation,"dispersion":val_dispersion,"routing":val_routing,"scotland":country_accuracy(val_rows,e19,e17,"Scotland")},
             "holdout_2024":{"evaluation_label":"development_benchmark_not_pristine_holdout","baseline":holdout_base,"share_only_candidate":holdout_share_only,"pre_routing_candidate":holdout_pre_route,"candidate":holdout,"dispersion":hold_dispersion,"routing":hold_routing,"scotland":country_accuracy(hold_rows,e24,e19n,"Scotland")},
             "internal_selection_2017":model_payload["internal_selection_2017"],
             "party_calibration_2017":model_payload["party_calibration_2017"],
+            "reform_diagnostics":{
+                "version":reform_diagnostics["version"],
+                "counts":reform_diagnostics["counts"],
+                "binary_confusion":reform_diagnostics["binary_confusion"],
+                "output":"data/reform-diagnostics-v0911.json",
+            },
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
+        DIAGNOSTIC_OUT.write_text(
+            json.dumps(reform_diagnostics,ensure_ascii=False,indent=2),
+            encoding="utf-8"
+        )
 
-        print("v0.9.10 selected share spec:",selected_spec)
-        print("v0.9.10 selected party strengths:",selected_party_strengths)
-        print("v0.9.10 selected incumbent routing:",selected_routing)
+        print("v0.9.11 preserves v0.9.10 share spec:",selected_spec)
+        print("v0.9.11 preserves v0.9.10 party strengths:",selected_party_strengths)
+        print("v0.9.11 preserves v0.9.10 incumbent routing:",selected_routing)
         print("2017 routing audit:",routing_tuning["selected_audit"])
         print("2017 scenario:",national_scenario_metrics(e15,t15_17["target"]))
         print("2019 scenario:",national_scenario_metrics(e17,t17_19["target"]))
@@ -2325,8 +2665,10 @@ def main()->int:
             f"pre-route {holdout_pre_route['winner_accuracy']:.2%}/{holdout_pre_route['seat_abs_error_sum']}",
             f"routed {holdout['winner_accuracy']:.2%}/{holdout['seat_abs_error_sum']}"
         )
-        print("Approved for beta live:",approved,reasons)
-        print("Publication-ready threshold (85% / seat error <=140):",publication_ready)
+        print("Underlying candidate gate passed:",candidate_gate_passed,reasons)
+        print("Diagnostic-only build approved for live:",approved)
+        print("Reform diagnostic counts:",reform_diagnostics["counts"])
+        print("Publication-ready (requires a future version and fresh validation):",publication_ready)
         print("Live central GB seat totals:",live["totals"])
     return 0
 
@@ -2334,7 +2676,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.10 shadow build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.11 diagnostic build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # Shadow failure must not break the existing production model.
         raise SystemExit(0)

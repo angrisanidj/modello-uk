@@ -24,7 +24,7 @@ const CONFIG = {
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v0910-20260826-incumbent-routing',
+  cacheVersion: 'uk-v0911-20260826-reform-diagnostics',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
@@ -383,6 +383,13 @@ function mrpLiteActive(){
     && Array.isArray(m?.seats)
     && m.seats.length===632;
 }
+function reformDiagnosticsReady(){
+  const m=state.mrpLite;
+  return m?.version==='uk-v0911-reform-diagnostics-live'
+    && m?.status==='ok'
+    && m?.diagnostic_only===true
+    && m?.approved===false;
+}
 function buildMrpLiteCentral(target,geo){
   const lookup=new Map(state.mrpLite.seats.map(s=>[String(s.id),s]));
   const totals=Object.fromEntries(SEAT_ORDER.map(p=>[p,0]));
@@ -471,6 +478,13 @@ function transferModelActive(){
   return state.modelParams?.model_type==='transfer-raked-v1'
     && state.modelParams?.approved===true
     && state.modelParams?.transfer_coefficients;
+}
+function productionModelLabel(){
+  const diagnostic=reformDiagnosticsReady()?' · diagnostica Reform v0.9.11 disponibile in shadow':'';
+  if(mrpLiteActive())return `MRP-lite + incumbent routing · benchmark 2024 ${(Number(state.mrpLite.holdout_accuracy)*100).toFixed(1)}%${diagnostic}`;
+  if(partialRakeModelActive())return `Raking parziale validato (α=${partialRakeStrength().toFixed(2)}) 2024 → oggi${diagnostic}`;
+  if(transferModelActive())return `Modello trasferimenti 2024 → oggi${diagnostic}`;
+  return `Fallback prudente 2024 → oggi: swing regolarizzato${diagnostic}`;
 }
 function transferCountryForSeat(seat){
   if(/scotland/i.test(seat.country||''))return 'Scotland';
@@ -829,13 +843,13 @@ function renderCentral(){
   $('#projectionTitle').textContent='Proiezione centrale · provvisoria';
   const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales;
   const sub=[sm?.polls?`Scozia: ${sm.polls} poll`:null,wm?.polls?`Galles: ${wm.polls} poll`:null].filter(Boolean).join(' · ');
-  $('#projectionSubtitle').textContent=`${mrpLiteActive()?`MRP-lite + incumbent routing · benchmark 2024 ${(state.central.mrpLite.holdoutAccuracy*100).toFixed(1)}% · ${state.central.mrpLite.selectedSpec}`:partialRakeModelActive()?`Raking parziale validato (α=${partialRakeStrength().toFixed(2)}) 2024 → oggi`:transferModelActive()?'Modello trasferimenti 2024 → oggi':'Fallback prudente 2024 → oggi: swing regolarizzato'}${sub?` · ${sub}`:''}${state.central?.ni?.signalWeight?` · NI: tracker Assembly ×${state.central.ni.signalWeight.toFixed(2)}`:' · NI: baseline 2024'} · Monte Carlo in corso: emiciclo e mappa mostrano il centro deterministico fino al completamento.`;
+  $('#projectionSubtitle').textContent=`${productionModelLabel()}${sub?` · ${sub}`:''}${state.central?.ni?.signalWeight?` · NI: tracker Assembly ×${state.central.ni.signalWeight.toFixed(2)}`:' · NI: baseline 2024'} · Monte Carlo in corso: emiciclo e mappa mostrano il centro deterministico fino al completamento.`;
   renderSeats(totals,null);
   $('#kpiLargest').textContent=PARTY[Object.entries(totals).sort((a,b)=>b[1]-a[1])[0][0]]?.short||'—';
   $('#kpiLargestMeta').textContent='proiezione centrale provvisoria';
 }
 function renderMc(){
-  const m=state.mc;if(!m)return; renderSeats(m.medians,m.intervals); $('#projectionTitle').textContent='Distribuzione dei seggi';$('#projectionSubtitle').textContent='Risultato Monte Carlo completato: mediana delle 50.000 simulazioni; intervallo centrale 80% tra parentesi.';
+  const m=state.mc;if(!m)return; renderSeats(m.medians,m.intervals); $('#projectionTitle').textContent='Distribuzione dei seggi';$('#projectionSubtitle').textContent=`${productionModelLabel()} · Risultato Monte Carlo completato: mediana delle 50.000 simulazioni; intervallo centrale 80% tra parentesi.`;
   $('#probLabMaj').textContent=pctFmt(m.labMaj*100);$('#probConMaj').textContent=pctFmt(m.conMaj*100);$('#probRefMaj').textContent=pctFmt(m.refMaj*100);$('#probHung').textContent=pctFmt(m.hung*100);
   if($('#probLabWorkMaj'))$('#probLabWorkMaj').textContent=pctFmt((m.labWorkMaj||0)*100);if($('#probConWorkMaj'))$('#probConWorkMaj').textContent=pctFmt((m.conWorkMaj||0)*100);if($('#probRefWorkMaj'))$('#probRefWorkMaj').textContent=pctFmt((m.refWorkMaj||0)*100);if($('#workingThreshold'))$('#workingThreshold').textContent=fmt0(m.workingThreshold||326);
   const largest=Object.entries(m.largest).sort((a,b)=>b[1]-a[1])[0];$('#kpiLargest').textContent=PARTY[largest[0]]?.short||largest[0];$('#kpiLargestMeta').textContent=`${pctFmt(largest[1]*100)} di essere il primo partito`;
@@ -969,7 +983,7 @@ async function init(force=false){
     state.constituencies=constituencies;state.constituencyIndex=new Map(constituencies.map(c=>[c.id,c]));
     state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;state.mrpLite=mrpLite;state.subnational=subnational;state.territorialBaseline=territorialBaseline;
     renderPolls();renderCoalitionButtons();
-    if(constituencies.length===650){buildCentral();renderCentral();renderMap();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource} · seat model: ${mrpLiteActive()?`MRP-lite ${(Number(state.mrpLite.holdout_accuracy)*100).toFixed(1)}% holdout`:(partialRakeModelActive()?`raking α=${partialRakeStrength().toFixed(2)}`:'fallback prudente')} · poll subnazionali: ${state.subnational.length} · NI: ${niModuleReady()?'18 collegi simulati':'fallback fisso'}`;await runMonteCarlo(force);}else{
+    if(constituencies.length===650){buildCentral();renderCentral();renderMap();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource} · seat model: ${productionModelLabel()} · poll subnazionali: ${state.subnational.length} · NI: ${niModuleReady()?'18 collegi simulati':'fallback fisso'}`;await runMonteCarlo(force);}else{
       setStatus('Sondaggi caricati · manca la baseline territoriale','error');showError('La dashboard nazionale è attiva, ma i 650 risultati di collegio non sono ancora nello snapshot locale e il browser non è riuscito a recuperarli direttamente. Esegui la GitHub Action “Update UK election data”: genererà automaticamente baseline e geometrie.');renderMap();
     }
   }catch(err){console.error(err);setStatus('Errore di caricamento','error');showError(`Errore: ${err.message||err}`);}finally{$('#refreshBtn').disabled=false;}
