@@ -24,7 +24,7 @@ const CONFIG = {
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v09-20260826-mrp-lite-shadow',
+  cacheVersion: 'uk-v091-20260826-mrp-parser-fix',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
@@ -375,7 +375,7 @@ function buildGeographicTargets(gbTarget){
 
 function mrpLiteActive(){
   const m=state.mrpLite;
-  return m?.version==='uk-v09-mrp-lite-live'
+  return m?.version==='uk-v091-mrp-lite-live'
     && m?.model_type==='constituency-residual-ml-v1'
     && m?.status==='ok'
     && m?.approved===true
