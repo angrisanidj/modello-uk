@@ -38,10 +38,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Update election data and optimized map
+      - name: Update election data and territorial inputs
         run: python tools/build_data.py
 
-      - name: Calibrate and validate territorial model
+      - name: Calibrate hierarchical territorial model
         run: python tools/build_backtest.py
 
       - name: Validate datasets
@@ -50,95 +50,78 @@ jobs:
           import json
           from pathlib import Path
 
-          polls = json.loads(
-              Path("data/polls.json").read_text(encoding="utf-8")
-          )
-          constituencies = json.loads(
-              Path("data/constituencies-2024.json").read_text(encoding="utf-8")
-          )
-          geo = json.loads(
-              Path("data/constituencies-2024.geojson").read_text(encoding="utf-8")
-          )
-          display_geo = json.loads(
-              Path("data/constituencies-map.geojson").read_text(encoding="utf-8")
-          )
-          backtest = json.loads(
-              Path("data/backtest-2024-territorial.json").read_text(encoding="utf-8")
-          )
-          params = json.loads(
-              Path("data/model-params.json").read_text(encoding="utf-8")
-          )
+          def load(path):
+              return json.loads(Path(path).read_text(encoding="utf-8"))
 
-          n_polls = len(polls.get("polls", []))
-          n_const = len(constituencies.get("constituencies", []))
-          n_geo = len(geo.get("features", []))
-          n_display = len(display_geo.get("features", []))
+          polls=load("data/polls.json")
+          constituencies=load("data/constituencies-2024.json")
+          territorial=load("data/territorial-baseline.json")
+          geo=load("data/constituencies-2024.geojson")
+          display=load("data/constituencies-map.geojson")
+          bt=load("data/backtest-2024-territorial.json")
+          params=load("data/model-params.json")
 
-          full_path = Path("data/constituencies-2024.geojson")
-          display_path = Path("data/constituencies-map.geojson")
-          full_bytes = full_path.stat().st_size
-          display_bytes = display_path.stat().st_size
+          sub_path=Path("data/subnational-polls.json")
+          sub=load(sub_path) if sub_path.exists() else {"polls":[]}
 
-          map_meta = display_geo.get("meta", {})
-          vertices_before = int(map_meta.get("vertices_before", 0) or 0)
-          vertices_after = int(map_meta.get("vertices_after", 0) or 0)
+          n_polls=len(polls.get("polls",[]))
+          n_sub=len(sub.get("polls",[]))
+          n_const=len(constituencies.get("constituencies",[]))
+          n_geo=len(geo.get("features",[]))
+          n_display=len(display.get("features",[]))
+          regions=territorial.get("english_regions",[])
+          groups=territorial.get("groups",{})
 
-          validation = backtest.get("validation_2019", {})
-          holdout = backtest.get("holdout_2024", {})
-          common_holdout = holdout.get("common", {})
-          fitted_holdout = holdout.get("fitted", {})
+          full_bytes=Path("data/constituencies-2024.geojson").stat().st_size
+          display_bytes=Path("data/constituencies-map.geojson").stat().st_size
+          before=int(display.get("meta",{}).get("vertices_before",0) or 0)
+          after=int(display.get("meta",{}).get("vertices_after",0) or 0)
 
-          print(f"Polls: {n_polls}")
+          baseline_holdout=bt.get("baseline_common",{}).get("holdout_2024",{})
+          hierarchical=bt.get("hierarchical_candidate",{})
+          hier_holdout=hierarchical.get("holdout_2024",{})
+
+          print(f"National polls: {n_polls}")
+          print(f"Subnational polls: {n_sub}")
           print(f"Constituencies: {n_const}")
+          print(f"Territorial groups: {sorted(groups)}")
+          print(f"English regions: {regions}")
           print(f"Full GeoJSON: {n_geo} features, {full_bytes:,} bytes")
           print(f"Display GeoJSON: {n_display} features, {display_bytes:,} bytes")
-          print(f"Map vertices: {vertices_before:,} -> {vertices_after:,}")
-          print(f"Live calibration approved: {params.get('approved')}")
-          print(f"Fitted lambdas: {params.get('lambdas')}")
-          print(f"2019 validation: {validation}")
-          print(f"2024 holdout common: {common_holdout}")
-          print(f"2024 holdout fitted: {fitted_holdout}")
+          print(f"Map vertices: {before:,} -> {after:,}")
+          print(f"Model version: {params.get('version')}")
+          print(f"Live hierarchical model approved: {params.get('approved')}")
+          print(f"Lambdas: {params.get('lambdas')}")
+          print(f"Regional ridge: {params.get('regional_ridge')}")
+          print(f"2019 validation: {params.get('validation')}")
+          print(f"2024 holdout: {params.get('holdout')}")
 
-          if n_polls < 10:
-              raise SystemExit(f"ERROR: only {n_polls} polls")
+          if n_polls<10:
+              raise SystemExit(f"ERROR: only {n_polls} national polls")
+          if n_const!=650:
+              raise SystemExit(f"ERROR: expected 650 constituencies, found {n_const}")
+          if len(regions)!=9:
+              raise SystemExit(f"ERROR: expected 9 English regions, found {regions}")
+          for required in ("GB","England","Scotland","Wales"):
+              if required not in groups:
+                  raise SystemExit(f"ERROR: missing territorial baseline {required}")
+          if n_geo<650 or n_display<650:
+              raise SystemExit("ERROR: geometry feature count below 650")
+          if display_bytes>=full_bytes:
+              raise SystemExit("ERROR: optimized map is not smaller than full map")
+          if before and after>=before:
+              raise SystemExit("ERROR: optimized map did not reduce vertices")
+          if baseline_holdout.get("gb_seats")!=632 or hier_holdout.get("gb_seats")!=632:
+              raise SystemExit("ERROR: 2024 backtest did not evaluate 632 GB seats")
+          if params.get("version")!="uk-v05-hierarchical-territorial":
+              raise SystemExit(f"ERROR: unexpected model params version {params.get('version')}")
 
-          if n_const != 650:
-              raise SystemExit(
-                  f"ERROR: expected 650 constituencies, found {n_const}"
-              )
+          # Subnational acquisition is deliberately fail-soft: a temporary Wikipedia
+          # layout/network problem must not stop the national model or Pages deploy.
+          if n_sub<2:
+              print("WARNING: subnational polling snapshot unavailable or too small; live site will fall back to GB-implied country swings.")
 
-          if n_geo < 650:
-              raise SystemExit(
-                  f"ERROR: expected at least 650 full geometries, found {n_geo}"
-              )
-
-          if n_display < 650:
-              raise SystemExit(
-                  f"ERROR: expected at least 650 display geometries, found {n_display}"
-              )
-
-          if display_bytes >= full_bytes:
-              raise SystemExit(
-                  "ERROR: optimized map is not smaller than full GeoJSON"
-              )
-
-          if vertices_before and vertices_after >= vertices_before:
-              raise SystemExit(
-                  "ERROR: optimized map did not reduce vertex count"
-              )
-
-          if common_holdout.get("gb_seats") != 632:
-              raise SystemExit(
-                  "ERROR: 2024 holdout did not evaluate 632 GB seats"
-              )
-
-          if params.get("version") != "uk-v04-historical-calibration":
-              raise SystemExit(
-                  f"ERROR: unexpected model params version: {params.get('version')}"
-              )
-
-          # approved=False is NOT an error: in that case app.js deliberately
-          # falls back to the conservative lambda=0.82 model.
+          # approved=False is valid. app.js then uses the common lambda and beta=1.
           print("Dataset validation passed.")
           PY
 
@@ -150,7 +133,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data, optimized map and calibration"
+            git commit -m "chore: update UK polls, territorial data and calibration"
             git push
           fi
 
