@@ -27,7 +27,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Fonte sondaggi: —</span>
-      <span class="badge">Versione 0.9.7 · FPTP contestability calibration</span>
+      <span class="badge">Versione 0.9.8 · party-specific territorial calibration</span>
     </div>
   </section>
   <div id="errorBox" class="errorbox"></div>
@@ -48,7 +48,7 @@
       <div class="explain compact">
         <p><strong>632 collegi GB</strong> sono simulati singolarmente con il risultato 2024 come baseline e swing regolarizzato.</p>
         <p><strong>18 collegi dell’Irlanda del Nord</strong> sono simulati separatamente con partiti, candidati e risultati Westminster 2024 reali. In assenza di polling Westminster recente, il tracker Assembly di LucidTalk entra soltanto come segnale debole.</p>
-        <p class="warning"><strong>Beta:</strong> la v0.9.7 aggiunge un secondo stadio FPTP sopra l’MRP-lite. Il primo stadio stima le quote locali; il secondo impara, usando solo elezioni precedenti, quali collegi trasformano davvero quelle quote in una vittoria. Serve soprattutto a distinguere voto diffuso da voto efficiente: il 2015 UKIP informa la dispersione territoriale di Reform, mentre winner/runner-up, margini e crollo Conservative aiutano il targeting Labour/LibDem. La forza del layer è scelta sul 2017, validata sul 2019 e soltanto dopo misurata sul holdout 2024.</p>
+        <p class="warning"><strong>Beta:</strong> la v0.9.8 calibra separatamente la geografia di ciascun partito. La dispersione locale viene stimata soltanto dalle elezioni precedenti con livelli di consenso nazionale comparabili: così UKIP 2015 può informare Reform senza imporre la stessa struttura ai Liberal Democrats. Il correttore FPTP usa inoltre intensità diverse per Labour, Conservative, Reform, LibDem, Green, SNP e Plaid, selezionate sul 2017. Il 2019 resta la validazione temporale; il 2024 è ora dichiarato benchmark di sviluppo, non più holdout incontaminato.</p>
       </div>
     </article>
   </section>
@@ -92,7 +92,7 @@
   <section class="card poll-table-card"><div class="table-scroll"><table><thead><tr><th>Data</th><th>Istituto</th><th>Area</th><th>n</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>Green</th><th>SNP</th><th>PC</th><th>RB</th></tr></thead><tbody id="pollTableBody"></tbody></table></div></section>
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La calibrazione territoriale viene stimata su elezioni precedenti e verificata su elezioni non usate nel fit.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Stage 3 · MRP-lite constituency-level con holdout duro</p></div></div><div class="explain"><p><strong>Selezione:</strong> il modello viene scelto usando 2010→2015 come fit e 2015→2017 come test interno. <strong>Validazione:</strong> dopo il refit, 2017→2019. <strong>Holdout vero:</strong> dopo un nuovo refit con tutta la storia disponibile al 2019, 2019 nozionale→2024.</p><p><strong>Variabili:</strong> voto precedente, posizione del partito nel collegio, margine, interazioni tra partiti, paese/regione, Leave 2016 e indicatori Census su età, tenure, etnia, attività economica, industria, classe occupazionale e densità.</p><p class="warning"><strong>Gate:</strong> la v0.9 non entra live sotto l’80% di collegi corretti nel holdout 2024, deve guadagnare almeno 5 punti sul fallback e non può degradare materialmente il 2019. Il 2024 non viene usato per scegliere il modello; entra nel refit live soltanto dopo che il punteggio holdout è stato congelato.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Stage 4 · calibrazione territoriale party-specific</p></div></div><div class="explain"><p><strong>Selezione:</strong> il modello viene scelto usando 2010→2015 come fit e 2015→2017 come test interno. <strong>Validazione:</strong> dopo il refit, 2017→2019. <strong>Benchmark 2024:</strong> 2019 nozionale→2024 resta un test temporale severo, ma dopo le iterazioni v0.9.x viene trattato come benchmark di sviluppo e non più come holdout incontaminato.</p><p><strong>Variabili:</strong> voto precedente, posizione del partito nel collegio, margine, interazioni tra partiti, paese/regione, Leave 2016 e indicatori Census su età, tenure, etnia, attività economica, industria, classe occupazionale e densità.</p><p class="warning"><strong>Gate:</strong> la v0.9 non entra live sotto l’80% di collegi corretti nel holdout 2024, deve guadagnare almeno 5 punti sul fallback e non può degradare materialmente il 2019. Il 2024 non viene usato per scegliere il modello; entra nel refit live soltanto dopo che il punteggio holdout è stato congelato.</p></div></article>
     <article class="card"><div class="cardhead"><div><h3>Pipeline e backstop</h3><p>Il sito non dipende da una singola richiesta live.</p></div></div><div class="pipeline"><span>Wikipedia / MediaWiki</span><b>→</b><span>snapshot validato</span><b>→</b><span>media</span><b>→</b><span>632 collegi GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>Se l’aggiornamento live fallisce, resta disponibile l’ultimo snapshot valido. La GitHub Action aggiorna sondaggi, risultati, geometrie e ora anche il backtest territoriale.</p></div></article>
   </section>
   <footer>
@@ -100,7 +100,7 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.7"></script>
+<script src="scripts/app.js?v=0.9.8"></script>
 <script src="scripts/map-performance.js"></script>
 </body>
 </html>

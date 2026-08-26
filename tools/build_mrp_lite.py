@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.7 — MRP-lite + FPTP contestability calibration / hybrid residual model
+modello-uk v0.9.8 — party-specific territorial calibration / hybrid residual model
 
 Purpose
 -------
@@ -79,8 +79,8 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v097-mrp-lite.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v097.json"
+BACKTEST_OUT=DATA/"backtest-v098-party-calibration.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v098.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -125,7 +125,34 @@ CONTEST_SPECS=(
 )
 
 
-UA="FocusAmerica-UK-election-model/0.9.7 (+https://angrisanidj.github.io/modello-uk/)"
+# v0.9.8: party-specific calibration. The pooled classifier architecture is
+# frozen to the v0.9.7 winner (logit C=3); only party-specific application
+# strengths are selected on the 2017 development election.
+PARTY_CONTEST_BASE_SPEC={"name":"logit_c300","kind":"logit","C":3.0}
+PARTY_STRENGTH_GRID={
+    "lab":(0.0,0.15,0.30,0.45,0.60),
+    "con":(0.0,0.15,0.30,0.45,0.60),
+    "ref":(0.0,0.20,0.40,0.60,0.80),
+    "ld":(0.0,0.20,0.40,0.60,0.80),
+    "green":(0.0,0.15,0.30,0.45),
+    "snp":(0.0,0.15,0.30,0.45,0.60),
+    "pc":(0.0,0.15,0.30,0.45,0.60),
+    "other":(0.0,),
+}
+DISPERSION_BOUNDS={
+    "ref":(0.35,1.15),
+    "ld":(0.65,1.85),
+    "snp":(0.65,1.65),
+    "pc":(0.65,1.65),
+    "green":(0.55,1.55),
+    "lab":(0.65,1.45),
+    "con":(0.65,1.45),
+    "other":(0.80,1.20),
+}
+DISPERSION_SIMILARITY_TAU=0.70
+
+
+UA="FocusAmerica-UK-election-model/0.9.8 (+https://angrisanidj.github.io/modello-uk/)"
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -626,7 +653,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v097-bes-integrity",
+        "version":"uk-v098-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -1242,6 +1269,248 @@ def apply_contest_layer(
     )
     return rows,scores
 
+
+def _eligible_party_shares(election:dict[str,Any],party:str)->np.ndarray:
+    vals=[
+        float(row[party])
+        for _,row in election["frame"].iterrows()
+        if allowed(party,str(row["country"]))
+    ]
+    return np.asarray(vals,dtype=float)
+
+
+def historical_party_dispersion(
+    history:list[dict[str,Any]],
+    target:dict[str,float]
+)->dict[str,dict[str,Any]]:
+    """Estimate party-specific geographic dispersion using PRIOR elections only."""
+    profile={}
+    for p in PARTIES:
+        obs=[]
+        for order,election in enumerate(history):
+            vals=_eligible_party_shares(election,p)
+            if len(vals)<20:
+                continue
+            mean=float(np.mean(vals))
+            sd=float(np.std(vals))
+            nat=float(nat_shares(election).get(p,0.0))
+            if mean<=0.02:
+                continue
+            rel=sd/max(0.35,mean)
+            dist=abs(math.log((nat+0.50)/(float(target.get(p,0.0))+0.50)))
+            similarity=math.exp(-dist/DISPERSION_SIMILARITY_TAU)
+            recency=1.0+0.12*order
+            w=similarity*recency
+            obs.append((rel,w,nat,election["year"]))
+        if not obs:
+            profile[p]={"relative_sd":1.0,"observations":0,"history":[]}
+            continue
+        den=sum(x[1] for x in obs) or 1.0
+        rel=sum(x[0]*x[1] for x in obs)/den
+        profile[p]={
+            "relative_sd":float(rel),
+            "observations":len(obs),
+            "history":[
+                {"year":year,"national_share":nat,"weight":w,"relative_sd":r}
+                for r,w,nat,year in obs
+            ],
+        }
+    return profile
+
+
+def calibrate_party_dispersion(
+    rows:pd.DataFrame,
+    base:dict[str,Any],
+    target:dict[str,float],
+    history:list[dict[str,Any]]
+)->tuple[pd.DataFrame,dict[str,Any]]:
+    """Match each party's spread to its own prior-election concentration."""
+    out=rows.copy().astype(float)
+    profile=historical_party_dispersion(history,target)
+    meta={}
+
+    for p in PARTIES:
+        indexes=[
+            idx for idx,row in base["frame"].iterrows()
+            if allowed(p,str(row["country"]))
+        ]
+        if len(indexes)<20:
+            meta[p]={"beta":1.0,"reason":"too_few_seats"}
+            continue
+
+        vals=np.asarray([float(out.at[idx,p]) for idx in indexes],dtype=float)
+        mean=float(np.mean(vals))
+        sd=float(np.std(vals))
+        desired_rel=float(profile.get(p,{}).get("relative_sd",1.0))
+        desired_sd=desired_rel*max(0.35,mean)
+        raw_beta=desired_sd/max(0.05,sd)
+        lo,hi=DISPERSION_BOUNDS[p]
+        beta=clamp(raw_beta,lo,hi)
+
+        if float(target.get(p,0.0))<0.45:
+            beta=1.0
+
+        adjusted=np.maximum(mean+beta*(vals-mean),0.0001)
+        for idx,v in zip(indexes,adjusted):
+            out.at[idx,p]=float(v)
+
+        meta[p]={
+            "beta":float(beta),
+            "raw_beta":float(raw_beta),
+            "current_mean":mean,
+            "current_sd":sd,
+            "target_relative_sd":desired_rel,
+            "desired_sd":desired_sd,
+            "bounds":[lo,hi],
+            "history":profile.get(p,{}).get("history",[]),
+        }
+
+    for idx,row in base["frame"].iterrows():
+        country=str(row["country"])
+        vals={
+            p:(max(.0001,float(out.at[idx,p])) if allowed(p,country) else 0.0)
+            for p in PARTIES
+        }
+        den=sum(vals.values()) or 1.0
+        for p in PARTIES:
+            out.at[idx,p]=vals[p]/den*100.0
+
+    return rake(out,base,target),meta
+
+
+def calibrate_with_party_strengths(
+    rows:pd.DataFrame,
+    contest_scores:pd.DataFrame,
+    base:dict[str,Any],
+    target:dict[str,float],
+    strengths:dict[str,float]
+)->pd.DataFrame:
+    out=rows.copy().astype(float)
+    for idx,row in base["frame"].iterrows():
+        parties=competitive_parties(row)
+        share_sum=sum(max(.01,float(out.at[idx,p])) for p in parties) or 1.0
+        prob_sum=sum(max(1e-6,float(contest_scores.at[idx,p])) for p in parties) or 1.0
+
+        factors={}
+        for p in parties:
+            strength=float(strengths.get(p,0.0))
+            if strength<=0:
+                factors[p]=1.0
+                continue
+            share_prob=max(.002,float(out.at[idx,p])/share_sum)
+            contest_prob=max(.002,float(contest_scores.at[idx,p])/prob_sum)
+            factors[p]=clamp((contest_prob/share_prob)**strength,.55,1.80)
+
+        country=str(row["country"])
+        vals={}
+        for p in PARTIES:
+            vals[p]=(
+                max(.0001,float(out.at[idx,p])*factors.get(p,1.0))
+                if allowed(p,country) else 0.0
+            )
+        den=sum(vals.values()) or 1.0
+        for p in PARTIES:
+            out.at[idx,p]=vals[p]/den*100.0
+
+    return rake(out,base,target)
+
+
+def party_winner_loss(
+    rows:pd.DataFrame,
+    actual:dict[str,Any],
+    base:dict[str,Any],
+    party:str
+)->tuple[int,int,int]:
+    pred=0;real=0;mistakes=0
+    for idx,row in actual["frame"].iterrows():
+        pw=predicted_winner(rows.loc[idx],base["frame"].loc[idx])
+        rw=str(row["actual_winner"])
+        pred+=int(pw==party);real+=int(rw==party)
+        mistakes+=int((pw==party)!=(rw==party))
+    return mistakes,abs(pred-real),pred
+
+
+def tune_party_strengths(
+    raw_rows:pd.DataFrame,
+    base:dict[str,Any],
+    actual:dict[str,Any],
+    target:dict[str,float],
+    training_transitions:list[dict[str,Any]]
+)->tuple[dict[str,float],dict[str,Any],pd.DataFrame]:
+    """Select party-specific FPTP strengths using the 2017 development election."""
+    model,names=train_contest_model(training_transitions,PARTY_CONTEST_BASE_SPEC)
+    scores=predict_contest_scores(base,target,model,names)
+
+    chosen={};audit={}
+    zero={p:0.0 for p in PARTIES}
+
+    for p in PARTIES:
+        candidates=[]
+        for strength in PARTY_STRENGTH_GRID[p]:
+            trial=dict(zero);trial[p]=float(strength)
+            candidate=calibrate_with_party_strengths(
+                raw_rows,scores,base,target,trial
+            )
+            mistakes,seat_err,pred=party_winner_loss(candidate,actual,base,p)
+            candidates.append({
+                "strength":float(strength),
+                "mistakes":int(mistakes),
+                "seat_error":int(seat_err),
+                "predicted_seats":int(pred),
+            })
+        candidates.sort(key=lambda x:(x["mistakes"],x["seat_error"],x["strength"]))
+        chosen[p]=float(candidates[0]["strength"])
+        audit[p]=candidates
+
+    global_candidates=[]
+    for scale in (0.0,0.50,0.75,1.00):
+        strengths={p:chosen[p]*scale for p in PARTIES}
+        candidate=calibrate_with_party_strengths(
+            raw_rows,scores,base,target,strengths
+        )
+        metrics=evaluate_rows(candidate,actual,base)
+        global_candidates.append({
+            "scale":scale,"metrics":metrics,"strengths":strengths
+        })
+
+    global_candidates.sort(key=lambda x:score_tuple(x["metrics"]),reverse=True)
+    selected=global_candidates[0]
+    return selected["strengths"],{
+        "per_party_candidates":audit,
+        "unscaled_strengths":chosen,
+        "global_candidates":[
+            {
+                "scale":x["scale"],
+                "winner_accuracy":x["metrics"]["winner_accuracy"],
+                "correct_winners":x["metrics"]["correct_winners"],
+                "seat_abs_error_sum":x["metrics"]["seat_abs_error_sum"],
+                "strengths":x["strengths"],
+            } for x in global_candidates
+        ],
+        "selected_scale":selected["scale"],
+    },scores
+
+
+def apply_party_calibration(
+    raw_rows:pd.DataFrame,
+    base:dict[str,Any],
+    target:dict[str,float],
+    history:list[dict[str,Any]],
+    training_transitions:list[dict[str,Any]],
+    strengths:dict[str,float]
+)->tuple[pd.DataFrame,dict[str,Any],pd.DataFrame|None]:
+    dispersed,dispersion_meta=calibrate_party_dispersion(
+        raw_rows,base,target,history
+    )
+    if not any(float(v)>0 for v in strengths.values()):
+        return dispersed,dispersion_meta,None
+    model,names=train_contest_model(training_transitions,PARTY_CONTEST_BASE_SPEC)
+    scores=predict_contest_scores(base,target,model,names)
+    calibrated=calibrate_with_party_strengths(
+        dispersed,scores,base,target,strengths
+    )
+    return calibrated,dispersion_meta,scores
+
 def evaluate_rows(rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,Any])->dict[str,Any]:
     df=actual["frame"];base_df=base["frame"]
     pred=Counter();real=Counter();correct=0
@@ -1382,8 +1651,8 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v097-mrp-lite",
-        "model_type":"constituency-residual-ml-fptp-v2",
+        "version":"uk-v098-party-calibration",
+        "model_type":"constituency-residual-party-calibration-v3",
         "status":"error",
         "approved":False,
         "publication_ready":False,
@@ -1394,15 +1663,15 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v097-mrp-lite-live","approved":False,"status":"error",
+        "version":"uk-v098-party-calibration-live","approved":False,"status":"error",
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v097-mrp-lite-backtest","status":"error","error":str(exc)
+        "version":"uk-v098-party-calibration-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v097-bes-integrity","status":"failed",
+            "version":"uk-v098-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -1449,58 +1718,98 @@ def main()->int:
         validation_base=evaluate_baseline(e17,e19)
         holdout_base=evaluate_baseline(e19n,e24)
 
-        # Tune using only pre-validation history.
         selected_spec,tuning=tune_spec(t10_15,t15_17)
-        selected_contest_spec,contest_tuning=tune_contest_spec(
-            t10_15,t15_17,selected_spec
-        )
 
-        # Unseen validation.
+        # 2017 development election: share model trained only through 2015.
+        dev_models,dev_names=train_models([t10_15],selected_spec)
+        dev_raw=predict_transition(
+            e15,t15_17["target"],dev_models,dev_names,selected_spec
+        )
+        dev_dispersed,dev_dispersion=calibrate_party_dispersion(
+            dev_raw,e15,t15_17["target"],[e10,e15]
+        )
+        selected_party_strengths,party_strength_tuning,dev_contest_scores=(
+            tune_party_strengths(
+                dev_dispersed,e15,e17,t15_17["target"],[t10_15]
+            )
+        )
+        dev_calibrated=calibrate_with_party_strengths(
+            dev_dispersed,dev_contest_scores,e15,t15_17["target"],
+            selected_party_strengths
+        )
+        development_2017=evaluate_rows(dev_calibrated,e17,e15)
+
+        # 2019 is temporal validation for the new party-specific calibration.
         models_val,names_val=train_models([t10_15,t15_17],selected_spec)
-        val_raw=predict_transition(e17,t17_19["target"],models_val,names_val,selected_spec)
+        val_raw=predict_transition(
+            e17,t17_19["target"],models_val,names_val,selected_spec
+        )
         validation_share_only=evaluate_rows(val_raw,e19,e17)
-        val_rows,val_contest_scores=apply_contest_layer(
-            val_raw,e17,t17_19["target"],[t10_15,t15_17],selected_contest_spec
+        val_rows,val_dispersion,val_contest_scores=apply_party_calibration(
+            val_raw,e17,t17_19["target"],
+            [e10,e15,e17],[t10_15,t15_17],
+            selected_party_strengths
         )
         validation=evaluate_rows(val_rows,e19,e17)
 
-        # Genuine holdout. Refit using everything known by the end of 2019.
-        models_hold,names_hold=train_models([t10_15,t15_17,t17_19],selected_spec)
-        hold_raw=predict_transition(e19n,t19n_24["target"],models_hold,names_hold,selected_spec)
+        # 2024 is a development benchmark, not a pristine holdout anymore.
+        models_hold,names_hold=train_models(
+            [t10_15,t15_17,t17_19],selected_spec
+        )
+        hold_raw=predict_transition(
+            e19n,t19n_24["target"],models_hold,names_hold,selected_spec
+        )
         holdout_share_only=evaluate_rows(hold_raw,e24,e19n)
-        hold_rows,hold_contest_scores=apply_contest_layer(
+        hold_rows,hold_dispersion,hold_contest_scores=apply_party_calibration(
             hold_raw,e19n,t19n_24["target"],
-            [t10_15,t15_17,t17_19],selected_contest_spec
+            [e10,e15,e17,e19],[t10_15,t15_17,t17_19],
+            selected_party_strengths
         )
         holdout=evaluate_rows(hold_rows,e24,e19n)
 
         approved,reasons=approval_gate(validation,holdout,validation_base,holdout_base)
-        publication_ready=bool(
-            approved
-            and holdout["winner_accuracy"]>=.85
-            and holdout["seat_abs_error_sum"]<=140
-        )
+        publication_ready=False
 
         # Live refit can use 2024 only AFTER the holdout has been scored.
         target_now,poll_meta=calculate_poll_target(DATA/"polls.json")
-        models_live,names_live=train_models([t10_15,t15_17,t17_19,t19n_24],selected_spec)
-        live_raw=predict_transition(e24,target_now,models_live,names_live,selected_spec)
-        live_rows,live_contest_scores=apply_contest_layer(
-            live_raw,e24,target_now,[t10_15,t15_17,t17_19,t19n_24],selected_contest_spec
+        models_live,names_live=train_models(
+            [t10_15,t15_17,t17_19,t19n_24],selected_spec
+        )
+        live_raw=predict_transition(
+            e24,target_now,models_live,names_live,selected_spec
+        )
+        live_rows,live_dispersion,live_contest_scores=apply_party_calibration(
+            live_raw,e24,target_now,
+            [e10,e15,e17,e19,e24],
+            [t10_15,t15_17,t17_19,t19n_24],
+            selected_party_strengths
         )
         live=live_projection(
-            e24,target_now,live_rows,live_contest_scores,selected_contest_spec
+            e24,target_now,live_rows,live_contest_scores,
+            {
+                "kind":"party_specific",
+                "classifier":PARTY_CONTEST_BASE_SPEC,
+                "strengths":selected_party_strengths,
+                "dispersion":live_dispersion,
+            }
         )
 
         model_payload={
-            "version":"uk-v097-mrp-lite",
-            "model_type":"constituency-residual-ml-fptp-v2",
+            "version":"uk-v098-party-calibration",
+            "model_type":"constituency-residual-party-calibration-v3",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
             "generated_at":utcnow().isoformat(),
             "selected_spec":selected_spec,
-            "selected_contest_spec":selected_contest_spec,
+            "selected_party_strengths":selected_party_strengths,
+            "party_contest_classifier":PARTY_CONTEST_BASE_SPEC,
+            "evaluation_status":{
+                "development_2017":"parameter_selection",
+                "validation_2019":"temporal_validation",
+                "benchmark_2024":"development_benchmark_not_pristine_holdout",
+                "publication_ready_requires_fresh_external_validation":True
+            },
             "hard_gate":{
                 "min_holdout_accuracy":.80,
                 "min_holdout_gain_pp":5.0,
@@ -1509,15 +1818,23 @@ def main()->int:
                 "max_validation_seat_error_increase":30,
             },
             "gate_failures":reasons,
+            "development_2017":{
+                "candidate":development_2017,
+                "dispersion":dev_dispersion,
+                "party_strength_tuning":party_strength_tuning
+            },
             "validation_2019":{
                 "baseline":validation_base,
                 "share_only_candidate":validation_share_only,
                 "candidate":validation,
+                "dispersion":val_dispersion
             },
             "holdout_2024":{
+                "evaluation_label":"development_benchmark_not_pristine_holdout",
                 "baseline":holdout_base,
                 "share_only_candidate":holdout_share_only,
                 "candidate":holdout,
+                "dispersion":hold_dispersion,
                 "accuracy_gain_pp":(holdout["winner_accuracy"]-holdout_base["winner_accuracy"])*100,
                 "seat_error_improvement":holdout_base["seat_abs_error_sum"]-holdout["seat_abs_error_sum"],
             },
@@ -1533,22 +1850,16 @@ def main()->int:
                     } for x in tuning
                 ],
             },
-            "contestability_selection_2017":{
-                "selected":selected_contest_spec,
-                "candidates":[
-                    {
-                        "spec":x["spec"],
-                        "winner_accuracy":x["metrics"]["winner_accuracy"],
-                        "correct_winners":x["metrics"]["correct_winners"],
-                        "seat_abs_error_sum":x["metrics"]["seat_abs_error_sum"],
-                        "predicted_seats":x["metrics"]["predicted_seats"],
-                    } for x in contest_tuning
-                ],
+            "party_calibration_2017":{
+                "classifier":PARTY_CONTEST_BASE_SPEC,
+                "selected_strengths":selected_party_strengths,
+                "tuning":party_strength_tuning,
+                "dispersion":dev_dispersion
             },
             "features":{
                 "historical_demographics":[c.replace("demo_","") for c in e19["demo_columns"]],
                 "current_demographics":[c.replace("demo_","") for c in e24["demo_columns"]],
-                "notes":"Census fields are converted to within-wave percentile ranks. Stage 1 predicts local vote shares; Stage 2 is an FPTP contestability classifier trained only on earlier elections and selected on 2017. It redistributes territorial efficiency while the final raking preserves national party targets. Official WinnerXX/SecondXX define historical seat competition; Other is never a pooled universal candidate.",
+                "notes":"Stage 1 predicts local vote shares. Stage 2 calibrates each party's geographic dispersion from prior actual elections at similar national support levels. Stage 3 applies a frozen pooled FPTP classifier with party-specific strengths selected on 2017. Final raking preserves national party targets. 2019 is temporal validation; 2024 is explicitly a development benchmark after earlier v0.9.x iteration.",
             },
             "integrity":{
                 "version":integrity.get("version"),
@@ -1567,15 +1878,17 @@ def main()->int:
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v097-mrp-lite-live",
-            "model_type":"constituency-residual-ml-fptp-v2",
+            "version":"uk-v098-party-calibration-live",
+            "model_type":"constituency-residual-party-calibration-v3",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
             "generated_at":utcnow().isoformat(),
             "model_version":model_payload["version"],
             "selected_spec":selected_spec,
-            "selected_contest_spec":selected_contest_spec,
+            "selected_party_strengths":selected_party_strengths,
+            "party_contest_classifier":PARTY_CONTEST_BASE_SPEC,
+            "development_benchmark_2024_accuracy":holdout["winner_accuracy"],
             "target_gb":target_now,
             "poll_meta":poll_meta,
             "holdout_accuracy":holdout["winner_accuracy"],
@@ -1585,21 +1898,23 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v097-mrp-lite-backtest",
+            "version":"uk-v098-party-calibration-backtest",
             "status":"ok",
             "selected_spec":selected_spec,
-            "selected_contest_spec":selected_contest_spec,
+            "selected_party_strengths":selected_party_strengths,
+            "party_contest_classifier":PARTY_CONTEST_BASE_SPEC,
             "approved_for_live":approved,
             "publication_ready":publication_ready,
-            "validation_2019":{"baseline":validation_base,"share_only_candidate":validation_share_only,"candidate":validation},
-            "holdout_2024":{"baseline":holdout_base,"share_only_candidate":holdout_share_only,"candidate":holdout},
+            "development_2017":model_payload["development_2017"],
+            "validation_2019":{"baseline":validation_base,"share_only_candidate":validation_share_only,"candidate":validation,"dispersion":val_dispersion},
+            "holdout_2024":{"evaluation_label":"development_benchmark_not_pristine_holdout","baseline":holdout_base,"share_only_candidate":holdout_share_only,"candidate":holdout,"dispersion":hold_dispersion},
             "internal_selection_2017":model_payload["internal_selection_2017"],
-            "contestability_selection_2017":model_payload["contestability_selection_2017"],
+            "party_calibration_2017":model_payload["party_calibration_2017"],
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
-        print("v0.9.7 selected share spec:",selected_spec)
-        print("v0.9.7 selected FPTP contest spec:",selected_contest_spec)
+        print("v0.9.8 selected share spec:",selected_spec)
+        print("v0.9.8 selected party strengths:",selected_party_strengths)
         print(
             "2019 validation:",
             f"baseline {validation_base['winner_accuracy']:.2%}/{validation_base['seat_abs_error_sum']}",
@@ -1607,7 +1922,7 @@ def main()->int:
             f"FPTP-calibrated {validation['winner_accuracy']:.2%}/{validation['seat_abs_error_sum']}"
         )
         print(
-            "2024 HOLDOUT:",
+            "2024 DEVELOPMENT BENCHMARK:",
             f"baseline {holdout_base['winner_accuracy']:.2%}/{holdout_base['seat_abs_error_sum']}",
             f"share-only {holdout_share_only['winner_accuracy']:.2%}/{holdout_share_only['seat_abs_error_sum']}",
             f"FPTP-calibrated {holdout['winner_accuracy']:.2%}/{holdout['seat_abs_error_sum']}"
@@ -1621,7 +1936,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.7 shadow build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.8 shadow build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # Shadow failure must not break the existing production model.
         raise SystemExit(0)
