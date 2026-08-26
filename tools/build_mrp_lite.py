@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.1 — corrected constituency MRP-lite / hybrid residual model
+modello-uk v0.9.2 — official-winner constituency MRP-lite / hybrid residual model
 
 Purpose
 -------
@@ -79,8 +79,8 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v091-mrp-lite.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v091.json"
+BACKTEST_OUT=DATA/"backtest-v092-mrp-lite.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v092.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -112,7 +112,7 @@ MODEL_SPECS=(
     {"name":"hybrid_a5_d2_w40","kind":"hybrid","alpha":5.0,"depth":2,"leaf":24,"l2":2.0,"hgb_weight":.40,"gamma":.85},
 )
 
-UA="FocusAmerica-UK-election-model/0.9.1 (+https://angrisanidj.github.io/modello-uk/)"
+UA="FocusAmerica-UK-election-model/0.9.2 (+https://angrisanidj.github.io/modello-uk/)"
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -319,6 +319,70 @@ def allowed(p:str,country:str)->bool:
     if p=="pc":return country=="Wales"
     return country!="Northern Ireland"
 
+def winner_col(df:pd.DataFrame,yy:str)->str|None:
+    return find_col(df,f"Winner{yy}",f"WinningParty{yy}",f"Winner20{yy}")
+
+def second_col(df:pd.DataFrame,yy:str)->str|None:
+    return find_col(df,f"Second{yy}",f"SecondParty{yy}",f"RunnerUp{yy}")
+
+def canonical_party_label(value:Any,allow_blank:bool=False)->str|None:
+    if value is None or (isinstance(value,float) and np.isnan(value)):
+        if allow_blank:return None
+        raise ValueError("Missing official winner label")
+    s=str(value).strip()
+    if not s or s.lower() in {"nan","none","na","n/a"}:
+        if allow_blank:return None
+        raise ValueError(f"Missing official winner label: {value!r}")
+    k=nkey(s)
+
+    mapping={
+        "con":"con","conservative":"con","conservatives":"con","conservativeparty":"con",
+        "lab":"lab","labour":"lab","labourparty":"lab",
+        "ld":"ld","libdem":"ld","libdems":"ld","liberaldemocrat":"ld","liberaldemocrats":"ld",
+        "green":"green","greenparty":"green","greens":"green",
+        "snp":"snp","scottishnationalparty":"snp",
+        "pc":"pc","plaid":"pc","plaidcymru":"pc",
+        "ukip":"ref","ukindependenceparty":"ref","unitedkingdomindependenceparty":"ref",
+        "brexit":"ref","brexitparty":"ref","reform":"ref","reformuk":"ref",
+        "spk":"other","speaker":"other","thespeaker":"other",
+        "ind":"other","independent":"other","independents":"other",
+        "other":"other","others":"other","minor":"other","minorparty":"other",
+    }
+    if k in mapping:return mapping[k]
+
+    # Some source labels include annotations such as "Lab gain" or
+    # "Conservative hold". Parse the party token but never guess numbers.
+    if "conservative" in k:return "con"
+    if "labour" in k:return "lab"
+    if "liberal" in k and "democrat" in k:return "ld"
+    if "scottishnational" in k:return "snp"
+    if "plaid" in k:return "pc"
+    if "green" in k:return "green"
+    if "ukip" in k or "brexit" in k or "reform" in k:return "ref"
+    if "speaker" in k or "independent" in k:return "other"
+
+    if allow_blank:return None
+    raise ValueError(f"Unrecognised official party label: {value!r}")
+
+def competitive_parties(row:pd.Series)->list[str]:
+    """Parties allowed to WIN the seat without pooling unrelated 'Other' votes.
+
+    Main parties are always eligible where geographically valid. The aggregate
+    'other' bucket becomes a seat-winning competitor only when an Other/
+    independent/Speaker candidate was already winner or runner-up in the
+    baseline election. This uses baseline information only and prevents a sum
+    of several minor candidates from behaving like one artificial super-party.
+    """
+    country=str(row["country"])
+    candidates=[p for p in MAIN_PARTIES if allowed(p,country)]
+    if row.get("actual_winner")=="other" or row.get("actual_second")=="other":
+        candidates.append("other")
+    return candidates
+
+def predicted_winner(predicted_row:pd.Series|dict[str,float],baseline_row:pd.Series)->str:
+    candidates=competitive_parties(baseline_row)
+    return max(candidates,key=lambda p:float(predicted_row[p]))
+
 def extract_election(df:pd.DataFrame,yy:str)->dict[str,Any]:
     ic=id_col(df); nc=name_col(df); cc=country_col(df); rc=region_col(df)
     if nc is None:raise RuntimeError("BES dataset has no constituency name column")
@@ -330,6 +394,16 @@ def extract_election(df:pd.DataFrame,yy:str)->dict[str,Any]:
     data["name"]=df[nc].astype(str)
     data["country"]=df[cc].map(normalize_country)
     data["region"]=[region_key(df.loc[i,rc],data.loc[i,"country"]) for i in df.index]
+
+    wc=winner_col(df,yy)
+    if wc is None:
+        raise RuntimeError(f"Election {yy}: BES dataset has no official Winner{yy} column")
+    sc=second_col(df,yy)
+    data["actual_winner"]=df[wc].map(lambda v:canonical_party_label(v,allow_blank=False))
+    if sc is not None:
+        data["actual_second"]=df[sc].map(lambda v:canonical_party_label(v,allow_blank=True))
+    else:
+        data["actual_second"]=None
 
     tv=total_vote_col(df,yy)
     total_votes=pd.to_numeric(df[tv],errors="coerce").fillna(0.0) if tv else pd.Series(0.0,index=df.index)
@@ -393,6 +467,9 @@ def extract_election(df:pd.DataFrame,yy:str)->dict[str,Any]:
 
     data=data[data["country"]!="Northern Ireland"].copy()
 
+    if data["actual_winner"].isna().any():
+        bad=data.loc[data["actual_winner"].isna(),["id","name"]].head(5).to_dict("records")
+        raise RuntimeError(f"Election {yy}: missing official winners after GB filter: {bad}")
     if len(data)!=632:
         raise RuntimeError(f"Election {yy}: expected exactly 632 GB seats, got {len(data)}")
     if data["id"].duplicated().any():
@@ -422,10 +499,7 @@ EXPECTED_WINNERS={
 }
 
 def actual_winner_counts(election:dict[str,Any])->dict[str,int]:
-    counts=Counter()
-    for _,row in election["frame"].iterrows():
-        candidates=[p for p in PARTIES if allowed(p,row["country"])]
-        counts[max(candidates,key=lambda p:float(row[p]))]+=1
+    counts=Counter(str(v) for v in election["frame"]["actual_winner"])
     return {p:int(counts[p]) for p in PARTIES if counts[p]}
 
 def integrity_record(label:str,election:dict[str,Any],boundary:str,expected_winners:dict[str,int]|None):
@@ -460,6 +534,9 @@ def integrity_record(label:str,election:dict[str,Any],boundary:str,expected_winn
         "countries":countries,
         "english_regions":english,
         "winner_counts":winners,
+        "official_winner_source":True,
+        "other_winner_seats":int((df["actual_winner"]=="other").sum()),
+        "other_runnerup_seats":int((df["actual_second"]=="other").sum()),
         "errors":errors,
     }
 
@@ -467,7 +544,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v091-bes-integrity",
+        "version":"uk-v092-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -614,10 +691,16 @@ def merge_demo(election:dict[str,Any],demo:pd.DataFrame)->dict[str,Any]:
 
 def row_context(row:pd.Series,nat_base:dict[str,float],nat_target:dict[str,float],party:str,demo_cols:list[str])->dict[str,float]:
     local={p:float(row[p])/100.0 for p in PARTIES}
-    ordered=sorted(PARTIES,key=lambda p:local[p],reverse=True)
-    winner=ordered[0]; second=ordered[1]
-    own_rank=ordered.index(party)+1
-    margin=max(0.0,local[winner]-local[second])
+    rankable=competitive_parties(row)
+    ordered=sorted(rankable,key=lambda p:local[p],reverse=True)
+
+    winner=str(row.get("actual_winner") or ordered[0])
+    second=row.get("actual_second")
+    if second not in rankable or second==winner:
+        second=next((p for p in ordered if p!=winner),ordered[0])
+
+    own_rank=(ordered.index(party)+1) if party in ordered else (len(ordered)+1)
+    margin=max(0.0,local.get(winner,0.0)-local.get(second,0.0))
 
     f={}
     for p in PARTIES:
@@ -628,9 +711,10 @@ def row_context(row:pd.Series,nat_base:dict[str,float],nat_target:dict[str,float
         f[f"delta_{p}"]=delta
         f[f"local_x_delta_{p}"]=local[p]*delta
 
-    f["own_rank"]=(own_rank-1)/7.0
+    f["own_rank"]=(own_rank-1)/max(1.0,float(len(ordered)))
     f["own_winner"]=1.0 if winner==party else 0.0
     f["own_second"]=1.0 if second==party else 0.0
+    f["other_competitive"]=1.0 if "other" in rankable else 0.0
     f["margin"]=margin
     f["turnout"]=float(row.get("turnout",0.0))/100.0
     country=str(row["country"])
@@ -796,19 +880,29 @@ def predict_transition(base:dict[str,Any],target:dict[str,float],models,feature_
         for p in PARTIES:out.at[idx,p]=vals[p]/s*100.0
     return rake(out,base,target)
 
-def evaluate_rows(rows:pd.DataFrame,actual:dict[str,Any])->dict[str,Any]:
-    df=actual["frame"];pred=Counter();real=Counter();correct=0
+def evaluate_rows(rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,Any])->dict[str,Any]:
+    df=actual["frame"];base_df=base["frame"]
+    pred=Counter();real=Counter();correct=0
     by_region=defaultdict(lambda:[0,0]);share_abs=0.0;share_n=0
+
+    if not df.index.equals(base_df.index):
+        raise RuntimeError(f"Evaluation {base['year']}->{actual['year']}: row indexes do not align")
+
     for idx,row in df.iterrows():
-        candidates=[p for p in PARTIES if allowed(p,row["country"])]
-        pw=max(candidates,key=lambda p:float(rows.at[idx,p]))
-        rw=max(candidates,key=lambda p:float(row[p]))
+        baseline_row=base_df.loc[idx]
+        pw=predicted_winner(rows.loc[idx],baseline_row)
+        rw=str(row["actual_winner"])
         pred[pw]+=1;real[rw]+=1
         if pw==rw:
             correct+=1;by_region[row["region"]][0]+=1
         by_region[row["region"]][1]+=1
-        for p in candidates:
-            share_abs+=abs(float(rows.at[idx,p])-float(row[p]));share_n+=1
+
+        # Share MAE is still computed against aggregate Other vote share. It is
+        # a vote-share metric, not a claim that pooled Other is one candidate.
+        for p in PARTIES:
+            if allowed(p,row["country"]):
+                share_abs+=abs(float(rows.at[idx,p])-float(row[p]));share_n+=1
+
     n=len(df)
     err={p:int(pred[p]-real[p]) for p in PARTIES}
     return {
@@ -820,6 +914,8 @@ def evaluate_rows(rows:pd.DataFrame,actual:dict[str,Any])->dict[str,Any]:
         "seat_error":err,
         "seat_abs_error_sum":int(sum(abs(v) for v in err.values())),
         "share_mae":share_abs/share_n if share_n else None,
+        "winner_source":"official_BES_WinnerXX",
+        "other_prediction_rule":"eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy":{
             r:{"correct":v[0],"n":v[1],"accuracy":v[0]/v[1] if v[1] else None}
             for r,v in sorted(by_region.items())
@@ -828,7 +924,7 @@ def evaluate_rows(rows:pd.DataFrame,actual:dict[str,Any])->dict[str,Any]:
 
 def evaluate_baseline(base:dict[str,Any],actual:dict[str,Any])->dict[str,Any]:
     target=nat_shares(actual)
-    return evaluate_rows(base_prediction(base,target),actual)
+    return evaluate_rows(base_prediction(base,target),actual,base)
 
 def score_tuple(metrics:dict[str,Any])->tuple:
     return (
@@ -842,7 +938,7 @@ def tune_spec(tr10_15:dict[str,Any],tr15_17:dict[str,Any]):
     for spec in MODEL_SPECS:
         models,names=train_models([tr10_15],spec)
         rows=predict_transition(tr15_17["base"],tr15_17["target"],models,names,spec)
-        metrics=evaluate_rows(rows,tr15_17["actual"])
+        metrics=evaluate_rows(rows,tr15_17["actual"],tr15_17["base"])
         candidates.append({"spec":spec,"metrics":metrics})
     candidates.sort(key=lambda x:score_tuple(x["metrics"]),reverse=True)
     return candidates[0]["spec"],candidates
@@ -878,8 +974,8 @@ def live_projection(current:dict[str,Any],target:dict[str,float],models,names,sp
     rows=predict_transition(current,target,models,names,spec)
     df=current["frame"];seats=[];totals=Counter()
     for idx,row in df.iterrows():
-        candidates=[p for p in PARTIES if allowed(p,row["country"])]
-        winner=max(candidates,key=lambda p:float(rows.at[idx,p]))
+        winner=predicted_winner(rows.loc[idx],row)
+        other_eligible=("other" in competitive_parties(row))
         totals[winner]+=1
         seats.append({
             "id":str(row["id"]),
@@ -888,10 +984,14 @@ def live_projection(current:dict[str,Any],target:dict[str,float],models,names,sp
             "region":str(row["region"]),
             "projected":{p:round(float(rows.at[idx,p]),5) for p in PARTIES},
             "centralWinner":winner,
+            "otherEligible":bool(other_eligible),
+            "baselineWinner":str(row.get("actual_winner") or ""),
+            "baselineSecond":str(row.get("actual_second") or ""),
         })
     return {
         "seats":seats,
         "totals":{p:int(totals[p]) for p in PARTIES},
+        "other_rule":"Aggregate Other share is not treated as a single candidate; Other can win only if winner/runner-up in the 2024 baseline."
     }
 
 def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[str,Any],hold_base:dict[str,Any])->tuple[bool,list[str]]:
@@ -910,7 +1010,7 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v091-mrp-lite",
+        "version":"uk-v092-mrp-lite",
         "model_type":"constituency-residual-ml-v1",
         "status":"error",
         "approved":False,
@@ -922,15 +1022,15 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v091-mrp-lite-live","approved":False,"status":"error",
+        "version":"uk-v092-mrp-lite-live","approved":False,"status":"error",
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v091-mrp-lite-backtest","status":"error","error":str(exc)
+        "version":"uk-v092-mrp-lite-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v091-bes-integrity","status":"failed",
+            "version":"uk-v092-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -983,12 +1083,12 @@ def main()->int:
         # Unseen validation.
         models_val,names_val=train_models([t10_15,t15_17],selected_spec)
         val_rows=predict_transition(e17,t17_19["target"],models_val,names_val,selected_spec)
-        validation=evaluate_rows(val_rows,e19)
+        validation=evaluate_rows(val_rows,e19,e17)
 
         # Genuine holdout. Refit using everything known by the end of 2019.
         models_hold,names_hold=train_models([t10_15,t15_17,t17_19],selected_spec)
         hold_rows=predict_transition(e19n,t19n_24["target"],models_hold,names_hold,selected_spec)
-        holdout=evaluate_rows(hold_rows,e24)
+        holdout=evaluate_rows(hold_rows,e24,e19n)
 
         approved,reasons=approval_gate(validation,holdout,validation_base,holdout_base)
         publication_ready=bool(
@@ -1003,7 +1103,7 @@ def main()->int:
         live=live_projection(e24,target_now,models_live,names_live,selected_spec)
 
         model_payload={
-            "version":"uk-v091-mrp-lite",
+            "version":"uk-v092-mrp-lite",
             "model_type":"constituency-residual-ml-v1",
             "status":"ok",
             "approved":approved,
@@ -1043,7 +1143,7 @@ def main()->int:
             "features":{
                 "historical_demographics":[c.replace("demo_","") for c in e19["demo_columns"]],
                 "current_demographics":[c.replace("demo_","") for c in e24["demo_columns"]],
-                "notes":"Census fields are converted to within-wave percentile ranks before modelling.",
+                "notes":"Census fields are converted to within-wave percentile ranks before modelling. Official WinnerXX/SecondXX fields define seat competition; aggregate Other remains a vote-share bucket, not a pooled candidate.",
             },
             "integrity":{
                 "version":integrity.get("version"),
@@ -1062,7 +1162,7 @@ def main()->int:
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v091-mrp-lite-live",
+            "version":"uk-v092-mrp-lite-live",
             "model_type":"constituency-residual-ml-v1",
             "status":"ok",
             "approved":approved,
@@ -1079,7 +1179,7 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v091-mrp-lite-backtest",
+            "version":"uk-v092-mrp-lite-backtest",
             "status":"ok",
             "selected_spec":selected_spec,
             "approved_for_live":approved,
@@ -1090,7 +1190,7 @@ def main()->int:
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
-        print("v0.9.1 selected spec:",selected_spec)
+        print("v0.9.2 selected spec:",selected_spec)
         print(
             "2019 validation:",
             f"baseline {validation_base['winner_accuracy']:.2%}/{validation_base['seat_abs_error_sum']}",
@@ -1110,7 +1210,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.1 shadow build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.2 shadow build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # Shadow failure must not break the existing production model.
         raise SystemExit(0)

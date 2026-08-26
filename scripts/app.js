@@ -24,7 +24,7 @@ const CONFIG = {
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v091-20260826-mrp-parser-fix',
+  cacheVersion: 'uk-v092-20260826-official-winner-fix',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
@@ -375,7 +375,7 @@ function buildGeographicTargets(gbTarget){
 
 function mrpLiteActive(){
   const m=state.mrpLite;
-  return m?.version==='uk-v091-mrp-lite-live'
+  return m?.version==='uk-v092-mrp-lite-live'
     && m?.model_type==='constituency-residual-ml-v1'
     && m?.status==='ok'
     && m?.approved===true
@@ -393,10 +393,11 @@ function buildMrpLiteCentral(target,geo){
     if(!m)throw new Error(`MRP-lite: manca il collegio ${c.id}`);
     const projected={};
     for(const p of PARTY_ORDER)projected[p]=Number(m.projected?.[p])||0;
-    const winner=SEAT_MODEL_PARTIES.filter(p=>partyAllowed(p,c))
-      .reduce((best,p)=>projected[p]>(projected[best]??-1)?p:best,'other');
+    const eligible=SEAT_MODEL_PARTIES.filter(p=>partyAllowed(p,c)&&(p!=='other'||m.otherEligible===true));
+    const computed=eligible.reduce((best,p)=>projected[p]>(projected[best]??-1)?p:best,eligible[0]||'other');
+    const winner=(m.centralWinner&&eligible.includes(m.centralWinner))?m.centralWinner:computed;
     totals[winner]=(totals[winner]||0)+1;
-    seats.push({...c,projected,centralWinner:winner,modelZone:zoneForSeat(c),mrpLite:true});
+    seats.push({...c,projected,centralWinner:winner,otherEligible:m.otherEligible===true,modelZone:zoneForSeat(c),mrpLite:true});
   }
   const niCentral=buildNiCentral();
   for(const [p,n] of Object.entries(niCentral.totals||{}))totals[p]=(totals[p]||0)+n;
@@ -733,7 +734,7 @@ function prepareSeatModel(){
       return {id:s.id,region:regionIndex.get(zone),candidates,ni:true};
     }
     const zoneTarget=geo.targets[zone]||target,zoneBase=geo.baselines[zone]||BASE_GB;
-    const candidates=SEAT_MODEL_PARTIES.filter(p=>partyAllowed(p,s)).map(p=>{
+    const candidates=SEAT_MODEL_PARTIES.filter(p=>partyAllowed(p,s)&&(p!=='other'||!s.mrpLite||s.otherEligible===true)).map(p=>{
       if(centreAlreadyTransformed){const central=Math.max(.03,s.projected?.[p]||.03);return {p,baseLog:Math.log(central),centralShift:0,central};}
       let base=s.shares?.[p]||0;const nat=Math.max(.05,Number(zoneBase[p])||Number(BASE_GB[p])||.2);
       if(p==='ref'&&base<.18&&refMissingPrior()>0)base=Math.max(base,nat*refMissingPrior());
