@@ -47,10 +47,10 @@ jobs:
       - name: Calibrate legacy partial-raking benchmark
         run: python tools/build_backtest.py
 
-      - name: Build v0.9.11 Reform error diagnostics (shadow only)
+      - name: Build v0.9.12 latent Reform geography experiment (shadow only)
         run: python tools/build_mrp_lite.py
 
-      - name: Validate BES integrity and v0.9.11 diagnostic safeguards
+      - name: Validate BES integrity and v0.9.12 safeguards
         run: |
           python - <<'PY'
           import json
@@ -68,11 +68,11 @@ jobs:
           params=load("data/model-params.json")
           ni=load("data/ni-2024.json")
 
-          integrity=load("data/bes-integrity-v0911.json")
+          integrity=load("data/bes-integrity-v0912.json")
           mrp=load("data/mrp-lite-model.json")
           live=load("data/mrp-lite-live.json")
-          backtest=load("data/backtest-v0911-reform-diagnostics.json")
-          diagnostic=load("data/reform-diagnostics-v0911.json")
+          backtest=load("data/backtest-v0912-ref-latent-potential.json")
+          diagnostic=load("data/reform-diagnostics-v0912.json")
 
           n_polls=len(polls.get("polls",[]))
           n_const=len(constituencies.get("constituencies",[]))
@@ -86,17 +86,6 @@ jobs:
           print(f"Legacy GB model: {params.get('version')} approved={params.get('approved')}")
           print(f"NI module: {ni.get('meta',{}).get('version')} seats={len(ni_seats)}")
           print(f"BES integrity: {integrity.get('status')}")
-          print("BES integrity errors:", integrity.get("errors",[]))
-          for check in integrity.get("checks",[]):
-              print(
-                  check.get("label"),
-                  "countries=",check.get("countries"),
-                  "regions=",check.get("english_regions"),
-                  "winners=",check.get("winner_counts"),
-                  "source=",check.get("share_source"),
-                  "unknown_winner_labels=",check.get("unknown_winner_labels"),
-                  "unknown_second_labels=",check.get("unknown_second_labels"),
-              )
 
           if n_polls<10:
               raise SystemExit("ERROR: too few national polls")
@@ -115,8 +104,8 @@ jobs:
           if {k:ni_winners.get(k,0) for k in expected_ni}!=expected_ni:
               raise SystemExit(f"ERROR: NI winner check failed: {dict(ni_winners)}")
 
-          # Unlike v0.9, parser integrity is a HARD deployment gate.
-          if integrity.get("version")!="uk-v0911-bes-integrity":
+          # Parser/integrity remains a hard deployment gate.
+          if integrity.get("version")!="uk-v0912-bes-integrity":
               raise SystemExit("ERROR: unexpected BES integrity version")
           if integrity.get("status")!="passed":
               raise SystemExit("ERROR: BES integrity failed: "+str(integrity.get("errors")))
@@ -125,161 +114,152 @@ jobs:
                   raise SystemExit(f"ERROR: {check.get('label')} does not contain exactly 632 GB rows")
               if check.get("ni_filtered_before_party_parsing") is not True:
                   raise SystemExit(f"ERROR: {check.get('label')} parsed parties before filtering NI")
-
-          if mrp.get("version")!="uk-v0911-reform-diagnostics":
-              raise SystemExit(f"ERROR: unexpected v0.9.11 model version {mrp.get('version')}")
-          if live.get("version")!="uk-v0911-reform-diagnostics-live":
-              raise SystemExit(f"ERROR: unexpected v0.9.11 live version {live.get('version')}")
-          if backtest.get("version")!="uk-v0911-reform-diagnostics-backtest":
-              raise SystemExit(
-                  f"ERROR: unexpected v0.9.11 backtest version {backtest.get('version')}"
+              print(
+                  check.get("label"),
+                  "winners=",check.get("winner_counts"),
+                  "ref_primary_stood=",check.get("ref_primary_stood_count"),
+                  "coverage=",check.get("ref_primary_coverage"),
+                  "source=",check.get("ref_primary_source"),
               )
-          if diagnostic.get("version")!="uk-v0911-reform-diagnostics":
-              raise SystemExit(f"ERROR: unexpected Reform diagnostic version {diagnostic.get('version')}")
 
-          print(f"v0.9.11 status: {mrp.get('status')}")
-          print(f"v0.9.11 diagnostic-only: {mrp.get('diagnostic_only')}")
-          print(f"Underlying candidate gate passed: {mrp.get('candidate_gate_passed')}")
-          print(f"v0.9.11 approved: {mrp.get('approved')}")
-          print(f"v0.9.11 publication_ready: {mrp.get('publication_ready')}")
+          expected_versions={
+              "model":"uk-v0912-ref-latent-potential",
+              "live":"uk-v0912-ref-latent-potential-live",
+              "backtest":"uk-v0912-ref-latent-potential-backtest",
+              "diagnostic":"uk-v0912-ref-latent-potential",
+          }
+          observed_versions={
+              "model":mrp.get("version"),"live":live.get("version"),
+              "backtest":backtest.get("version"),"diagnostic":diagnostic.get("version"),
+          }
+          if observed_versions!=expected_versions:
+              raise SystemExit(f"ERROR: unexpected v0.9.12 versions {observed_versions}")
 
-          # v0.9.11 is a diagnostic release: production still falls back, but
-          # the release itself must NOT deploy if its diagnostics failed.
-          for label,payload in (
-              ("model",mrp),("live shadow",live),("backtest",backtest),
-              ("Reform diagnostic",diagnostic),
-          ):
+          for label,payload in (("model",mrp),("live shadow",live),("backtest",backtest),("diagnostic",diagnostic)):
               if payload.get("status")!="ok":
-                  raise SystemExit(
-                      f"ERROR: v0.9.11 {label} build failed: {payload.get('error')}"
-                  )
+                  raise SystemExit(f"ERROR: v0.9.12 {label} build failed: {payload.get('error')}")
 
-          if mrp.get("status")=="ok":
-              if mrp.get("model_type")!="constituency-residual-incumbent-routing-v5":
-                  raise SystemExit(f"ERROR: unexpected preserved v0.9.10 model type {mrp.get('model_type')}")
-              if mrp.get("diagnostic_only") is not True or live.get("diagnostic_only") is not True:
-                  raise SystemExit("ERROR: v0.9.11 must remain diagnostic-only")
-              if mrp.get("used_for_parameter_selection") is not False:
-                  raise SystemExit("ERROR: 2024 diagnostics marked as parameter selection")
-              if mrp.get("changes_production_model") is not False:
-                  raise SystemExit("ERROR: diagnostic build claims to change production")
-              if mrp.get("approved") is not False or live.get("approved") is not False:
-                  raise SystemExit("ERROR: diagnostic-only v0.9.11 cannot activate live")
-              if diagnostic.get("status")!="ok":
-                  raise SystemExit(f"ERROR: Reform diagnostic failed: {diagnostic.get('error')}")
-              if diagnostic.get("diagnostic_only") is not True:
-                  raise SystemExit("ERROR: Reform report is not marked diagnostic-only")
-              if diagnostic.get("used_for_parameter_selection") is not False:
-                  raise SystemExit("ERROR: Reform report may not select parameters")
-              if diagnostic.get("changes_production_model") is not False:
-                  raise SystemExit("ERROR: Reform report may not change the live model")
-              if diagnostic.get("parameter_updates") not in ({},None):
-                  raise SystemExit("ERROR: diagnostic report contains parameter updates")
-              strengths=mrp.get("selected_party_strengths")
-              if not isinstance(strengths,dict):
-                  raise SystemExit("ERROR: missing party-specific FPTP strengths")
-              required={"lab","con","ref","ld","green","snp","pc","other"}
-              if not required.issubset(strengths):
-                  raise SystemExit(f"ERROR: incomplete party strengths {strengths}")
-              scenario=mrp.get("scenario_activation",{})
-              if not isinstance(scenario.get("validation_2019"),dict):
-                  raise SystemExit("ERROR: missing 2019 scenario activation audit")
-              if not isinstance(scenario.get("benchmark_2024"),dict):
-                  raise SystemExit("ERROR: missing 2024 scenario activation audit")
-              print("2019 scenario activation:",scenario.get("validation_2019"))
-              print("2024 scenario activation:",scenario.get("benchmark_2024"))
-              val=mrp.get("validation_2019",{}).get("candidate",{})
-              val_base=mrp.get("validation_2019",{}).get("baseline",{})
-              hold=mrp.get("holdout_2024",{}).get("candidate",{})
-              base=mrp.get("holdout_2024",{}).get("baseline",{})
-              val_share=mrp.get("validation_2019",{}).get("share_only_candidate",{})
-              hold_share=mrp.get("holdout_2024",{}).get("share_only_candidate",{})
-              print("2019 baseline:",val_base)
-              val_pre=mrp.get("validation_2019",{}).get("pre_routing_candidate",{})
-              hold_pre=mrp.get("holdout_2024",{}).get("pre_routing_candidate",{})
-              print("2019 share-only:",val_share)
-              print("2019 pre-routing:",val_pre)
-              print("2019 routed candidate:",val)
-              print("2024 baseline:",base)
-              print("2024 share-only:",hold_share)
-              print("2024 pre-routing:",hold_pre)
-              print("2024 routed candidate:",hold)
-              print("2024 Scotland:",mrp.get("holdout_2024",{}).get("scotland"))
-              print("Selected share spec:",mrp.get("selected_spec"))
-              print("Selected party strengths:",mrp.get("selected_party_strengths"))
-              routing=mrp.get("selected_incumbent_routing")
-              if not isinstance(routing,dict):
-                  raise SystemExit("ERROR: missing selected incumbent-routing parameters")
-              if "route_strength" not in routing or "unwind_strength" not in routing:
-                  raise SystemExit(f"ERROR: incomplete incumbent routing {routing}")
-              if abs(float(routing["route_strength"]))>1e-12 or abs(float(routing["unwind_strength"]))>1e-12:
-                  raise SystemExit(f"ERROR: v0.9.11 no longer preserves the rejected zero-strength routing {routing}")
-              print("Selected incumbent routing:",routing)
-              if val.get("gb_seats")!=632 or hold.get("gb_seats")!=632:
-                  raise SystemExit("ERROR: v0.9.11 did not evaluate 632 GB seats")
-              if val.get("winner_source")!="official_BES_WinnerXX" or hold.get("winner_source")!="official_BES_WinnerXX":
-                  raise SystemExit("ERROR: v0.9.11 evaluation is not using official BES WinnerXX")
-              if hold.get("other_prediction_rule")!="eligible_only_if_baseline_winner_or_runner_up":
-                  raise SystemExit("ERROR: pooled Other is still being treated as a universal seat candidate")
+          if mrp.get("model_type")!="constituency-residual-ref-latent-potential-v6":
+              raise SystemExit(f"ERROR: unexpected v0.9.12 model type {mrp.get('model_type')}")
+          if live.get("model_type")!="constituency-residual-ref-latent-potential-v6":
+              raise SystemExit("ERROR: live shadow model type mismatch")
 
-              # Frozen v0.9.10 regression guard.  The diagnostic release is
-              # valid only if it is analysing exactly the previously accepted
-              # v0.9.10 candidate behaviour, not a silently changed rerun.
-              expected_regression={
-                  "validation_2019_correct_winners":583,
-                  "validation_2019_seat_abs_error_sum":42,
-                  "benchmark_2024_correct_winners":494,
-                  "benchmark_2024_seat_abs_error_sum":176,
-                  "benchmark_2024_predicted_reform_seats":39,
-                  "benchmark_2024_actual_reform_seats":5,
-              }
-              observed_regression={
-                  "validation_2019_correct_winners":val.get("correct_winners"),
-                  "validation_2019_seat_abs_error_sum":val.get("seat_abs_error_sum"),
-                  "benchmark_2024_correct_winners":hold.get("correct_winners"),
-                  "benchmark_2024_seat_abs_error_sum":hold.get("seat_abs_error_sum"),
-                  "benchmark_2024_predicted_reform_seats":hold.get("predicted_seats",{}).get("ref"),
-                  "benchmark_2024_actual_reform_seats":hold.get("actual_seats",{}).get("ref"),
-              }
-              if observed_regression!=expected_regression:
-                  raise SystemExit(
-                      "ERROR: v0.9.11 no longer reproduces frozen v0.9.10 metrics: "
-                      f"expected={expected_regression} observed={observed_regression}"
-                  )
-              if val_pre.get("correct_winners")!=val.get("correct_winners") or val_pre.get("seat_abs_error_sum")!=val.get("seat_abs_error_sum"):
-                  raise SystemExit("ERROR: zero routing changed 2019 pre-routing metrics")
-              if hold_pre.get("correct_winners")!=hold.get("correct_winners") or hold_pre.get("seat_abs_error_sum")!=hold.get("seat_abs_error_sum"):
-                  raise SystemExit("ERROR: zero routing changed 2024 pre-routing metrics")
-              print("Frozen v0.9.10 regression guard: PASSED",observed_regression)
+          # The structural candidate changes the shadow model but may not go live.
+          if mrp.get("shadow_only") is not True or live.get("shadow_only") is not True:
+              raise SystemExit("ERROR: v0.9.12 must remain shadow-only")
+          if mrp.get("approved") is not False or live.get("approved") is not False:
+              raise SystemExit("ERROR: v0.9.12 cannot be promoted on the 2024-inspired benchmark")
+          if mrp.get("publication_ready") is not False or live.get("publication_ready") is not False:
+              raise SystemExit("ERROR: v0.9.12 incorrectly marked publication-ready")
+          if mrp.get("used_for_parameter_selection") is not False:
+              raise SystemExit("ERROR: v0.9.12 marked 2024 as parameter selection")
+          if mrp.get("changes_production_model") is not False:
+              raise SystemExit("ERROR: shadow experiment claims to change production")
+          if mrp.get("changes_candidate_model") is not True or live.get("changes_candidate_model") is not True:
+              raise SystemExit("ERROR: structural experiment is not marked as a changed shadow candidate")
+          if diagnostic.get("diagnostic_only") is not True:
+              raise SystemExit("ERROR: Reform report must remain diagnostic-only")
+          if diagnostic.get("used_for_parameter_selection") is not False:
+              raise SystemExit("ERROR: Reform report may not select parameters")
+          if diagnostic.get("changes_production_model") is not False:
+              raise SystemExit("ERROR: Reform report may not change the model")
+          if diagnostic.get("parameter_updates") not in ({},None):
+              raise SystemExit("ERROR: diagnostic report contains parameter updates")
 
-              roles=diagnostic.get("feature_roles",{})
-              predictor_features=set(roles.get("predictors_ex_ante",[]))
-              outcome_features=set(roles.get("outcomes_2024_only",[]))
-              if not predictor_features or outcome_features!={"actual_ref_share","ref_share_error"}:
-                  raise SystemExit(f"ERROR: invalid diagnostic feature roles {roles}")
-              if predictor_features & outcome_features:
-                  raise SystemExit("ERROR: realised 2024 outcomes leaked into predictor feature set")
-              for comparison in diagnostic.get("feature_comparisons",[]):
-                  ranked={row.get("feature") for row in comparison.get("features",[])}
-                  leaked=ranked & outcome_features
-                  if leaked:
-                      raise SystemExit(f"ERROR: realised 2024 outcomes leaked into predictor ranking: {sorted(leaked)}")
+          donor=mrp.get("ref_latent_donor",{})
+          if donor.get("donor_year")!="15":
+              raise SystemExit(f"ERROR: latent donor is not 2015 UKIP: {donor}")
+          if donor.get("uses_2024") is not False or donor.get("parameter_tuning") is not False:
+              raise SystemExit(f"ERROR: latent donor leaks/tunes on 2024: {donor}")
+          if int(donor.get("training_seats") or 0)<450:
+              raise SystemExit(f"ERROR: too few 2015 donor seats: {donor}")
+          if abs(float(donor.get("ridge_alpha") or 0)-20.0)>1e-12:
+              raise SystemExit(f"ERROR: latent ridge alpha changed unexpectedly: {donor}")
+          print("Latent donor:",donor)
 
-              confusion=diagnostic.get("binary_confusion",{})
-              counts=diagnostic.get("counts",{})
-              if confusion.get("total")!=632:
-                  raise SystemExit(f"ERROR: Reform diagnostic covers {confusion.get('total')} seats")
-              if sum(int(confusion.get(k,0)) for k in ("true_positive","false_positive","false_negative","true_negative"))!=632:
-                  raise SystemExit("ERROR: invalid Reform confusion matrix")
-              if counts.get("predicted_reform_wins")!=hold.get("predicted_seats",{}).get("ref"):
-                  raise SystemExit("ERROR: Reform predicted-seat count does not match backtest")
-              if counts.get("actual_reform_wins")!=hold.get("actual_seats",{}).get("ref"):
-                  raise SystemExit("ERROR: Reform actual-seat count does not match BES")
-              if len(diagnostic.get("false_positive_seats",[]))!=confusion.get("false_positive"):
-                  raise SystemExit("ERROR: false-positive seat list does not match confusion matrix")
-              print("Reform diagnostic counts:",counts)
-              print("v0.9.11 is diagnostic-only: production remains on fallback. This is REQUIRED.")
-          print("Dataset/model validation passed.")
+          latent=mrp.get("ref_latent_activation",{})
+          val_latent=latent.get("validation_2019",{})
+          hold_latent=latent.get("benchmark_2024",{})
+          live_latent=latent.get("live",{})
+          if abs(float(val_latent.get("activation") or 0))>1e-12:
+              raise SystemExit(f"ERROR: latent layer activated in 2019 validation: {val_latent}")
+          if float(hold_latent.get("activation") or 0)<=0:
+              raise SystemExit(f"ERROR: latent layer did not activate for 2019->2024: {hold_latent}")
+          if float(hold_latent.get("principal_coverage") or 1)>=0.75:
+              raise SystemExit(f"ERROR: 2019 principal Reform-family coverage unexpectedly high: {hold_latent}")
+          if int(hold_latent.get("imputed_seats") or 0)<100:
+              raise SystemExit(f"ERROR: too few structurally missing 2019 seats: {hold_latent}")
+          if abs(float(live_latent.get("activation") or 0))>1e-12:
+              raise SystemExit(f"ERROR: latent layer should be inactive on fully contested 2024 live baseline: {live_latent}")
+          print("Latent activation 2019 validation:",val_latent)
+          print("Latent activation 2024 benchmark:",hold_latent)
+          print("Latent activation live:",live_latent)
+
+          strengths=mrp.get("selected_party_strengths")
+          required={"lab","con","ref","ld","green","snp","pc","other"}
+          if not isinstance(strengths,dict) or not required.issubset(strengths):
+              raise SystemExit(f"ERROR: incomplete party strengths {strengths}")
+          routing=mrp.get("selected_incumbent_routing")
+          if not isinstance(routing,dict):
+              raise SystemExit("ERROR: missing incumbent-routing parameters")
+          if abs(float(routing.get("route_strength") or 0))>1e-12 or abs(float(routing.get("unwind_strength") or 0))>1e-12:
+              raise SystemExit(f"ERROR: rejected v0.9.10 routing unexpectedly reactivated {routing}")
+
+          val=mrp.get("validation_2019",{}).get("candidate",{})
+          val_pre=mrp.get("validation_2019",{}).get("pre_routing_candidate",{})
+          hold=mrp.get("holdout_2024",{}).get("candidate",{})
+          hold_pre=mrp.get("holdout_2024",{}).get("pre_routing_candidate",{})
+          if val.get("gb_seats")!=632 or hold.get("gb_seats")!=632:
+              raise SystemExit("ERROR: v0.9.12 did not evaluate 632 GB seats")
+          if val.get("winner_source")!="official_BES_WinnerXX" or hold.get("winner_source")!="official_BES_WinnerXX":
+              raise SystemExit("ERROR: evaluation is not using official BES WinnerXX")
+
+          # Regression guard: the new structural layer must be exactly inactive in 2019.
+          expected_2019={"correct_winners":583,"seat_abs_error_sum":42}
+          observed_2019={k:val.get(k) for k in expected_2019}
+          if observed_2019!=expected_2019:
+              raise SystemExit(f"ERROR: v0.9.12 changed 2019 validation: expected={expected_2019} observed={observed_2019}")
+          if val_pre.get("correct_winners")!=val.get("correct_winners") or val_pre.get("seat_abs_error_sum")!=val.get("seat_abs_error_sum"):
+              raise SystemExit("ERROR: zero routing changed 2019 pre-routing metrics")
+          if hold_pre.get("correct_winners")!=hold.get("correct_winners") or hold_pre.get("seat_abs_error_sum")!=hold.get("seat_abs_error_sum"):
+              raise SystemExit("ERROR: zero routing changed 2024 pre-routing metrics")
+
+          print("2019 regression guard: PASSED",observed_2019)
+          print("2024 latent candidate:",hold)
+          print("Numerical candidate gate passed:",mrp.get("candidate_gate_passed"),mrp.get("gate_failures"))
+          print("NOTE: approval remains false regardless; 2024 is not fresh promotion evidence.")
+
+          # Diagnostic completeness and no outcome leakage into ranked predictors.
+          roles=diagnostic.get("feature_roles",{})
+          predictor_features=set(roles.get("predictors_ex_ante",[]))
+          outcome_features=set(roles.get("outcomes_2024_only",[]))
+          if outcome_features!={"actual_ref_share","ref_share_error"}:
+              raise SystemExit(f"ERROR: invalid diagnostic outcome roles {roles}")
+          if predictor_features & outcome_features:
+              raise SystemExit("ERROR: realised 2024 outcomes leaked into predictor feature set")
+          for comparison in diagnostic.get("feature_comparisons",[]):
+              ranked={row.get("feature") for row in comparison.get("features",[])}
+              leaked=ranked & outcome_features
+              if leaked:
+                  raise SystemExit(f"ERROR: realised 2024 outcomes leaked into predictor ranking: {sorted(leaked)}")
+          pairs={(x.get("left"),x.get("right")) for x in diagnostic.get("feature_comparisons",[])}
+          if ("false_positive","false_negative") not in pairs:
+              raise SystemExit(f"ERROR: missing FP-vs-FN Reform comparison: {pairs}")
+
+          confusion=diagnostic.get("binary_confusion",{})
+          counts=diagnostic.get("counts",{})
+          if confusion.get("total")!=632:
+              raise SystemExit(f"ERROR: Reform diagnostic covers {confusion.get('total')} seats")
+          if sum(int(confusion.get(k,0)) for k in ("true_positive","false_positive","false_negative","true_negative"))!=632:
+              raise SystemExit("ERROR: invalid Reform confusion matrix")
+          if counts.get("predicted_reform_wins")!=hold.get("predicted_seats",{}).get("ref"):
+              raise SystemExit("ERROR: Reform predicted-seat count does not match backtest")
+          if counts.get("actual_reform_wins")!=hold.get("actual_seats",{}).get("ref"):
+              raise SystemExit("ERROR: Reform actual-seat count does not match BES")
+          if len(diagnostic.get("false_positive_seats",[]))!=confusion.get("false_positive"):
+              raise SystemExit("ERROR: false-positive seat list does not match confusion matrix")
+          print("Reform diagnostic counts:",counts)
+          print("Dataset/model validation passed. v0.9.12 remains SHADOW ONLY.")
           PY
 
       - name: Commit refreshed data
@@ -290,7 +270,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data and v0.9.11 Reform diagnostics"
+            git commit -m "chore: update UK data and v0.9.12 latent Reform experiment"
             git push
           fi
 
@@ -299,9 +279,3 @@ jobs:
 
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v4
-        with:
-          path: "."
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
