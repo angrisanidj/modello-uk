@@ -1,0 +1,106 @@
+name: Update and deploy UK model
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 5 * * *"
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: uk-model-pages
+  cancel-in-progress: false
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Update election data
+        run: python tools/build_data.py
+
+      - name: Validate datasets
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          polls = json.loads(
+              Path("data/polls.json").read_text(encoding="utf-8")
+          )
+          constituencies = json.loads(
+              Path("data/constituencies-2024.json").read_text(encoding="utf-8")
+          )
+          geo = json.loads(
+              Path("data/constituencies-2024.geojson").read_text(encoding="utf-8")
+          )
+
+          n_polls = len(polls.get("polls", []))
+          n_const = len(constituencies.get("constituencies", []))
+          n_geo = len(geo.get("features", []))
+
+          print(f"Polls: {n_polls}")
+          print(f"Constituencies: {n_const}")
+          print(f"GeoJSON features: {n_geo}")
+
+          if n_polls < 10:
+              raise SystemExit(f"ERROR: only {n_polls} polls")
+
+          if n_const != 650:
+              raise SystemExit(
+                  f"ERROR: expected 650 constituencies, found {n_const}"
+              )
+
+          if n_geo < 650:
+              raise SystemExit(
+                  f"ERROR: expected at least 650 geometries, found {n_geo}"
+              )
+
+          print("Dataset validation passed.")
+          PY
+
+      - name: Commit refreshed data
+        run: |
+          if git diff --quiet -- data/; then
+            echo "No data changes to commit."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/
+            git commit -m "chore: update UK election data"
+            git push
+          fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: "."
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
