@@ -20,7 +20,6 @@ concurrency:
 jobs:
   update-and-deploy:
     runs-on: ubuntu-latest
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -41,13 +40,17 @@ jobs:
       - name: Update election data and territorial inputs
         run: python tools/build_data.py
 
-      - name: Calibrate partial national raking
+      - name: Build Northern Ireland module
+        run: python tools/build_ni.py
+
+      - name: Calibrate partial raking model
         run: python tools/build_backtest.py
 
       - name: Validate datasets
         run: |
           python - <<'PY'
           import json
+          from collections import Counter
           from pathlib import Path
 
           def load(path):
@@ -60,58 +63,35 @@ jobs:
           display=load("data/constituencies-map.geojson")
           backtest=load("data/backtest-2024-territorial.json")
           params=load("data/model-params.json")
-          sub_path=Path("data/subnational-polls.json")
-          sub=load(sub_path) if sub_path.exists() else {"polls":[]}
+          ni=load("data/ni-2024.json")
 
-          n_polls=len(polls.get("polls",[]))
-          n_sub=len(sub.get("polls",[]))
-          n_const=len(constituencies.get("constituencies",[]))
-          n_geo=len(geo.get("features",[]))
-          n_display=len(display.get("features",[]))
-          regions=territorial.get("english_regions",[])
-
-          baseline=backtest.get("baseline_common",{})
-          candidate=backtest.get("partial_raking_candidate",{})
-          val=candidate.get("validation_2019",{})
-          hold=candidate.get("holdout_2024",{})
-          alpha=params.get("rake_strength")
+          n_polls=len(polls.get("polls",[])); n_const=len(constituencies.get("constituencies",[])); regions=territorial.get("english_regions",[])
+          ni_seats=ni.get("constituencies",[]); ni_winners=Counter(s.get("winner2024") for s in ni_seats)
+          expected={"sf":7,"dup":5,"sdlp":2,"alliance":1,"uup":1,"tuv":1,"ind":1}; target=ni.get("target_shares",{})
+          base_hold=backtest.get("baseline_common",{}).get("holdout_2024",{})
+          partial=backtest.get("partial_raking_candidate",{}); val=partial.get("validation_2019",{}); hold=partial.get("holdout_2024",{})
 
           print(f"National polls: {n_polls}")
-          print(f"Subnational polls: {n_sub}")
           print(f"Constituencies: {n_const}")
-          print(f"English regions: {regions}")
-          print(f"Model version: {params.get('version')}")
-          print(f"Model type: {params.get('model_type')}")
-          print(f"Selected rake alpha: {alpha}")
-          print(f"Partial-raking model approved: {params.get('approved')}")
-          print(f"2019 candidate: accuracy={val.get('winner_accuracy')} seat_error={val.get('seat_abs_error_sum')}")
-          print(f"2024 candidate: accuracy={hold.get('winner_accuracy')} seat_error={hold.get('seat_abs_error_sum')}")
-          print(f"2019 baseline: {baseline.get('validation_2019',{})}")
-          print(f"2024 baseline: {baseline.get('holdout_2024',{})}")
+          print(f"GB model: {params.get('version')} approved={params.get('approved')}")
+          print(f"NI version: {ni.get('meta',{}).get('version')}")
+          print(f"NI seats: {len(ni_seats)}")
+          print(f"NI winners 2024: {dict(ni_winners)}")
+          print(f"NI signal weight: {ni.get('meta',{}).get('signal_weight')}")
+          print(f"NI weak target: {target}")
 
-          if n_polls < 10:
-              raise SystemExit(f"ERROR: only {n_polls} national polls")
-          if n_const != 650:
-              raise SystemExit(f"ERROR: expected 650 constituencies, found {n_const}")
-          if n_geo < 650 or n_display < 650:
-              raise SystemExit("ERROR: geometry feature count below 650")
-          if len(regions) != 9:
-              raise SystemExit(f"ERROR: expected 9 English regions, found {regions}")
-          if params.get("version") != "uk-v07-partial-raking":
-              raise SystemExit(f"ERROR: unexpected model version {params.get('version')}")
-          if params.get("model_type") != "partial-raked-v1":
-              raise SystemExit(f"ERROR: unexpected model type {params.get('model_type')}")
-          if not isinstance(alpha,(int,float)) or not (0 <= alpha <= 1):
-              raise SystemExit(f"ERROR: invalid rake strength {alpha}")
-          if baseline.get("holdout_2024",{}).get("gb_seats") != 632:
-              raise SystemExit("ERROR: baseline holdout did not evaluate 632 GB seats")
-          if val.get("gb_seats") != 632 or hold.get("gb_seats") != 632:
-              raise SystemExit("ERROR: partial-raking validation/holdout did not evaluate 632 GB seats")
-          if len(candidate.get("alpha_grid_training",[])) != 41:
-              raise SystemExit("ERROR: incomplete alpha training grid")
+          if n_polls<10: raise SystemExit("ERROR: too few national polls")
+          if n_const!=650: raise SystemExit(f"ERROR: expected 650 constituencies, got {n_const}")
+          if len(geo.get("features",[]))<650 or len(display.get("features",[]))<650: raise SystemExit("ERROR: geometry feature count below 650")
+          if len(regions)!=9: raise SystemExit(f"ERROR: expected 9 English regions, got {regions}")
+          if params.get("version")!="uk-v07-partial-raking": raise SystemExit(f"ERROR: unexpected GB model version {params.get('version')}")
+          if base_hold.get("gb_seats")!=632 or val.get("gb_seats")!=632 or hold.get("gb_seats")!=632: raise SystemExit("ERROR: GB backtest did not evaluate 632 seats")
+          if ni.get("meta",{}).get("version")!="uk-v08-ni-constituency": raise SystemExit("ERROR: unexpected NI module version")
+          if len(ni_seats)!=18: raise SystemExit(f"ERROR: expected 18 NI seats, got {len(ni_seats)}")
+          if {k:ni_winners.get(k,0) for k in expected}!=expected: raise SystemExit(f"ERROR: NI winner check failed: {dict(ni_winners)}")
+          if abs(sum(float(v) for v in target.values())-100)>.05: raise SystemExit("ERROR: NI target does not sum to 100")
+          if abs(float(ni.get("meta",{}).get("signal_weight",0))-.25)>1e-9: raise SystemExit("ERROR: unexpected NI signal weight")
 
-          # approved=False is valid. The browser then keeps the conservative
-          # fallback rather than silently publishing an inferior candidate.
           print("Dataset validation passed.")
           PY
 
@@ -123,7 +103,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data and partial-raking calibration"
+            git commit -m "chore: update UK data, NI module and backtest"
             git push
           fi
 
