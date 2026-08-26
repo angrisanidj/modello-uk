@@ -1,5 +1,5 @@
 {
-  "version": "uk-v04-historical-calibration",
+  "version": "uk-v05-hierarchical-territorial",
   "approved": false,
   "training_elections": [
     "2010→2015",
@@ -7,27 +7,130 @@
   ],
   "validation_election": "2017→2019",
   "holdout_election": "2019 notional→2024",
+  "common_lambda": 0.82,
   "lambdas": {
-    "lab": 0.55,
-    "con": 0.85,
+    "lab": 0.4,
+    "con": 0.4,
     "ref": 0.82,
-    "ld": 0.45,
+    "ld": 0.65,
     "green": 0.35,
-    "snp": 1.4,
+    "snp": 1.3,
     "pc": 0.82
   },
+  "regional_beta": {
+    "East Midlands": {
+      "lab": 0.9173,
+      "con": 1.0468,
+      "ref": 1.0319,
+      "ld": 1.2312,
+      "green": 1.1719,
+      "snp": 1.0,
+      "pc": 1.0
+    },
+    "East of England": {
+      "lab": 1.3846,
+      "con": 0.8686,
+      "ref": 0.9647,
+      "ld": 0.9978,
+      "green": 0.6418,
+      "snp": 1.0,
+      "pc": 1.0
+    },
+    "London": {
+      "lab": 0.8561,
+      "con": 0.45,
+      "ref": 1.0062,
+      "ld": 0.9781,
+      "green": 0.9405,
+      "snp": 1.0,
+      "pc": 1.0
+    },
+    "North East": {
+      "lab": 0.6763,
+      "con": 1.6308,
+      "ref": 0.9514,
+      "ld": 1.2054,
+      "green": 1.65,
+      "snp": 1.0,
+      "pc": 1.0
+    },
+    "North West": {
+      "lab": 0.8025,
+      "con": 1.0217,
+      "ref": 1.0291,
+      "ld": 1.1159,
+      "green": 1.3379,
+      "snp": 1.0,
+      "pc": 1.0
+    },
+    "Scotland": {
+      "lab": 0.45,
+      "con": 1.65,
+      "ref": 0.9187,
+      "ld": 0.8572,
+      "green": 0.9801,
+      "snp": 0.8466,
+      "pc": 1.0
+    },
+    "South East": {
+      "lab": 1.5397,
+      "con": 0.672,
+      "ref": 0.9534,
+      "ld": 0.9511,
+      "green": 0.8628,
+      "snp": 1.0,
+      "pc": 1.0
+    },
+    "South West": {
+      "lab": 1.65,
+      "con": 0.8319,
+      "ref": 1.1272,
+      "ld": 0.7765,
+      "green": 1.2132,
+      "snp": 1.0,
+      "pc": 1.0
+    },
+    "Wales": {
+      "lab": 1.0043,
+      "con": 1.2562,
+      "ref": 1.0817,
+      "ld": 1.0549,
+      "green": 1.6478,
+      "snp": 1.0,
+      "pc": 1.0245
+    },
+    "West Midlands": {
+      "lab": 0.9468,
+      "con": 1.0695,
+      "ref": 1.0731,
+      "ld": 1.222,
+      "green": 1.1632,
+      "snp": 1.0,
+      "pc": 1.0
+    },
+    "Yorkshire and The Humber": {
+      "lab": 0.8596,
+      "con": 1.2811,
+      "ref": 1.0474,
+      "ld": 1.0947,
+      "green": 1.0831,
+      "snp": 1.0,
+      "pc": 1.0
+    }
+  },
+  "regional_ridge": 0.02,
   "ref_missing_prior": 0.0,
   "validation": {
     "common_accuracy": 0.9177215189873418,
-    "fitted_accuracy": 0.9177215189873418,
+    "hierarchical_accuracy": 0.9034810126582279,
     "common_seat_abs_error": 44,
-    "fitted_seat_abs_error": 66
+    "hierarchical_seat_abs_error": 84
   },
   "holdout": {
     "common_accuracy": 0.6835443037974683,
-    "fitted_accuracy": 0.7009493670886076,
+    "hierarchical_accuracy": 0.5917721518987342,
     "common_seat_abs_error": 340,
-    "fitted_seat_abs_error": 322
+    "hierarchical_seat_abs_error": 480
   },
-  "note": "Live use is allowed only when approved=true. Country-oracle diagnostics are never live parameters."
+  "note": "Live use only when approved=true. Regional betas are learned on 2010→2015 and 2015→2017 only; 2019 and 2024 are unseen gates. Current Scotland/Wales polling is a separate live-data layer in app.js."
 }
