@@ -23,7 +23,7 @@ const CONFIG = {
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v08-20260826-ni',
+  cacheVersion: 'uk-v081-20260826-ni-palette-mcux',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
@@ -47,17 +47,17 @@ const PARTY = {
   pc:{name:'Plaid Cymru',short:'PC',color:'#005b54'},
   rb:{name:'Restore Britain',short:'RB',color:'#8752cc'},
   other:{name:'Altri',short:'Altri',color:'#7c8491'},
-  sf:{name:'Sinn Féin',short:'SF',color:'#326760',abstentionist:true},
-  dup:{name:'Democratic Unionist Party',short:'DUP',color:'#d46a4c'},
-  alliance:{name:'Alliance Party',short:'Alliance',color:'#f6cb2f',text:'#111'},
-  sdlp:{name:'SDLP',short:'SDLP',color:'#2aa82c'},
-  uup:{name:'Ulster Unionist Party',short:'UUP',color:'#48a5ee'},
-  tuv:{name:'Traditional Unionist Voice',short:'TUV',color:'#0d3a67'},
-  aontu:{name:'Aontú',short:'Aontú',color:'#6b2d5c'},
-  pbp:{name:'People Before Profit',short:'PBP',color:'#e31b23'},
-  ni_green:{name:'Green Party NI',short:'Green NI',color:'#3a9d23'},
-  ind:{name:'Independent',short:'Ind',color:'#9aa1aa'},
-  ni_other:{name:'Altri NI',short:'Altri NI',color:'#616977'},
+  sf:{name:'Sinn Féin',short:'SF',color:'#008c4a',abstentionist:true},
+  dup:{name:'Democratic Unionist Party',short:'DUP',color:'#8f3f2f'},
+  alliance:{name:'Alliance Party',short:'Alliance',color:'#c49300',text:'#111'},
+  sdlp:{name:'SDLP',short:'SDLP',color:'#5f8f32'},
+  uup:{name:'Ulster Unionist Party',short:'UUP',color:'#596fb3'},
+  tuv:{name:'Traditional Unionist Voice',short:'TUV',color:'#263a5e'},
+  aontu:{name:'Aontú',short:'Aontú',color:'#8d4a83'},
+  pbp:{name:'People Before Profit',short:'PBP',color:'#a51f4b'},
+  ni_green:{name:'Green Party NI',short:'Green NI',color:'#79a86b'},
+  ind:{name:'Independent',short:'Ind',color:'#b6beca'},
+  ni_other:{name:'Altri NI',short:'Altri NI',color:'#505866'},
 };
 const NI_ORDER=['sf','dup','alliance','sdlp','uup','tuv','aontu','pbp','ni_green','ind','ni_other'];
 const SEAT_ORDER=['lab','con','ref','ld','green','snp','pc','rb','sf','dup','alliance','sdlp','uup','tuv','aontu','pbp','ni_green','ind','ni_other','other'];
@@ -704,7 +704,17 @@ function prepareSeatModel(){
 
 async function runMonteCarlo(force=false){
   if(!state.central?.seats?.length)return;
-  if(!force){const cached=loadMcCache();if(cached){state.mc=cached;renderMc();applyMapColors();return;}}
+  setMonteCarloPending(true);
+  if(!force){
+    const cached=loadMcCache();
+    if(cached){
+      state.mc=cached;
+      renderMc();
+      setMonteCarloPending(false);
+      applyMapColors();
+      return;
+    }
+  }
   const {models,regions,target}=prepareSeatModel(),P=SEAT_ORDER.length,N=CONFIG.mcSims,nSeats=models.length;
   const partyIndex=new Map(SEAT_ORDER.map((p,i)=>[p,i])),dists=SEAT_ORDER.map(()=>new Uint16Array(N)),wins=new Uint32Array(nSeats*P),rng=mulberry32(hashString(fingerprint()));
   let hung=0,labMaj=0,conMaj=0,refMaj=0,labWorkMaj=0,conWorkMaj=0,refWorkMaj=0;
@@ -739,7 +749,12 @@ async function runMonteCarlo(force=false){
   const seatProb={};for(let si=0;si<nSeats;si++){const obj={};for(let pi=0;pi<P;pi++)obj[SEAT_ORDER[pi]]=wins[si*P+pi]/N;seatProb[models[si].id]=obj;}
   const workArr=Array.from(workThresholds).sort((a,b)=>a-b);
   const summary={sims:N,medians,intervals,labMaj:labMaj/N,conMaj:conMaj/N,refMaj:refMaj/N,labWorkMaj:labWorkMaj/N,conWorkMaj:conWorkMaj/N,refWorkMaj:refWorkMaj/N,workingThreshold:quantileSorted(workArr,.5),hung:hung/N,largest:Object.fromEntries(SEAT_ORDER.map(p=>[p,largestCounts[p]/N])),seatProb,dist:distPlain,fingerprint:fingerprint()};
-  state.mc=summary;saveMcCache(summary);$('#mcStatus').textContent='Completato';renderMc();applyMapColors();
+  state.mc=summary;
+  saveMcCache(summary);
+  $('#mcStatus').textContent='Completato';
+  renderMc();
+  setMonteCarloPending(false);
+  applyMapColors();
 }
 
 function quantileSorted(arr,q){
@@ -747,12 +762,36 @@ function quantileSorted(arr,q){
   return arr[i];
 }
 
+function setMonteCarloPending(pending){
+  const probBtn=$('#mapProbBtn');
+  if(probBtn){
+    probBtn.disabled=!!pending;
+    probBtn.setAttribute('aria-disabled',pending?'true':'false');
+    probBtn.title=pending?'Disponibile al termine delle 50.000 simulazioni':'Colora i collegi in base alla probabilità di vittoria';
+  }
+  const badge=$('#mcBadge');
+  if(badge)badge.textContent=pending?'50.000 simulazioni · in corso':'50.000 simulazioni · completate';
+
+  if(pending&&state.mapMode==='prob'){
+    state.mapMode='central';
+    $('#mapCentralBtn')?.classList.add('active');
+    $('#mapProbBtn')?.classList.remove('active');
+    applyMapColors();
+  }
+}
+
 function renderCentral(){
-  const totals=state.central.totals; $('#projectionTitle').textContent='Proiezione centrale'; const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales; const sub=[sm?.polls?`Scozia: ${sm.polls} poll`:null,wm?.polls?`Galles: ${wm.polls} poll`:null].filter(Boolean).join(' · '); $('#projectionSubtitle').textContent=`${partialRakeModelActive()?`Raking parziale validato (α=${partialRakeStrength().toFixed(2)}) 2024 → oggi`:transferModelActive()?'Modello trasferimenti 2024 → oggi':'Fallback prudente 2024 → oggi: swing regolarizzato'}${sub?` · ${sub}`:''}${state.central?.ni?.signalWeight?` · NI: tracker Assembly ×${state.central.ni.signalWeight.toFixed(2)}`:' · NI: baseline 2024'}.`;
-  renderSeats(totals,null); $('#kpiLargest').textContent=PARTY[Object.entries(totals).sort((a,b)=>b[1]-a[1])[0][0]]?.short||'—'; $('#kpiLargestMeta').textContent='proiezione centrale';
+  const totals=state.central.totals;
+  $('#projectionTitle').textContent='Proiezione centrale · provvisoria';
+  const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales;
+  const sub=[sm?.polls?`Scozia: ${sm.polls} poll`:null,wm?.polls?`Galles: ${wm.polls} poll`:null].filter(Boolean).join(' · ');
+  $('#projectionSubtitle').textContent=`${partialRakeModelActive()?`Raking parziale validato (α=${partialRakeStrength().toFixed(2)}) 2024 → oggi`:transferModelActive()?'Modello trasferimenti 2024 → oggi':'Fallback prudente 2024 → oggi: swing regolarizzato'}${sub?` · ${sub}`:''}${state.central?.ni?.signalWeight?` · NI: tracker Assembly ×${state.central.ni.signalWeight.toFixed(2)}`:' · NI: baseline 2024'} · Monte Carlo in corso: emiciclo e mappa mostrano il centro deterministico fino al completamento.`;
+  renderSeats(totals,null);
+  $('#kpiLargest').textContent=PARTY[Object.entries(totals).sort((a,b)=>b[1]-a[1])[0][0]]?.short||'—';
+  $('#kpiLargestMeta').textContent='proiezione centrale provvisoria';
 }
 function renderMc(){
-  const m=state.mc;if(!m)return; renderSeats(m.medians,m.intervals); $('#projectionTitle').textContent='Distribuzione dei seggi';$('#projectionSubtitle').textContent='Mediana delle 50.000 simulazioni; intervallo centrale 80% tra parentesi.';
+  const m=state.mc;if(!m)return; renderSeats(m.medians,m.intervals); $('#projectionTitle').textContent='Distribuzione dei seggi';$('#projectionSubtitle').textContent='Risultato Monte Carlo completato: mediana delle 50.000 simulazioni; intervallo centrale 80% tra parentesi.';
   $('#probLabMaj').textContent=pctFmt(m.labMaj*100);$('#probConMaj').textContent=pctFmt(m.conMaj*100);$('#probRefMaj').textContent=pctFmt(m.refMaj*100);$('#probHung').textContent=pctFmt(m.hung*100);
   if($('#probLabWorkMaj'))$('#probLabWorkMaj').textContent=pctFmt((m.labWorkMaj||0)*100);if($('#probConWorkMaj'))$('#probConWorkMaj').textContent=pctFmt((m.conWorkMaj||0)*100);if($('#probRefWorkMaj'))$('#probRefWorkMaj').textContent=pctFmt((m.refWorkMaj||0)*100);if($('#workingThreshold'))$('#workingThreshold').textContent=fmt0(m.workingThreshold||326);
   const largest=Object.entries(m.largest).sort((a,b)=>b[1]-a[1])[0];$('#kpiLargest').textContent=PARTY[largest[0]]?.short||largest[0];$('#kpiLargestMeta').textContent=`${pctFmt(largest[1]*100)} di essere il primo partito`;
@@ -857,12 +896,25 @@ function bindUi(){
     if(path&&$('#ukMap').contains(path))selectSeat(path.dataset.id);
   });
   $('#mapCentralBtn').addEventListener('click',()=>{state.mapMode='central';$('#mapCentralBtn').classList.add('active');$('#mapProbBtn').classList.remove('active');applyMapColors();});
-  $('#mapProbBtn').addEventListener('click',()=>{state.mapMode='prob';$('#mapProbBtn').classList.add('active');$('#mapCentralBtn').classList.remove('active');applyMapColors();});
+  $('#mapProbBtn').addEventListener('click',()=>{
+    if(!state.mc)return;
+    state.mapMode='prob';
+    $('#mapProbBtn').classList.add('active');
+    $('#mapCentralBtn').classList.remove('active');
+    applyMapColors();
+  });
   $$('[data-window]').forEach(btn=>btn.addEventListener('click',()=>{ $$('[data-window]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const use=btn.dataset.window==='latest'?state.latestAverage:state.average.values;const old=state.average.values;state.average.values=use;renderPolls();state.average.values=old;}));
 }
 
 async function init(force=false){
-  clearError();setStatus('Caricamento dati…','loading');$('#refreshBtn').disabled=true;
+  clearError();
+  state.mc=null;
+  state.mapMode='central';
+  $('#mapCentralBtn')?.classList.add('active');
+  $('#mapProbBtn')?.classList.remove('active');
+  setMonteCarloPending(true);
+  setStatus('Caricamento dati…','loading');
+  $('#refreshBtn').disabled=true;
   try{
     if(force){try{localStorage.removeItem(mcCacheKey());}catch(_){ }}
     const [polls,constituencies,geometry,ni,modelParams,subnational,territorialBaseline]=await Promise.all([
