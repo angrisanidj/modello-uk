@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.9 — scenario-aware party calibration / hybrid residual model
+modello-uk v0.9.10 — incumbent-collapse challenger routing / hybrid residual model
 
 Purpose
 -------
@@ -79,8 +79,8 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v099-scenario-aware.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v099.json"
+BACKTEST_OUT=DATA/"backtest-v0910-incumbent-routing.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v0910.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -163,7 +163,17 @@ SCENARIO_CON_DROP_FULL=15.0
 SCENARIO_REF_RISE_FULL=8.0
 
 
-UA="FocusAmerica-UK-election-model/0.9.9 (+https://angrisanidj.github.io/modello-uk/)"
+# v0.9.10 incumbent-collapse routing.
+# The strength grid is selected ONLY on 2015->2017, where the SNP provides a
+# genuine historical example of a previously dominant incumbent party losing a
+# large fraction of its support and seats.
+INCUMBENT_DECLINE_REL_LOW=0.10
+INCUMBENT_DECLINE_REL_FULL=0.30
+ROUTING_STRENGTH_GRID=(0.0,0.20,0.40,0.60,0.80)
+UNWIND_STRENGTH_GRID=(0.0,0.15,0.30,0.45,0.60)
+
+
+UA="FocusAmerica-UK-election-model/0.9.10 (+https://angrisanidj.github.io/modello-uk/)"
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -664,7 +674,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v099-bes-integrity",
+        "version":"uk-v0910-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -1611,6 +1621,234 @@ def apply_party_calibration(
     )
     return calibrated,dispersion_meta,scores
 
+
+def incumbent_decline_profile(
+    base:dict[str,Any],
+    target:dict[str,float]
+)->dict[str,dict[str,float]]:
+    base_nat=nat_shares(base)
+    out={}
+    for p in PARTIES:
+        b=float(base_nat.get(p,0.0))
+        t=float(target.get(p,0.0))
+        drop=max(0.0,b-t)
+        relative=drop/max(0.50,b)
+        activation=clamp(
+            (relative-INCUMBENT_DECLINE_REL_LOW)/
+            max(1e-9,INCUMBENT_DECLINE_REL_FULL-INCUMBENT_DECLINE_REL_LOW),
+            0.0,1.0
+        )
+        out[p]={
+            "base_share":b,
+            "target_share":t,
+            "absolute_drop":drop,
+            "relative_drop":relative,
+            "activation":activation,
+        }
+    return out
+
+
+def route_incumbent_collapse(
+    rows:pd.DataFrame,
+    base:dict[str,Any],
+    target:dict[str,float],
+    route_strength:float,
+    unwind_strength:float
+)->tuple[pd.DataFrame,dict[str,Any]]:
+    """Concentrate opposition around the established runner-up in collapse seats.
+
+    Uses only baseline winner/runner-up plus national base/target shares.
+    No future constituency winner or future local share is consulted.
+
+    1) Challenger routing:
+       part of the vote held by third/fourth challengers is shifted to the
+       baseline runner-up.
+    2) Incumbent unwind:
+       part of the incumbent's residual predicted lead over the runner-up is
+       shifted to that runner-up.
+
+    Final raking restores national party vote targets, so the layer primarily
+    alters territorial efficiency rather than aggregate support.
+    """
+    out=rows.copy().astype(float)
+    decline=incumbent_decline_profile(base,target)
+    audit={
+        "route_strength":float(route_strength),
+        "unwind_strength":float(unwind_strength),
+        "decline_profile":decline,
+        "affected_seats":0,
+        "by_incumbent":defaultdict(lambda:{
+            "seats":0,"routed_vote":0.0,"unwound_vote":0.0,
+            "runnerups":Counter()
+        }),
+    }
+
+    for idx,row in base["frame"].iterrows():
+        incumbent=str(row.get("actual_winner") or "")
+        runner=str(row.get("actual_second") or "")
+        if incumbent not in PARTIES or runner not in PARTIES:
+            continue
+        if incumbent==runner:
+            continue
+
+        activation=float(decline.get(incumbent,{}).get("activation",0.0))
+        if activation<=0:
+            continue
+
+        candidates=competitive_parties(row)
+        if incumbent not in candidates or runner not in candidates:
+            continue
+
+        effective_route=float(route_strength)*activation
+        effective_unwind=float(unwind_strength)*activation
+        if effective_route<=0 and effective_unwind<=0:
+            continue
+
+        audit["affected_seats"]+=1
+        a=audit["by_incumbent"][incumbent]
+        a["seats"]+=1
+        a["runnerups"][runner]+=1
+
+        # A. consolidate weaker challengers into the established runner-up.
+        donor_parties=[
+            p for p in candidates
+            if p not in {incumbent,runner}
+        ]
+        donor_pool=sum(max(0.0,float(out.at[idx,p])) for p in donor_parties)
+        routed=effective_route*donor_pool
+        if routed>0 and donor_pool>0:
+            for p in donor_parties:
+                share=max(0.0,float(out.at[idx,p]))
+                out.at[idx,p]=max(0.0001,share-routed*(share/donor_pool))
+            out.at[idx,runner]=float(out.at[idx,runner])+routed
+            a["routed_vote"]+=float(routed)
+
+        # B. unwind part of a residual local incumbent advantage.
+        inc=float(out.at[idx,incumbent])
+        run=float(out.at[idx,runner])
+        gap=max(0.0,inc-run)
+        # Moving half the gap would make the seat tied; strength=1 would erase
+        # the full margin. Our development grid deliberately stops at 0.60.
+        unwind=effective_unwind*gap*0.50
+        if unwind>0:
+            unwind=min(unwind,max(0.0,inc-0.0001))
+            out.at[idx,incumbent]=inc-unwind
+            out.at[idx,runner]=run+unwind
+            a["unwound_vote"]+=float(unwind)
+
+        # Row normalization before global raking.
+        country=str(row["country"])
+        vals={
+            p:(max(.0001,float(out.at[idx,p])) if allowed(p,country) else 0.0)
+            for p in PARTIES
+        }
+        den=sum(vals.values()) or 1.0
+        for p in PARTIES:
+            out.at[idx,p]=vals[p]/den*100.0
+
+    # JSON-safe audit.
+    audit["by_incumbent"]={
+        p:{
+            "seats":v["seats"],
+            "routed_vote":v["routed_vote"],
+            "unwound_vote":v["unwound_vote"],
+            "runnerups":dict(v["runnerups"]),
+        }
+        for p,v in audit["by_incumbent"].items()
+    }
+    return rake(out,base,target),audit
+
+
+def tune_incumbent_routing(
+    rows:pd.DataFrame,
+    base:dict[str,Any],
+    actual:dict[str,Any],
+    target:dict[str,float]
+)->tuple[dict[str,float],dict[str,Any],pd.DataFrame]:
+    """Select routing/unwind strengths on the 2017 development election only."""
+    candidates=[]
+    for route_strength in ROUTING_STRENGTH_GRID:
+        for unwind_strength in UNWIND_STRENGTH_GRID:
+            candidate,audit=route_incumbent_collapse(
+                rows,base,target,route_strength,unwind_strength
+            )
+            metrics=evaluate_rows(candidate,actual,base)
+
+            # Extra Scotland diagnostic: 2015->2017 is the historical incumbent-
+            # collapse training analogue used by this layer.
+            sc=metrics.get("regional_accuracy",{}).get("scotland",{})
+            candidates.append({
+                "route_strength":float(route_strength),
+                "unwind_strength":float(unwind_strength),
+                "metrics":metrics,
+                "scotland_accuracy":sc.get("accuracy"),
+                "audit":audit,
+            })
+
+    # Overall constituency accuracy remains the primary objective. Seat error
+    # and Scotland accuracy only break ties.
+    candidates.sort(
+        key=lambda x:(
+            x["metrics"]["correct_winners"],
+            -x["metrics"]["seat_abs_error_sum"],
+            x["scotland_accuracy"] if x["scotland_accuracy"] is not None else -1,
+            -x["route_strength"],
+            -x["unwind_strength"],
+        ),
+        reverse=True
+    )
+    best=candidates[0]
+    selected={
+        "route_strength":best["route_strength"],
+        "unwind_strength":best["unwind_strength"],
+    }
+    summary=[
+        {
+            "route_strength":x["route_strength"],
+            "unwind_strength":x["unwind_strength"],
+            "winner_accuracy":x["metrics"]["winner_accuracy"],
+            "correct_winners":x["metrics"]["correct_winners"],
+            "seat_abs_error_sum":x["metrics"]["seat_abs_error_sum"],
+            "scotland_accuracy":x["scotland_accuracy"],
+            "predicted_seats":x["metrics"]["predicted_seats"],
+        }
+        for x in candidates
+    ]
+    final_rows,final_audit=route_incumbent_collapse(
+        rows,base,target,selected["route_strength"],selected["unwind_strength"]
+    )
+    return selected,{
+        "selected":selected,
+        "candidates":summary,
+        "selected_audit":final_audit,
+        "selection_election":"2015_to_2017",
+    },final_rows
+
+
+def country_accuracy(
+    rows:pd.DataFrame,
+    actual:dict[str,Any],
+    base:dict[str,Any],
+    country:str
+)->dict[str,Any]:
+    total=0;correct=0;pred=Counter();real=Counter()
+    for idx,row in actual["frame"].iterrows():
+        if str(row["country"])!=country:
+            continue
+        total+=1
+        pw=predicted_winner(rows.loc[idx],base["frame"].loc[idx])
+        rw=str(row["actual_winner"])
+        pred[pw]+=1;real[rw]+=1
+        correct+=int(pw==rw)
+    return {
+        "country":country,
+        "n":total,
+        "correct":correct,
+        "accuracy":correct/total if total else None,
+        "predicted_seats":dict(pred),
+        "actual_seats":dict(real),
+    }
+
 def evaluate_rows(rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,Any])->dict[str,Any]:
     df=actual["frame"];base_df=base["frame"]
     pred=Counter();real=Counter();correct=0
@@ -1751,8 +1989,8 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v099-scenario-aware",
-        "model_type":"constituency-residual-scenario-aware-v4",
+        "version":"uk-v0910-incumbent-routing",
+        "model_type":"constituency-residual-incumbent-routing-v5",
         "status":"error",
         "approved":False,
         "publication_ready":False,
@@ -1763,15 +2001,15 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v099-scenario-aware-live","approved":False,"status":"error",
+        "version":"uk-v0910-incumbent-routing-live","approved":False,"status":"error",
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v099-scenario-aware-backtest","status":"error","error":str(exc)
+        "version":"uk-v0910-incumbent-routing-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v099-bes-integrity","status":"failed",
+            "version":"uk-v0910-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -1837,7 +2075,10 @@ def main()->int:
             dev_dispersed,dev_contest_scores,e15,t15_17["target"],
             selected_party_strengths
         )
-        development_2017=evaluate_rows(dev_calibrated,e17,e15)
+        selected_routing,routing_tuning,dev_routed=tune_incumbent_routing(
+            dev_calibrated,e15,e17,t15_17["target"]
+        )
+        development_2017=evaluate_rows(dev_routed,e17,e15)
 
         # 2019 is temporal validation for the new party-specific calibration.
         models_val,names_val=train_models([t10_15,t15_17],selected_spec)
@@ -1845,10 +2086,16 @@ def main()->int:
             e17,t17_19["target"],models_val,names_val,selected_spec
         )
         validation_share_only=evaluate_rows(val_raw,e19,e17)
-        val_rows,val_dispersion,val_contest_scores=apply_party_calibration(
+        val_pre_route,val_dispersion,val_contest_scores=apply_party_calibration(
             val_raw,e17,t17_19["target"],
             [e10,e15,e17],[t10_15,t15_17],
             selected_party_strengths
+        )
+        validation_pre_route=evaluate_rows(val_pre_route,e19,e17)
+        val_rows,val_routing=route_incumbent_collapse(
+            val_pre_route,e17,t17_19["target"],
+            selected_routing["route_strength"],
+            selected_routing["unwind_strength"]
         )
         validation=evaluate_rows(val_rows,e19,e17)
 
@@ -1860,10 +2107,16 @@ def main()->int:
             e19n,t19n_24["target"],models_hold,names_hold,selected_spec
         )
         holdout_share_only=evaluate_rows(hold_raw,e24,e19n)
-        hold_rows,hold_dispersion,hold_contest_scores=apply_party_calibration(
+        hold_pre_route,hold_dispersion,hold_contest_scores=apply_party_calibration(
             hold_raw,e19n,t19n_24["target"],
             [e10,e15,e17,e19],[t10_15,t15_17,t17_19],
             selected_party_strengths
+        )
+        holdout_pre_route=evaluate_rows(hold_pre_route,e24,e19n)
+        hold_rows,hold_routing=route_incumbent_collapse(
+            hold_pre_route,e19n,t19n_24["target"],
+            selected_routing["route_strength"],
+            selected_routing["unwind_strength"]
         )
         holdout=evaluate_rows(hold_rows,e24,e19n)
 
@@ -1878,25 +2131,32 @@ def main()->int:
         live_raw=predict_transition(
             e24,target_now,models_live,names_live,selected_spec
         )
-        live_rows,live_dispersion,live_contest_scores=apply_party_calibration(
+        live_pre_route,live_dispersion,live_contest_scores=apply_party_calibration(
             live_raw,e24,target_now,
             [e10,e15,e17,e19,e24],
             [t10_15,t15_17,t17_19,t19n_24],
             selected_party_strengths
         )
+        live_rows,live_routing=route_incumbent_collapse(
+            live_pre_route,e24,target_now,
+            selected_routing["route_strength"],
+            selected_routing["unwind_strength"]
+        )
         live=live_projection(
             e24,target_now,live_rows,live_contest_scores,
             {
-                "kind":"party_specific",
+                "kind":"party_specific_plus_incumbent_routing",
                 "classifier":PARTY_CONTEST_BASE_SPEC,
                 "strengths":selected_party_strengths,
                 "dispersion":live_dispersion,
+                "routing":selected_routing,
+                "routing_audit":live_routing,
             }
         )
 
         model_payload={
-            "version":"uk-v099-scenario-aware",
-            "model_type":"constituency-residual-scenario-aware-v4",
+            "version":"uk-v0910-incumbent-routing",
+            "model_type":"constituency-residual-incumbent-routing-v5",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -1904,6 +2164,8 @@ def main()->int:
             "selected_spec":selected_spec,
             "selected_party_strengths":selected_party_strengths,
             "party_contest_classifier":PARTY_CONTEST_BASE_SPEC,
+            "selected_incumbent_routing":selected_routing,
+            "incumbent_routing_development":routing_tuning,
             "scenario_activation":{
                 "turnover_low":SCENARIO_TURNOVER_LOW,
                 "turnover_high":SCENARIO_TURNOVER_HIGH,
@@ -1932,20 +2194,28 @@ def main()->int:
             "development_2017":{
                 "candidate":development_2017,
                 "dispersion":dev_dispersion,
-                "party_strength_tuning":party_strength_tuning
+                "party_strength_tuning":party_strength_tuning,
+                "routing_tuning":routing_tuning,
+                "scotland":country_accuracy(dev_routed,e17,e15,"Scotland")
             },
             "validation_2019":{
                 "baseline":validation_base,
                 "share_only_candidate":validation_share_only,
+                "pre_routing_candidate":validation_pre_route,
                 "candidate":validation,
-                "dispersion":val_dispersion
+                "dispersion":val_dispersion,
+                "routing":val_routing,
+                "scotland":country_accuracy(val_rows,e19,e17,"Scotland")
             },
             "holdout_2024":{
                 "evaluation_label":"development_benchmark_not_pristine_holdout",
                 "baseline":holdout_base,
                 "share_only_candidate":holdout_share_only,
+                "pre_routing_candidate":holdout_pre_route,
                 "candidate":holdout,
                 "dispersion":hold_dispersion,
+                "routing":hold_routing,
+                "scotland":country_accuracy(hold_rows,e24,e19n,"Scotland"),
                 "accuracy_gain_pp":(holdout["winner_accuracy"]-holdout_base["winner_accuracy"])*100,
                 "seat_error_improvement":holdout_base["seat_abs_error_sum"]-holdout["seat_abs_error_sum"],
             },
@@ -1970,7 +2240,7 @@ def main()->int:
             "features":{
                 "historical_demographics":[c.replace("demo_","") for c in e19["demo_columns"]],
                 "current_demographics":[c.replace("demo_","") for c in e24["demo_columns"]],
-                "notes":"Stage 1 predicts local vote shares. Stage 2 calibrates each party's geographic dispersion from prior elections, but the correction is scenario-aware: its activation rises with national vote turnover, own-party movement, Conservative collapse and Reform surge where relevant. Stage 3 applies the frozen FPTP classifier with the same scenario attenuation. Final raking preserves national targets. 2019 is temporal validation; 2024 is a development benchmark.",
+                "notes":"Stages 1-3 are the v0.9.9 scenario-aware share/dispersion/FPTP model. Stage 4 is an incumbent-collapse routing layer selected only on 2015->2017: when a baseline winner suffers a large relative national decline, third/fourth challenger support can consolidate around the baseline runner-up and part of the residual incumbent local lead can unwind. This supplies a historical analogue for both SNP collapse and later Conservative collapse. Final raking preserves national targets. 2019 remains temporal validation; 2024 is a development benchmark.",
             },
             "integrity":{
                 "version":integrity.get("version"),
@@ -1989,8 +2259,8 @@ def main()->int:
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v099-scenario-aware-live",
-            "model_type":"constituency-residual-scenario-aware-v4",
+            "version":"uk-v0910-incumbent-routing-live",
+            "model_type":"constituency-residual-incumbent-routing-v5",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -1999,6 +2269,8 @@ def main()->int:
             "selected_spec":selected_spec,
             "selected_party_strengths":selected_party_strengths,
             "party_contest_classifier":PARTY_CONTEST_BASE_SPEC,
+            "selected_incumbent_routing":selected_routing,
+            "live_routing_audit":live_routing,
             "scenario":national_scenario_metrics(e24,target_now),
             "effective_party_strengths":{
                 p:selected_party_strengths.get(p,0.0)*party_scenario_activation(
@@ -2016,23 +2288,26 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v099-scenario-aware-backtest",
+            "version":"uk-v0910-incumbent-routing-backtest",
             "status":"ok",
             "selected_spec":selected_spec,
             "selected_party_strengths":selected_party_strengths,
             "party_contest_classifier":PARTY_CONTEST_BASE_SPEC,
+            "selected_incumbent_routing":selected_routing,
             "approved_for_live":approved,
             "publication_ready":publication_ready,
             "development_2017":model_payload["development_2017"],
-            "validation_2019":{"baseline":validation_base,"share_only_candidate":validation_share_only,"candidate":validation,"dispersion":val_dispersion},
-            "holdout_2024":{"evaluation_label":"development_benchmark_not_pristine_holdout","baseline":holdout_base,"share_only_candidate":holdout_share_only,"candidate":holdout,"dispersion":hold_dispersion},
+            "validation_2019":{"baseline":validation_base,"share_only_candidate":validation_share_only,"pre_routing_candidate":validation_pre_route,"candidate":validation,"dispersion":val_dispersion,"routing":val_routing,"scotland":country_accuracy(val_rows,e19,e17,"Scotland")},
+            "holdout_2024":{"evaluation_label":"development_benchmark_not_pristine_holdout","baseline":holdout_base,"share_only_candidate":holdout_share_only,"pre_routing_candidate":holdout_pre_route,"candidate":holdout,"dispersion":hold_dispersion,"routing":hold_routing,"scotland":country_accuracy(hold_rows,e24,e19n,"Scotland")},
             "internal_selection_2017":model_payload["internal_selection_2017"],
             "party_calibration_2017":model_payload["party_calibration_2017"],
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
-        print("v0.9.9 selected share spec:",selected_spec)
-        print("v0.9.9 selected party strengths:",selected_party_strengths)
+        print("v0.9.10 selected share spec:",selected_spec)
+        print("v0.9.10 selected party strengths:",selected_party_strengths)
+        print("v0.9.10 selected incumbent routing:",selected_routing)
+        print("2017 routing audit:",routing_tuning["selected_audit"])
         print("2017 scenario:",national_scenario_metrics(e15,t15_17["target"]))
         print("2019 scenario:",national_scenario_metrics(e17,t17_19["target"]))
         print("2024 scenario:",national_scenario_metrics(e19n,t19n_24["target"]))
@@ -2040,13 +2315,15 @@ def main()->int:
             "2019 validation:",
             f"baseline {validation_base['winner_accuracy']:.2%}/{validation_base['seat_abs_error_sum']}",
             f"share-only {validation_share_only['winner_accuracy']:.2%}/{validation_share_only['seat_abs_error_sum']}",
-            f"FPTP-calibrated {validation['winner_accuracy']:.2%}/{validation['seat_abs_error_sum']}"
+            f"pre-route {validation_pre_route['winner_accuracy']:.2%}/{validation_pre_route['seat_abs_error_sum']}",
+            f"routed {validation['winner_accuracy']:.2%}/{validation['seat_abs_error_sum']}"
         )
         print(
             "2024 DEVELOPMENT BENCHMARK:",
             f"baseline {holdout_base['winner_accuracy']:.2%}/{holdout_base['seat_abs_error_sum']}",
             f"share-only {holdout_share_only['winner_accuracy']:.2%}/{holdout_share_only['seat_abs_error_sum']}",
-            f"FPTP-calibrated {holdout['winner_accuracy']:.2%}/{holdout['seat_abs_error_sum']}"
+            f"pre-route {holdout_pre_route['winner_accuracy']:.2%}/{holdout_pre_route['seat_abs_error_sum']}",
+            f"routed {holdout['winner_accuracy']:.2%}/{holdout['seat_abs_error_sum']}"
         )
         print("Approved for beta live:",approved,reasons)
         print("Publication-ready threshold (85% / seat error <=140):",publication_ready)
@@ -2057,7 +2334,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.9 shadow build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.10 shadow build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # Shadow failure must not break the existing production model.
         raise SystemExit(0)

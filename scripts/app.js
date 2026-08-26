@@ -24,7 +24,7 @@ const CONFIG = {
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v099-20260826-scenario-aware',
+  cacheVersion: 'uk-v0910-20260826-incumbent-routing',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
@@ -375,8 +375,8 @@ function buildGeographicTargets(gbTarget){
 
 function mrpLiteActive(){
   const m=state.mrpLite;
-  return m?.version==='uk-v099-scenario-aware-live'
-    && m?.model_type==='constituency-residual-scenario-aware-v4'
+  return m?.version==='uk-v0910-incumbent-routing-live'
+    && m?.model_type==='constituency-residual-incumbent-routing-v5'
     && m?.status==='ok'
     && m?.approved===true
     && Number(m?.holdout_accuracy)>=.80
@@ -829,7 +829,7 @@ function renderCentral(){
   $('#projectionTitle').textContent='Proiezione centrale · provvisoria';
   const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales;
   const sub=[sm?.polls?`Scozia: ${sm.polls} poll`:null,wm?.polls?`Galles: ${wm.polls} poll`:null].filter(Boolean).join(' · ');
-  $('#projectionSubtitle').textContent=`${mrpLiteActive()?`MRP-lite scenario-aware · benchmark 2024 ${(state.central.mrpLite.holdoutAccuracy*100).toFixed(1)}% · ${state.central.mrpLite.selectedSpec}`:partialRakeModelActive()?`Raking parziale validato (α=${partialRakeStrength().toFixed(2)}) 2024 → oggi`:transferModelActive()?'Modello trasferimenti 2024 → oggi':'Fallback prudente 2024 → oggi: swing regolarizzato'}${sub?` · ${sub}`:''}${state.central?.ni?.signalWeight?` · NI: tracker Assembly ×${state.central.ni.signalWeight.toFixed(2)}`:' · NI: baseline 2024'} · Monte Carlo in corso: emiciclo e mappa mostrano il centro deterministico fino al completamento.`;
+  $('#projectionSubtitle').textContent=`${mrpLiteActive()?`MRP-lite + incumbent routing · benchmark 2024 ${(state.central.mrpLite.holdoutAccuracy*100).toFixed(1)}% · ${state.central.mrpLite.selectedSpec}`:partialRakeModelActive()?`Raking parziale validato (α=${partialRakeStrength().toFixed(2)}) 2024 → oggi`:transferModelActive()?'Modello trasferimenti 2024 → oggi':'Fallback prudente 2024 → oggi: swing regolarizzato'}${sub?` · ${sub}`:''}${state.central?.ni?.signalWeight?` · NI: tracker Assembly ×${state.central.ni.signalWeight.toFixed(2)}`:' · NI: baseline 2024'} · Monte Carlo in corso: emiciclo e mappa mostrano il centro deterministico fino al completamento.`;
   renderSeats(totals,null);
   $('#kpiLargest').textContent=PARTY[Object.entries(totals).sort((a,b)=>b[1]-a[1])[0][0]]?.short||'—';
   $('#kpiLargestMeta').textContent='proiezione centrale provvisoria';
