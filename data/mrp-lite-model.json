@@ -1,10 +1,14 @@
 {
-  "version": "uk-v0910-incumbent-routing",
+  "version": "uk-v0911-reform-diagnostics",
   "model_type": "constituency-residual-incumbent-routing-v5",
   "status": "ok",
   "approved": false,
   "publication_ready": false,
-  "generated_at": "2026-08-26T19:14:49.739386+00:00",
+  "diagnostic_only": true,
+  "used_for_parameter_selection": false,
+  "changes_production_model": false,
+  "candidate_gate_passed": false,
+  "generated_at": "2026-08-26T20:00:52.954665+00:00",
   "selected_spec": {
     "name": "hgb_d2_g100",
     "kind": "hgb",
@@ -681,29 +685,29 @@
         "other": 3.568672291692681
       },
       "target_national": {
-        "lab": 25.86085610213282,
-        "con": 20.334887274534267,
-        "ref": 24.623509896691736,
-        "ld": 10.664933066291987,
-        "green": 10.922586780316305,
+        "lab": 25.86085610213279,
+        "con": 20.334887274534264,
+        "ref": 24.62350989669176,
+        "ld": 10.664933066291995,
+        "green": 10.922586780316301,
         "snp": 2.917465662303746,
-        "pc": 1.1084633831799064,
-        "other": 3.567297834549236
+        "pc": 1.1084633831799056,
+        "other": 3.5672978345492337
       },
       "deltas": {
-        "lab": -8.776636539548264,
-        "con": -4.0264891324655,
-        "ref": 9.933237148337327,
-        "ld": -1.890207053938484,
-        "green": 4.0162595179677085,
+        "lab": -8.776636539548296,
+        "con": -4.026489132465503,
+        "ref": 9.933237148337351,
+        "ld": -1.8902070539384752,
+        "green": 4.016259517967705,
         "snp": 0.33176845043767633,
-        "pc": 0.41344206635299197,
-        "other": -0.0013744571434450847
+        "pc": 0.4134420663529911,
+        "other": -0.0013744571434473052
       },
-      "turnover": 14.694707183095698,
-      "system_activation": 0.7245589319246415,
-      "con_drop": 4.0264891324655,
-      "ref_rise": 9.933237148337327
+      "turnover": 14.694707183095723,
+      "system_activation": 0.7245589319246436,
+      "con_drop": 4.026489132465503,
+      "ref_rise": 9.933237148337351
     }
   },
   "evaluation_status": {
@@ -722,6 +726,39 @@
   "gate_failures": [
     "holdout_2024_accuracy_below_80pct"
   ],
+  "reform_diagnostics": {
+    "version": "uk-v0911-reform-diagnostics",
+    "counts": {
+      "predicted_reform_wins": 39,
+      "actual_reform_wins": 5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "cohorts": {
+        "correct_non_reform": 494,
+        "false_negative": 5,
+        "false_positive": 39,
+        "other_winner_error": 94
+      },
+      "false_positive_actual_winners": {
+        "lab": 39
+      },
+      "false_positive_regions": {
+        "yorkshire": 15,
+        "east_midlands": 3,
+        "wales": 8,
+        "north_east": 10,
+        "north_west": 3
+      }
+    },
+    "binary_confusion": {
+      "true_positive": 0,
+      "false_positive": 39,
+      "false_negative": 5,
+      "true_negative": 588,
+      "total": 632
+    },
+    "output": "data/reform-diagnostics-v0911.json"
+  },
   "development_2017": {
     "candidate": {
       "winner_accuracy": 0.9034810126582279,
@@ -4499,7 +4536,7 @@
     "notes": "Stages 1-3 are the v0.9.9 scenario-aware share/dispersion/FPTP model. Stage 4 is an incumbent-collapse routing layer selected only on 2015->2017: when a baseline winner suffers a large relative national decline, third/fourth challenger support can consolidate around the baseline runner-up and part of the residual incumbent local lead can unwind. This supplies a historical analogue for both SNP collapse and later Conservative collapse. Final raking preserves national targets. 2019 remains temporal validation; 2024 is a development benchmark."
   },
   "integrity": {
-    "version": "uk-v0910-bes-integrity",
+    "version": "uk-v0911-bes-integrity",
     "status": "passed",
     "checks": [
       {
@@ -4848,5 +4885,5 @@
       "file_size": 1407419
     }
   },
-  "note": "The v0.9.9 scenario activation uses only baseline and target national shares. 2019 remains temporal validation; 2024 is retained as a development benchmark, not a pristine holdout."
+  "note": "v0.9.11 does not change the v0.9.10 candidate or any live coefficient. It uses 2024 labels only to diagnose Reform false positives. 2019 remains temporal validation; a separate future version and fresh validation are required for promotion."
 }
