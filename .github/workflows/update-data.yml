@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -38,10 +38,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Update election data
+      - name: Update election data and optimized map
         run: python tools/build_data.py
 
-      - name: Build territorial backtest
+      - name: Calibrate and validate territorial model
         run: python tools/build_backtest.py
 
       - name: Validate datasets
@@ -59,30 +59,45 @@ jobs:
           geo = json.loads(
               Path("data/constituencies-2024.geojson").read_text(encoding="utf-8")
           )
+          display_geo = json.loads(
+              Path("data/constituencies-map.geojson").read_text(encoding="utf-8")
+          )
           backtest = json.loads(
               Path("data/backtest-2024-territorial.json").read_text(encoding="utf-8")
+          )
+          params = json.loads(
+              Path("data/model-params.json").read_text(encoding="utf-8")
           )
 
           n_polls = len(polls.get("polls", []))
           n_const = len(constituencies.get("constituencies", []))
           n_geo = len(geo.get("features", []))
-          bt_current = backtest.get("current_lambda_0_82", {})
-          bt_best = backtest.get("best_lambda_by_winner_accuracy", {})
+          n_display = len(display_geo.get("features", []))
+
+          full_path = Path("data/constituencies-2024.geojson")
+          display_path = Path("data/constituencies-map.geojson")
+          full_bytes = full_path.stat().st_size
+          display_bytes = display_path.stat().st_size
+
+          map_meta = display_geo.get("meta", {})
+          vertices_before = int(map_meta.get("vertices_before", 0) or 0)
+          vertices_after = int(map_meta.get("vertices_after", 0) or 0)
+
+          validation = backtest.get("validation_2019", {})
+          holdout = backtest.get("holdout_2024", {})
+          common_holdout = holdout.get("common", {})
+          fitted_holdout = holdout.get("fitted", {})
 
           print(f"Polls: {n_polls}")
           print(f"Constituencies: {n_const}")
-          print(f"GeoJSON features: {n_geo}")
-          print(
-              "Backtest current λ=0.82:",
-              f"accuracy={bt_current.get('winner_accuracy')}",
-              f"seat_abs_error={bt_current.get('seat_abs_error_sum')}"
-          )
-          print(
-              "Backtest best:",
-              f"lambda={bt_best.get('lambda')}",
-              f"accuracy={bt_best.get('winner_accuracy')}",
-              f"seat_abs_error={bt_best.get('seat_abs_error_sum')}"
-          )
+          print(f"Full GeoJSON: {n_geo} features, {full_bytes:,} bytes")
+          print(f"Display GeoJSON: {n_display} features, {display_bytes:,} bytes")
+          print(f"Map vertices: {vertices_before:,} -> {vertices_after:,}")
+          print(f"Live calibration approved: {params.get('approved')}")
+          print(f"Fitted lambdas: {params.get('lambdas')}")
+          print(f"2019 validation: {validation}")
+          print(f"2024 holdout common: {common_holdout}")
+          print(f"2024 holdout fitted: {fitted_holdout}")
 
           if n_polls < 10:
               raise SystemExit(f"ERROR: only {n_polls} polls")
@@ -94,12 +109,36 @@ jobs:
 
           if n_geo < 650:
               raise SystemExit(
-                  f"ERROR: expected at least 650 geometries, found {n_geo}"
+                  f"ERROR: expected at least 650 full geometries, found {n_geo}"
               )
 
-          if bt_current.get("gb_seats") != 632:
-              raise SystemExit("ERROR: territorial backtest did not evaluate 632 GB seats")
+          if n_display < 650:
+              raise SystemExit(
+                  f"ERROR: expected at least 650 display geometries, found {n_display}"
+              )
 
+          if display_bytes >= full_bytes:
+              raise SystemExit(
+                  "ERROR: optimized map is not smaller than full GeoJSON"
+              )
+
+          if vertices_before and vertices_after >= vertices_before:
+              raise SystemExit(
+                  "ERROR: optimized map did not reduce vertex count"
+              )
+
+          if common_holdout.get("gb_seats") != 632:
+              raise SystemExit(
+                  "ERROR: 2024 holdout did not evaluate 632 GB seats"
+              )
+
+          if params.get("version") != "uk-v04-historical-calibration":
+              raise SystemExit(
+                  f"ERROR: unexpected model params version: {params.get('version')}"
+              )
+
+          # approved=False is NOT an error: in that case app.js deliberately
+          # falls back to the conservative lambda=0.82 model.
           print("Dataset validation passed.")
           PY
 
@@ -111,7 +150,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK election data and backtest"
+            git commit -m "chore: update UK data, optimized map and calibration"
             git push
           fi
 
