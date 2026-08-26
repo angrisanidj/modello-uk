@@ -1,29 +1,27 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.19 — Liberal Democrat local-footprint validation (shadow research)
+modello-uk v0.9.20 — Scotland + Conservative/Labour pairwise validation (shadow research)
 
-This release does not promote or alter the live/canonical model. It starts from the
-frozen v0.9.15 local-election reference (585/632, seat error 42 in 2019; 501/632,
-seat error 166 in the 2024 development benchmark) and asks whether the v0.9.18
-Liberal Democrat target-seat effect can be justified without selecting parameters on 2024.
+This release keeps the frozen v0.9.15 local-election reference as the best defensible
+shadow candidate (585/632, seat error 42 in 2019; 501/632, seat error 166 in the 2024
+development benchmark) and tests the two remaining large error families nominated by
+the v0.9.17 audit in one run:
 
-The new hypothesis is independently motivated by the Liberal Democrats' own 2019
-election review, which states that high local-government representation was a fundamental
-pre-qualification for target-seat status but was ignored in 2019. v0.9.19 therefore adds
-a hard pre-election local-footprint gate to the LD concentration rule.
+1) Scotland: a symmetric SNP/Labour pairwise local-strength concentration, applied only
+   in Scottish seats when pre-election local evidence contradicts the currently predicted
+   winner.
+2) Conservative/Labour: the same symmetric pairwise mechanism in England and Wales,
+   excluding Scotland so the two experiments are territorially disjoint before raking.
 
-Parameter selection uses historical evidence only:
-- 2017: an honest deterministic proportional-swing reference from the 2015 election,
-  combined with local-election results available before 8 June 2017. The project's
-  canonical 2017 fitted candidate is deliberately NOT used because 2017 selected earlier
-  model/calibration parameters.
-- 2019: the frozen pre-2024-selected v0.9.15 reference and local-election data available
-  before 12 December 2019.
-- 2024: score-only benchmark after the 2017+2019 selection is locked.
+Both layers use only pre-election information: predicted shares, prior-election party
+roles, Democracy Club local-election strength and its reliability.  No realised 2024
+winner, region-specific audit count, or 2024 outcome enters a score or parameter choice.
 
-No region label or realised 2024 outcome enters the target score or local-footprint gate.
-Even a numerical success remains shadow research because the LD-target hypothesis was
-originally nominated from the v0.9.17 audit of 2024 errors.
+Each layer is selected independently on 2017 + 2019.  A bounded joint shortlist is then
+selected on the same two historical elections and only afterwards scored on 2024.
+The 2024 benchmark is score-only and cannot select or promote parameters.  Even numerical
+success remains shadow research because these hypotheses were nominated from the 2024
+audit.
 """
 from __future__ import annotations
 
@@ -54,10 +52,10 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v0919-ld-footprint-validation.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v0919.json"
-DIAGNOSTIC_OUT=DATA/"ld-footprint-validation-v0919.json"
-SWEEP_OUT=DATA/"v0915-reference-v0919.json"
+BACKTEST_OUT=DATA/"backtest-v0920-scotland-conlab.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v0920.json"
+DIAGNOSTIC_OUT=DATA/"scotland-conlab-sweep-v0920.json"
+SWEEP_OUT=DATA/"v0915-reference-v0920.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -111,6 +109,14 @@ LD_HIST_STRENGTH_GRID=(0.0,0.20,0.40,0.60,0.80)
 LD_HIST_SCORE_FLOOR_GRID=(0.50,0.65)
 LD_HIST_LOCAL_ADV_FLOOR_GRID=(-1.5,0.0,2.0,4.0)
 LD_HIST_LOCAL_CONF_FLOOR_GRID=(0.0,0.35,0.55)
+
+# v0.9.20 pairwise local concentration.  These grids are fixed before 2024 is scored.
+PAIR_STRENGTH_GRID=(0.0,0.20,0.40,0.60)
+PAIR_MARGIN_CAP_GRID=(10.0,20.0,None)
+PAIR_LOCAL_ADV_FLOOR_GRID=(0.0,2.0)
+PAIR_LOCAL_CONF_FLOOR=0.35
+PAIR_MAX_SHIFT=6.0
+PAIR_COMBINED_SHORTLIST=6
 ONS_LOOKUPS={
     "2019":{
         # Prefer ONS/Open Geography public Hub CSV downloads.  The underlying
@@ -783,7 +789,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v0919-bes-integrity",
+        "version":"uk-v0920-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -1241,7 +1247,7 @@ def evaluate_ref_structural_sweep(
         reverse=True,
     )
     return {
-        "version":"uk-v0919-ld-footprint-validation",
+        "version":"uk-v0920-scotland-conlab-sweep",
         "status":"ok",
         "generated_at":utcnow().isoformat(),
         "diagnostic_only":True,
@@ -2540,13 +2546,13 @@ def build_reform_diagnostics(
         raise RuntimeError("Reform diagnostic does not cover all 632 GB seats")
 
     return {
-        "version":"uk-v0919-ld-footprint-validation",
+        "version":"uk-v0920-scotland-conlab-sweep",
         "status":"ok",
         "generated_at":utcnow().isoformat(),
         "diagnostic_only":True,
         "used_for_parameter_selection":False,
         "changes_production_model":False,
-        "source_model":"uk-v0919-ld-footprint-validation",
+        "source_model":"uk-v0920-scotland-conlab-sweep",
         "benchmark":"2019_notional_to_2024",
         "benchmark_role":"development_diagnostic_not_pristine_holdout",
         "interpretation_warning":(
@@ -2948,7 +2954,7 @@ def build_error_structure(rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,A
             })
     pair_rows=[{"predicted":a,"actual":b,"count":int(n)} for (a,b),n in pairs.most_common()]
     return {
-        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
         "canonical_candidate":"frozen_v0910_equivalent","total_seats":len(actual["frame"]),"wrong_seats":len(wrong),
         "correct_seats":len(actual["frame"])-len(wrong),"confusion_pairs":pair_rows,
         "regions":{r:{**v,"accuracy":1.0-v["wrong"]/v["n"] if v["n"] else None} for r,v in sorted(regions.items())},
@@ -3078,7 +3084,7 @@ def build_remaining_error_audit(
 
     local_available=sum(1 for r in wrong if r["local_profile"]["available"])
     return {
-        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
         "diagnostic_only":True,"shadow_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"changes_candidate_model":False,
         "source_candidate":"v0.9.15 reference local_strength=0.25 byelection_strength=0",
@@ -3138,7 +3144,7 @@ def evaluate_v0915_reference(
     if m24["correct_winners"]!=501 or m24["seat_abs_error_sum"]!=166:
         raise RuntimeError(f"v0.9.15 reference 2024 regression failed: {m24}")
     report={
-        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
         "diagnostic_only":True,"shadow_only":True,"uses_2024_for_parameter_selection":False,
         "parameter_selection_election":"2019","reference_parameters":dict(V0915_REFERENCE),
         "method":"frozen v0.9.15 local-authority advantage; local_strength=0.25, confidence_floor=0, no margin cap, by-election strength=0",
@@ -3212,7 +3218,7 @@ def evaluate_local_strength_sweep(
     baseline19=evaluate_rows(val_rows,e19,e17);baseline24=evaluate_rows(hold_rows,e24,e19n)
     selected_gate=bool(selected_2024["correct_winners"]>=506 and selected_2024["seat_abs_error_sum"]<=176)
     return {
-        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
         "shadow_only":True,"uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
         "selection_policy":"grid fixed in source; rank by 2019 correct winners, then seat error, then share MAE; 2024 labels never select strengths",
         "methods":{
@@ -3588,7 +3594,7 @@ def evaluate_local_strength_sweep(val_rows:pd.DataFrame,hold_rows:pd.DataFrame,e
     baseline19=evaluate_rows(val_rows,e19,e17);baseline24=evaluate_rows(hold_rows,e24,e19n)
     gate=bool(selected24["correct_winners"]>=506 and selected24["seat_abs_error_sum"]<=166)
     return {
-        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
         "shadow_only":True,"uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
         "candidate_count":len(candidates),
         "grid":{"local_strength":list(LOCAL_STRENGTH_GRID),"confidence_floor":list(LOCAL_CONFIDENCE_FLOOR_GRID),
@@ -3709,7 +3715,7 @@ def evaluate_ld_target_sweep(
     benchmark.sort(key=lambda x:score_tuple(x["benchmark_2024"]),reverse=True)
     gate=bool(selected24["correct_winners"]>=506 and selected24["seat_abs_error_sum"]<=166)
     return {
-        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
         "diagnostic_only":True,"shadow_only":True,"used_for_parameter_selection":True,"uses_2024_for_parameter_selection":False,"changes_production_model":False,"changes_candidate_model":False,
         "hypothesis_origin":"nominated by v0.9.17 2024 error audit; therefore numerical success on 2024 is not sufficient for promotion",
         "parameter_selection_election":"2019","candidate_count":len(candidates),
@@ -3836,7 +3842,7 @@ def evaluate_ld_footprint_validation(
     benchmark.sort(key=lambda x:score_tuple(x["benchmark_2024"]),reverse=True)
     gate=bool(selected24["correct_winners"]>=506 and selected24["seat_abs_error_sum"]<=166)
     return {
-        "version":"uk-v0919-ld-footprint-validation","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
         "diagnostic_only":True,"shadow_only":True,"used_for_parameter_selection":True,
         "parameter_selection_elections":["2017","2019"],"uses_2024_for_parameter_selection":False,
         "changes_production_model":False,"changes_candidate_model":False,
@@ -3871,6 +3877,202 @@ def evaluate_ld_footprint_validation(
         "parameter_updates":{},
     }
 
+
+def _pair_top_two(rows:pd.DataFrame,idx:Any,brow:pd.Series)->list[tuple[str,float]]:
+    return sorted(((p,float(rows.at[idx,p])) for p in competitive_parties(brow)),key=lambda x:x[1],reverse=True)
+
+
+def apply_pairwise_local_concentration(
+    rows:pd.DataFrame,base:dict[str,Any],target:dict[str,float],local_profile:dict[str,Any],
+    party_a:str,party_b:str,strength:float,margin_cap:float|None,local_adv_floor:float,
+    scope:str
+)->tuple[pd.DataFrame,dict[str,Any]]:
+    """Symmetric pairwise correction driven only by pre-election local evidence.
+
+    A seat is eligible only when the current predicted winner is one member of the pair,
+    the other member is second, local-election evidence favours the currently losing
+    member by more than the fixed advantage floor, and reliability/margin gates pass.
+    The mechanism is symmetric: historical validation may therefore learn either direction
+    and does not encode the 2024 audit's realised winner.
+    """
+    st=float(strength); cap=None if margin_cap is None else float(margin_cap); adv_floor=float(local_adv_floor)
+    out=rows.copy().astype(float); adjusted=[]; eligible=0; missing=0; low_conf=0; wrong_scope=0; non_pair=0; weak_adv=0; safe=0
+    if st<=1e-12:
+        return out,{"strength":0.0,"margin_cap":cap,"local_adv_floor":adv_floor,"scope":scope,"eligible_seats":0,"adjusted_seats":0,"national_target_preserved":True}
+    for idx,brow in base["frame"].iterrows():
+        country=str(brow["country"])
+        in_scope=(country=="Scotland") if scope=="scotland" else (country!="Scotland")
+        if not in_scope:
+            wrong_scope+=1; continue
+        lp=local_profile.get("seats",{}).get(str(idx))
+        if not lp:
+            missing+=1; continue
+        conf=float(lp.get("confidence") or 0.0)
+        if conf+1e-12<PAIR_LOCAL_CONF_FLOOR:
+            low_conf+=1; continue
+        ordered=_pair_top_two(rows,idx,brow)
+        if len(ordered)<2 or {ordered[0][0],ordered[1][0]}!={party_a,party_b}:
+            non_pair+=1; continue
+        winner,win_share=ordered[0]; loser,lose_share=ordered[1]; margin=float(win_share-lose_share)
+        if cap is not None and margin>cap+1e-12:
+            safe+=1; continue
+        adv=lp.get("advantage",{}) if isinstance(lp,dict) else {}
+        local_diff=float(adv.get(loser,0.0))-float(adv.get(winner,0.0))
+        if local_diff<=adv_floor+1e-12:
+            weak_adv+=1; continue
+        eligible+=1
+        closeness=1.0 if cap is None else clamp(1.0-margin/max(1e-6,cap),0.10,1.0)
+        signal=min(15.0,max(0.0,local_diff-adv_floor))
+        delta=clamp(st*conf*closeness*signal,0.0,PAIR_MAX_SHIFT)
+        if delta<=1e-12: continue
+        out.at[idx,winner]=max(.0001,float(out.at[idx,winner])-delta)
+        out.at[idx,loser]=max(.0001,float(out.at[idx,loser])+delta)
+        adjusted.append({"id":str(brow["id"]),"name":str(brow["name"]),"country":country,"winner_before":winner,"challenger":loser,"margin_before":margin,"local_advantage_diff":local_diff,"confidence":conf,"delta_pre_rake":float(delta)})
+        vals={p:(max(.0001,float(out.at[idx,p])) if allowed(p,country) else 0.0) for p in PARTIES}
+        den=sum(vals.values()) or 1.0
+        for p in PARTIES: out.at[idx,p]=vals[p]/den*100.0
+    out=experimental_rake(out,base,target)
+    return out,{"strength":st,"margin_cap":cap,"local_adv_floor":adv_floor,"local_conf_floor":PAIR_LOCAL_CONF_FLOOR,"scope":scope,
+        "eligible_seats":eligible,"adjusted_seats":len(adjusted),"missing_local_profile":missing,"skipped_low_confidence":low_conf,
+        "skipped_scope":wrong_scope,"skipped_non_pair_top2":non_pair,"skipped_weak_local_signal":weak_adv,"skipped_safe_margin":safe,
+        "national_target_preserved":True,"top_adjustments":sorted(adjusted,key=lambda x:x["delta_pre_rake"],reverse=True)[:30]}
+
+
+def _pair_candidate_id(prefix:str,st:float,cap:float|None,adv:float)->str:
+    return f"{prefix}_s{st:.2f}_{'all' if cap is None else 'm'+str(int(cap))}_a{adv:.1f}"
+
+
+def _pair_historical_admissible(m17:dict[str,Any],m19:dict[str,Any],b17:dict[str,Any],b19:dict[str,Any])->bool:
+    return bool(
+        m17["correct_winners"]>=b17["correct_winners"]-2 and
+        m19["correct_winners"]>=b19["correct_winners"]-2 and
+        m17["seat_abs_error_sum"]<=b17["seat_abs_error_sum"]+8 and
+        m19["seat_abs_error_sum"]<=b19["seat_abs_error_sum"]+4
+    )
+
+
+def _pair_rank_key(c:dict[str,Any])->tuple:
+    return (int(c["winner_gain_sum"]),int(c["seat_error_improvement_sum"]),int(c["winner_gain_2019"]),int(c["winner_gain_2017"]),-float(c["strength"]),-(999.0 if c["margin_cap"] is None else float(c["margin_cap"])),-float(c["local_adv_floor"]))
+
+
+def _pair_direction_count(rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,Any],predicted_party:str,actual_party:str,country:str|None=None)->int:
+    n=0
+    for idx,arow in actual["frame"].iterrows():
+        if country is not None and str(arow["country"])!=country: continue
+        if predicted_winner(rows.loc[idx],base["frame"].loc[idx])==predicted_party and str(arow["actual_winner"])==actual_party: n+=1
+    return n
+
+
+def _evaluate_pair_grid(
+    prefix:str,party_a:str,party_b:str,scope:str,
+    ref17:pd.DataFrame,ref19:pd.DataFrame,ref24:pd.DataFrame,
+    e15:dict[str,Any],e17:dict[str,Any],e19:dict[str,Any],e19n:dict[str,Any],e24:dict[str,Any],
+    local17:dict[str,Any],local19:dict[str,Any],local24:dict[str,Any]
+)->dict[str,Any]:
+    target17=nat_shares(e17); target19=nat_shares(e19); target24=nat_shares(e24)
+    b17=evaluate_rows(ref17,e17,e15); b19=evaluate_rows(ref19,e19,e17); b24=evaluate_rows(ref24,e24,e19n)
+    candidates=[]
+    for st in PAIR_STRENGTH_GRID:
+        for cap in PAIR_MARGIN_CAP_GRID:
+            for adv in PAIR_LOCAL_ADV_FLOOR_GRID:
+                r17,meta17=apply_pairwise_local_concentration(ref17,e15,target17,local17,party_a,party_b,st,cap,adv,scope)
+                r19,meta19=apply_pairwise_local_concentration(ref19,e17,target19,local19,party_a,party_b,st,cap,adv,scope)
+                m17=evaluate_rows(r17,e17,e15); m19=evaluate_rows(r19,e19,e17)
+                c={"id":_pair_candidate_id(prefix,st,cap,adv),"strength":st,"margin_cap":cap,"local_adv_floor":adv,
+                   "validation_2017":m17,"validation_2019":m19,
+                   "winner_gain_2017":int(m17["correct_winners"]-b17["correct_winners"]),"winner_gain_2019":int(m19["correct_winners"]-b19["correct_winners"]),
+                   "winner_gain_sum":int(m17["correct_winners"]+m19["correct_winners"]-b17["correct_winners"]-b19["correct_winners"]),
+                   "seat_error_improvement_2017":int(b17["seat_abs_error_sum"]-m17["seat_abs_error_sum"]),"seat_error_improvement_2019":int(b19["seat_abs_error_sum"]-m19["seat_abs_error_sum"]),
+                   "seat_error_improvement_sum":int(b17["seat_abs_error_sum"]+b19["seat_abs_error_sum"]-m17["seat_abs_error_sum"]-m19["seat_abs_error_sum"]),
+                   "admissible":_pair_historical_admissible(m17,m19,b17,b19),"meta_2017":meta17,"meta_2019":meta19}
+                candidates.append(c)
+    admissible=[c for c in candidates if c["admissible"]]
+    if not admissible: raise RuntimeError(f"No admissible {prefix} historical candidate")
+    admissible.sort(key=_pair_rank_key,reverse=True); selected=admissible[0]
+    selected_rows,selected_meta=apply_pairwise_local_concentration(ref24,e19n,target24,local24,party_a,party_b,selected["strength"],selected["margin_cap"],selected["local_adv_floor"],scope)
+    selected24=evaluate_rows(selected_rows,e24,e19n)
+    benchmark=[]
+    for c in candidates:
+        r,meta=apply_pairwise_local_concentration(ref24,e19n,target24,local24,party_a,party_b,c["strength"],c["margin_cap"],c["local_adv_floor"],scope)
+        m=evaluate_rows(r,e24,e19n)
+        benchmark.append({"id":c["id"],"strength":c["strength"],"margin_cap":c["margin_cap"],"local_adv_floor":c["local_adv_floor"],"historically_admissible":c["admissible"],"benchmark_2024":m,"meta_2024":meta,
+                          "research_gate":bool(m["correct_winners"]>=506 and m["seat_abs_error_sum"]<=166)})
+    benchmark.sort(key=lambda x:score_tuple(x["benchmark_2024"]),reverse=True)
+    return {"prefix":prefix,"party_pair":[party_a,party_b],"scope":scope,"candidate_count":len(candidates),"admissible_count":len(admissible),
+            "baseline":{"validation_2017":b17,"validation_2019":b19,"benchmark_2024":b24},
+            "selected_historical":{**{k:selected[k] for k in ("id","strength","margin_cap","local_adv_floor","winner_gain_2017","winner_gain_2019","winner_gain_sum","seat_error_improvement_sum")},
+                "validation_2017":selected["validation_2017"],"validation_2019":selected["validation_2019"],"benchmark_2024":selected24,"meta_2024":selected_meta,
+                "research_gate":bool(selected24["correct_winners"]>=506 and selected24["seat_abs_error_sum"]<=166)},
+            "historical_ranking":admissible[:20],"all_historical_candidates":candidates,
+            "benchmark_2024_diagnostic":{"ranking":benchmark,"best_expost":benchmark[0],"passing_research_gate":[x["id"] for x in benchmark if x["research_gate"]],"warning":"2024 is diagnostic only"}}
+
+
+def evaluate_scotland_conlab_sweep(
+    reference19:pd.DataFrame,reference24:pd.DataFrame,
+    e15:dict[str,Any],e17:dict[str,Any],e19:dict[str,Any],e19n:dict[str,Any],e24:dict[str,Any],
+    local19:dict[str,Any],local24:dict[str,Any]
+)->dict[str,Any]:
+    target17=nat_shares(e17); target19=nat_shares(e19); target24=nat_shares(e24)
+    reference17=base_prediction(e15,target17)
+    raw17,src17=fetch_dc_local_results(LOCAL_DATES_2017)
+    ons19,ons19_meta=fetch_ons_ward_lookup("2019")
+    local17=build_local_advantage_profile(e15,raw17,ons19,"2017-06-08")
+    if local17["matched_seats"]<250: raise RuntimeError(f"2017 pairwise validation local coverage too low: {local17['matched_seats']}")
+
+    scot=_evaluate_pair_grid("scot","snp","lab","scotland",reference17,reference19,reference24,e15,e17,e19,e19n,e24,local17,local19,local24)
+    conlab=_evaluate_pair_grid("conlab","con","lab","england_wales",reference17,reference19,reference24,e15,e17,e19,e19n,e24,local17,local19,local24)
+
+    # Joint selection is restricted to the top historical candidates from each independent sweep.
+    sc_top=scot["historical_ranking"][:PAIR_COMBINED_SHORTLIST]; cl_top=conlab["historical_ranking"][:PAIR_COMBINED_SHORTLIST]
+    b17=evaluate_rows(reference17,e17,e15); b19=evaluate_rows(reference19,e19,e17); b24=evaluate_rows(reference24,e24,e19n)
+    joint=[]
+    for sc in sc_top:
+        for cl in cl_top:
+            a17,_=apply_pairwise_local_concentration(reference17,e15,target17,local17,"snp","lab",sc["strength"],sc["margin_cap"],sc["local_adv_floor"],"scotland")
+            j17,_=apply_pairwise_local_concentration(a17,e15,target17,local17,"con","lab",cl["strength"],cl["margin_cap"],cl["local_adv_floor"],"england_wales")
+            a19,_=apply_pairwise_local_concentration(reference19,e17,target19,local19,"snp","lab",sc["strength"],sc["margin_cap"],sc["local_adv_floor"],"scotland")
+            j19,_=apply_pairwise_local_concentration(a19,e17,target19,local19,"con","lab",cl["strength"],cl["margin_cap"],cl["local_adv_floor"],"england_wales")
+            m17=evaluate_rows(j17,e17,e15); m19=evaluate_rows(j19,e19,e17)
+            admissible=_pair_historical_admissible(m17,m19,b17,b19)
+            joint.append({"id":f"{sc['id']}+{cl['id']}","scotland":{k:sc[k] for k in ("id","strength","margin_cap","local_adv_floor")},"conlab":{k:cl[k] for k in ("id","strength","margin_cap","local_adv_floor")},
+                          "validation_2017":m17,"validation_2019":m19,"winner_gain_2017":m17["correct_winners"]-b17["correct_winners"],"winner_gain_2019":m19["correct_winners"]-b19["correct_winners"],
+                          "winner_gain_sum":m17["correct_winners"]+m19["correct_winners"]-b17["correct_winners"]-b19["correct_winners"],
+                          "seat_error_improvement_sum":b17["seat_abs_error_sum"]+b19["seat_abs_error_sum"]-m17["seat_abs_error_sum"]-m19["seat_abs_error_sum"],"admissible":admissible})
+    ja=[x for x in joint if x["admissible"]]
+    if not ja: raise RuntimeError("No admissible combined Scotland+ConLab candidate")
+    ja.sort(key=lambda x:(x["winner_gain_sum"],x["seat_error_improvement_sum"],x["winner_gain_2019"],x["winner_gain_2017"],-(x["scotland"]["strength"]+x["conlab"]["strength"])),reverse=True)
+    selected=ja[0]
+    sc=selected["scotland"]; cl=selected["conlab"]
+    a24,sm=apply_pairwise_local_concentration(reference24,e19n,target24,local24,"snp","lab",sc["strength"],sc["margin_cap"],sc["local_adv_floor"],"scotland")
+    j24,cm=apply_pairwise_local_concentration(a24,e19n,target24,local24,"con","lab",cl["strength"],cl["margin_cap"],cl["local_adv_floor"],"england_wales")
+    m24=evaluate_rows(j24,e24,e19n)
+
+    # Diagnostic 2024 comparison for the historically shortlisted joint candidates only.
+    bench=[]
+    for x in ja:
+        sc=x["scotland"]; cl=x["conlab"]
+        a,_=apply_pairwise_local_concentration(reference24,e19n,target24,local24,"snp","lab",sc["strength"],sc["margin_cap"],sc["local_adv_floor"],"scotland")
+        r,_=apply_pairwise_local_concentration(a,e19n,target24,local24,"con","lab",cl["strength"],cl["margin_cap"],cl["local_adv_floor"],"england_wales")
+        m=evaluate_rows(r,e24,e19n)
+        bench.append({"id":x["id"],"historically_admissible":True,"benchmark_2024":m,"research_gate":bool(m["correct_winners"]>=506 and m["seat_abs_error_sum"]<=166)})
+    bench.sort(key=lambda x:score_tuple(x["benchmark_2024"]),reverse=True)
+
+    return {"version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),"diagnostic_only":True,"shadow_only":True,
+        "used_for_parameter_selection":True,"parameter_selection_elections":["2017","2019"],"uses_2024_for_parameter_selection":False,"changes_production_model":False,"changes_candidate_model":False,
+        "hypothesis_origin":"v0.9.17 audit: SNP→Lab and Conservative→Lab were the two remaining large non-Reform error families after LD research",
+        "method":"symmetric pairwise local concentration; no realised 2024 labels or audit-region counts enter scoring",
+        "grid":{"strength":list(PAIR_STRENGTH_GRID),"margin_cap":[x for x in PAIR_MARGIN_CAP_GRID],"local_adv_floor":list(PAIR_LOCAL_ADV_FLOOR_GRID),"local_conf_floor":PAIR_LOCAL_CONF_FLOOR,"max_pre_rake_shift_pp":PAIR_MAX_SHIFT,"combined_shortlist_per_layer":PAIR_COMBINED_SHORTLIST},
+        "baseline_reference":{"validation_2017":b17,"validation_2019":b19,"benchmark_2024":b24},
+        "scotland_snp_lab":scot,"conservative_labour":conlab,
+        "combined":{"candidate_count":len(joint),"admissible_count":len(ja),"selected_historical":{**selected,"benchmark_2024":m24,"meta_2024":{"scotland":sm,"conlab":cm},"research_gate":bool(m24["correct_winners"]>=506 and m24["seat_abs_error_sum"]<=166)},
+                    "historical_ranking":ja[:20],"benchmark_2024_diagnostic":{"ranking":bench,"best_expost_shortlist":bench[0],"passing_research_gate":[x["id"] for x in bench if x["research_gate"]],"warning":"Only historically shortlisted combinations are scored; 2024 cannot select parameters."}},
+        "error_family_diagnostics":{"baseline_2024_snp_to_lab":_pair_direction_count(reference24,e24,e19n,"snp","lab","Scotland"),"selected_combined_2024_snp_to_lab":_pair_direction_count(j24,e24,e19n,"snp","lab","Scotland"),
+                                    "baseline_2024_con_to_lab":_pair_direction_count(reference24,e24,e19n,"con","lab",None),"selected_combined_2024_con_to_lab":_pair_direction_count(j24,e24,e19n,"con","lab",None)},
+        "coverage":{"local_2017":{k:v for k,v in local17.items() if k!="seats"},"local_2019":{k:v for k,v in local19.items() if k!="seats"},"local_2024":{k:v for k,v in local24.items() if k!="seats"}},
+        "sources":{"local_2017":src17,"ons_2017_mapping":ons19_meta},"research_gate_definition":"historically selected candidate must reach >=506/632 correct in 2024 AND seat_abs_error_sum <=166; informational only",
+        "promotion_policy":"always shadow in v0.9.20 because both hypotheses were nominated from the 2024 audit","parameter_updates":{}}
+
+
 def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[str,Any],hold_base:dict[str,Any])->tuple[bool,list[str]]:
     reasons=[]
     if holdout["winner_accuracy"]<.80:
@@ -3887,8 +4089,8 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v0919-ld-footprint-validation",
-        "model_type":"constituency-residual-ld-footprint-v13",
+        "version":"uk-v0920-scotland-conlab-sweep",
+        "model_type":"constituency-residual-scotland-conlab-v14",
         "status":"error",
         "approved":False,
         "publication_ready":False,
@@ -3900,32 +4102,32 @@ def write_failure(exc:Exception):
         "generated_at":utcnow().isoformat(),
         "error":str(exc),
         "traceback_tail":traceback.format_exc().splitlines()[-12:],
-        "note":"LD-target shadow build failed; the previously deployed production/fallback model must remain unchanged.",
+        "note":"Scotland+ConLab shadow build failed; the previously deployed production/fallback model must remain unchanged.",
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v0919-ld-footprint-validation-live","approved":False,"status":"error",
+        "version":"uk-v0920-scotland-conlab-sweep-live","approved":False,"status":"error",
         "diagnostic_only":True,"changes_production_model":False,"changes_candidate_model":False,"shadow_only":True,
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v0919-ld-footprint-validation-backtest","status":"error","error":str(exc)
+        "version":"uk-v0920-scotland-conlab-sweep-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     DIAGNOSTIC_OUT.write_text(json.dumps({
-        "version":"uk-v0919-ld-footprint-validation","status":"error",
+        "version":"uk-v0920-scotland-conlab-sweep","status":"error",
         "diagnostic_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"parameter_updates":{},
-        "source_model":"uk-v0919-ld-footprint-validation",
+        "source_model":"uk-v0920-scotland-conlab-sweep",
         "error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     SWEEP_OUT.write_text(json.dumps({
-        "version":"uk-v0919-ld-footprint-validation","status":"error",
+        "version":"uk-v0920-scotland-conlab-sweep","status":"error",
         "diagnostic_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v0919-bes-integrity","status":"failed",
+            "version":"uk-v0920-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -4040,10 +4242,10 @@ def main()->int:
             validation,holdout,validation_base,holdout_base
         )
         reference,v0915_val_rows,v0915_hold_rows,local19,local24=evaluate_v0915_reference(val_rows,hold_rows,e17,e19,e19n,e24)
-        ld_validation=evaluate_ld_footprint_validation(v0915_val_rows,v0915_hold_rows,e15,e17,e19,e19n,e24,local19,local24)
-        ld_validation_gate_passed=bool(ld_validation["selected_historical"]["research_gate"])
-        # v0.9.19 remains shadow-only. Parameters are selected on 2017+2019 only;
-        # 2024 is score-only and cannot promote this audit-inspired hypothesis.
+        pair_sweep=evaluate_scotland_conlab_sweep(v0915_val_rows,v0915_hold_rows,e15,e17,e19,e19n,e24,local19,local24)
+        pair_research_gate_passed=bool(pair_sweep["combined"]["selected_historical"]["research_gate"])
+        # v0.9.20 remains shadow-only. Scotland and ConLab settings are selected on
+        # 2017+2019 only; 2024 is score-only and cannot promote audit-inspired hypotheses.
         approved=False
         publication_ready=False
 
@@ -4079,8 +4281,8 @@ def main()->int:
         )
 
         model_payload={
-            "version":"uk-v0919-ld-footprint-validation",
-            "model_type":"constituency-residual-ld-footprint-v13",
+            "version":"uk-v0920-scotland-conlab-sweep",
+            "model_type":"constituency-residual-scotland-conlab-v14",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -4090,23 +4292,25 @@ def main()->int:
             "changes_candidate_model":False,
             "shadow_only":True,
             "candidate_gate_passed":candidate_gate_passed,
-            "ld_footprint_research_gate_passed":ld_validation_gate_passed,
-            "promotion_blocked_reason":"v0.9.19 is shadow-only; parameters are selected on 2017+2019 and 2024 remains a non-pristine audit-inspired benchmark",
+            "pairwise_research_gate_passed":pair_research_gate_passed,
+            "promotion_blocked_reason":"v0.9.20 is shadow-only; Scotland and ConLab parameters are selected on 2017+2019 and 2024 remains a non-pristine audit-inspired benchmark",
             "canonical_candidate":"frozen_v0910_equivalent",
             "best_shadow_reference":{
                 "version":"v0.9.15",
-                "output":"data/v0915-reference-v0919.json",
+                "output":"data/v0915-reference-v0920.json",
                 "parameters":reference["reference_parameters"],
                 "validation_2019":reference["validation_2019"],
                 "benchmark_2024":reference["benchmark_2024"],
                 "uses_2024_for_parameter_selection":False,
             },
-            "ld_footprint_validation":{
-                "output":"data/ld-footprint-validation-v0919.json",
-                "selected_historical":ld_validation["selected_historical"],
-                "best_expost_2024":ld_validation["benchmark_2024_diagnostic"]["best_expost"],
-                "research_gate_passed":ld_validation_gate_passed,
+            "pairwise_structural_sweep":{
+                "output":"data/scotland-conlab-sweep-v0920.json",
+                "scotland_selected":pair_sweep["scotland_snp_lab"]["selected_historical"],
+                "conlab_selected":pair_sweep["conservative_labour"]["selected_historical"],
+                "combined_selected":pair_sweep["combined"]["selected_historical"],
+                "research_gate_passed":pair_research_gate_passed,
                 "uses_2024_for_parameter_selection":False,
+                "applied_to_live":False,
             },
             "generated_at":utcnow().isoformat(),
             "selected_spec":selected_spec,
@@ -4188,7 +4392,7 @@ def main()->int:
             "features":{
                 "historical_demographics":[c.replace("demo_","") for c in e19["demo_columns"]],
                 "current_demographics":[c.replace("demo_","") for c in e24["demo_columns"]],
-                "notes":"v0.9.19 keeps the canonical candidate frozen and validates a Liberal Democrat target-seat rule with an explicit local-government footprint gate. Candidate settings are selected on 2017+2019 only; region and 2024 outcomes are excluded.",
+                "notes":"v0.9.20 keeps the canonical candidate frozen and validates symmetric SNP/Labour and Conservative/Labour pairwise local-strength rules. Candidate settings are selected on 2017+2019 only; realised 2024 outcomes are excluded.",
             },
             "integrity":{
                 "version":integrity.get("version"),
@@ -4200,15 +4404,15 @@ def main()->int:
                 "current_bes":curr_meta,
             },
             "note":(
-                "v0.9.19 keeps the canonical candidate frozen and reproduces the v0.9.15 local-strength reference exactly. "
-                "LD footprint-gated targeting parameters are selected on 2017+2019 only; the 2024 benchmark is diagnostic."
+                "v0.9.20 keeps the canonical candidate frozen and reproduces the v0.9.15 local-strength reference exactly. "
+                "Scotland SNP/Labour and England/Wales Conservative/Labour pairwise settings are selected on 2017+2019 only; the 2024 benchmark is diagnostic."
             )
         }
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v0919-ld-footprint-validation-live",
-            "model_type":"constituency-residual-ld-footprint-v13",
+            "version":"uk-v0920-scotland-conlab-sweep-live",
+            "model_type":"constituency-residual-scotland-conlab-v14",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -4220,15 +4424,18 @@ def main()->int:
             "candidate_gate_passed":candidate_gate_passed,
             "best_shadow_reference":{
                 "version":"v0.9.15",
-                "output":"data/v0915-reference-v0919.json",
+                "output":"data/v0915-reference-v0920.json",
                 "parameters":reference["reference_parameters"],
                 "benchmark_2024":reference["benchmark_2024"],
                 "uses_2024_for_parameter_selection":False,
             },
-            "ld_footprint_validation":{
-                "output":"data/ld-footprint-validation-v0919.json",
-                "selected_historical":ld_validation["selected_historical"],
-                "research_gate_passed":ld_validation_gate_passed,
+            "pairwise_structural_sweep":{
+                "output":"data/scotland-conlab-sweep-v0920.json",
+                "scotland_selected":pair_sweep["scotland_snp_lab"]["selected_historical"],
+                "conlab_selected":pair_sweep["conservative_labour"]["selected_historical"],
+                "combined_selected":pair_sweep["combined"]["selected_historical"],
+                "research_gate_passed":pair_research_gate_passed,
+                "uses_2024_for_parameter_selection":False,
                 "applied_to_live":False,
             },
             "generated_at":utcnow().isoformat(),
@@ -4255,7 +4462,7 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v0919-ld-footprint-validation-backtest",
+            "version":"uk-v0920-scotland-conlab-sweep-backtest",
             "status":"ok",
             "diagnostic_only":True,
             "used_for_parameter_selection":False,
@@ -4264,18 +4471,20 @@ def main()->int:
             "changes_candidate_model":False,
             "best_shadow_reference":{
                 "version":"v0.9.15",
-                "output":"data/v0915-reference-v0919.json",
+                "output":"data/v0915-reference-v0920.json",
                 "parameters":reference["reference_parameters"],
                 "validation_2019":reference["validation_2019"],
                 "benchmark_2024":reference["benchmark_2024"],
                 "uses_2024_for_parameter_selection":False,
             },
-            "ld_footprint_validation":{
-                "output":"data/ld-footprint-validation-v0919.json",
-                "selected_historical":ld_validation["selected_historical"],
-                "best_expost_2024":ld_validation["benchmark_2024_diagnostic"]["best_expost"],
-                "research_gate_passed":ld_validation_gate_passed,
+            "pairwise_structural_sweep":{
+                "output":"data/scotland-conlab-sweep-v0920.json",
+                "scotland_selected":pair_sweep["scotland_snp_lab"]["selected_historical"],
+                "conlab_selected":pair_sweep["conservative_labour"]["selected_historical"],
+                "combined_selected":pair_sweep["combined"]["selected_historical"],
+                "research_gate_passed":pair_research_gate_passed,
                 "uses_2024_for_parameter_selection":False,
+                "applied_to_live":False,
             },
             "selected_spec":selected_spec,
             "selected_party_strengths":selected_party_strengths,
@@ -4292,7 +4501,7 @@ def main()->int:
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
         DIAGNOSTIC_OUT.write_text(
-            json.dumps(ld_validation,ensure_ascii=False,indent=2),
+            json.dumps(pair_sweep,ensure_ascii=False,indent=2),
             encoding="utf-8"
         )
         SWEEP_OUT.write_text(
@@ -4300,14 +4509,15 @@ def main()->int:
             encoding="utf-8"
         )
 
-        print("v0.9.19 selected share spec:",selected_spec)
+        print("v0.9.20 selected share spec:",selected_spec)
         print("v0.9.15 reference 2019 regression:",reference["validation_2019"])
         print("v0.9.15 reference 2024 benchmark:",reference["benchmark_2024"])
-        print("v0.9.19 LD footprint selected on 2017+2019:",ld_validation["selected_historical"])
-        print("v0.9.19 LD best 2024 ex-post diagnostic:",ld_validation["benchmark_2024_diagnostic"]["best_expost"])
-        print("v0.9.19 LD passing research gate:",ld_validation["benchmark_2024_diagnostic"]["passing_research_gate"])
-        print("v0.9.19 selected party strengths:",selected_party_strengths)
-        print("v0.9.19 incumbent routing:",selected_routing)
+        print("v0.9.20 Scotland selected on 2017+2019:",pair_sweep["scotland_snp_lab"]["selected_historical"])
+        print("v0.9.20 ConLab selected on 2017+2019:",pair_sweep["conservative_labour"]["selected_historical"])
+        print("v0.9.20 combined selected on 2017+2019:",pair_sweep["combined"]["selected_historical"])
+        print("v0.9.20 combined passing research gate:",pair_sweep["combined"]["benchmark_2024_diagnostic"]["passing_research_gate"])
+        print("v0.9.20 selected party strengths:",selected_party_strengths)
+        print("v0.9.20 incumbent routing:",selected_routing)
         print("2017 routing audit:",routing_tuning["selected_audit"])
         print("2017 scenario:",national_scenario_metrics(e15,t15_17["target"]))
         print("2019 scenario:",national_scenario_metrics(e17,t17_19["target"]))
@@ -4336,7 +4546,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.19 LD-footprint validation build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.20 Scotland+ConLab sweep build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # A broken research build must not be deployed. The previously deployed
         # production/fallback remains untouched because this workflow stops before
