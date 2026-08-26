@@ -18,7 +18,7 @@ import json
 import re
 import sys
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -37,7 +37,7 @@ ONS_GEOJSON = (
     "Westminster_Parliamentary_Constituencies_July_2024_Boundaries_UK_BGC/"
     "FeatureServer/0/query"
 )
-UA = "FocusAmerica-UK-election-model/0.4 (+https://angrisanidj.github.io/)"
+UA = "FocusAmerica-UK-election-model/0.5 (+https://angrisanidj.github.io/)"
 
 PARTY_MAP = {
     "lab": "lab", "labour": "lab", "labour party": "lab", "labour and co-operative party": "lab",
@@ -198,6 +198,195 @@ def fetch_polls() -> list[dict[str, Any]]:
     return polls
 
 
+
+def infer_recent_end_date(fieldwork: str) -> str | None:
+    """Parse a subnational fieldwork date, inferring year only for recent rows."""
+    now = datetime.now(timezone.utc).date()
+    m = re.search(r"\b(20\d{2})\b", fieldwork)
+    years = [int(m.group(1))] if m else [now.year, now.year - 1]
+    for year in years:
+        iso = end_date(fieldwork, year)
+        if not iso:
+            continue
+        d = datetime.fromisoformat(iso).date()
+        if d <= now + timedelta(days=35) and d >= now - timedelta(days=550):
+            return iso
+    return None
+
+
+def parse_subnational_table(table: Any, country: str) -> list[dict[str, Any]]:
+    rows = table.find_all("tr")
+    if not rows:
+        return []
+    headers = [canonical_header(x) for x in table_headers(table)]
+    idx: dict[str, int] = {}
+    for i, h in enumerate(headers):
+        if "date" in h and "conduct" in h: idx["date"] = i
+        elif h == "pollster": idx["pollster"] = i
+        elif h == "client": idx["client"] = i
+        elif "sample" in h: idx["sample"] = i
+        elif h == "lab": idx["lab"] = i
+        elif h == "con": idx["con"] = i
+        elif h in {"ref", "reform"}: idx["ref"] = i
+        elif h in {"ld", "lib dem", "lib dems"}: idx["ld"] = i
+        elif h in {"grn", "green"}: idx["green"] = i
+        elif h == "snp": idx["snp"] = i
+        elif h in {"pc", "plaid", "plaid cymru"}: idx["pc"] = i
+        elif h == "rb": idx["rb"] = i
+        elif h == "alba": idx["other_extra"] = i
+        elif h.startswith("other"): idx["other"] = i
+
+    if "date" not in idx or "pollster" not in idx:
+        return []
+    party_cols = {"lab", "con", "ref", "ld", "green", "snp", "pc"} & set(idx)
+    if len(party_cols) < 4:
+        return []
+
+    out: list[dict[str, Any]] = []
+    for tr in rows[1:]:
+        cells = [clean_text(c) for c in tr.find_all(["th", "td"], recursive=False)]
+        if len(cells) < max(idx.values()) + 1:
+            continue
+        fwork = cells[idx["date"]]
+        iso = infer_recent_end_date(fwork)
+        if not iso:
+            continue
+        pollster = cells[idx["pollster"]]
+        if not pollster or "election" in pollster.lower() or "by-election" in pollster.lower():
+            continue
+        rec: dict[str, Any] = {
+            "country": country,
+            "area": country.upper(),
+            "date": iso,
+            "fieldwork": fwork,
+            "pollster": re.sub(r"\s*\[[^]]+\]\s*", "", pollster).strip(),
+            "client": cells[idx["client"]] if "client" in idx else "",
+            "sample": int((pct(cells[idx["sample"]]) or 0)) if "sample" in idx else 0,
+        }
+        for p in ("lab", "con", "ref", "ld", "green", "snp", "pc", "rb", "other"):
+            rec[p] = pct(cells[idx[p]]) if p in idx else None
+        if "other_extra" in idx:
+            extra = pct(cells[idx["other_extra"]])
+            if extra is not None:
+                rec["other"] = (rec["other"] or 0.0) + extra
+        out.append(rec)
+    return out
+
+
+def fetch_subnational_polls() -> list[dict[str, Any]]:
+    """Read Westminster polling for Scotland and Wales from the main polling page."""
+    params = {"action": "parse", "page": POLL_PAGE, "prop": "text", "format": "json"}
+    payload = get(MEDIAWIKI_API, params=params).json()
+    soup = BeautifulSoup(payload["parse"]["text"]["*"], "html.parser")
+    in_subnational = False
+    country: str | None = None
+    polls: list[dict[str, Any]] = []
+    seen: set[tuple[Any, ...]] = set()
+
+    for el in soup.find_all(["h2", "h3", "h4", "table"]):
+        if el.name in {"h2", "h3", "h4"}:
+            title = re.sub(r"\[edit\]", "", clean_text(el), flags=re.I).strip()
+            if el.name == "h2":
+                if "Sub-national poll results" in title:
+                    in_subnational = True
+                    country = None
+                    continue
+                if in_subnational:
+                    break
+            if in_subnational and title in {"Scotland", "Wales"}:
+                country = title
+            continue
+        if not in_subnational or country not in {"Scotland", "Wales"}:
+            continue
+        for rec in parse_subnational_table(el, country):
+            key = (rec["country"], rec["date"], rec["pollster"], rec.get("sample"),
+                   rec.get("lab"), rec.get("con"), rec.get("ref"), rec.get("snp"), rec.get("pc"))
+            if key not in seen:
+                seen.add(key)
+                polls.append(rec)
+
+    polls.sort(key=lambda x: x["date"], reverse=True)
+    counts = Counter(p["country"] for p in polls)
+    if counts.get("Scotland", 0) < 2 or counts.get("Wales", 0) < 2:
+        raise RuntimeError(f"Subnational polling parse too small: {dict(counts)}")
+    return polls
+
+
+def territorial_zone(item: dict[str, Any]) -> str:
+    country = (item.get("country") or "").strip()
+    if country == "Scotland":
+        return "Scotland"
+    if country == "Wales":
+        return "Wales"
+    if country == "England":
+        return (item.get("region") or "England").strip() or "England"
+    return country or "Other"
+
+
+def build_territorial_baseline(constituencies: list[dict[str, Any]]) -> dict[str, Any]:
+    """Aggregate the certified 2024 constituency baseline by country and English region."""
+    groups: dict[str, dict[str, Any]] = {}
+
+    def add(group: str, item: dict[str, Any]) -> None:
+        g = groups.setdefault(group, {"valid_votes": 0, "seats": 0, "party_votes": defaultdict(float)})
+        vv = int(item.get("valid_votes") or 0)
+        if vv <= 0:
+            return
+        g["valid_votes"] += vv
+        g["seats"] += 1
+        pv = item.get("party_votes") or {}
+        if pv:
+            for p, v in pv.items():
+                g["party_votes"][p] += float(v)
+        else:
+            for p, share in (item.get("shares") or {}).items():
+                g["party_votes"][p] += vv * float(share) / 100.0
+
+    for item in constituencies:
+        country = (item.get("country") or "").strip()
+        if country == "Northern Ireland":
+            continue
+        add("GB", item)
+        add(country, item)
+        if country == "England":
+            add(territorial_zone(item), item)
+
+    out_groups: dict[str, Any] = {}
+    for name, g in groups.items():
+        total = float(g["valid_votes"])
+        shares = {
+            p: round(float(v) / total * 100.0, 5)
+            for p, v in g["party_votes"].items()
+            if total > 0
+        }
+        out_groups[name] = {
+            "valid_votes": int(g["valid_votes"]),
+            "seats": int(g["seats"]),
+            "shares": shares,
+        }
+
+    gb_votes = out_groups.get("GB", {}).get("valid_votes", 0)
+    country_weights = {}
+    if gb_votes:
+        for country in ("England", "Scotland", "Wales"):
+            country_weights[country] = round(
+                out_groups.get(country, {}).get("valid_votes", 0) / gb_votes, 8
+            )
+
+    english_regions = sorted(
+        name for name in out_groups
+        if name not in {"GB", "England", "Scotland", "Wales"}
+    )
+    if len(english_regions) != 9:
+        raise RuntimeError(f"Expected 9 English regions, got {english_regions}")
+
+    return {
+        "groups": out_groups,
+        "country_vote_weights": country_weights,
+        "english_regions": english_regions,
+    }
+
+
 def map_party(abbrev: str, full: str) -> str:
     a = (abbrev or "").strip().lower()
     f = (full or "").strip().lower()
@@ -244,8 +433,10 @@ def fetch_constituencies() -> list[dict[str, Any]]:
             raise RuntimeError(f"No valid votes found for {item['name']} ({item['id']})")
 
         shares: defaultdict[str, float] = defaultdict(float)
+        party_votes: defaultdict[str, int] = defaultdict(int)
         for candidate in candidates:
             share = candidate["votes"] / total_votes * 100.0
+            party_votes[candidate["party"]] += candidate["votes"]
             reported = candidate.pop("reported_share", None)
             if reported is not None and abs(reported - share) > 0.25:
                 raise RuntimeError(
@@ -257,6 +448,8 @@ def fetch_constituencies() -> list[dict[str, Any]]:
 
         item.pop("shares", None)
         item["shares"] = {k: round(v, 3) for k, v in shares.items()}
+        item["valid_votes"] = total_votes
+        item["party_votes"] = dict(party_votes)
         share_total = sum(item["shares"].values())
         if not 99.5 <= share_total <= 100.5:
             raise RuntimeError(
@@ -474,12 +667,37 @@ def main() -> int:
         print(f"warning: polls not refreshed: {exc}", file=sys.stderr)
 
     try:
+        subnational = fetch_subnational_polls()
+        write_json(DATA / "subnational-polls.json", {
+            "meta": {
+                "source": "Wikipedia / MediaWiki API — Westminster sub-national polls",
+                "generated_at": stamp,
+                "countries": ["Scotland", "Wales"],
+            },
+            "polls": subnational,
+        })
+        sub_counts = Counter(p["country"] for p in subnational)
+        status["subnational_polls"] = dict(sub_counts)
+        successes += 1
+    except Exception as exc:
+        status["subnational_polls_error"] = str(exc)
+        print(f"warning: subnational polls not refreshed: {exc}", file=sys.stderr)
+
+    try:
         constituencies = fetch_constituencies()
         write_json(DATA / "constituencies-2024.json", {
             "meta": {"source": "House of Commons Library CBP-10009", "generated_at": stamp, "generated": True},
             "constituencies": constituencies,
         })
-        status["constituencies"] = len(constituencies); successes += 1
+        territorial = build_territorial_baseline(constituencies)
+        territorial["meta"] = {
+            "source": "House of Commons Library CBP-10009, aggregated from 2024 valid votes",
+            "generated_at": stamp,
+        }
+        write_json(DATA / "territorial-baseline.json", territorial)
+        status["constituencies"] = len(constituencies)
+        status["english_regions"] = len(territorial.get("english_regions", []))
+        successes += 1
     except Exception as exc:
         status["constituencies_error"] = str(exc)
         print(f"warning: constituencies not refreshed: {exc}", file=sys.stderr)

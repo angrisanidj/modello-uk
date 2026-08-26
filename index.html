@@ -27,7 +27,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Fonte sondaggi: —</span>
-      <span class="badge">Versione 0.4 · calibrazione + mappa veloce</span>
+      <span class="badge">Versione 0.5 · modello gerarchico territoriale</span>
     </div>
   </section>
   <div id="errorBox" class="errorbox"></div>
@@ -48,7 +48,7 @@
       <div class="explain compact">
         <p><strong>632 collegi GB</strong> sono simulati singolarmente con il risultato 2024 come baseline e swing regolarizzato.</p>
         <p><strong>18 collegi dell’Irlanda del Nord</strong> restano in un modulo separato, perché i normali Westminster polls non ne descrivono il sistema partitico.</p>
-        <p class="warning"><strong>Beta:</strong> la v0.4 calibra l’elasticità territoriale su elezioni storiche separate e mantiene un holdout 2024. La calibrazione probabilistica completa viene dopo.</p>
+        <p class="warning"><strong>Beta:</strong> la v0.5 usa una gerarchia GB → nazioni → 9 regioni inglesi → collegi. Scozia e Galles incorporano i Westminster polls subnazionali con shrinkage; i coefficienti regionali storici entrano live solo se superano validazione e holdout.</p>
       </div>
     </article>
   </section>
@@ -92,7 +92,7 @@
   <section class="card poll-table-card"><div class="table-scroll"><table><thead><tr><th>Data</th><th>Istituto</th><th>Area</th><th>n</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>Green</th><th>SNP</th><th>PC</th><th>RB</th></tr></thead><tbody id="pollTableBody"></tbody></table></div></section>
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La calibrazione territoriale viene stimata su elezioni precedenti e verificata su elezioni non usate nel fit.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Stage 1b · calibrazione storica con holdout</p></div></div><div class="explain"><p><strong>Fit:</strong> 2010→2015 e 2015→2017. <strong>Validazione:</strong> 2017→2019. <strong>Holdout:</strong> 2019 nozionale→2024.</p><p><strong>Regola:</strong> i coefficienti entrano nel modello live solo se migliorano sia la validazione 2019 sia il 2024 mai usato nel fit.</p><p class="warning"><strong>Non è ancora il backtest finale:</strong> il prossimo step aggiungerà i sondaggi storici e calibrerà l’incertezza Monte Carlo.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Stage 2 · modello gerarchico con holdout</p></div></div><div class="explain"><p><strong>Fit:</strong> 2010→2015 e 2015→2017 per elasticità di partito e sensibilità territoriale. <strong>Validazione:</strong> 2017→2019. <strong>Holdout:</strong> 2019 nozionale→2024.</p><p><strong>Regola:</strong> il modello gerarchico entra live solo se non peggiora né accuratezza dei collegi né errore sui seggi in entrambe le elezioni non usate nel fit.</p><p class="warning"><strong>Layer live:</strong> i sondaggi Westminster di Scozia e Galles sono fusi con il segnale GB tramite shrinkage; in assenza di rilevazioni recenti il modello torna automaticamente allo swing implicito nazionale.</p></div></article>
     <article class="card"><div class="cardhead"><div><h3>Pipeline e backstop</h3><p>Il sito non dipende da una singola richiesta live.</p></div></div><div class="pipeline"><span>Wikipedia / MediaWiki</span><b>→</b><span>snapshot validato</span><b>→</b><span>media</span><b>→</b><span>632 collegi GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>Se l’aggiornamento live fallisce, resta disponibile l’ultimo snapshot valido. La GitHub Action aggiorna sondaggi, risultati, geometrie e ora anche il backtest territoriale.</p></div></article>
   </section>
   <footer>

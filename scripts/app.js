@@ -8,18 +8,22 @@ const CONFIG = {
   geometryDisplayLocal: 'data/constituencies-map.geojson',
   geometryLocal: 'data/constituencies-2024.geojson',
   modelParamsLocal: 'data/model-params.json',
+  subnationalLocal: 'data/subnational-polls.json',
+  territorialBaselineLocal: 'data/territorial-baseline.json',
   niLocal: 'data/ni-2024.json',
   commonsCandidateCsv: 'https://researchbriefings.files.parliament.uk/documents/CBP-10009/HoC-GE2024-results-by-candidate.csv',
   wikiApi: 'https://en.wikipedia.org/w/api.php?action=parse&page=Opinion_polling_for_the_next_United_Kingdom_general_election&prop=text&format=json&origin=*',
   onsGeo: 'https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Westminster_Parliamentary_Constituencies_July_2024_Boundaries_UK_BGC/FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson',
   halfLifeDays: 7,
   modelLookbackDays: 100,
+  subnationalHalfLifeDays: 28,
+  subnationalLookbackDays: 210,
   mcSims: 50000,
   mcBatch: 1000,
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v04-20260826-calibrated-map',
+  cacheVersion: 'uk-v05-20260826-hierarchical',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
@@ -49,7 +53,8 @@ const OFFLINE = new URLSearchParams(location.search).get('offline') === '1';
 const state = {
   polls:[], pollSource:'', average:null, latestAverage:null,
   constituencies:[], constituencyIndex:new Map(), byId:new Map(), geometry:null, ni:null,
-  modelParams:null, mapPaths:new Map(), selectedPath:null,
+  modelParams:null, subnational:[], territorialBaseline:null, geographicTargets:null,
+  mapPaths:new Map(), selectedPath:null,
   central:null, mc:null, selectedSeat:null, mapMode:'central', coalition:new Set(),
 };
 
@@ -193,6 +198,18 @@ async function loadModelParams(){
     return j?.approved ? j : null;
   }catch(_){ return null; }
 }
+async function loadSubnationalPolls(){
+  try{
+    const j=await fetchJson(CONFIG.subnationalLocal,5000);
+    return Array.isArray(j?.polls)?j.polls:[];
+  }catch(_){ return []; }
+}
+async function loadTerritorialBaseline(){
+  try{
+    const j=await fetchJson(CONFIG.territorialBaselineLocal,5000);
+    return j?.groups?.GB?j:null;
+  }catch(_){ return null; }
+}
 function lambdaFor(p){
   const v=state.modelParams?.lambdas?.[p];
   return Number.isFinite(v)?v:CONFIG.swingLambda;
@@ -200,6 +217,25 @@ function lambdaFor(p){
 function refMissingPrior(){
   const v=state.modelParams?.ref_missing_prior;
   return Number.isFinite(v)?v:0;
+}
+function regionBetaFor(zone,p){
+  const v=state.modelParams?.regional_beta?.[zone]?.[p];
+  return Number.isFinite(v)?v:1;
+}
+function zoneForSeat(seat){
+  if(/scotland/i.test(seat.country||''))return 'Scotland';
+  if(/wales/i.test(seat.country||''))return 'Wales';
+  if(/england/i.test(seat.country||''))return seat.region||'England';
+  return seat.country||'Other';
+}
+function allowedInZone(p,zone){
+  if(p==='rb')return false;
+  if(p==='snp')return zone==='Scotland';
+  if(p==='pc')return zone==='Wales';
+  return true;
+}
+function baseGroup(zone){
+  return state.territorialBaseline?.groups?.[zone]||null;
 }
 
 function calculateAverage(polls){
@@ -217,6 +253,106 @@ function calculateAverage(polls){
 function latestPollAverage(polls,n=6){
   const slice=polls.slice(0,n), out={}; for(const p of PARTY_ORDER){const vals=slice.map(x=>x[p]).filter(Number.isFinite);out[p]=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;}return out;
 }
+function normalizeForZone(values,zone){
+  const out={};let total=0;
+  for(const p of PARTY_ORDER){
+    if(!allowedInZone(p,zone)){out[p]=0;continue;}
+    const v=Math.max(0,Number(values?.[p])||0);
+    out[p]=v;total+=v;
+  }
+  if(total<=0)return out;
+  for(const p of PARTY_ORDER)out[p]=out[p]/total*100;
+  return out;
+}
+function subnationalAverage(country){
+  const now=new Date(),sums=Object.fromEntries(PARTY_ORDER.map(p=>[p,0])),den=Object.fromEntries(PARTY_ORDER.map(p=>[p,0]));
+  let effectiveWeight=0,used=0;
+  for(const poll of state.subnational){
+    if(poll.country!==country)continue;
+    const d=new Date(`${poll.date}T12:00:00Z`),age=Math.max(0,(now-d)/86400000);
+    if(age>CONFIG.subnationalLookbackDays)continue;
+    const temporal=Math.pow(.5,age/CONFIG.subnationalHalfLifeDays);
+    const sample=clamp(Math.sqrt(Math.max(400,poll.sample||1000)/1000),.70,1.30);
+    const w=temporal*sample;
+    if(w<.025)continue;
+    effectiveWeight+=w;used++;
+    for(const p of PARTY_ORDER){
+      const v=poll[p];
+      if(Number.isFinite(v)){sums[p]+=w*v;den[p]+=w;}
+    }
+  }
+  const values={};
+  for(const p of PARTY_ORDER)values[p]=den[p]?sums[p]/den[p]:null;
+  return {values,used,effectiveWeight};
+}
+function nationalImpliedTarget(zone,gbTarget){
+  const base=baseGroup(zone)?.shares||BASE_GB,raw={};
+  for(const p of PARTY_ORDER){
+    if(!allowedInZone(p,zone)){raw[p]=0;continue;}
+    const b=Math.max(.05,Number(base[p])||.05);
+    const gbBase=Math.max(.05,Number(BASE_GB[p])||.05);
+    raw[p]=b*Math.pow(Math.max(.08,(gbTarget[p]||.05)/gbBase),regionBetaFor(zone,p));
+  }
+  return normalizeForZone(raw,zone);
+}
+function blendCountryPoll(country,gbTarget){
+  const prior=nationalImpliedTarget(country,gbTarget);
+  const poll=subnationalAverage(country);
+  if(poll.used<1||poll.effectiveWeight<.08)return {target:prior,source:'GB swing',weight:0,used:0};
+  const observed=normalizeForZone(
+    Object.fromEntries(PARTY_ORDER.map(p=>[p,Number.isFinite(poll.values[p])?poll.values[p]:prior[p]])),
+    country
+  );
+  // Sparse country polls are useful but should not fully override the GB signal.
+  const alpha=clamp(poll.effectiveWeight/(poll.effectiveWeight+1.6),0,.82);
+  const mixed={};
+  for(const p of PARTY_ORDER)mixed[p]=(1-alpha)*prior[p]+alpha*observed[p];
+  return {target:normalizeForZone(mixed,country),source:'polling subnazionale',weight:alpha,used:poll.used};
+}
+function buildGeographicTargets(gbTarget){
+  const groups=state.territorialBaseline?.groups;
+  if(!groups?.GB)return {targets:{GB:gbTarget},baselines:{GB:BASE_GB},meta:{}};
+
+  const scot=blendCountryPoll('Scotland',gbTarget);
+  const wales=blendCountryPoll('Wales',gbTarget);
+  const weights=state.territorialBaseline.country_vote_weights||{};
+  const wE=Number(weights.England)||.84,wS=Number(weights.Scotland)||.08,wW=Number(weights.Wales)||.05;
+
+  const engRaw={};
+  for(const p of PARTY_ORDER){
+    if(!allowedInZone(p,'England')){engRaw[p]=0;continue;}
+    const residual=((gbTarget[p]||0)-wS*(scot.target[p]||0)-wW*(wales.target[p]||0))/Math.max(.01,wE);
+    engRaw[p]=Math.max(.02,residual);
+  }
+  const england=normalizeForZone(engRaw,'England');
+
+  const targets={GB:gbTarget,England:england,Scotland:scot.target,Wales:wales.target};
+  const baselines={GB:groups.GB.shares,England:groups.England?.shares||BASE_GB,Scotland:groups.Scotland?.shares||BASE_GB,Wales:groups.Wales?.shares||BASE_GB};
+
+  for(const region of state.territorialBaseline.english_regions||[]){
+    const rb=groups[region]?.shares;
+    if(!rb)continue;
+    const raw={};
+    for(const p of PARTY_ORDER){
+      if(!allowedInZone(p,region)){raw[p]=0;continue;}
+      const b=Math.max(.05,Number(rb[p])||.05);
+      const eb=Math.max(.05,Number(baselines.England[p])||.05);
+      const et=Math.max(.05,Number(england[p])||.05);
+      raw[p]=b*Math.pow(Math.max(.08,et/eb),regionBetaFor(region,p));
+    }
+    targets[region]=normalizeForZone(raw,region);
+    baselines[region]=rb;
+  }
+
+  return {
+    targets,baselines,
+    meta:{
+      Scotland:{source:scot.source,polls:scot.used,blend:scot.weight},
+      Wales:{source:wales.source,polls:wales.used,blend:wales.weight},
+      regionalModel:state.modelParams?'validated':'uniform England fallback'
+    }
+  };
+}
 
 function renderPolls(){
   const a=state.average.values; const ordered=PARTY_ORDER.map(p=>[p,a[p]]).sort((x,y)=>y[1]-x[1]);
@@ -231,32 +367,40 @@ function renderPolls(){
 function formatDate(iso){ try{return new Date(`${iso}T12:00:00Z`).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(_){return iso;} }
 function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
-function partyAllowed(p, seat){ if(p==='rb')return false; if(p==='snp')return /scotland/i.test(seat.country); if(p==='pc')return /wales/i.test(seat.country); return true; }
+function partyAllowed(p, seat){ return allowedInZone(p,zoneForSeat(seat)); }
 function normalizeTargets(avg){
   const x={}; let total=0; for(const p of PARTY_ORDER){ x[p]=Math.max(0.05,avg[p]||0); total+=x[p]; }
   for(const p of PARTY_ORDER)x[p]=x[p]/total*100; return x;
 }
-function projectedShares(seat,target){
-  const raw={}; let sum=0;
+function projectedShares(seat,target,geoBase){
+  const raw={}; let sum=0; const zone=zoneForSeat(seat);
   for(const p of PARTY_ORDER){
     if(!partyAllowed(p,seat)){raw[p]=0;continue;}
     let base=seat.shares?.[p]||0;
-    const natBase=BASE_GB[p]||.2;
+    const natBase=Math.max(.05,Number(geoBase?.[p])||Number(BASE_GB[p])||.2);
     if(p==='ref' && base<.18 && refMissingPrior()>0) base=Math.max(base,natBase*refMissingPrior());
     if(['lab','con','ref','ld','green'].includes(p))base=Math.max(base,.18); else base=Math.max(base,.03);
-    const ratio=Math.max(.08,target[p]/natBase);
+    const ratio=Math.max(.08,(target[p]||.05)/natBase);
     raw[p]=base*Math.pow(ratio,lambdaFor(p)); sum+=raw[p];
   }
   if(sum<=0)return raw; for(const p of PARTY_ORDER)raw[p]=raw[p]/sum*100; return raw;
 }
 function buildCentral(){
-  const target=normalizeTargets(state.average.values), seats=[]; const totals=Object.fromEntries(PARTY_ORDER.map(p=>[p,0]));
+  const target=normalizeTargets(state.average.values),geo=buildGeographicTargets(target),seats=[];
+  const totals=Object.fromEntries(PARTY_ORDER.map(p=>[p,0]));
   for(const c of state.constituencies){
     if(/northern ireland/i.test(c.country))continue;
-    const shares=projectedShares(c,target); const winner=SEAT_MODEL_PARTIES.reduce((best,p)=>shares[p]>(shares[best]??-1)?p:best,SEAT_MODEL_PARTIES[0]); totals[winner]++; seats.push({...c,projected:shares,centralWinner:winner});
+    const zone=zoneForSeat(c);
+    const zoneTarget=geo.targets[zone]||geo.targets.England||target;
+    const zoneBase=geo.baselines[zone]||geo.baselines.England||BASE_GB;
+    const shares=projectedShares(c,zoneTarget,zoneBase);
+    const winner=SEAT_MODEL_PARTIES.reduce((best,p)=>shares[p]>(shares[best]??-1)?p:best,SEAT_MODEL_PARTIES[0]);
+    totals[winner]++;
+    seats.push({...c,projected:shares,centralWinner:winner,modelZone:zone});
   }
   totals.other+=CONFIG.niSeats;
-  state.central={target,seats,totals}; state.byId=new Map(seats.map(s=>[s.id,s]));
+  state.geographicTargets=geo;
+  state.central={target,geographic:geo,seats,totals}; state.byId=new Map(seats.map(s=>[s.id,s]));
   return state.central;
 }
 
@@ -264,24 +408,28 @@ function hashString(str){ let h=2166136261>>>0; for(let i=0;i<str.length;i++){h^
 function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
 function logistic(rng){const u=clamp(rng(),1e-7,1-1e-7);return Math.log(u/(1-u))/Math.PI*Math.sqrt(3);}
 function normalApprox(rng){return (rng()+rng()+rng()+rng()+rng()+rng()-3)*Math.SQRT2;}
-function fingerprint(){ const p=state.polls.slice(0,40).map(x=>`${x.date}|${x.pollster}|${x.lab}|${x.con}|${x.ref}|${x.ld}|${x.green}|${x.rb}`).join(';'); const cal=state.modelParams?.version||'fallback'; return `${CONFIG.cacheVersion}:${hashString(p+'|'+state.constituencies.length+'|'+cal)}`; }
+function fingerprint(){ const p=state.polls.slice(0,40).map(x=>`${x.date}|${x.pollster}|${x.lab}|${x.con}|${x.ref}|${x.ld}|${x.green}|${x.rb}`).join(';'); const sp=state.subnational.slice(0,24).map(x=>`${x.country}|${x.date}|${x.pollster}|${x.lab}|${x.con}|${x.ref}|${x.snp}|${x.pc}`).join(';'); const cal=state.modelParams?.version||'fallback'; return `${CONFIG.cacheVersion}:${hashString(p+'|'+sp+'|'+state.constituencies.length+'|'+cal)}`; }
 function mcCacheKey(){return `focusamerica:${fingerprint()}`;}
 function saveMcCache(summary){ try{localStorage.setItem(mcCacheKey(),JSON.stringify(summary));}catch(_){ } }
 function loadMcCache(){ try{const x=JSON.parse(localStorage.getItem(mcCacheKey())||'null');if(x?.sims===CONFIG.mcSims&&x?.medians)return x;}catch(_){ }return null; }
 
 function prepareSeatModel(){
-  const seats=state.central.seats, target=state.central.target;
-  const regions=[...new Set(seats.map(s=>s.region||s.country||'Other'))]; const regionIndex=new Map(regions.map((r,i)=>[r,i]));
+  const seats=state.central.seats,target=state.central.target,geo=state.central.geographic;
+  const regions=[...new Set(seats.map(s=>s.modelZone||s.region||s.country||'Other'))];
+  const regionIndex=new Map(regions.map((r,i)=>[r,i]));
   const models=seats.map(s=>{
+    const zone=s.modelZone||zoneForSeat(s);
+    const zoneTarget=geo.targets[zone]||target;
+    const zoneBase=geo.baselines[zone]||BASE_GB;
     const candidates=SEAT_MODEL_PARTIES.filter(p=>partyAllowed(p,s)).map(p=>{
       let base=s.shares?.[p]||0;
-      const nat=BASE_GB[p]||.2;
+      const nat=Math.max(.05,Number(zoneBase[p])||Number(BASE_GB[p])||.2);
       if(p==='ref' && base<.18 && refMissingPrior()>0)base=Math.max(base,nat*refMissingPrior());
       if(['lab','con','ref','ld','green'].includes(p))base=Math.max(base,.18); else base=Math.max(base,.03);
-      const lambda=lambdaFor(p);
-      return {p,baseLog:Math.log(base),lambda,nat,central:s.projected[p]||0};
+      const lambda=lambdaFor(p),ratio=Math.max(.08,(zoneTarget[p]||.05)/nat);
+      return {p,baseLog:Math.log(base),centralShift:lambda*Math.log(ratio),central:s.projected[p]||0};
     }).sort((a,b)=>b.central-a.central).slice(0,5);
-    return {id:s.id,region:regionIndex.get(s.region||s.country||'Other'),candidates};
+    return {id:s.id,region:regionIndex.get(zone),candidates};
   });
   return {models,regions,target};
 }
@@ -300,12 +448,12 @@ async function runMonteCarlo(force=false){
       const drawn={}; let sum=0;
       for(const p of PARTY_ORDER){const sigma=CONFIG.nationalSigma[p]||.8;drawn[p]=Math.max(.05,target[p]+normalApprox(rng)*sigma);sum+=drawn[p];}
       for(const p of PARTY_ORDER)drawn[p]=drawn[p]/sum*100;
-      const natShift={}; for(const p of PARTY_ORDER)natShift[p]=lambdaFor(p)*Math.log(Math.max(.05,drawn[p])/(BASE_GB[p]||.2));
+      const natShift={}; for(const p of PARTY_ORDER)natShift[p]=lambdaFor(p)*Math.log(Math.max(.05,drawn[p])/Math.max(.05,target[p]||.05));
       const regNoise=Array.from({length:regions.length},()=>Object.fromEntries(PARTY_ORDER.map(p=>[p,logistic(rng)*CONFIG.regionNoise])));
       const counts=new Uint16Array(P);
       for(let si=0;si<nSeats;si++){
         const m=models[si]; let bestP='other',bestScore=-Infinity;
-        for(const cand of m.candidates){const score=cand.baseLog+natShift[cand.p]+regNoise[m.region][cand.p]+logistic(rng)*CONFIG.localNoise;if(score>bestScore){bestScore=score;bestP=cand.p;}}
+        for(const cand of m.candidates){const score=cand.baseLog+cand.centralShift+natShift[cand.p]+regNoise[m.region][cand.p]+logistic(rng)*CONFIG.localNoise;if(score>bestScore){bestScore=score;bestP=cand.p;}}
         const pi=partyIndex.get(bestP);counts[pi]++;wins[si*P+pi]++;
       }
       counts[partyIndex.get('other')]+=CONFIG.niSeats;
@@ -328,7 +476,7 @@ async function runMonteCarlo(force=false){
 function quantileSorted(arr,q){const i=Math.floor((arr.length-1)*q);return arr[i];}
 
 function renderCentral(){
-  const totals=state.central.totals; $('#projectionTitle').textContent='Proiezione centrale provvisoria'; $('#projectionSubtitle').textContent='Conversione territoriale 2024 → oggi, prima della calibrazione completa del backtest.';
+  const totals=state.central.totals; $('#projectionTitle').textContent='Proiezione centrale'; const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales; const sub=[sm?.polls?`Scozia: ${sm.polls} poll`:null,wm?.polls?`Galles: ${wm.polls} poll`:null].filter(Boolean).join(' · '); $('#projectionSubtitle').textContent=`Modello gerarchico 2024 → oggi: GB → nazioni → regioni → collegi${sub?` · ${sub}`:''}.`;
   renderSeats(totals,null); $('#kpiLargest').textContent=PARTY[Object.entries(totals).sort((a,b)=>b[1]-a[1])[0][0]].short; $('#kpiLargestMeta').textContent='proiezione centrale';
 }
 function renderMc(){
@@ -444,11 +592,15 @@ async function init(force=false){
   clearError();setStatus('Caricamento dati…','loading');$('#refreshBtn').disabled=true;
   try{
     if(force){try{localStorage.removeItem(mcCacheKey());}catch(_){ }}
-    const [polls,constituencies,geometry,ni,modelParams]=await Promise.all([loadPolls(),loadConstituencies(),loadGeometry(),fetchJson(CONFIG.niLocal,5000).catch(()=>null),loadModelParams()]);
+    const [polls,constituencies,geometry,ni,modelParams,subnational,territorialBaseline]=await Promise.all([
+      loadPolls(),loadConstituencies(),loadGeometry(),fetchJson(CONFIG.niLocal,5000).catch(()=>null),
+      loadModelParams(),loadSubnationalPolls(),loadTerritorialBaseline()
+    ]);
     state.polls=polls;state.average=calculateAverage(polls);state.latestAverage=latestPollAverage(polls);
     state.constituencies=constituencies;state.constituencyIndex=new Map(constituencies.map(c=>[c.id,c]));
-    state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;renderPolls();renderCoalitionButtons();
-    if(constituencies.length===650){buildCentral();renderCentral();renderMap();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource} · calibrazione: ${state.modelParams?'storica validata':'fallback prudente'}`;await runMonteCarlo(force);}else{
+    state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;state.subnational=subnational;state.territorialBaseline=territorialBaseline;
+    renderPolls();renderCoalitionButtons();
+    if(constituencies.length===650){buildCentral();renderCentral();renderMap();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource} · modello regionale: ${state.modelParams?'validato':'fallback'} · poll subnazionali: ${state.subnational.length}`;await runMonteCarlo(force);}else{
       setStatus('Sondaggi caricati · manca la baseline territoriale','error');showError('La dashboard nazionale è attiva, ma i 650 risultati di collegio non sono ancora nello snapshot locale e il browser non è riuscito a recuperarli direttamente. Esegui la GitHub Action “Update UK election data”: genererà automaticamente baseline e geometrie.');renderMap();
     }
   }catch(err){console.error(err);setStatus('Errore di caricamento','error');showError(`Errore: ${err.message||err}`);}finally{$('#refreshBtn').disabled=false;}
