@@ -89,3 +89,7 @@ Anche se passa, `approved:false`, `publication_ready:false` e `shadow_only:true`
 - `data/bes-integrity-v0915.json`
 
 Il report `local-strength-sweep-v0915.json` include le fonti effettivamente scaricate, le date, la copertura geografica, il candidato scelto sul 2019 e la classifica 2024 solo diagnostica.
+## Hotfix ONS public-download transport
+
+The ONS ward-to-PCON/LAD lookups are now fetched primarily from the public Open Geography Portal Hub CSV downloads rather than querying the backing FeatureServer directly. This is intentional: ONS can change anonymous FeatureServer query permissions independently of public dataset availability. The loader follows public CSV redirects, polls short-lived Hub cache-generation states, validates the expected PCON/LAD columns and minimum row count, and only then uses anonymous FeatureServer queries as a compatibility fallback.
+

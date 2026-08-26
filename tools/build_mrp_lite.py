@@ -25,6 +25,7 @@ import re
 import sys
 import tempfile
 import traceback
+import time
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -88,9 +89,15 @@ LOCAL_MAX_SEAT_SHIFT=8.0
 BYELECTION_MAX_SEAT_SHIFT=8.0
 ONS_LOOKUPS={
     "2019":{
-        # ONS republished the Dec-2019 lookup under a new FeatureServer item.
-        # Keep the older LAD-only endpoint as a fallback because data.gov.uk may
-        # continue to advertise it even when the ArcGIS service itself returns 404.
+        # Prefer ONS/Open Geography public Hub CSV downloads.  The underlying
+        # FeatureServer was republished in 2026 and may now answer public REST
+        # queries with Token Required, while the Hub CSV remains public.
+        # The LAD-only item is sufficient for this model and currently has a
+        # cached public CSV; the CTYUA item is retained as a second Hub fallback.
+        "downloads":(
+            "https://open-geography-portalx-ons.hub.arcgis.com/api/download/v1/items/552d79e95b30497bb073a9ac79c6a641/csv?layers=0",
+            "https://open-geography-portalx-ons.hub.arcgis.com/api/download/v1/items/4fed3ee9994c4361bd8122c31bf1885f/csv?layers=0",
+        ),
         "queries":(
             "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/WD19_PCON19_LAD19_UTLA19_UK_LU_e5a0b74eff43407b86dcc7a4300ceb25/FeatureServer/0/query",
             "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/WD19_PCON19_LAD19_UK_LU_2b79d5f36feb42938063932a4d4a3533/FeatureServer/0/query",
@@ -98,9 +105,10 @@ ONS_LOOKUPS={
         "pcon":"PCON19NM","lad":"LAD19NM",
     },
     "2024":{
-        "queries":(
-            "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/WD24_PCON24_LAD24_UTLA24_UK_LU/FeatureServer/0/query",
+        "downloads":(
+            "https://open-geography-portalx-ons.hub.arcgis.com/api/download/v1/items/62eb9df29a2f4521b5076a419ff9a47e/csv?layers=0",
         ),
+        "queries":(),
         "pcon":"PCON24NM","lad":"LAD24NM",
     },
 }
@@ -3131,9 +3139,54 @@ def aggregate_local_profiles(raw:pd.DataFrame)->tuple[dict[str,dict[str,Any]],di
 
 def fetch_ons_ward_lookup(year:str)->tuple[list[dict[str,str]],dict[str,Any]]:
     spec=ONS_LOOKUPS[year]
-    headers={"User-Agent":"modello-uk/0.9.15 research"}
-    urls=list(spec.get("queries") or ([spec["query"]] if spec.get("query") else []))
+    headers={
+        "User-Agent":"modello-uk/0.9.15 research",
+        "Accept":"text/csv,application/octet-stream,application/json;q=0.8,*/*;q=0.5",
+    }
     failures=[]
+
+    # Primary path: public ArcGIS Hub download API.  ONS/Data.gov.uk publishes
+    # these exact item IDs as public CSV resources.  This avoids depending on
+    # direct FeatureServer query permissions, which may change independently of
+    # the public download status of the dataset.
+    for url in spec.get("downloads",()):
+        try:
+            response=None
+            for attempt in range(7):
+                response=requests.get(url,headers=headers,timeout=120,allow_redirects=True)
+                response.raise_for_status()
+                ctype=(response.headers.get("content-type") or "").lower()
+                body=response.content
+                # Hub can return a small JSON status object while refreshing a
+                # cached export.  Poll the same public URL for up to ~30 seconds.
+                if "json" in ctype or body.lstrip().startswith(b"{"):
+                    try:payload=response.json()
+                    except Exception:payload={}
+                    status=str(payload.get("status") or "").lower()
+                    if status in {"pending","processing","converting","generating"}:
+                        if attempt>=6:raise RuntimeError(f"Hub CSV still {status}: {payload}")
+                        time.sleep(5);continue
+                    raise RuntimeError(f"unexpected Hub JSON response: {payload}")
+                frame=pd.read_csv(io.BytesIO(body),dtype=str,encoding="utf-8-sig")
+                if spec["pcon"] not in frame.columns or spec["lad"] not in frame.columns:
+                    raise RuntimeError(f"CSV missing {spec['pcon']}/{spec['lad']}; columns={list(frame.columns)[:20]}")
+                rows=[]
+                for pcon,lad in zip(frame[spec["pcon"]],frame[spec["lad"]]):
+                    pcon="" if pd.isna(pcon) else str(pcon).strip()
+                    lad="" if pd.isna(lad) else str(lad).strip()
+                    if pcon and lad:rows.append({"pcon":pcon,"lad":lad})
+                if len(rows)<5000:raise RuntimeError(f"lookup CSV unexpectedly small: {len(rows)}")
+                return rows,{"source":"ONS Open Geography Portal public Hub CSV","year":year,
+                             "url":url,"resolved_url":response.url,"rows":len(rows),
+                             "fallbacks_tried":len(failures),"transport":"hub_csv"}
+            raise RuntimeError("Hub CSV polling exhausted without data")
+        except Exception as exc:
+            failures.append({"url":url,"transport":"hub_csv","error":str(exc)})
+
+    # Last-resort compatibility path for any ONS FeatureServer that still permits
+    # anonymous REST queries.  A Token Required response is treated as a source
+    # failure, not as a model/data result.
+    urls=list(spec.get("queries") or ([spec["query"]] if spec.get("query") else []))
     for url in urls:
         try:
             ids=requests.get(url,params={"where":"1=1","returnIdsOnly":"true","f":"json"},headers=headers,timeout=120)
@@ -3152,11 +3205,11 @@ def fetch_ons_ward_lookup(year:str)->tuple[list[dict[str,str]],dict[str,Any]]:
                     a=feat.get("attributes",{});pcon=str(a.get(spec["pcon"]) or "");lad=str(a.get(spec["lad"]) or "")
                     if pcon and lad:rows.append({"pcon":pcon,"lad":lad})
             if len(rows)<5000:raise RuntimeError(f"lookup unexpectedly small: {len(rows)}")
-            return rows,{"source":"ONS Open Geography Portal ward-PCON-LAD lookup","year":year,
-                         "url":url,"rows":len(rows),"fallbacks_tried":len(failures)}
+            return rows,{"source":"ONS Open Geography Portal FeatureServer fallback","year":year,
+                         "url":url,"rows":len(rows),"fallbacks_tried":len(failures),"transport":"feature_query"}
         except Exception as exc:
-            failures.append({"url":url,"error":str(exc)})
-    raise RuntimeError(f"ONS {year} lookup unavailable from all configured endpoints: {failures}")
+            failures.append({"url":url,"transport":"feature_query","error":str(exc)})
+    raise RuntimeError(f"ONS {year} lookup unavailable from all configured public downloads/endpoints: {failures}")
 
 
 def build_local_advantage_profile(base:dict[str,Any],raw_local:pd.DataFrame,lookup_rows:list[dict[str,str]],target_date:str)->dict[str,Any]:
