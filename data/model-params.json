@@ -1,0 +1,33 @@
+{
+  "version": "uk-v04-historical-calibration",
+  "approved": true,
+  "training_elections": [
+    "2010→2015",
+    "2015→2017"
+  ],
+  "validation_election": "2017→2019",
+  "holdout_election": "2019 notional→2024",
+  "lambdas": {
+    "lab": 0.55,
+    "con": 0.85,
+    "ref": 0.82,
+    "ld": 0.45,
+    "green": 0.35,
+    "snp": 1.4,
+    "pc": 0.82
+  },
+  "ref_missing_prior": 0.0,
+  "validation": {
+    "common_accuracy": 0.9177215189873418,
+    "fitted_accuracy": 0.9177215189873418,
+    "common_seat_abs_error": 44,
+    "fitted_seat_abs_error": 66
+  },
+  "holdout": {
+    "common_accuracy": 0.6835443037974683,
+    "fitted_accuracy": 0.7009493670886076,
+    "common_seat_abs_error": 340,
+    "fitted_seat_abs_error": 322
+  },
+  "note": "Live use is allowed only when approved=true. Country-oracle diagnostics are never live parameters."
+}
