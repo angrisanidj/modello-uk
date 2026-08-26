@@ -1,6 +1,6 @@
 {
-  "version": "uk-v0919-ld-footprint-validation",
-  "model_type": "constituency-residual-ld-footprint-v13",
+  "version": "uk-v0920-scotland-conlab-sweep",
+  "model_type": "constituency-residual-scotland-conlab-v14",
   "status": "ok",
   "approved": false,
   "publication_ready": false,
@@ -10,12 +10,12 @@
   "changes_candidate_model": false,
   "shadow_only": true,
   "candidate_gate_passed": false,
-  "ld_footprint_research_gate_passed": false,
-  "promotion_blocked_reason": "v0.9.19 is shadow-only; parameters are selected on 2017+2019 and 2024 remains a non-pristine audit-inspired benchmark",
+  "pairwise_research_gate_passed": false,
+  "promotion_blocked_reason": "v0.9.20 is shadow-only; Scotland and ConLab parameters are selected on 2017+2019 and 2024 remains a non-pristine audit-inspired benchmark",
   "canonical_candidate": "frozen_v0910_equivalent",
   "best_shadow_reference": {
     "version": "v0.9.15",
-    "output": "data/v0915-reference-v0919.json",
+    "output": "data/v0915-reference-v0920.json",
     "parameters": {
       "local_strength": 0.25,
       "confidence_floor": 0.0,
@@ -56,7 +56,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.7168953972049072,
+      "share_mae": 2.7168953973035195,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -152,7 +152,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 166,
-      "share_mae": 5.556807618048258,
+      "share_mae": 5.55680761701318,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -215,14 +215,13 @@
     },
     "uses_2024_for_parameter_selection": false
   },
-  "ld_footprint_validation": {
-    "output": "data/ld-footprint-validation-v0919.json",
-    "selected_historical": {
-      "id": "ldh_s0.00_f0.65_a+4.0_q0.55",
+  "pairwise_structural_sweep": {
+    "output": "data/scotland-conlab-sweep-v0920.json",
+    "scotland_selected": {
+      "id": "scot_s0.00_m10_a0.0",
       "strength": 0.0,
-      "score_floor": 0.65,
-      "local_adv_floor": 4.0,
-      "local_conf_floor": 0.55,
+      "margin_cap": 10.0,
+      "local_adv_floor": 0.0,
       "winner_gain_2017": 0,
       "winner_gain_2019": 0,
       "winner_gain_sum": 0,
@@ -358,7 +357,7 @@
           "other": -1
         },
         "seat_abs_error_sum": 42,
-        "share_mae": 2.7168953972049072,
+        "share_mae": 2.7168953973035195,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -454,7 +453,7 @@
           "other": -1
         },
         "seat_abs_error_sum": 166,
-        "share_mae": 5.556807618048258,
+        "share_mae": 5.55680761701318,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -517,33 +516,225 @@
       },
       "meta_2024": {
         "strength": 0.0,
-        "score_floor": 0.65,
-        "local_adv_floor": 4.0,
-        "local_conf_floor": 0.55,
+        "margin_cap": 10.0,
+        "local_adv_floor": 0.0,
+        "scope": "scotland",
         "eligible_seats": 0,
         "adjusted_seats": 0,
-        "missing_local_profile": 0,
-        "national_target_preserved": true,
-        "top_adjustments": []
+        "national_target_preserved": true
       },
       "research_gate": false
     },
-    "best_expost_2024": {
-      "id": "ldh_s0.60_f0.65_a+0.0_q0.55",
-      "strength": 0.6,
-      "score_floor": 0.65,
+    "conlab_selected": {
+      "id": "conlab_s0.00_m10_a0.0",
+      "strength": 0.0,
+      "margin_cap": 10.0,
       "local_adv_floor": 0.0,
-      "local_conf_floor": 0.55,
-      "historically_admissible": false,
+      "winner_gain_2017": 0,
+      "winner_gain_2019": 0,
+      "winner_gain_sum": 0,
+      "seat_error_improvement_sum": 0,
+      "validation_2017": {
+        "winner_accuracy": 0.9003164556962026,
+        "correct_winners": 569,
+        "gb_seats": 632,
+        "predicted_seats": {
+          "lab": 277,
+          "con": 322,
+          "ref": 0,
+          "ld": 9,
+          "green": 0,
+          "snp": 21,
+          "pc": 3,
+          "other": 0
+        },
+        "actual_seats": {
+          "lab": 262,
+          "con": 317,
+          "ref": 0,
+          "ld": 12,
+          "green": 1,
+          "snp": 35,
+          "pc": 4,
+          "other": 1
+        },
+        "seat_error": {
+          "lab": 15,
+          "con": 5,
+          "ref": 0,
+          "ld": -3,
+          "green": -1,
+          "snp": -14,
+          "pc": -1,
+          "other": -1
+        },
+        "seat_abs_error_sum": 40,
+        "share_mae": 2.508127924075581,
+        "winner_source": "official_BES_WinnerXX",
+        "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+        "regional_accuracy": {
+          "east_england": {
+            "correct": 55,
+            "n": 58,
+            "accuracy": 0.9482758620689655
+          },
+          "east_midlands": {
+            "correct": 42,
+            "n": 46,
+            "accuracy": 0.9130434782608695
+          },
+          "london": {
+            "correct": 67,
+            "n": 73,
+            "accuracy": 0.9178082191780822
+          },
+          "north_east": {
+            "correct": 27,
+            "n": 29,
+            "accuracy": 0.9310344827586207
+          },
+          "north_west": {
+            "correct": 71,
+            "n": 75,
+            "accuracy": 0.9466666666666667
+          },
+          "scotland": {
+            "correct": 34,
+            "n": 59,
+            "accuracy": 0.576271186440678
+          },
+          "south_east": {
+            "correct": 77,
+            "n": 84,
+            "accuracy": 0.9166666666666666
+          },
+          "south_west": {
+            "correct": 51,
+            "n": 55,
+            "accuracy": 0.9272727272727272
+          },
+          "wales": {
+            "correct": 39,
+            "n": 40,
+            "accuracy": 0.975
+          },
+          "west_midlands": {
+            "correct": 55,
+            "n": 59,
+            "accuracy": 0.9322033898305084
+          },
+          "yorkshire": {
+            "correct": 51,
+            "n": 54,
+            "accuracy": 0.9444444444444444
+          }
+        }
+      },
+      "validation_2019": {
+        "winner_accuracy": 0.9256329113924051,
+        "correct_winners": 585,
+        "gb_seats": 632,
+        "predicted_seats": {
+          "lab": 198,
+          "con": 350,
+          "ref": 0,
+          "ld": 31,
+          "green": 1,
+          "snp": 49,
+          "pc": 3,
+          "other": 0
+        },
+        "actual_seats": {
+          "lab": 202,
+          "con": 365,
+          "ref": 0,
+          "ld": 11,
+          "green": 1,
+          "snp": 48,
+          "pc": 4,
+          "other": 1
+        },
+        "seat_error": {
+          "lab": -4,
+          "con": -15,
+          "ref": 0,
+          "ld": 20,
+          "green": 0,
+          "snp": 1,
+          "pc": -1,
+          "other": -1
+        },
+        "seat_abs_error_sum": 42,
+        "share_mae": 2.7168953973035195,
+        "winner_source": "official_BES_WinnerXX",
+        "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+        "regional_accuracy": {
+          "east_england": {
+            "correct": 55,
+            "n": 58,
+            "accuracy": 0.9482758620689655
+          },
+          "east_midlands": {
+            "correct": 46,
+            "n": 46,
+            "accuracy": 1.0
+          },
+          "london": {
+            "correct": 69,
+            "n": 73,
+            "accuracy": 0.9452054794520548
+          },
+          "north_east": {
+            "correct": 25,
+            "n": 29,
+            "accuracy": 0.8620689655172413
+          },
+          "north_west": {
+            "correct": 65,
+            "n": 75,
+            "accuracy": 0.8666666666666667
+          },
+          "scotland": {
+            "correct": 56,
+            "n": 59,
+            "accuracy": 0.9491525423728814
+          },
+          "south_east": {
+            "correct": 77,
+            "n": 84,
+            "accuracy": 0.9166666666666666
+          },
+          "south_west": {
+            "correct": 49,
+            "n": 55,
+            "accuracy": 0.8909090909090909
+          },
+          "wales": {
+            "correct": 36,
+            "n": 40,
+            "accuracy": 0.9
+          },
+          "west_midlands": {
+            "correct": 55,
+            "n": 59,
+            "accuracy": 0.9322033898305084
+          },
+          "yorkshire": {
+            "correct": 52,
+            "n": 54,
+            "accuracy": 0.9629629629629629
+          }
+        }
+      },
       "benchmark_2024": {
-        "winner_accuracy": 0.8022151898734177,
-        "correct_winners": 507,
+        "winner_accuracy": 0.7927215189873418,
+        "correct_winners": 501,
         "gb_seats": 632,
         "predicted_seats": {
           "lab": 346,
-          "con": 148,
+          "con": 152,
           "ref": 39,
-          "ld": 59,
+          "ld": 55,
           "green": 9,
           "snp": 22,
           "pc": 4,
@@ -561,23 +752,23 @@
         },
         "seat_error": {
           "lab": -65,
-          "con": 27,
+          "con": 31,
           "ref": 34,
-          "ld": -13,
+          "ld": -17,
           "green": 5,
           "snp": 13,
           "pc": 0,
           "other": -1
         },
-        "seat_abs_error_sum": 158,
-        "share_mae": 5.546773677231209,
+        "seat_abs_error_sum": 166,
+        "share_mae": 5.55680761701318,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
           "east_england": {
-            "correct": 51,
+            "correct": 50,
             "n": 61,
-            "accuracy": 0.8360655737704918
+            "accuracy": 0.819672131147541
           },
           "east_midlands": {
             "correct": 36,
@@ -605,14 +796,14 @@
             "accuracy": 0.7368421052631579
           },
           "south_east": {
-            "correct": 74,
+            "correct": 71,
             "n": 91,
-            "accuracy": 0.8131868131868132
+            "accuracy": 0.7802197802197802
           },
           "south_west": {
-            "correct": 43,
+            "correct": 42,
             "n": 58,
-            "accuracy": 0.7413793103448276
+            "accuracy": 0.7241379310344828
           },
           "wales": {
             "correct": 23,
@@ -620,9 +811,9 @@
             "accuracy": 0.71875
           },
           "west_midlands": {
-            "correct": 50,
+            "correct": 49,
             "n": 57,
-            "accuracy": 0.8771929824561403
+            "accuracy": 0.8596491228070176
           },
           "yorkshire": {
             "correct": 37,
@@ -632,413 +823,350 @@
         }
       },
       "meta_2024": {
-        "strength": 0.6,
-        "score_floor": 0.65,
+        "strength": 0.0,
+        "margin_cap": 10.0,
         "local_adv_floor": 0.0,
-        "local_conf_floor": 0.55,
-        "eligible_seats": 31,
-        "adjusted_seats": 31,
-        "missing_local_profile": 165,
-        "national_target_preserved": true,
-        "top_adjustments": [
-          {
-            "id": "E14001592",
-            "name": "Woking",
-            "delta_ld_pre_rake": 4.503170511155309,
-            "score": 0.9381605231573561,
-            "baseline_ld_share": 31.054977711738484,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 1,
-            "predicted_ld_share": 42.01447929229901,
-            "predicted_deficit_to_best_non_ld": 0.0,
-            "local_ld_advantage": 17.223770098532164,
-            "local_confidence": 0.9533026157867809
-          },
-          {
-            "id": "E14001220",
-            "name": "Eastleigh",
-            "delta_ld_pre_rake": 4.4810762570299385,
-            "score": 0.9335575535479038,
-            "baseline_ld_share": 34.434761558944565,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 1,
-            "predicted_ld_share": 44.547047864785725,
-            "predicted_deficit_to_best_non_ld": 0.0,
-            "local_ld_advantage": 8.130715610256097,
-            "local_confidence": 0.9302877677395195
-          },
-          {
-            "id": "E14001197",
-            "name": "Didcot and Wantage",
-            "delta_ld_pre_rake": 4.282227969901599,
-            "score": 0.8921308270628332,
-            "baseline_ld_share": 31.321532403488757,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 1,
-            "predicted_ld_share": 37.30199857787744,
-            "predicted_deficit_to_best_non_ld": 0.0,
-            "local_ld_advantage": 9.066862778754992,
-            "local_confidence": 0.7231541353141663
-          },
-          {
-            "id": "E14001268",
-            "name": "Harpenden and Berkhamsted",
-            "delta_ld_pre_rake": 4.256837315091589,
-            "score": 0.8868411073107477,
-            "baseline_ld_share": 25.282572033442175,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 1,
-            "predicted_ld_share": 30.50672116759009,
-            "predicted_deficit_to_best_non_ld": 0.0,
-            "local_ld_advantage": 14.227309806180843,
-            "local_confidence": 0.8382283755504736
-          },
-          {
-            "id": "E14001396",
-            "name": "North Norfolk",
-            "delta_ld_pre_rake": 4.15278421474145,
-            "score": 0.8651633780711354,
-            "baseline_ld_share": 30.35762771032931,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 1,
-            "predicted_ld_share": 32.2605417025346,
-            "predicted_deficit_to_best_non_ld": 0.0,
-            "local_ld_advantage": 5.821885825766323,
-            "local_confidence": 0.7231541353141663
-          },
-          {
-            "id": "E14001484",
-            "name": "South Devon",
-            "delta_ld_pre_rake": 4.1173191578434425,
-            "score": 0.8577748245507173,
-            "baseline_ld_share": 28.249275683256748,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 1,
-            "predicted_ld_share": 35.586469962096324,
-            "predicted_deficit_to_best_non_ld": 0.0,
-            "local_ld_advantage": 6.015773477450637,
-            "local_confidence": 0.7231541353141663
-          },
-          {
-            "id": "E14001587",
-            "name": "Winchester",
-            "delta_ld_pre_rake": 4.10678237057998,
-            "score": 0.8555796605374958,
-            "baseline_ld_share": 39.85542394892898,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 1,
-            "predicted_ld_share": 48.01614005218683,
-            "predicted_deficit_to_best_non_ld": 0.0,
-            "local_ld_advantage": 3.6018266850902236,
-            "local_confidence": 0.9533026157867808
-          },
-          {
-            "id": "E14001201",
-            "name": "Dorking and Horley",
-            "delta_ld_pre_rake": 4.068872320075712,
-            "score": 0.8476817333491068,
-            "baseline_ld_share": 32.11670795485824,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 1,
-            "predicted_ld_share": 37.064775599603514,
-            "predicted_deficit_to_best_non_ld": 0.0,
-            "local_ld_advantage": 3.4764738515791365,
-            "local_confidence": 0.9058980585780172
-          },
-          {
-            "id": "E14001593",
-            "name": "Wokingham",
-            "delta_ld_pre_rake": 4.0105141586854804,
-            "score": 0.8355237830594752,
-            "baseline_ld_share": 32.30931433141859,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 1,
-            "predicted_ld_share": 44.745322322939124,
-            "predicted_deficit_to_best_non_ld": 0.0,
-            "local_ld_advantage": 2.6551026631844827,
-            "local_confidence": 0.9533026157867809
-          },
-          {
-            "id": "E14001224",
-            "name": "Ely and East Cambridgeshire",
-            "delta_ld_pre_rake": 3.9620470857229355,
-            "score": 0.8254264761922783,
-            "baseline_ld_share": 29.259157256954012,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 1,
-            "predicted_ld_share": 34.93979443343714,
-            "predicted_deficit_to_best_non_ld": 0.0,
-            "local_ld_advantage": 3.785263667374263,
-            "local_confidence": 0.7013309462981734
-          },
-          {
-            "id": "E14001482",
-            "name": "South Cotswolds",
-            "delta_ld_pre_rake": 3.9606832735296864,
-            "score": 0.8251423486520181,
-            "baseline_ld_share": 27.648573953261018,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 32.701430093893805,
-            "predicted_deficit_to_best_non_ld": 0.20440764160677105,
-            "local_ld_advantage": 6.632055954100766,
-            "local_confidence": 0.640708614206624
-          },
-          {
-            "id": "E14001526",
-            "name": "Stratford-on-Avon",
-            "delta_ld_pre_rake": 3.938438672301019,
-            "score": 0.820508056729379,
-            "baseline_ld_share": 24.676512874134097,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 30.484254782816762,
-            "predicted_deficit_to_best_non_ld": 2.2909130104345152,
-            "local_ld_advantage": 11.432611389567262,
-            "local_confidence": 0.7231541353141663
-          },
-          {
-            "id": "E14001376",
-            "name": "Newbury",
-            "delta_ld_pre_rake": 3.9173496253318802,
-            "score": 0.8161145052774751,
-            "baseline_ld_share": 32.59696690274862,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 1,
-            "predicted_ld_share": 37.41638047869241,
-            "predicted_deficit_to_best_non_ld": 0.0,
-            "local_ld_advantage": 2.769702110110984,
-            "local_confidence": 0.7231541353141663
-          },
-          {
-            "id": "E14001263",
-            "name": "Hamble Valley",
-            "delta_ld_pre_rake": 3.870731041885177,
-            "score": 0.8064023003927452,
-            "baseline_ld_share": 21.05327746708508,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 29.26584259214236,
-            "predicted_deficit_to_best_non_ld": 7.410385008949536,
-            "local_ld_advantage": 10.568827474389918,
-            "local_confidence": 0.9533026157867809
-          },
-          {
-            "id": "E14001591",
-            "name": "Witney",
-            "delta_ld_pre_rake": 3.809843948227111,
-            "score": 0.7937174892139814,
-            "baseline_ld_share": 25.96490509633694,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 32.88243139225556,
-            "predicted_deficit_to_best_non_ld": 1.923589459642109,
-            "local_ld_advantage": 3.811886758257865,
-            "local_confidence": 0.9094648099824733
-          },
-          {
-            "id": "E14001542",
-            "name": "Tewkesbury",
-            "delta_ld_pre_rake": 3.8088825960676482,
-            "score": 0.7935172075140934,
-            "baseline_ld_share": 21.99858888187456,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 26.279389593569785,
-            "predicted_deficit_to_best_non_ld": 4.90479039880579,
-            "local_ld_advantage": 7.162942818437935,
-            "local_confidence": 0.7963831972827254
-          },
-          {
-            "id": "E14001388",
-            "name": "North Dorset",
-            "delta_ld_pre_rake": 3.801771909021664,
-            "score": 0.7920358143795134,
-            "baseline_ld_share": 20.368846326500076,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 25.749400414287475,
-            "predicted_deficit_to_best_non_ld": 8.778371564912423,
-            "local_ld_advantage": 12.35500534027216,
-            "local_confidence": 0.9533026157867808
-          },
-          {
-            "id": "E14001166",
-            "name": "Chichester",
-            "delta_ld_pre_rake": 3.6785280995072753,
-            "score": 0.7663600207306824,
-            "baseline_ld_share": 20.303006546195757,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 24.547581818848453,
-            "predicted_deficit_to_best_non_ld": 6.01184608124338,
-            "local_ld_advantage": 16.526605772611596,
-            "local_confidence": 0.7231541353141663
-          },
-          {
-            "id": "E14001366",
-            "name": "Mid Sussex",
-            "delta_ld_pre_rake": 3.6614916219073264,
-            "score": 0.7628107545640264,
-            "baseline_ld_share": 25.475457515722677,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 1,
-            "predicted_ld_share": 28.43038718106539,
-            "predicted_deficit_to_best_non_ld": 0.0,
-            "local_ld_advantage": 1.1420514421949903,
-            "local_confidence": 0.7231541353141663
-          },
-          {
-            "id": "E14001067",
-            "name": "Arundel and South Downs",
-            "delta_ld_pre_rake": 3.6364641397473005,
-            "score": 0.7575966957806877,
-            "baseline_ld_share": 18.951897427071682,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 25.549522014317493,
-            "predicted_deficit_to_best_non_ld": 6.099402112610097,
-            "local_ld_advantage": 11.957589075378616,
-            "local_confidence": 0.7231541353141663
-          },
-          {
-            "id": "E14001159",
-            "name": "Chelmsford",
-            "delta_ld_pre_rake": 3.598450054575658,
-            "score": 0.749677094703262,
-            "baseline_ld_share": 26.067328057072796,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 30.933193419521615,
-            "predicted_deficit_to_best_non_ld": 1.325602077335411,
-            "local_ld_advantage": 2.1225767915988687,
-            "local_confidence": 0.7231541353141663
-          },
-          {
-            "id": "E14001294",
-            "name": "Horsham",
-            "delta_ld_pre_rake": 3.556761475342627,
-            "score": 0.740991974029714,
-            "baseline_ld_share": 24.712623097582814,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 30.960999234434745,
-            "predicted_deficit_to_best_non_ld": 1.4847996383367246,
-            "local_ld_advantage": 2.1622212936359215,
-            "local_confidence": 0.7231541353141663
-          },
-          {
-            "id": "E14001403",
-            "name": "North West Hampshire",
-            "delta_ld_pre_rake": 3.526616625399195,
-            "score": 0.7347117969581656,
-            "baseline_ld_share": 18.46499119701279,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 22.429691873283726,
-            "predicted_deficit_to_best_non_ld": 11.318402310150528,
-            "local_ld_advantage": 7.993459649158023,
-            "local_confidence": 0.8190493355110892
-          },
-          {
-            "id": "E14001214",
-            "name": "East Hampshire",
-            "delta_ld_pre_rake": 3.510004466345915,
-            "score": 0.7312509304887324,
-            "baseline_ld_share": 21.716658975542227,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 25.02296905739327,
-            "predicted_deficit_to_best_non_ld": 5.251855111656479,
-            "local_ld_advantage": 4.358177142597466,
-            "local_confidence": 0.732360074533071
-          },
-          {
-            "id": "E14001233",
-            "name": "Fareham and Waterlooville",
-            "delta_ld_pre_rake": 3.3865427558534775,
-            "score": 0.7055297408028078,
-            "baseline_ld_share": 18.94279248878479,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 22.440711050459942,
-            "predicted_deficit_to_best_non_ld": 12.91423423943868,
-            "local_ld_advantage": 5.2846645051183145,
-            "local_confidence": 0.9533026157867808
-          },
-          {
-            "id": "E14001548",
-            "name": "Tiverton and Minehead",
-            "delta_ld_pre_rake": 3.3602312554868083,
-            "score": 0.7000481782264184,
-            "baseline_ld_share": 19.493635020541987,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 24.174640186281525,
-            "predicted_deficit_to_best_non_ld": 10.087413053381564,
-            "local_ld_advantage": 20.01846875479636,
-            "local_confidence": 0.5687098300176411
-          },
-          {
-            "id": "E14001392",
-            "name": "North East Hampshire",
-            "delta_ld_pre_rake": 3.2980402811457923,
-            "score": 0.6870917252387068,
-            "baseline_ld_share": 22.37087960514719,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 30.936201390888275,
-            "predicted_deficit_to_best_non_ld": 4.800668122471887,
-            "local_ld_advantage": 0.570922287417579,
-            "local_confidence": 0.9533026157867809
-          },
-          {
-            "id": "E14001288",
-            "name": "Hinckley and Bosworth",
-            "delta_ld_pre_rake": 3.296379572872924,
-            "score": 0.6867457443485259,
-            "baseline_ld_share": 18.19198243616848,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 24.56602142290398,
-            "predicted_deficit_to_best_non_ld": 13.565425374873314,
-            "local_ld_advantage": 15.730497281996003,
-            "local_confidence": 0.6716727002153245
-          },
-          {
-            "id": "E14001458",
-            "name": "Rutland and Stamford",
-            "delta_ld_pre_rake": 3.2847240446229073,
-            "score": 0.6843175092964391,
-            "baseline_ld_share": 15.834790047234723,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 21.23066657942979,
-            "predicted_deficit_to_best_non_ld": 13.209582264428644,
-            "local_ld_advantage": 7.422203863258,
-            "local_confidence": 0.7231541353141664
-          },
-          {
-            "id": "E14001551",
-            "name": "Torbay",
-            "delta_ld_pre_rake": 3.2796525623566257,
-            "score": 0.6832609504909637,
-            "baseline_ld_share": 24.245159011987205,
-            "baseline_role": "runner_up",
-            "predicted_ld_rank": 2,
-            "predicted_ld_share": 29.158614330643744,
-            "predicted_deficit_to_best_non_ld": 7.4061683243657015,
-            "local_ld_advantage": 1.507839604464527,
-            "local_confidence": 0.7231541353141663
-          }
-        ]
+        "scope": "england_wales",
+        "eligible_seats": 0,
+        "adjusted_seats": 0,
+        "national_target_preserved": true
       },
-      "research_gate": true
+      "research_gate": false
+    },
+    "combined_selected": {
+      "id": "scot_s0.00_m10_a0.0+conlab_s0.00_m10_a0.0",
+      "scotland": {
+        "id": "scot_s0.00_m10_a0.0",
+        "strength": 0.0,
+        "margin_cap": 10.0,
+        "local_adv_floor": 0.0
+      },
+      "conlab": {
+        "id": "conlab_s0.00_m10_a0.0",
+        "strength": 0.0,
+        "margin_cap": 10.0,
+        "local_adv_floor": 0.0
+      },
+      "validation_2017": {
+        "winner_accuracy": 0.9003164556962026,
+        "correct_winners": 569,
+        "gb_seats": 632,
+        "predicted_seats": {
+          "lab": 277,
+          "con": 322,
+          "ref": 0,
+          "ld": 9,
+          "green": 0,
+          "snp": 21,
+          "pc": 3,
+          "other": 0
+        },
+        "actual_seats": {
+          "lab": 262,
+          "con": 317,
+          "ref": 0,
+          "ld": 12,
+          "green": 1,
+          "snp": 35,
+          "pc": 4,
+          "other": 1
+        },
+        "seat_error": {
+          "lab": 15,
+          "con": 5,
+          "ref": 0,
+          "ld": -3,
+          "green": -1,
+          "snp": -14,
+          "pc": -1,
+          "other": -1
+        },
+        "seat_abs_error_sum": 40,
+        "share_mae": 2.508127924075581,
+        "winner_source": "official_BES_WinnerXX",
+        "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+        "regional_accuracy": {
+          "east_england": {
+            "correct": 55,
+            "n": 58,
+            "accuracy": 0.9482758620689655
+          },
+          "east_midlands": {
+            "correct": 42,
+            "n": 46,
+            "accuracy": 0.9130434782608695
+          },
+          "london": {
+            "correct": 67,
+            "n": 73,
+            "accuracy": 0.9178082191780822
+          },
+          "north_east": {
+            "correct": 27,
+            "n": 29,
+            "accuracy": 0.9310344827586207
+          },
+          "north_west": {
+            "correct": 71,
+            "n": 75,
+            "accuracy": 0.9466666666666667
+          },
+          "scotland": {
+            "correct": 34,
+            "n": 59,
+            "accuracy": 0.576271186440678
+          },
+          "south_east": {
+            "correct": 77,
+            "n": 84,
+            "accuracy": 0.9166666666666666
+          },
+          "south_west": {
+            "correct": 51,
+            "n": 55,
+            "accuracy": 0.9272727272727272
+          },
+          "wales": {
+            "correct": 39,
+            "n": 40,
+            "accuracy": 0.975
+          },
+          "west_midlands": {
+            "correct": 55,
+            "n": 59,
+            "accuracy": 0.9322033898305084
+          },
+          "yorkshire": {
+            "correct": 51,
+            "n": 54,
+            "accuracy": 0.9444444444444444
+          }
+        }
+      },
+      "validation_2019": {
+        "winner_accuracy": 0.9256329113924051,
+        "correct_winners": 585,
+        "gb_seats": 632,
+        "predicted_seats": {
+          "lab": 198,
+          "con": 350,
+          "ref": 0,
+          "ld": 31,
+          "green": 1,
+          "snp": 49,
+          "pc": 3,
+          "other": 0
+        },
+        "actual_seats": {
+          "lab": 202,
+          "con": 365,
+          "ref": 0,
+          "ld": 11,
+          "green": 1,
+          "snp": 48,
+          "pc": 4,
+          "other": 1
+        },
+        "seat_error": {
+          "lab": -4,
+          "con": -15,
+          "ref": 0,
+          "ld": 20,
+          "green": 0,
+          "snp": 1,
+          "pc": -1,
+          "other": -1
+        },
+        "seat_abs_error_sum": 42,
+        "share_mae": 2.7168953973035195,
+        "winner_source": "official_BES_WinnerXX",
+        "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+        "regional_accuracy": {
+          "east_england": {
+            "correct": 55,
+            "n": 58,
+            "accuracy": 0.9482758620689655
+          },
+          "east_midlands": {
+            "correct": 46,
+            "n": 46,
+            "accuracy": 1.0
+          },
+          "london": {
+            "correct": 69,
+            "n": 73,
+            "accuracy": 0.9452054794520548
+          },
+          "north_east": {
+            "correct": 25,
+            "n": 29,
+            "accuracy": 0.8620689655172413
+          },
+          "north_west": {
+            "correct": 65,
+            "n": 75,
+            "accuracy": 0.8666666666666667
+          },
+          "scotland": {
+            "correct": 56,
+            "n": 59,
+            "accuracy": 0.9491525423728814
+          },
+          "south_east": {
+            "correct": 77,
+            "n": 84,
+            "accuracy": 0.9166666666666666
+          },
+          "south_west": {
+            "correct": 49,
+            "n": 55,
+            "accuracy": 0.8909090909090909
+          },
+          "wales": {
+            "correct": 36,
+            "n": 40,
+            "accuracy": 0.9
+          },
+          "west_midlands": {
+            "correct": 55,
+            "n": 59,
+            "accuracy": 0.9322033898305084
+          },
+          "yorkshire": {
+            "correct": 52,
+            "n": 54,
+            "accuracy": 0.9629629629629629
+          }
+        }
+      },
+      "winner_gain_2017": 0,
+      "winner_gain_2019": 0,
+      "winner_gain_sum": 0,
+      "seat_error_improvement_sum": 0,
+      "admissible": true,
+      "benchmark_2024": {
+        "winner_accuracy": 0.7927215189873418,
+        "correct_winners": 501,
+        "gb_seats": 632,
+        "predicted_seats": {
+          "lab": 346,
+          "con": 152,
+          "ref": 39,
+          "ld": 55,
+          "green": 9,
+          "snp": 22,
+          "pc": 4,
+          "other": 5
+        },
+        "actual_seats": {
+          "lab": 411,
+          "con": 121,
+          "ref": 5,
+          "ld": 72,
+          "green": 4,
+          "snp": 9,
+          "pc": 4,
+          "other": 6
+        },
+        "seat_error": {
+          "lab": -65,
+          "con": 31,
+          "ref": 34,
+          "ld": -17,
+          "green": 5,
+          "snp": 13,
+          "pc": 0,
+          "other": -1
+        },
+        "seat_abs_error_sum": 166,
+        "share_mae": 5.55680761701318,
+        "winner_source": "official_BES_WinnerXX",
+        "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+        "regional_accuracy": {
+          "east_england": {
+            "correct": 50,
+            "n": 61,
+            "accuracy": 0.819672131147541
+          },
+          "east_midlands": {
+            "correct": 36,
+            "n": 47,
+            "accuracy": 0.7659574468085106
+          },
+          "london": {
+            "correct": 68,
+            "n": 75,
+            "accuracy": 0.9066666666666666
+          },
+          "north_east": {
+            "correct": 15,
+            "n": 27,
+            "accuracy": 0.5555555555555556
+          },
+          "north_west": {
+            "correct": 68,
+            "n": 73,
+            "accuracy": 0.9315068493150684
+          },
+          "scotland": {
+            "correct": 42,
+            "n": 57,
+            "accuracy": 0.7368421052631579
+          },
+          "south_east": {
+            "correct": 71,
+            "n": 91,
+            "accuracy": 0.7802197802197802
+          },
+          "south_west": {
+            "correct": 42,
+            "n": 58,
+            "accuracy": 0.7241379310344828
+          },
+          "wales": {
+            "correct": 23,
+            "n": 32,
+            "accuracy": 0.71875
+          },
+          "west_midlands": {
+            "correct": 49,
+            "n": 57,
+            "accuracy": 0.8596491228070176
+          },
+          "yorkshire": {
+            "correct": 37,
+            "n": 54,
+            "accuracy": 0.6851851851851852
+          }
+        }
+      },
+      "meta_2024": {
+        "scotland": {
+          "strength": 0.0,
+          "margin_cap": 10.0,
+          "local_adv_floor": 0.0,
+          "scope": "scotland",
+          "eligible_seats": 0,
+          "adjusted_seats": 0,
+          "national_target_preserved": true
+        },
+        "conlab": {
+          "strength": 0.0,
+          "margin_cap": 10.0,
+          "local_adv_floor": 0.0,
+          "scope": "england_wales",
+          "eligible_seats": 0,
+          "adjusted_seats": 0,
+          "national_target_preserved": true
+        }
+      },
+      "research_gate": false
     },
     "research_gate_passed": false,
-    "uses_2024_for_parameter_selection": false
+    "uses_2024_for_parameter_selection": false,
+    "applied_to_live": false
   },
-  "generated_at": "2026-08-26T23:32:18.016452+00:00",
+  "generated_at": "2026-08-26T23:46:45.091026+00:00",
   "selected_spec": {
     "name": "hgb_d2_g100",
     "kind": "hgb",
@@ -1715,29 +1843,29 @@
         "other": 3.568672291692681
       },
       "target_national": {
-        "lab": 25.860856102132807,
-        "con": 20.334887274534264,
-        "ref": 24.623509896691754,
-        "ld": 10.664933066291994,
-        "green": 10.922586780316298,
-        "snp": 2.917465662303747,
-        "pc": 1.1084633831799053,
-        "other": 3.5672978345492363
+        "lab": 25.86085610213281,
+        "con": 20.334887274534275,
+        "ref": 24.623509896691736,
+        "ld": 10.664933066291985,
+        "green": 10.9225867803163,
+        "snp": 2.917465662303746,
+        "pc": 1.1084633831799056,
+        "other": 3.567297834549235
       },
       "deltas": {
-        "lab": -8.776636539548278,
-        "con": -4.026489132465503,
-        "ref": 9.933237148337344,
-        "ld": -1.890207053938477,
-        "green": 4.016259517967701,
-        "snp": 0.3317684504376772,
-        "pc": 0.41344206635299086,
-        "other": -0.0013744571434446406
+        "lab": -8.776636539548274,
+        "con": -4.026489132465493,
+        "ref": 9.933237148337327,
+        "ld": -1.8902070539384859,
+        "green": 4.016259517967703,
+        "snp": 0.33176845043767633,
+        "pc": 0.4134420663529911,
+        "other": -0.001374457143445973
       },
-      "turnover": 14.694707183095709,
-      "system_activation": 0.7245589319246424,
-      "con_drop": 4.026489132465503,
-      "ref_rise": 9.933237148337344
+      "turnover": 14.694707183095698,
+      "system_activation": 0.7245589319246415,
+      "con_drop": 4.026489132465493,
+      "ref_rise": 9.933237148337327
     }
   },
   "evaluation_status": {
@@ -1792,7 +1920,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.9589578523955873,
+      "share_mae": 2.958957852288145,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -3238,7 +3366,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.620772793346298,
+      "share_mae": 2.620772793463433,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -3334,7 +3462,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.620772793346298,
+      "share_mae": 2.620772793463433,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -4016,7 +4144,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 176,
-      "share_mae": 5.649179055034874,
+      "share_mae": 5.6491790539373365,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -4112,7 +4240,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 176,
-      "share_mae": 5.649179055034874,
+      "share_mae": 5.6491790539373365,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -4770,7 +4898,7 @@
         "winner_accuracy": 0.8686708860759493,
         "correct_winners": 549,
         "seat_abs_error_sum": 98,
-        "share_mae": 3.053361340715711
+        "share_mae": 3.05336134071576
       },
       {
         "spec": {
@@ -4786,7 +4914,7 @@
         "winner_accuracy": 0.865506329113924,
         "correct_winners": 547,
         "seat_abs_error_sum": 108,
-        "share_mae": 3.146246092494248
+        "share_mae": 3.1462460924942883
       },
       {
         "spec": {
@@ -4802,7 +4930,7 @@
         "winner_accuracy": 0.8639240506329114,
         "correct_winners": 546,
         "seat_abs_error_sum": 106,
-        "share_mae": 3.2158979434403334
+        "share_mae": 3.2158979434403556
       },
       {
         "spec": {
@@ -4814,7 +4942,7 @@
         "winner_accuracy": 0.8575949367088608,
         "correct_winners": 542,
         "seat_abs_error_sum": 120,
-        "share_mae": 3.3233081486371443
+        "share_mae": 3.323308148637162
       },
       {
         "spec": {
@@ -4826,7 +4954,7 @@
         "winner_accuracy": 0.8560126582278481,
         "correct_winners": 541,
         "seat_abs_error_sum": 118,
-        "share_mae": 3.2031419738098257
+        "share_mae": 3.2031419738092843
       },
       {
         "spec": {
@@ -4838,7 +4966,7 @@
         "winner_accuracy": 0.8528481012658228,
         "correct_winners": 539,
         "seat_abs_error_sum": 122,
-        "share_mae": 3.258940799793759
+        "share_mae": 3.2589407997938085
       },
       {
         "spec": {
@@ -4850,7 +4978,7 @@
         "winner_accuracy": 0.8386075949367089,
         "correct_winners": 530,
         "seat_abs_error_sum": 144,
-        "share_mae": 3.8024517743158213
+        "share_mae": 3.8024517743159674
       },
       {
         "spec": {
@@ -4862,7 +4990,7 @@
         "winner_accuracy": 0.8354430379746836,
         "correct_winners": 528,
         "seat_abs_error_sum": 152,
-        "share_mae": 3.829211149727902
+        "share_mae": 3.8292111497279393
       }
     ]
   },
@@ -5530,10 +5658,10 @@
       "routine",
       "leave"
     ],
-    "notes": "v0.9.19 keeps the canonical candidate frozen and validates a Liberal Democrat target-seat rule with an explicit local-government footprint gate. Candidate settings are selected on 2017+2019 only; region and 2024 outcomes are excluded."
+    "notes": "v0.9.20 keeps the canonical candidate frozen and validates symmetric SNP/Labour and Conservative/Labour pairwise local-strength rules. Candidate settings are selected on 2017+2019 only; realised 2024 outcomes are excluded."
   },
   "integrity": {
-    "version": "uk-v0919-bes-integrity",
+    "version": "uk-v0920-bes-integrity",
     "status": "passed",
     "checks": [
       {
@@ -5900,5 +6028,5 @@
       "file_size": 1407419
     }
   },
-  "note": "v0.9.19 keeps the canonical candidate frozen and reproduces the v0.9.15 local-strength reference exactly. LD footprint-gated targeting parameters are selected on 2017+2019 only; the 2024 benchmark is diagnostic."
+  "note": "v0.9.20 keeps the canonical candidate frozen and reproduces the v0.9.15 local-strength reference exactly. Scotland SNP/Labour and England/Wales Conservative/Labour pairwise settings are selected on 2017+2019 only; the 2024 benchmark is diagnostic."
 }
