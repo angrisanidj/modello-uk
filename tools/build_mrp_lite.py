@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.16 — local-strength refinement sweep (shadow research)
+modello-uk v0.9.17 — remaining-error audit (shadow research)
 
-Refines the first genuinely successful post-v0.9.10 signal: pre-election local-election
-strength. The v0.9.15 coarse sweep selected local_strength=0.25 and byelection_strength=0
-using 2019 only, then improved the 2024 benchmark from 494/632 and seat error 176 to
-501/632 and seat error 166.
+Freezes the best pre-2024-selected local-election signal found so far: the v0.9.15
+reference configuration local_strength=0.25, byelection_strength=0.  That configuration
+must reproduce 585/632 with seat error 42 on the 2019 validation election and 501/632
+with seat error 166 on the 2024 development benchmark.
 
-v0.9.16 does NOT add new outcome information and does NOT tune on 2024. Parliamentary
-by-elections are fixed at zero because 2019 rejected that layer. A fixed 81-candidate grid
-refines local strength around 0.25 and tests two pre-election reliability gates: minimum
-local-profile confidence and maximum canonical predicted margin. Parameters are selected
-ONLY on 2019. The 2024 labels are score-only.
+v0.9.17 does NOT tune any new parameter and does NOT change the production/canonical
+candidate.  It builds a systematic diagnostic of the 131 constituencies still missed by
+the v0.9.15 reference: predicted→actual pairs, regions, predicted-margin bands, prior
+winner/runner-up structure, party share errors, local-election profile coverage/confidence,
+and the exact seats fixed or broken by the local-strength layer relative to the frozen
+v0.9.10-equivalent candidate.
 
-Canonical regression guards remain 583/632 and seat error 42 in 2019; 494/632 and seat
-error 176 in 2024. The v0.9.15 reference candidate must reproduce 585/632, seat error 42
-in 2019 and 501/632, seat error 166 in 2024. Research gate: >=506/632 and seat error <=166.
-Shadow only even if the research gate passes.
+The 2024 labels are used for diagnosis only.  No coefficient, threshold, feature set,
+rule or promotion decision is selected from this audit.  The next model experiment must
+be specified separately and validated with an appropriate historical analogue.
 """
 from __future__ import annotations
 
@@ -47,10 +47,10 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v0916-local-refinement.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v0916.json"
-DIAGNOSTIC_OUT=DATA/"error-structure-v0916.json"
-SWEEP_OUT=DATA/"local-strength-refinement-v0916.json"
+BACKTEST_OUT=DATA/"backtest-v0917-error-audit.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v0917.json"
+DIAGNOSTIC_OUT=DATA/"error-audit-v0917.json"
+SWEEP_OUT=DATA/"v0915-reference-v0917.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -63,9 +63,7 @@ FLOOR_MAIN=.18
 FLOOR_SMALL=.03
 RAKE_ITERATIONS=80
 
-# v0.9.16 shadow research grids.  These are fixed ex ante; only the 2019
-# election may select among them.  The 2024 result is never used to choose a
-# strength, threshold or live candidate.
+# Legacy structural-sweep constants retained for reproducibility; unused by the v0.9.17 audit.
 REGRADE_PARTIES=("lab","con","ld","green","snp","pc")
 REGRADE_STRENGTH_GRID=(0.0,0.25,0.50,0.75,1.00,1.25)
 PLACE_REGION_STRENGTH_GRID=(0.0,0.50,1.00)
@@ -77,9 +75,8 @@ PLACE_REGION_PRIOR_N=14.0
 PLACE_COMP_PRIOR_N=10.0
 PLACE_MAX_SEAT_SHIFT=6.0
 
-# v0.9.16 refinement of the v0.9.15 local-election signal. The grid is fixed
-# ex ante and 2019 alone may select among candidates; 2024 is score-only.
-# By-election strength is deliberately fixed at zero after v0.9.15 rejected it.
+# Local-election source constants reused to reproduce the frozen v0.9.15 reference.
+# v0.9.17 performs no strength sweep and keeps by-election strength at zero.
 DC_EXPORT_URL="https://candidates.democracyclub.org.uk/data/export_csv/"
 LOCAL_DATES_2019=("2017-05-04","2018-05-03","2019-05-02")
 LOCAL_DATES_2024=("2019-05-02","2021-05-06","2022-05-05","2023-05-04","2024-05-02")
@@ -197,7 +194,7 @@ ROUTING_STRENGTH_GRID=(0.0,0.20,0.40,0.60,0.80)
 UNWIND_STRENGTH_GRID=(0.0,0.15,0.30,0.45,0.60)
 
 
-# v0.9.16 latent Reform/Brexit geography. These values are fixed a priori and
+# Legacy latent Reform/Brexit constants retained for reproducibility; these values are fixed a priori and
 # are NOT tuned on 2024. 2015 UKIP is the donor because it contested almost the
 # whole country and predates both the 2019 Brexit Party withdrawal strategy and
 # the 2024 benchmark. The latent prior changes geography only: nat_shares()
@@ -763,7 +760,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v0916-bes-integrity",
+        "version":"uk-v0917-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -1221,7 +1218,7 @@ def evaluate_ref_structural_sweep(
         reverse=True,
     )
     return {
-        "version":"uk-v0916-local-strength-refinement",
+        "version":"uk-v0917-error-audit",
         "status":"ok",
         "generated_at":utcnow().isoformat(),
         "diagnostic_only":True,
@@ -1264,7 +1261,7 @@ def row_context(row:pd.Series,nat_base:dict[str,float],nat_target:dict[str,float
     f["other_competitive"]=1.0 if "other" in rankable else 0.0
     f["margin"]=margin
     f["turnout"]=float(row.get("turnout",0.0))/100.0
-    # v0.9.16 isolation rule: latent-prior metadata is deliberately NOT added
+    # Isolation rule: latent-prior metadata is deliberately NOT added
     # as ML features. When activation is zero, the residual/contest models must
     # have exactly the same feature space as v0.9.10. The latent layer changes
     # geography only through local["ref"] / base_prediction when activated.
@@ -2520,13 +2517,13 @@ def build_reform_diagnostics(
         raise RuntimeError("Reform diagnostic does not cover all 632 GB seats")
 
     return {
-        "version":"uk-v0916-local-strength-refinement",
+        "version":"uk-v0917-error-audit",
         "status":"ok",
         "generated_at":utcnow().isoformat(),
         "diagnostic_only":True,
         "used_for_parameter_selection":False,
         "changes_production_model":False,
-        "source_model":"uk-v0916-local-strength-refinement",
+        "source_model":"uk-v0917-error-audit",
         "benchmark":"2019_notional_to_2024",
         "benchmark_role":"development_diagnostic_not_pristine_holdout",
         "interpretation_warning":(
@@ -2705,7 +2702,7 @@ def live_projection(
 
 
 def experimental_rake(rows:pd.DataFrame,election:dict[str,Any],target:dict[str,float])->pd.DataFrame:
-    """Vectorised raking for the v0.9.16 shadow sweep only."""
+    """Vectorised raking helper retained for historical shadow experiments."""
     target=normalize_target(target);df=election["frame"]
     arr=rows.loc[:,PARTIES].to_numpy(dtype=float,copy=True)
     w=df["weight"].to_numpy(dtype=float);den=float(w.sum()) or 1.0
@@ -2928,13 +2925,207 @@ def build_error_structure(rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,A
             })
     pair_rows=[{"predicted":a,"actual":b,"count":int(n)} for (a,b),n in pairs.most_common()]
     return {
-        "version":"uk-v0916-local-strength-refinement","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0917-error-audit","status":"ok","generated_at":utcnow().isoformat(),
         "canonical_candidate":"frozen_v0910_equivalent","total_seats":len(actual["frame"]),"wrong_seats":len(wrong),
         "correct_seats":len(actual["frame"])-len(wrong),"confusion_pairs":pair_rows,
         "regions":{r:{**v,"accuracy":1.0-v["wrong"]/v["n"] if v["n"] else None} for r,v in sorted(regions.items())},
         "predicted_margin_bands":{b:{**v,"error_rate":v["wrong"]/v["n"] if v["n"] else None} for b,v in sorted(margin_bins.items())},
         "largest_error_pair":pair_rows[0] if pair_rows else None,"wrong_constituencies":wrong,
     }
+
+
+
+
+def _row_winner_and_margin(rows:pd.DataFrame,idx:Any,brow:pd.Series)->tuple[str,float,list[tuple[str,float]]]:
+    ordered=sorted(
+        ((p,float(rows.at[idx,p])) for p in competitive_parties(brow)),
+        key=lambda x:x[1],reverse=True
+    )
+    winner=ordered[0][0] if ordered else "other"
+    margin=float(ordered[0][1]-ordered[1][1]) if len(ordered)>1 else 100.0
+    return winner,margin,ordered
+
+
+def _actual_winner_margin(arow:pd.Series)->float:
+    vals=sorted(
+        (float(arow[p]) for p in PARTIES if allowed(p,str(arow["country"]))),
+        reverse=True
+    )
+    return float(vals[0]-vals[1]) if len(vals)>1 else 100.0
+
+
+def build_remaining_error_audit(
+    reference_rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,Any],
+    canonical_rows:pd.DataFrame,local_profile:dict[str,Any]
+)->dict[str,Any]:
+    """Describe the residual 2024 errors of the frozen v0.9.15 reference.
+
+    This function is deliberately diagnostic.  It may inspect realised 2024 labels and
+    vote shares, but nothing returned here is allowed to select parameters or alter the
+    live/canonical candidate.
+    """
+    pairs=Counter();pair_regions=Counter();regions=defaultdict(lambda:{"n":0,"wrong":0})
+    margin_bins=defaultdict(lambda:{"n":0,"wrong":0});baseline_winners=Counter()
+    actual_error_winners=Counter();predicted_error_winners=Counter();impact=Counter()
+    wrong=[];all_records=[]
+    share_error_all=defaultdict(list);share_error_wrong=defaultdict(list)
+
+    for idx,arow in actual["frame"].iterrows():
+        brow=base["frame"].loc[idx]
+        pw,pmargin,ordered=_row_winner_and_margin(reference_rows,idx,brow)
+        cw,cmargin,_=_row_winner_and_margin(canonical_rows,idx,brow)
+        rw=str(arow["actual_winner"])
+        region=str(arow["region"]);mb=_margin_band(pmargin)
+        correct=(pw==rw);canonical_correct=(cw==rw)
+        regions[region]["n"]+=1;margin_bins[mb]["n"]+=1
+        if canonical_correct and correct:impact_label="unchanged_correct"
+        elif (not canonical_correct) and correct:impact_label="fixed_by_local_strength"
+        elif canonical_correct and (not correct):impact_label="broken_by_local_strength"
+        elif cw!=pw:impact_label="changed_but_still_wrong"
+        else:impact_label="unchanged_wrong"
+        impact[impact_label]+=1
+
+        lp=local_profile.get("seats",{}).get(str(idx)) or {}
+        adv=lp.get("advantage",{}) if isinstance(lp,dict) else {}
+        share_errors={}
+        for p in PARTIES:
+            if not allowed(p,str(arow["country"])):continue
+            err=float(reference_rows.at[idx,p])-float(arow[p])
+            share_errors[p]=err;share_error_all[p].append(err)
+            if not correct:share_error_wrong[p].append(err)
+
+        record={
+            "id":str(arow["id"]),"name":str(arow["name"]),"country":str(arow["country"]),"region":region,
+            "predicted_winner":pw,"actual_winner":rw,"canonical_winner":cw,
+            "prediction_changed_by_local_strength":bool(pw!=cw),"local_impact":impact_label,
+            "predicted_margin":float(pmargin),"canonical_margin":float(cmargin),
+            "actual_margin":_actual_winner_margin(arow),"predicted_margin_band":mb,
+            "baseline_winner":str(brow.get("actual_winner") or ""),"baseline_second":str(brow.get("actual_second") or ""),
+            "baseline_margin":float(_baseline_margin(brow)),"competition_key":_competition_key(brow),
+            "predicted_top3":[{"party":p,"share":v} for p,v in ordered[:3]],
+            "predicted_shares":{p:float(reference_rows.at[idx,p]) for p in PARTIES if allowed(p,str(arow["country"]))},
+            "actual_shares":{p:float(arow[p]) for p in PARTIES if allowed(p,str(arow["country"]))},
+            "share_error_pred_minus_actual":share_errors,
+            "local_profile":{
+                "available":bool(lp),
+                "confidence":float(lp.get("confidence") or 0.0) if lp else 0.0,
+                "coverage":float(lp.get("coverage") or 0.0) if lp else 0.0,
+                "mean_age_years":float(lp.get("mean_age_years") or 0.0) if lp else None,
+                "advantage":{p:float(adv.get(p,0.0)) for p in PARTIES if p in adv},
+                "actual_minus_predicted_advantage":float(adv.get(rw,0.0)-adv.get(pw,0.0)) if lp else None,
+            },
+        }
+        all_records.append(record)
+        if not correct:
+            pairs[(pw,rw)]+=1;pair_regions[(pw,rw,region)]+=1
+            regions[region]["wrong"]+=1;margin_bins[mb]["wrong"]+=1
+            baseline_winners[str(brow.get("actual_winner") or "")]+=1
+            actual_error_winners[rw]+=1;predicted_error_winners[pw]+=1
+            wrong.append(record)
+
+    pair_rows=[{"predicted":a,"actual":b,"count":int(n)} for (a,b),n in pairs.most_common()]
+    pair_region_rows=[
+        {"predicted":a,"actual":b,"region":r,"count":int(n)}
+        for (a,b,r),n in pair_regions.most_common()
+    ]
+    correct=len(actual["frame"])-len(wrong)
+    if len(actual["frame"])!=632 or correct!=501 or len(wrong)!=131:
+        raise RuntimeError(f"v0.9.15 remaining-error audit regression mismatch: correct={correct} wrong={len(wrong)}")
+
+    priority=[]
+    for row in pair_rows:
+        if row["count"]>=5:
+            priority.append({"family":"predicted_to_actual","key":f"{row['predicted']}->{row['actual']}","count":row["count"]})
+    for row in pair_region_rows:
+        if row["count"]>=5:
+            priority.append({"family":"predicted_to_actual_by_region","key":f"{row['predicted']}->{row['actual']}|{row['region']}","count":row["count"]})
+    for region,v in regions.items():
+        if v["wrong"]>=5:
+            priority.append({"family":"region","key":region,"count":int(v["wrong"]),"error_rate":v["wrong"]/v["n"] if v["n"] else None})
+    priority.sort(key=lambda x:(-int(x["count"]),str(x["family"]),str(x["key"])))
+
+    def err_summary(vals:dict[str,list[float]])->dict[str,Any]:
+        out={}
+        for p,items in vals.items():
+            arr=np.asarray(items,float)
+            if arr.size:
+                out[p]={"n":int(arr.size),"mean_bias":float(arr.mean()),"mae":float(np.abs(arr).mean()),
+                        "median_bias":float(np.median(arr))}
+        return out
+
+    local_available=sum(1 for r in wrong if r["local_profile"]["available"])
+    return {
+        "version":"uk-v0917-error-audit","status":"ok","generated_at":utcnow().isoformat(),
+        "diagnostic_only":True,"shadow_only":True,"used_for_parameter_selection":False,
+        "changes_production_model":False,"changes_candidate_model":False,
+        "source_candidate":"v0.9.15 reference local_strength=0.25 byelection_strength=0",
+        "benchmark":"2019_notional_to_2024","benchmark_role":"development_diagnostic_not_pristine_holdout",
+        "interpretation_warning":(
+            "2024 outcomes are used only to diagnose the 131 residual errors of the pre-2024-selected v0.9.15 reference. "
+            "No rule, coefficient, threshold, feature or promotion decision is selected from this audit."
+        ),
+        "totals":{"seats":632,"correct":501,"wrong":131,"accuracy":501/632,
+                  "target_80pct_correct":506,"minimum_net_recoveries_for_80pct":5},
+        "seat_distribution":{
+            "predicted":dict(Counter(r["predicted_winner"] for r in all_records)),
+            "actual":dict(Counter(r["actual_winner"] for r in all_records)),
+        },
+        "confusion_pairs":pair_rows,"pair_region_clusters":pair_region_rows,
+        "largest_error_pair":pair_rows[0] if pair_rows else None,
+        "error_winners":{"predicted":dict(predicted_error_winners),"actual":dict(actual_error_winners)},
+        "baseline_winner_among_errors":dict(baseline_winners),
+        "regions":{r:{**v,"accuracy":1.0-v["wrong"]/v["n"] if v["n"] else None} for r,v in sorted(regions.items())},
+        "predicted_margin_bands":{b:{**v,"error_rate":v["wrong"]/v["n"] if v["n"] else None} for b,v in sorted(margin_bins.items())},
+        "local_strength_impact_vs_v0910":{"counts":dict(impact),
+            "net_correct_gain":int(impact["fixed_by_local_strength"]-impact["broken_by_local_strength"])},
+        "local_profile_on_remaining_errors":{"available":int(local_available),"missing":int(len(wrong)-local_available),
+            "mean_confidence":float(np.mean([r["local_profile"]["confidence"] for r in wrong if r["local_profile"]["available"]])) if local_available else None,
+            "mean_coverage":float(np.mean([r["local_profile"]["coverage"] for r in wrong if r["local_profile"]["available"]])) if local_available else None},
+        "party_share_error":{"all_632":err_summary(share_error_all),"wrong_131":err_summary(share_error_wrong)},
+        "priority_families_min5":priority,
+        "wrong_constituencies":wrong,
+        "local_strength_fixed_seats":[r for r in all_records if r["local_impact"]=="fixed_by_local_strength"],
+        "local_strength_broken_seats":[r for r in all_records if r["local_impact"]=="broken_by_local_strength"],
+        "next_step_policy":(
+            "Use this audit to nominate a small number of hypotheses only. Any new correction inspired by 2024 must be "
+            "validated on a historical analogue or a fresh external election before promotion."
+        ),
+        "parameter_updates":{},
+    }
+
+
+def evaluate_v0915_reference(
+    val_rows:pd.DataFrame,hold_rows:pd.DataFrame,e17:dict[str,Any],e19:dict[str,Any],
+    e19n:dict[str,Any],e24:dict[str,Any]
+)->tuple[dict[str,Any],pd.DataFrame,dict[str,Any]]:
+    """Reproduce the frozen v0.9.15 reference without any new tuning."""
+    raw19,src19=fetch_dc_local_results(LOCAL_DATES_2019)
+    raw24,src24=fetch_dc_local_results(LOCAL_DATES_2024)
+    ons19,ons19_meta=fetch_ons_ward_lookup("2019");ons24,ons24_meta=fetch_ons_ward_lookup("2024")
+    local19=build_local_advantage_profile(e17,raw19,ons19,"2019-12-12")
+    local24=build_local_advantage_profile(e19n,raw24,ons24,"2024-07-04")
+    if local19["matched_seats"]<300 or local24["matched_seats"]<300:
+        raise RuntimeError(f"Local-strength coverage too low: 2019={local19['matched_seats']} 2024={local24['matched_seats']}")
+    target19=nat_shares(e19);target24=nat_shares(e24)
+    rows19,meta19=apply_local_election_strength_refined(val_rows,e17,target19,local19,0.25,0.0,None)
+    rows24,meta24=apply_local_election_strength_refined(hold_rows,e19n,target24,local24,0.25,0.0,None)
+    m19=evaluate_rows(rows19,e19,e17);m24=evaluate_rows(rows24,e24,e19n)
+    if m19["correct_winners"]!=585 or m19["seat_abs_error_sum"]!=42:
+        raise RuntimeError(f"v0.9.15 reference 2019 regression failed: {m19}")
+    if m24["correct_winners"]!=501 or m24["seat_abs_error_sum"]!=166:
+        raise RuntimeError(f"v0.9.15 reference 2024 regression failed: {m24}")
+    report={
+        "version":"uk-v0917-error-audit","status":"ok","generated_at":utcnow().isoformat(),
+        "diagnostic_only":True,"shadow_only":True,"uses_2024_for_parameter_selection":False,
+        "parameter_selection_election":"2019","reference_parameters":dict(V0915_REFERENCE),
+        "method":"frozen v0.9.15 local-authority advantage; local_strength=0.25, confidence_floor=0, no margin cap, by-election strength=0",
+        "validation_2019":m19,"benchmark_2024":m24,"meta_2019":meta19,"meta_2024":meta24,
+        "coverage":{"local_2019":{k:v for k,v in local19.items() if k!="seats"},
+                    "local_2024":{k:v for k,v in local24.items() if k!="seats"}},
+        "sources":{"local_2019":src19,"local_2024":src24,"ons_2019":ons19_meta,"ons_2024":ons24_meta},
+        "note":"This file reproduces the v0.9.15 reference only; it contains no parameter sweep and cannot promote a model.",
+    }
+    return report,rows24,local24
 
 
 def _apply_structural_config(
@@ -2998,7 +3189,7 @@ def evaluate_local_strength_sweep(
     baseline19=evaluate_rows(val_rows,e19,e17);baseline24=evaluate_rows(hold_rows,e24,e19n)
     selected_gate=bool(selected_2024["correct_winners"]>=506 and selected_2024["seat_abs_error_sum"]<=176)
     return {
-        "version":"uk-v0916-local-strength-refinement","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0917-error-audit","status":"ok","generated_at":utcnow().isoformat(),
         "shadow_only":True,"uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
         "selection_policy":"grid fixed in source; rank by 2019 correct winners, then seat error, then share MAE; 2024 labels never select strengths",
         "methods":{
@@ -3056,7 +3247,7 @@ def _place_key(v:Any)->str:
 
 
 def _dc_csv(params:list[tuple[str,str]],label:str)->pd.DataFrame:
-    headers={"User-Agent":"modello-uk/0.9.16 research; public election data"}
+    headers={"User-Agent":"modello-uk/0.9.17 research; public election data"}
     r=requests.get(DC_EXPORT_URL,params=params,headers=headers,timeout=120)
     r.raise_for_status()
     text=r.text
@@ -3144,7 +3335,7 @@ def aggregate_local_profiles(raw:pd.DataFrame)->tuple[dict[str,dict[str,Any]],di
 def fetch_ons_ward_lookup(year:str)->tuple[list[dict[str,str]],dict[str,Any]]:
     spec=ONS_LOOKUPS[year]
     headers={
-        "User-Agent":"modello-uk/0.9.16 research",
+        "User-Agent":"modello-uk/0.9.17 research",
         "Accept":"text/csv,application/octet-stream,application/json;q=0.8,*/*;q=0.5",
     }
     failures=[]
@@ -3374,7 +3565,7 @@ def evaluate_local_strength_sweep(val_rows:pd.DataFrame,hold_rows:pd.DataFrame,e
     baseline19=evaluate_rows(val_rows,e19,e17);baseline24=evaluate_rows(hold_rows,e24,e19n)
     gate=bool(selected24["correct_winners"]>=506 and selected24["seat_abs_error_sum"]<=166)
     return {
-        "version":"uk-v0916-local-strength-refinement","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0917-error-audit","status":"ok","generated_at":utcnow().isoformat(),
         "shadow_only":True,"uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
         "candidate_count":len(candidates),
         "grid":{"local_strength":list(LOCAL_STRENGTH_GRID),"confidence_floor":list(LOCAL_CONFIDENCE_FLOOR_GRID),
@@ -3417,8 +3608,8 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v0916-local-strength-refinement",
-        "model_type":"constituency-residual-local-strength-refinement-v10",
+        "version":"uk-v0917-error-audit",
+        "model_type":"constituency-residual-error-audit-v11",
         "status":"error",
         "approved":False,
         "publication_ready":False,
@@ -3430,32 +3621,32 @@ def write_failure(exc:Exception):
         "generated_at":utcnow().isoformat(),
         "error":str(exc),
         "traceback_tail":traceback.format_exc().splitlines()[-12:],
-        "note":"Shadow model failed to build; production must remain on the v0.8.1 fallback.",
+        "note":"Audit build failed; the previously deployed production/fallback model must remain unchanged.",
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v0916-local-strength-refinement-live","approved":False,"status":"error",
+        "version":"uk-v0917-error-audit-live","approved":False,"status":"error",
         "diagnostic_only":True,"changes_production_model":False,"changes_candidate_model":False,"shadow_only":True,
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v0916-local-strength-refinement-backtest","status":"error","error":str(exc)
+        "version":"uk-v0917-error-audit-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     DIAGNOSTIC_OUT.write_text(json.dumps({
-        "version":"uk-v0916-local-strength-refinement","status":"error",
+        "version":"uk-v0917-error-audit","status":"error",
         "diagnostic_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"parameter_updates":{},
-        "source_model":"uk-v0916-local-strength-refinement",
+        "source_model":"uk-v0917-error-audit",
         "error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     SWEEP_OUT.write_text(json.dumps({
-        "version":"uk-v0916-local-strength-refinement","status":"error",
+        "version":"uk-v0917-error-audit","status":"error",
         "diagnostic_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v0916-bes-integrity","status":"failed",
+            "version":"uk-v0917-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -3569,11 +3760,11 @@ def main()->int:
         candidate_gate_passed,reasons=approval_gate(
             validation,holdout,validation_base,holdout_base
         )
-        error_structure=build_error_structure(hold_rows,e24,e19n)
-        local_sweep=evaluate_local_strength_sweep(val_rows,hold_rows,e17,e19,e19n,e24)
-        # v0.9.16 is research-only.  The canonical candidate remains the
-        # frozen v0.9.10-equivalent baseline.  All new strengths are selected
-        # on 2019 only; the 2024 benchmark can score but cannot promote them.
+        reference,v0915_hold_rows,local24=evaluate_v0915_reference(val_rows,hold_rows,e17,e19,e19n,e24)
+        error_structure=build_remaining_error_audit(v0915_hold_rows,e24,e19n,hold_rows,local24)
+        # v0.9.17 is audit-only. The canonical candidate remains the frozen
+        # v0.9.10-equivalent model; the best validated shadow reference is v0.9.15.
+        # The 2024 labels below diagnose residual errors but select nothing.
         approved=False
         publication_ready=False
 
@@ -3609,8 +3800,8 @@ def main()->int:
         )
 
         model_payload={
-            "version":"uk-v0916-local-strength-refinement",
-            "model_type":"constituency-residual-local-strength-refinement-v10",
+            "version":"uk-v0917-error-audit",
+            "model_type":"constituency-residual-error-audit-v11",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -3620,18 +3811,23 @@ def main()->int:
             "changes_candidate_model":False,
             "shadow_only":True,
             "candidate_gate_passed":candidate_gate_passed,
-            "promotion_blocked_reason":"v0.9.16 is shadow research; 2019 selects refined local-strength parameters; 2024 cannot select or promote them",
+            "promotion_blocked_reason":"v0.9.17 is audit-only; 2024 outcomes diagnose the residual errors of the frozen v0.9.15 reference and cannot select or promote a rule",
             "canonical_candidate":"frozen_v0910_equivalent",
-            "local_strength_sweep":{
-                "output":"data/local-strength-refinement-v0916.json",
-                "selected_pre2024":local_sweep["selected_pre2024"],
-                "benchmark_2024_diagnostic":local_sweep["benchmark_2024_diagnostic"],
-                "selection_policy":"grid fixed in source; rank/select only on 2019; 2024 score-only",
+            "best_shadow_reference":{
+                "version":"v0.9.15",
+                "output":"data/v0915-reference-v0917.json",
+                "parameters":reference["reference_parameters"],
+                "validation_2019":reference["validation_2019"],
+                "benchmark_2024":reference["benchmark_2024"],
+                "uses_2024_for_parameter_selection":False,
             },
-            "error_structure":{
-                "output":"data/error-structure-v0916.json",
-                "wrong_seats":error_structure["wrong_seats"],
+            "remaining_error_audit":{
+                "output":"data/error-audit-v0917.json",
+                "correct_seats":error_structure["totals"]["correct"],
+                "wrong_seats":error_structure["totals"]["wrong"],
+                "minimum_net_recoveries_for_80pct":error_structure["totals"]["minimum_net_recoveries_for_80pct"],
                 "largest_error_pair":error_structure["largest_error_pair"],
+                "priority_families_min5":error_structure["priority_families_min5"],
             },
             "generated_at":utcnow().isoformat(),
             "selected_spec":selected_spec,
@@ -3713,7 +3909,7 @@ def main()->int:
             "features":{
                 "historical_demographics":[c.replace("demo_","") for c in e19["demo_columns"]],
                 "current_demographics":[c.replace("demo_","") for c in e24["demo_columns"]],
-                "notes":"v0.9.16 keeps the canonical candidate identical to v0.9.10. Shadow research refines the validated recent local-election strength signal; by-election strength is fixed at zero. Parameters are selected on 2019 only; 2024 is score-only. Final raking always enforces the national target.",
+                "notes":"v0.9.17 keeps the canonical candidate identical to v0.9.10 and freezes the best shadow reference at the pre-2024-selected v0.9.15 local-election signal. The 2024 labels are used only to audit its 131 residual errors; no new parameters are selected.",
             },
             "integrity":{
                 "version":integrity.get("version"),
@@ -3725,15 +3921,15 @@ def main()->int:
                 "current_bes":curr_meta,
             },
             "note":(
-                "v0.9.16 keeps the canonical candidate frozen at the v0.9.10-equivalent model and evaluates the validated local-election strength signal in a fine shadow sweep with source-confidence and canonical-margin gates; by-elections are fixed at zero. "
-                "Refined local-strength parameters are selected on 2019 only. The 2024 benchmark scores the pre-selected candidate and the fixed grid for diagnostics only; it selects nothing for live use."
+                "v0.9.17 keeps the canonical candidate frozen at the v0.9.10-equivalent model and reproduces the v0.9.15 local-strength reference exactly. "
+                "The 2024 benchmark is used only to audit the 131 residual constituency errors and to nominate future hypotheses; it selects nothing for live use."
             )
         }
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v0916-local-strength-refinement-live",
-            "model_type":"constituency-residual-local-strength-refinement-v10",
+            "version":"uk-v0917-error-audit-live",
+            "model_type":"constituency-residual-error-audit-v11",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -3743,11 +3939,17 @@ def main()->int:
             "changes_candidate_model":False,
             "shadow_only":True,
             "candidate_gate_passed":candidate_gate_passed,
-            "local_strength_sweep":{
-                "output":"data/local-strength-refinement-v0916.json",
-                "selected_pre2024_id":local_sweep["selected_pre2024"]["id"],
-                "selected_pre2024_benchmark_2024":local_sweep["selected_pre2024"]["benchmark_2024"],
+            "best_shadow_reference":{
+                "version":"v0.9.15",
+                "output":"data/v0915-reference-v0917.json",
+                "parameters":reference["reference_parameters"],
+                "benchmark_2024":reference["benchmark_2024"],
                 "uses_2024_for_parameter_selection":False,
+            },
+            "remaining_error_audit":{
+                "output":"data/error-audit-v0917.json",
+                "wrong_seats":error_structure["totals"]["wrong"],
+                "minimum_net_recoveries_for_80pct":error_structure["totals"]["minimum_net_recoveries_for_80pct"],
             },
             "generated_at":utcnow().isoformat(),
             "model_version":model_payload["version"],
@@ -3773,22 +3975,27 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v0916-local-strength-refinement-backtest",
+            "version":"uk-v0917-error-audit-backtest",
             "status":"ok",
             "diagnostic_only":True,
             "used_for_parameter_selection":False,
             "shadow_only":True,
             "changes_production_model":False,
             "changes_candidate_model":False,
-            "local_strength_sweep":{
-                "output":"data/local-strength-refinement-v0916.json",
-                "selected_pre2024":local_sweep["selected_pre2024"],
+            "best_shadow_reference":{
+                "version":"v0.9.15",
+                "output":"data/v0915-reference-v0917.json",
+                "parameters":reference["reference_parameters"],
+                "validation_2019":reference["validation_2019"],
+                "benchmark_2024":reference["benchmark_2024"],
                 "uses_2024_for_parameter_selection":False,
             },
-            "error_structure":{
-                "output":"data/error-structure-v0916.json",
-                "wrong_seats":error_structure["wrong_seats"],
+            "remaining_error_audit":{
+                "output":"data/error-audit-v0917.json",
+                "correct_seats":error_structure["totals"]["correct"],
+                "wrong_seats":error_structure["totals"]["wrong"],
                 "largest_error_pair":error_structure["largest_error_pair"],
+                "priority_families_min5":error_structure["priority_families_min5"],
             },
             "selected_spec":selected_spec,
             "selected_party_strengths":selected_party_strengths,
@@ -3809,18 +4016,19 @@ def main()->int:
             encoding="utf-8"
         )
         SWEEP_OUT.write_text(
-            json.dumps(local_sweep,ensure_ascii=False,indent=2),
+            json.dumps(reference,ensure_ascii=False,indent=2),
             encoding="utf-8"
         )
 
-        print("v0.9.16 selected share spec:",selected_spec)
-        print("v0.9.16 pre-2024 selected local-strength config:",local_sweep["selected_pre2024"]["id"])
-        print("v0.9.16 selected config 2019:",local_sweep["selected_pre2024"]["validation_2019"])
-        print("v0.9.16 selected config 2024 benchmark:",local_sweep["selected_pre2024"]["benchmark_2024"])
-        print("v0.9.16 best 2024 result in fixed grid (NOT selectable):",local_sweep["benchmark_2024_diagnostic"]["best_expost"])
-        print("v0.9.16 largest canonical error pair:",error_structure["largest_error_pair"])
-        print("v0.9.16 selected party strengths:",selected_party_strengths)
-        print("v0.9.16 incumbent routing:",selected_routing)
+        print("v0.9.17 selected share spec:",selected_spec)
+        print("v0.9.15 reference 2019 regression:",reference["validation_2019"])
+        print("v0.9.15 reference 2024 benchmark:",reference["benchmark_2024"])
+        print("v0.9.17 remaining errors:",error_structure["totals"])
+        print("v0.9.17 largest remaining error pair:",error_structure["largest_error_pair"])
+        print("v0.9.17 local-strength impact vs v0.9.10:",error_structure["local_strength_impact_vs_v0910"])
+        print("v0.9.17 priority families >=5:",error_structure["priority_families_min5"][:20])
+        print("v0.9.17 selected party strengths:",selected_party_strengths)
+        print("v0.9.17 incumbent routing:",selected_routing)
         print("2017 routing audit:",routing_tuning["selected_audit"])
         print("2017 scenario:",national_scenario_metrics(e15,t15_17["target"]))
         print("2019 scenario:",national_scenario_metrics(e17,t17_19["target"]))
@@ -3841,7 +4049,7 @@ def main()->int:
         )
         print("Underlying candidate gate passed:",candidate_gate_passed,reasons)
         print("Shadow build approved for live:",approved)
-        print("Canonical 2024 wrong seats:",error_structure["wrong_seats"])
+        print("v0.9.15 reference 2024 wrong seats:",error_structure["totals"]["wrong"])
         print("Publication-ready (requires a future version and fresh validation):",publication_ready)
         print("Live central GB seat totals:",live["totals"])
     return 0
@@ -3850,7 +4058,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.16 diagnostic build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.17 diagnostic build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # A broken research build must not be deployed. The previously deployed
         # production/fallback remains untouched because this workflow stops before
