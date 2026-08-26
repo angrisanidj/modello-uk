@@ -27,7 +27,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Fonte sondaggi: —</span>
-      <span class="badge">Versione 0.8 · Northern Ireland</span>
+      <span class="badge">Versione 0.8.1 · NI palette + Monte Carlo UX</span>
     </div>
   </section>
   <div id="errorBox" class="errorbox"></div>
@@ -75,7 +75,7 @@
   <div class="section-title"><div><div class="section-kicker">Territorio</div><h2>Mappa dei collegi</h2><p>Il colore indica il vincitore centrale; dopo il Monte Carlo il pannello mostra anche la probabilità di vittoria.</p></div></div>
   <section class="grid map-layout">
     <article class="card map-card">
-      <div class="cardhead"><div><h3>650 Westminster constituencies</h3><p id="mapMeta">Caricamento geometrie ONS…</p></div><div class="controls"><button id="mapCentralBtn" class="active">Proiezione</button><button id="mapProbBtn">Probabilità</button></div></div>
+      <div class="cardhead"><div><h3>650 Westminster constituencies</h3><p id="mapMeta">Caricamento geometrie ONS…</p></div><div class="controls"><button id="mapCentralBtn" class="active">Proiezione</button><button id="mapProbBtn" disabled aria-disabled="true" title="Disponibile al termine delle 50.000 simulazioni">Probabilità</button></div></div>
       <div id="mapWrap" class="map-wrap"><svg id="ukMap" viewBox="0 0 640 760" role="img" aria-label="Mappa dei collegi parlamentari britannici"></svg><div id="mapEmpty" class="empty-state">Le geometrie saranno caricate dalla build automatica.</div></div>
     </article>
     <article class="card seat-detail">
@@ -100,7 +100,7 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.8"></script>
+<script src="scripts/app.js?v=0.8.1"></script>
 <script src="scripts/map-performance.js"></script>
 </body>
 </html>
