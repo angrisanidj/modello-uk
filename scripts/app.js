@@ -23,7 +23,7 @@ const CONFIG = {
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v06-20260826-transfer',
+  cacheVersion: 'uk-v07-20260826-partial-rake',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
@@ -356,6 +356,59 @@ function buildGeographicTargets(gbTarget){
 }
 
 
+function partialRakeModelActive(){
+  return state.modelParams?.model_type==='partial-raked-v1'
+    && state.modelParams?.approved===true
+    && Number.isFinite(Number(state.modelParams?.rake_strength));
+}
+function partialRakeStrength(){
+  return clamp(Number(state.modelParams?.rake_strength)||0,0,1);
+}
+function weightedNationalRows(items){
+  const totals=Object.fromEntries(SEAT_MODEL_PARTIES.map(p=>[p,0]));
+  let den=0;
+  for(const item of items){
+    const w=Math.max(1,Number(item.seat.valid_votes)||1);den+=w;
+    for(const p of SEAT_MODEL_PARTIES)totals[p]+=w*(item.shares[p]||0)/100;
+  }
+  if(den>0)for(const p of SEAT_MODEL_PARTIES)totals[p]=totals[p]/den*100;
+  return totals;
+}
+function targetForRaking(gbTarget){
+  const out={};let total=0;
+  for(const p of SEAT_MODEL_PARTIES){
+    const v=Math.max(.0001,Number(gbTarget?.[p])||0);out[p]=v;total+=v;
+  }
+  if(total>0)for(const p of SEAT_MODEL_PARTIES)out[p]=out[p]/total*100;
+  return out;
+}
+function fullRakeItems(items,target,iterations=40){
+  const out=items.map(item=>({seat:item.seat,shares:{...item.shares}}));
+  for(let iter=0;iter<iterations;iter++){
+    const current=weightedNationalRows(out);let maxErr=0;const mult={};
+    for(const p of SEAT_MODEL_PARTIES){
+      maxErr=Math.max(maxErr,Math.abs((current[p]||0)-(target[p]||0)));
+      mult[p]=clamp((target[p]||0)/Math.max(.01,current[p]||0),.40,2.50);
+    }
+    if(maxErr<.02)break;
+    for(const item of out){
+      const raw={};
+      for(const p of SEAT_MODEL_PARTIES)raw[p]=partyAllowed(p,item.seat)?(item.shares[p]||0)*mult[p]:0;
+      item.shares=normalizeSeatRow(raw,item.seat);
+    }
+  }
+  return out;
+}
+function applyPartialRaking(items,gbTarget){
+  const alpha=partialRakeStrength();
+  if(alpha<=0)return items;
+  const target=targetForRaking(gbTarget),full=fullRakeItems(items,target,Number(state.modelParams?.rake_iterations)||40);
+  return items.map((item,i)=>{
+    const raw={};
+    for(const p of SEAT_MODEL_PARTIES)raw[p]=(1-alpha)*(item.shares[p]||0)+alpha*(full[i].shares[p]||0);
+    return {seat:item.seat,shares:normalizeSeatRow(raw,item.seat)};
+  });
+}
 function transferModelActive(){
   return state.modelParams?.model_type==='transfer-raked-v1'
     && state.modelParams?.approved===true
@@ -519,106 +572,39 @@ function projectedShares(seat,target,geoBase){
 }
 function buildCentral(){
   const target=normalizeTargets(state.average.values),geo=buildGeographicTargets(target);
-  let central;
-  if(transferModelActive()){
-    central=buildTransferCentral(target,geo);
-  }else{
-    const seats=[];const totals=Object.fromEntries(PARTY_ORDER.map(p=>[p,0]));
-    for(const c of state.constituencies){
-      if(/northern ireland/i.test(c.country))continue;
-      const zone=zoneForSeat(c);
-      const zoneTarget=geo.targets[zone]||geo.targets.England||target;
-      const zoneBase=geo.baselines[zone]||geo.baselines.England||BASE_GB;
-      const shares=projectedShares(c,zoneTarget,zoneBase);
-      const winner=SEAT_MODEL_PARTIES.reduce((best,p)=>shares[p]>(shares[best]??-1)?p:best,SEAT_MODEL_PARTIES[0]);
-      totals[winner]++;
-      seats.push({...c,projected:shares,centralWinner:winner,modelZone:zone});
-    }
-    totals.other+=CONFIG.niSeats;
-    central={target,geographic:geo,seats,totals};
+
+  // First build the same cautious constituency centre used by the fallback.
+  const initial=[];
+  for(const c of state.constituencies){
+    if(/northern ireland/i.test(c.country||''))continue;
+    const zone=zoneForSeat(c);
+    const zoneTarget=geo.targets[zone]||geo.targets.England||target;
+    const zoneBase=geo.baselines[zone]||geo.baselines.England||BASE_GB;
+    initial.push({seat:c,shares:projectedShares(c,zoneTarget,zoneBase),zone});
   }
-  state.geographicTargets=geo;
-  state.central=central;state.byId=new Map(central.seats.map(s=>[s.id,s]));
-  return state.central;
-}
 
-function hashString(str){ let h=2166136261>>>0; for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0; }
-function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
-function logistic(rng){const u=clamp(rng(),1e-7,1-1e-7);return Math.log(u/(1-u))/Math.PI*Math.sqrt(3);}
-function normalApprox(rng){return (rng()+rng()+rng()+rng()+rng()+rng()-3)*Math.SQRT2;}
-function fingerprint(){ const p=state.polls.slice(0,40).map(x=>`${x.date}|${x.pollster}|${x.lab}|${x.con}|${x.ref}|${x.ld}|${x.green}|${x.rb}`).join(';'); const sp=state.subnational.slice(0,24).map(x=>`${x.country}|${x.date}|${x.pollster}|${x.lab}|${x.con}|${x.ref}|${x.snp}|${x.pc}`).join(';'); const cal=state.modelParams?.version||'fallback'; return `${CONFIG.cacheVersion}:${hashString(p+'|'+sp+'|'+state.constituencies.length+'|'+cal)}`; }
-function mcCacheKey(){return `focusamerica:${fingerprint()}`;}
-function saveMcCache(summary){ try{localStorage.setItem(mcCacheKey(),JSON.stringify(summary));}catch(_){ } }
-function loadMcCache(){ try{const x=JSON.parse(localStorage.getItem(mcCacheKey())||'null');if(x?.sims===CONFIG.mcSims&&x?.medians)return x;}catch(_){ }return null; }
-
-function prepareSeatModel(){
-  const seats=state.central.seats,target=state.central.target,geo=state.central.geographic;
-  const regions=[...new Set(seats.map(s=>s.modelZone||s.region||s.country||'Other'))];
-  const regionIndex=new Map(regions.map((r,i)=>[r,i]));
-  const models=seats.map(s=>{
-    const zone=s.modelZone||zoneForSeat(s);
-    const zoneTarget=geo.targets[zone]||target;
-    const zoneBase=geo.baselines[zone]||BASE_GB;
-    const candidates=SEAT_MODEL_PARTIES.filter(p=>partyAllowed(p,s)).map(p=>{
-      if(transferModelActive()){
-        const central=Math.max(.03,s.projected?.[p]||.03);
-        return {p,baseLog:Math.log(central),centralShift:0,central};
-      }
-      let base=s.shares?.[p]||0;
-      const nat=Math.max(.05,Number(zoneBase[p])||Number(BASE_GB[p])||.2);
-      if(p==='ref' && base<.18 && refMissingPrior()>0)base=Math.max(base,nat*refMissingPrior());
-      if(['lab','con','ref','ld','green'].includes(p))base=Math.max(base,.18); else base=Math.max(base,.03);
-      const lambda=lambdaFor(p),ratio=Math.max(.08,(zoneTarget[p]||.05)/nat);
-      return {p,baseLog:Math.log(base),centralShift:lambda*Math.log(ratio),central:s.projected[p]||0};
-    }).sort((a,b)=>b.central-a.central).slice(0,5);
-    return {id:s.id,region:regionIndex.get(zone),candidates};
-  });
-  return {models,regions,target};
-}
-
-async function runMonteCarlo(force=false){
-  if(!state.central?.seats?.length)return;
-  if(!force){const cached=loadMcCache();if(cached){state.mc=cached;renderMc();applyMapColors();return;}}
-  const {models,regions,target}=prepareSeatModel(), P=PARTY_ORDER.length, N=CONFIG.mcSims, nSeats=models.length;
-  const partyIndex=new Map(PARTY_ORDER.map((p,i)=>[p,i]));
-  const dists=PARTY_ORDER.map(()=>new Uint16Array(N)); const wins=new Uint32Array(nSeats*P); const rng=mulberry32(hashString(fingerprint()));
-  let hung=0, labMaj=0,conMaj=0,refMaj=0; const largestCounts=Object.fromEntries(PARTY_ORDER.map(p=>[p,0]));
-  $('#mcStatus').textContent='Calcolo in corso'; $('#mcProgress').value=0;
-  for(let start=0;start<N;start+=CONFIG.mcBatch){
-    const end=Math.min(N,start+CONFIG.mcBatch);
-    for(let sim=start;sim<end;sim++){
-      const drawn={}; let sum=0;
-      for(const p of PARTY_ORDER){const sigma=CONFIG.nationalSigma[p]||.8;drawn[p]=Math.max(.05,target[p]+normalApprox(rng)*sigma);sum+=drawn[p];}
-      for(const p of PARTY_ORDER)drawn[p]=drawn[p]/sum*100;
-      const natShift={}; for(const p of PARTY_ORDER){const elastic=transferModelActive()?CONFIG.swingLambda:lambdaFor(p);natShift[p]=elastic*Math.log(Math.max(.05,drawn[p])/Math.max(.05,target[p]||.05));}
-      const regNoise=Array.from({length:regions.length},()=>Object.fromEntries(PARTY_ORDER.map(p=>[p,logistic(rng)*CONFIG.regionNoise])));
-      const counts=new Uint16Array(P);
-      for(let si=0;si<nSeats;si++){
-        const m=models[si]; let bestP='other',bestScore=-Infinity;
-        for(const cand of m.candidates){const score=cand.baseLog+cand.centralShift+natShift[cand.p]+regNoise[m.region][cand.p]+logistic(rng)*CONFIG.localNoise;if(score>bestScore){bestScore=score;bestP=cand.p;}}
-        const pi=partyIndex.get(bestP);counts[pi]++;wins[si*P+pi]++;
-      }
-      counts[partyIndex.get('other')]+=CONFIG.niSeats;
-      let largest='lab',largestN=-1;
-      for(let pi=0;pi<P;pi++){dists[pi][sim]=counts[pi];if(counts[pi]>largestN){largestN=counts[pi];largest=PARTY_ORDER[pi];}}
-      largestCounts[largest]++;
-      const lm=counts[partyIndex.get('lab')]>=CONFIG.majority, cm=counts[partyIndex.get('con')]>=CONFIG.majority, rm=counts[partyIndex.get('ref')]>=CONFIG.majority;
-      if(lm)labMaj++;if(cm)conMaj++;if(rm)refMaj++;if(!lm&&!cm&&!rm)hung++;
-    }
-    $('#mcProgress').value=end; $('#mcCount').textContent=`${fmt0(end)} / ${fmt0(N)}`; await sleepFrame();
+  let items=initial;
+  if(partialRakeModelActive())items=applyPartialRaking(initial,target);
+  else if(transferModelActive()||partialRakeModelActive()){
+    // Backward-compatible dead branch: v0.6 was rejected, but keeping the
+    // implementation makes old cached/model files harmless during deployment.
+    const legacy=buildTransferCentral(target,geo);
+    state.geographicTargets=geo;state.central=legacy;state.byId=new Map(legacy.seats.map(s=>[s.id,s]));return legacy;
   }
-  const medians={}, intervals={}, distPlain={};
-  for(let pi=0;pi<P;pi++){
-    const p=PARTY_ORDER[pi], arr=Array.from(dists[pi]).sort((a,b)=>a-b); medians[p]=quantileSorted(arr,.5); intervals[p]=[quantileSorted(arr,.1),quantileSorted(arr,.9)]; distPlain[p]=Array.from(dists[pi]);
-  }
-  const seatProb={}; for(let si=0;si<nSeats;si++){const obj={};for(let pi=0;pi<P;pi++)obj[PARTY_ORDER[pi]]=wins[si*P+pi]/N;seatProb[models[si].id]=obj;}
-  const summary={sims:N,medians,intervals,labMaj:labMaj/N,conMaj:conMaj/N,refMaj:refMaj/N,hung:hung/N,largest:Object.fromEntries(PARTY_ORDER.map(p=>[p,largestCounts[p]/N])),seatProb,dist:distPlain,fingerprint:fingerprint()};
-  state.mc=summary; saveMcCache(summary); $('#mcStatus').textContent='Completato'; renderMc(); applyMapColors();
-}
-function quantileSorted(arr,q){const i=Math.floor((arr.length-1)*q);return arr[i];}
 
+  const totals=Object.fromEntries(PARTY_ORDER.map(p=>[p,0])),seats=[];
+  for(let i=0;i<items.length;i++){
+    const item=items[i],c=item.seat,shares=item.shares,zone=initial[i]?.zone||zoneForSeat(c);
+    const winner=SEAT_MODEL_PARTIES.filter(p=>partyAllowed(p,c)).reduce((best,p)=>shares[p]>(shares[best]??-1)?p:best,'other');
+    totals[winner]++;seats.push({...c,projected:shares,centralWinner:winner,modelZone:zone});
+  }
+  totals.other+=CONFIG.niSeats;
+  const central={target,geographic:geo,seats,totals};
+  state.geographicTargets=geo;state.central=central;state.byId=new Map(seats.map(s=>[s.id,s]));
+  return central;
+}
 function renderCentral(){
-  const totals=state.central.totals; $('#projectionTitle').textContent='Proiezione centrale'; const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales; const sub=[sm?.polls?`Scozia: ${sm.polls} poll`:null,wm?.polls?`Galles: ${wm.polls} poll`:null].filter(Boolean).join(' · '); $('#projectionSubtitle').textContent=`${transferModelActive()?'Modello trasferimenti 2024 → oggi: target nazionale → competizione locale → collegi':'Fallback prudente 2024 → oggi: swing regolarizzato'}${sub?` · ${sub}`:''}.`;
+  const totals=state.central.totals; $('#projectionTitle').textContent='Proiezione centrale'; const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales; const sub=[sm?.polls?`Scozia: ${sm.polls} poll`:null,wm?.polls?`Galles: ${wm.polls} poll`:null].filter(Boolean).join(' · '); $('#projectionSubtitle').textContent=`${partialRakeModelActive()?`Raking parziale validato (α=${partialRakeStrength().toFixed(2)}) 2024 → oggi`:transferModelActive()?'Modello trasferimenti 2024 → oggi':'Fallback prudente 2024 → oggi: swing regolarizzato'}${sub?` · ${sub}`:''}.`;
   renderSeats(totals,null); $('#kpiLargest').textContent=PARTY[Object.entries(totals).sort((a,b)=>b[1]-a[1])[0][0]].short; $('#kpiLargestMeta').textContent='proiezione centrale';
 }
 function renderMc(){
@@ -742,7 +728,7 @@ async function init(force=false){
     state.constituencies=constituencies;state.constituencyIndex=new Map(constituencies.map(c=>[c.id,c]));
     state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;state.subnational=subnational;state.territorialBaseline=territorialBaseline;
     renderPolls();renderCoalitionButtons();
-    if(constituencies.length===650){buildCentral();renderCentral();renderMap();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource} · modello regionale: ${state.modelParams?'validato':'fallback'} · poll subnazionali: ${state.subnational.length}`;await runMonteCarlo(force);}else{
+    if(constituencies.length===650){buildCentral();renderCentral();renderMap();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource} · seat model: ${partialRakeModelActive()?`raking α=${partialRakeStrength().toFixed(2)}`:'fallback prudente'} · poll subnazionali: ${state.subnational.length}`;await runMonteCarlo(force);}else{
       setStatus('Sondaggi caricati · manca la baseline territoriale','error');showError('La dashboard nazionale è attiva, ma i 650 risultati di collegio non sono ancora nello snapshot locale e il browser non è riuscito a recuperarli direttamente. Esegui la GitHub Action “Update UK election data”: genererà automaticamente baseline e geometrie.');renderMap();
     }
   }catch(err){console.error(err);setStatus('Errore di caricamento','error');showError(`Errore: ${err.message||err}`);}finally{$('#refreshBtn').disabled=false;}

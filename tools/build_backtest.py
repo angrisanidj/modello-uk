@@ -404,9 +404,8 @@ def model_gate(
 
 
 
-TRANSFER_FEATURE_PARTIES=("lab","con","ref","ld","green","snp","pc")
-TRANSFER_TARGET_PARTIES=("lab","con","ref","ld","green","snp","pc","other")
-TRANSFER_RIDGE_GRID=(.10,.30,1.0,3.0,10.0,30.0,100.0)
+RAKE_ALPHA_GRID=tuple(round(i/40,3) for i in range(41))  # 0.000 .. 1.000 by .025
+RAKE_ITERATIONS=40
 
 
 def seat_weight(seat:dict[str,Any])->float:
@@ -414,18 +413,18 @@ def seat_weight(seat:dict[str,Any])->float:
 
 
 def normalized_row(raw:dict[str,float],country:str)->dict[str,float]:
-    out={}
+    vals={}
     total=0.0
     for p in PARTIES:
         if not allowed(p,country):
-            out[p]=0.0
+            vals[p]=0.0
             continue
         v=max(.0001,float(raw.get(p,0.0)))
-        out[p]=v
+        vals[p]=v
         total+=v
     if total<=0:
         return {p:(100.0 if p=="other" else 0.0) for p in PARTIES}
-    return {p:(out[p]/total*100.0 if allowed(p,country) else 0.0) for p in PARTIES}
+    return {p:(vals[p]/total*100.0 if allowed(p,country) else 0.0) for p in PARTIES}
 
 
 def proportional_rows(
@@ -433,20 +432,23 @@ def proportional_rows(
     target_nat:dict[str,float],
     lam:float=COMMON_LAMBDA
 )->dict[str,dict[str,float]]:
+    """Row-form equivalent of the production proportional-swing centre."""
     base_nat=shares_from_seats(baseline)
     rows={}
     for code,seat in baseline.items():
         if country_key(seat["country"])=="Northern Ireland":
             continue
-        base=local_shares(seat)
+        local=local_shares(seat)
         raw={}
         for p in PARTIES:
             if not allowed(p,seat["country"]):
                 raw[p]=0.0
                 continue
-            b=base.get(p,0.0)
-            floor=FLOOR_MAIN if p in {"lab","con","ref","ld","green"} else FLOOR_SMALL
-            b=max(b,floor)
+            if p=="other":
+                raw[p]=max(local.get(p,0.0),FLOOR_SMALL)
+                continue
+            b=local.get(p,0.0)
+            b=max(b,FLOOR_MAIN if p in {"lab","con","ref","ld","green"} else FLOOR_SMALL)
             bn=max(base_nat.get(p,0.0),.05)
             tn=max(target_nat.get(p,0.0),.05)
             raw[p]=b*(max(.08,tn/bn)**lam)
@@ -462,22 +464,19 @@ def weighted_national_from_rows(
     den=0.0
     for code,row in rows.items():
         seat=baseline.get(code)
-        if not seat:
-            continue
+        if not seat: continue
         w=seat_weight(seat)
         den+=w
         for p in PARTIES:
             totals[p]+=w*float(row.get(p,0.0))/100.0
-    if den<=0:
-        return {p:0.0 for p in PARTIES}
+    if den<=0: return totals
     return {p:totals[p]/den*100.0 for p in PARTIES}
 
 
-def normalize_target_for_model(target_nat:dict[str,float])->dict[str,float]:
+def normalized_target(target_nat:dict[str,float])->dict[str,float]:
     vals={p:max(.0001,float(target_nat.get(p,0.0))) for p in PARTIES}
     total=sum(vals.values())
-    if total<=0:
-        return vals
+    if total<=0: return vals
     return {p:vals[p]/total*100.0 for p in PARTIES}
 
 
@@ -485,185 +484,82 @@ def rake_rows(
     rows:dict[str,dict[str,float]],
     baseline:dict[str,dict[str,Any]],
     target_nat:dict[str,float],
-    iterations:int=36
+    iterations:int=RAKE_ITERATIONS
 )->dict[str,dict[str,float]]:
-    target=normalize_target_for_model(target_nat)
+    """Full iterative proportional fitting to the supplied GB target."""
+    target=normalized_target(target_nat)
     out={code:dict(row) for code,row in rows.items()}
     for _ in range(iterations):
         current=weighted_national_from_rows(out,baseline)
-        max_err=max(abs(current[p]-target[p]) for p in PARTIES)
-        if max_err<.015:
+        if max(abs(current[p]-target[p]) for p in PARTIES)<.01:
             break
-        mult={}
-        for p in PARTIES:
-            cur=max(current.get(p,0.0),.01)
-            mult[p]=clamp(target.get(p,0.0)/cur,.45,2.20)
+        mult={p:clamp(target[p]/max(.01,current.get(p,0.0)),.40,2.50) for p in PARTIES}
         for code,row in out.items():
             seat=baseline[code]
-            raw={}
-            for p in PARTIES:
-                raw[p]=(row.get(p,0.0)*mult[p]) if allowed(p,seat["country"]) else 0.0
+            raw={p:((row.get(p,0.0)*mult[p]) if allowed(p,seat["country"]) else 0.0) for p in PARTIES}
             out[code]=normalized_row(raw,seat["country"])
     return out
 
 
-def transfer_features(
-    seat:dict[str,Any],
-    base_nat:dict[str,float],
-    target_nat:dict[str,float]
-)->list[float]:
-    local=local_shares(seat)
-    features=[]
-    for p in TRANSFER_FEATURE_PARTIES:
-        # Signed national movement × local over/under-exposure.
-        # Scaling constants make ridge strengths comparable across parties.
-        national_move=(target_nat.get(p,0.0)-base_nat.get(p,0.0))/10.0
-        local_exposure=(local.get(p,0.0)-base_nat.get(p,0.0))/20.0
-        features.append(national_move*local_exposure)
-    return features
-
-
-def solve_linear_system(a:list[list[float]],b:list[float])->list[float]:
-    n=len(b)
-    aug=[list(map(float,a[i]))+[float(b[i])] for i in range(n)]
-    for col in range(n):
-        pivot=max(range(col,n),key=lambda r:abs(aug[r][col]))
-        if abs(aug[pivot][col])<1e-12:
-            continue
-        if pivot!=col:
-            aug[col],aug[pivot]=aug[pivot],aug[col]
-        div=aug[col][col]
-        aug[col]=[x/div for x in aug[col]]
-        for r in range(n):
-            if r==col:
-                continue
-            f=aug[r][col]
-            if abs(f)<1e-15:
-                continue
-            aug[r]=[aug[r][c]-f*aug[col][c] for c in range(n+1)]
-    return [aug[i][-1] for i in range(n)]
-
-
-def ridge_coefficients(
-    x_rows:list[list[float]],
-    y:list[float],
-    ridge:float
-)->list[float]:
-    k=len(x_rows[0]) if x_rows else 0
-    xtx=[[0.0]*k for _ in range(k)]
-    xty=[0.0]*k
-    for x,yy in zip(x_rows,y):
-        for i in range(k):
-            xty[i]+=x[i]*yy
-            for j in range(k):
-                xtx[i][j]+=x[i]*x[j]
-    for i in range(k):
-        xtx[i][i]+=ridge
-    return solve_linear_system(xtx,xty)
-
-
-def fit_transfer_coefficients(
-    train_cycles:list[tuple[str,dict[str,Any],dict[str,Any]]],
-    ridge:float
+def blend_rows(
+    base_rows:dict[str,dict[str,float]],
+    fully_raked:dict[str,dict[str,float]],
+    baseline:dict[str,dict[str,Any]],
+    alpha:float
 )->dict[str,dict[str,float]]:
-    x_rows=[]
-    residuals={p:[] for p in TRANSFER_TARGET_PARTIES}
-    for _,baseline,actual in train_cycles:
-        base_nat=shares_from_seats(baseline)
-        target_nat=shares_from_seats(actual)
-        initial=rake_rows(proportional_rows(baseline,target_nat),baseline,target_nat)
-        for code,seat in baseline.items():
-            if country_key(seat["country"])=="Northern Ireland":
-                continue
-            actual_seat=actual.get(code)
-            if not actual_seat:
-                continue
-            x=transfer_features(seat,base_nat,target_nat)
-            x_rows.append(x)
-            truth=local_shares(actual_seat)
-            for p in TRANSFER_TARGET_PARTIES:
-                residuals[p].append(truth.get(p,0.0)-initial[code].get(p,0.0))
-    coeff={}
-    for target in TRANSFER_TARGET_PARTIES:
-        beta=ridge_coefficients(x_rows,residuals[target],ridge)
-        coeff[target]={
-            source:round(clamp(v,-18.0,18.0),6)
-            for source,v in zip(TRANSFER_FEATURE_PARTIES,beta)
-        }
-    return coeff
+    """
+    Linear share blend has a useful property: because constituency weights are
+    unchanged, national totals also move linearly from the original implied
+    result toward the exact target. Thus alpha has a transparent interpretation.
+    """
+    a=clamp(float(alpha),0.0,1.0)
+    rows={}
+    for code,base in base_rows.items():
+        seat=baseline[code]
+        full=fully_raked[code]
+        raw={p:((1-a)*base.get(p,0.0)+a*full.get(p,0.0)) for p in PARTIES}
+        rows[code]=normalized_row(raw,seat["country"])
+    return rows
 
 
-def apply_transfer_rows(
+def partial_raked_rows(
     baseline:dict[str,dict[str,Any]],
     target_nat:dict[str,float],
-    coefficients:dict[str,dict[str,float]]
+    alpha:float
 )->dict[str,dict[str,float]]:
-    base_nat=shares_from_seats(baseline)
-    initial=rake_rows(proportional_rows(baseline,target_nat),baseline,target_nat)
-    rows={}
-    for code,seat in baseline.items():
-        if country_key(seat["country"])=="Northern Ireland":
-            continue
-        features=transfer_features(seat,base_nat,target_nat)
-        raw=dict(initial[code])
-        for target in TRANSFER_TARGET_PARTIES:
-            if not allowed(target,seat["country"]):
-                raw[target]=0.0
-                continue
-            row=coefficients.get(target,{})
-            corr=0.0
-            for source,value in zip(TRANSFER_FEATURE_PARTIES,features):
-                corr+=float(row.get(source,0.0))*value
-            raw[target]=max(.0001,raw.get(target,0.0)+corr)
-        rows[code]=normalized_row(raw,seat["country"])
-    # Corrections redistribute geography only. National totals are forced back
-    # to the supplied target so the transfer layer cannot invent national vote.
-    return rake_rows(rows,baseline,target_nat)
+    base=proportional_rows(baseline,target_nat)
+    if alpha<=0: return base
+    full=rake_rows(base,baseline,target_nat)
+    if alpha>=1: return full
+    return blend_rows(base,full,baseline,alpha)
 
 
-def evaluate_rows(
-    rows:dict[str,dict[str,float]],
-    actual:dict[str,dict[str,Any]]
-)->dict[str,Any]:
-    pred=Counter()
-    real=Counter()
-    correct=0
-    n=0
+def evaluate_rows(rows:dict[str,dict[str,float]],actual:dict[str,dict[str,Any]])->dict[str,Any]:
+    pred=Counter();real=Counter();correct=0;n=0
     by_region=defaultdict(lambda:[0,0])
-    share_abs=0.0
-    share_n=0
+    share_abs=0.0;share_n=0
     for code,a in actual.items():
-        if country_key(a["country"])=="Northern Ireland":
-            continue
+        if country_key(a["country"])=="Northern Ireland": continue
         row=rows.get(code)
-        if row is None:
-            raise RuntimeError(f"Missing prediction for {code}")
-        allowed_parties=[p for p in PARTIES if allowed(p,a["country"])]
-        pw=max(allowed_parties,key=lambda p:row.get(p,0.0))
+        if row is None: raise RuntimeError(f"Missing prediction for {code}")
+        candidates=[p for p in PARTIES if allowed(p,a["country"])]
+        pw=max(candidates,key=lambda p:row.get(p,0.0))
         rw=a["winner"] or "other"
-        pred[pw]+=1
-        real[rw]+=1
-        n+=1
+        pred[pw]+=1;real[rw]+=1;n+=1
         if pw==rw:
-            correct+=1
-            by_region[zone_key(a)][0]+=1
+            correct+=1;by_region[zone_key(a)][0]+=1
         by_region[zone_key(a)][1]+=1
         truth=local_shares(a)
-        for p in allowed_parties:
-            share_abs+=abs(row.get(p,0.0)-truth.get(p,0.0))
-            share_n+=1
-    if n!=632:
-        raise RuntimeError(f"Expected 632 GB seats, got {n}")
+        for p in candidates:
+            share_abs+=abs(row.get(p,0.0)-truth.get(p,0.0));share_n+=1
+    if n!=632: raise RuntimeError(f"Expected 632 GB seats, got {n}")
     seat_error={p:int(pred[p]-real[p]) for p in PARTIES}
     abs_error=sum(abs(x) for x in seat_error.values())
     return {
-        "winner_accuracy":correct/n,
-        "correct_winners":correct,
-        "gb_seats":n,
+        "winner_accuracy":correct/n,"correct_winners":correct,"gb_seats":n,
         "predicted_seats":{p:int(pred[p]) for p in PARTIES},
         "actual_seats":{p:int(real[p]) for p in PARTIES},
-        "seat_error":seat_error,
-        "seat_abs_error_sum":int(abs_error),
+        "seat_error":seat_error,"seat_abs_error_sum":int(abs_error),
         "share_mae":share_abs/share_n if share_n else None,
         "regional_accuracy":{
             r:{"correct":v[0],"n":v[1],"accuracy":v[0]/v[1] if v[1] else None}
@@ -672,61 +568,52 @@ def evaluate_rows(
     }
 
 
-def evaluate_raked(
-    baseline:dict[str,dict[str,Any]],
-    actual:dict[str,dict[str,Any]]
+def evaluate_partial(
+    baseline:dict[str,dict[str,Any]],actual:dict[str,dict[str,Any]],alpha:float
 )->dict[str,Any]:
     target=shares_from_seats(actual)
-    rows=rake_rows(proportional_rows(baseline,target),baseline,target)
-    return evaluate_rows(rows,actual)
+    return evaluate_rows(partial_raked_rows(baseline,target,alpha),actual)
 
 
-def evaluate_transfer(
-    baseline:dict[str,dict[str,Any]],
-    actual:dict[str,dict[str,Any]],
-    coefficients:dict[str,dict[str,float]]
-)->dict[str,Any]:
-    target=shares_from_seats(actual)
-    rows=apply_transfer_rows(baseline,target,coefficients)
-    return evaluate_rows(rows,actual)
-
-
-def fit_transfer_model(
+def fit_rake_strength(
     train_cycles:list[tuple[str,dict[str,Any],dict[str,Any]]]
-)->tuple[dict[str,dict[str,float]],float,dict[str,Any]]:
+)->tuple[float,dict[str,Any],list[dict[str,Any]]]:
+    """Select alpha on TRAIN only, favouring balanced performance across cycles."""
+    candidates=[]
     best=None
-    for ridge in TRANSFER_RIDGE_GRID:
-        coeff=fit_transfer_coefficients(train_cycles,ridge)
-        results=[evaluate_transfer(b,a,coeff) for _,b,a in train_cycles]
+    for alpha in RAKE_ALPHA_GRID:
+        results=[evaluate_partial(b,a,alpha) for _,b,a in train_cycles]
+        # Conservative criterion: protect the weaker training election first,
+        # then total winner accuracy, then seat error, then share MAE. If tied,
+        # prefer less raking / less model intervention.
         score=(
+            min(r["correct_winners"] for r in results),
             sum(r["correct_winners"] for r in results),
             -sum(r["seat_abs_error_sum"] for r in results),
-            -sum(r["share_mae"] or 999 for r in results),
+            -sum((r["share_mae"] or 999) for r in results),
+            -alpha,
         )
-        candidate=(score,coeff,ridge,results)
-        if best is None or candidate[0]>best[0]:
-            best=candidate
+        candidates.append({
+            "alpha":alpha,
+            "combined_correct":sum(r["correct_winners"] for r in results),
+            "combined_seat_abs_error":sum(r["seat_abs_error_sum"] for r in results),
+            "mean_share_mae":sum((r["share_mae"] or 0) for r in results)/len(results),
+        })
+        item=(score,alpha,results)
+        if best is None or item[0]>best[0]: best=item
     assert best is not None
-    _,coeff,ridge,results=best
-    return coeff,ridge,{
+    _,alpha,results=best
+    return alpha,{
         "cycles":{label:r for (label,_,_),r in zip(train_cycles,results)},
         "combined_correct":sum(r["correct_winners"] for r in results),
         "combined_seat_abs_error":sum(r["seat_abs_error_sum"] for r in results),
-        "combined_share_mae":sum(r["share_mae"] or 0 for r in results)/len(results),
-    }
-
-
-def rounded_coefficients(coeff:dict[str,dict[str,float]])->dict[str,dict[str,float]]:
-    return {
-        target:{source:round(float(v),6) for source,v in row.items()}
-        for target,row in coeff.items()
-    }
+        "mean_share_mae":sum((r["share_mae"] or 0) for r in results)/len(results),
+    },candidates
 
 
 def main()->int:
     with tempfile.TemporaryDirectory() as td:
-        db=Path(td)/"psephology.db"
-        download_db(db)
+        db=Path(td)/"psephology.db";download_db(db)
         conn=sqlite3.connect(db)
         try:
             ids={
@@ -739,139 +626,104 @@ def main()->int:
             }
             elections={k:aggregate(election_rows(conn,v)) for k,v in ids.items()}
             for k,seats in elections.items():
-                if len(seats)!=650:
-                    raise RuntimeError(f"{k}: expected 650 seats, got {len(seats)}")
+                if len(seats)!=650: raise RuntimeError(f"{k}: expected 650 seats, got {len(seats)}")
 
             train=[
                 ("2010→2015",elections["2010"],elections["2015"]),
                 ("2015→2017",elections["2015"],elections["2017"]),
             ]
             common={p:COMMON_LAMBDA for p in FIT_PARTIES}
-
-            # Production fallback currently used by app.js when no candidate passes.
             train_common=[evaluate(b,a,common,None,0) for _,b,a in train]
             val_common=evaluate(elections["2017"],elections["2019"],common,None,0)
             hold_common=evaluate(elections["2019N"],elections["2024"],common,None,0)
 
-            # Diagnostic: exact national raking without learned cross-party transfers.
-            train_raked=[evaluate_raked(b,a) for _,b,a in train]
-            val_raked=evaluate_raked(elections["2017"],elections["2019"])
-            hold_raked=evaluate_raked(elections["2019N"],elections["2024"])
+            alpha,train_partial,alpha_grid=fit_rake_strength(train)
+            val_partial=evaluate_partial(elections["2017"],elections["2019"],alpha)
+            hold_partial=evaluate_partial(elections["2019N"],elections["2024"],alpha)
 
-            # v0.6 candidate: residual cross-party transfer matrix fitted on TRAIN only.
-            coeff,ridge,train_transfer=fit_transfer_model(train)
-            val_transfer=evaluate_transfer(elections["2017"],elections["2019"],coeff)
-            hold_transfer=evaluate_transfer(elections["2019N"],elections["2024"],coeff)
+            # Keep endpoints as transparent diagnostics.
+            val_unraked=evaluate_partial(elections["2017"],elections["2019"],0.0)
+            hold_unraked=evaluate_partial(elections["2019N"],elections["2024"],0.0)
+            val_full=evaluate_partial(elections["2017"],elections["2019"],1.0)
+            hold_full=evaluate_partial(elections["2019N"],elections["2024"],1.0)
 
-            approved=model_gate(val_common,val_transfer,hold_common,hold_transfer)
+            approved=model_gate(val_common,val_partial,hold_common,hold_partial)
 
             params={
-                "version":"uk-v06-transfer-raked",
-                "model_type":"transfer-raked-v1",
+                "version":"uk-v07-partial-raking",
+                "model_type":"partial-raked-v1",
                 "approved":approved,
                 "training_elections":["2010→2015","2015→2017"],
                 "validation_election":"2017→2019",
                 "holdout_election":"2019 notional→2024",
                 "common_lambda":COMMON_LAMBDA,
-                "transfer_feature_parties":list(TRANSFER_FEATURE_PARTIES),
-                "transfer_target_parties":list(TRANSFER_TARGET_PARTIES),
-                "transfer_coefficients":rounded_coefficients(coeff),
-                "transfer_ridge":ridge,
-                "rake_iterations":36,
+                "rake_strength":round(alpha,3),
+                "rake_iterations":RAKE_ITERATIONS,
                 "validation":{
                     "common_accuracy":val_common["winner_accuracy"],
-                    "raked_accuracy":val_raked["winner_accuracy"],
-                    "transfer_accuracy":val_transfer["winner_accuracy"],
+                    "partial_accuracy":val_partial["winner_accuracy"],
+                    "full_accuracy":val_full["winner_accuracy"],
                     "common_seat_abs_error":val_common["seat_abs_error_sum"],
-                    "raked_seat_abs_error":val_raked["seat_abs_error_sum"],
-                    "transfer_seat_abs_error":val_transfer["seat_abs_error_sum"],
-                    "transfer_share_mae":val_transfer["share_mae"],
+                    "partial_seat_abs_error":val_partial["seat_abs_error_sum"],
+                    "full_seat_abs_error":val_full["seat_abs_error_sum"],
+                    "partial_share_mae":val_partial["share_mae"],
                 },
                 "holdout":{
                     "common_accuracy":hold_common["winner_accuracy"],
-                    "raked_accuracy":hold_raked["winner_accuracy"],
-                    "transfer_accuracy":hold_transfer["winner_accuracy"],
+                    "partial_accuracy":hold_partial["winner_accuracy"],
+                    "full_accuracy":hold_full["winner_accuracy"],
                     "common_seat_abs_error":hold_common["seat_abs_error_sum"],
-                    "raked_seat_abs_error":hold_raked["seat_abs_error_sum"],
-                    "transfer_seat_abs_error":hold_transfer["seat_abs_error_sum"],
-                    "transfer_share_mae":hold_transfer["share_mae"],
+                    "partial_seat_abs_error":hold_partial["seat_abs_error_sum"],
+                    "full_seat_abs_error":hold_full["seat_abs_error_sum"],
+                    "partial_share_mae":hold_partial["share_mae"],
                 },
                 "note":(
-                    "The transfer matrix is trained only on 2010→2015 and 2015→2017. "
-                    "It redistributes local vote according to cross-party exposure, then "
-                    "rakes constituency shares back to the supplied national target. "
-                    "It is used live only when approved=true after unseen 2019 and 2024 gates."
+                    "Rake strength is selected only on 2010→2015 and 2015→2017. "
+                    "alpha=0 is no raking; alpha=1 is full raking. Live use requires "
+                    "non-worsening winner accuracy AND seat error on unseen 2019 and 2024."
                 ),
             }
-            PARAMS_OUT.write_text(
-                json.dumps(params,ensure_ascii=False,indent=2),
-                encoding="utf-8"
-            )
+            PARAMS_OUT.write_text(json.dumps(params,ensure_ascii=False,indent=2),encoding="utf-8")
 
             payload={
                 "meta":{
-                    "stage":"v0.6 transfer / competition calibration",
+                    "stage":"v0.7 partial national raking",
                     "source":"UK Parliament psephology database",
                     "polling_error_included":False,
-                    "production_rule":(
-                        "transfer model trained on 2010→2015 and 2015→2017 must not worsen "
-                        "winner accuracy or aggregate seat error on either 2019 validation "
-                        "or the untouched 2024 holdout"
-                    ),
-                    "model_description":(
-                        "Start from proportional national swing, exactly rake back to the "
-                        "national vote target, then redistribute local shares through a "
-                        "ridge-regularised cross-party exposure matrix and rake again."
-                    ),
+                    "production_rule":"alpha trained on 2015/2017; strict non-worsening gate on both 2019 and 2024",
+                    "interpretation":"alpha linearly blends constituency shares between the unraked proportional centre and the fully nationally-raked centre",
                 },
                 "baseline_common":{
                     "lambda":COMMON_LAMBDA,
                     "training":{label:r for (label,_,_),r in zip(train,train_common)},
-                    "validation_2019":val_common,
-                    "holdout_2024":hold_common,
+                    "validation_2019":val_common,"holdout_2024":hold_common,
                 },
-                "raked_only_diagnostic":{
-                    "training":{label:r for (label,_,_),r in zip(train,train_raked)},
-                    "validation_2019":val_raked,
-                    "holdout_2024":hold_raked,
+                "partial_raking_candidate":{
+                    "selected_alpha":alpha,
+                    "training":train_partial,
+                    "validation_2019":val_partial,
+                    "holdout_2024":hold_partial,
+                    "alpha_grid_training":alpha_grid,
                 },
-                "transfer_candidate":{
-                    "ridge":ridge,
-                    "coefficients":rounded_coefficients(coeff),
-                    "training":train_transfer,
-                    "validation_2019":val_transfer,
-                    "holdout_2024":hold_transfer,
+                "endpoint_diagnostics":{
+                    "unraked_alpha_0":{"validation_2019":val_unraked,"holdout_2024":hold_unraked},
+                    "full_raking_alpha_1":{"validation_2019":val_full,"holdout_2024":hold_full},
                 },
                 "approved_for_live":approved,
             }
-            OUT.write_text(
-                json.dumps(payload,ensure_ascii=False,indent=2),
-                encoding="utf-8"
-            )
+            OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
-            print("Transfer ridge:",ridge)
-            print("Transfer coefficients:",json.dumps(rounded_coefficients(coeff),sort_keys=True))
-            print(
-                "2019 validation:",
-                f"common={val_common['winner_accuracy']:.2%}/{val_common['seat_abs_error_sum']}",
-                f"raked={val_raked['winner_accuracy']:.2%}/{val_raked['seat_abs_error_sum']}",
-                f"transfer={val_transfer['winner_accuracy']:.2%}/{val_transfer['seat_abs_error_sum']}"
-            )
-            print(
-                "2024 holdout:",
-                f"common={hold_common['winner_accuracy']:.2%}/{hold_common['seat_abs_error_sum']}",
-                f"raked={hold_raked['winner_accuracy']:.2%}/{hold_raked['seat_abs_error_sum']}",
-                f"transfer={hold_transfer['winner_accuracy']:.2%}/{hold_transfer['seat_abs_error_sum']}"
-            )
-            print("Approved transfer model for live:",approved)
+            print("Selected partial-raking alpha (TRAIN only):",alpha)
+            print("2019 validation:",f"common={val_common['winner_accuracy']:.2%}/{val_common['seat_abs_error_sum']}",f"partial={val_partial['winner_accuracy']:.2%}/{val_partial['seat_abs_error_sum']}",f"full={val_full['winner_accuracy']:.2%}/{val_full['seat_abs_error_sum']}")
+            print("2024 holdout:",f"common={hold_common['winner_accuracy']:.2%}/{hold_common['seat_abs_error_sum']}",f"partial={hold_partial['winner_accuracy']:.2%}/{hold_partial['seat_abs_error_sum']}",f"full={hold_full['winner_accuracy']:.2%}/{hold_full['seat_abs_error_sum']}")
+            print("Approved partial-raking model for live:",approved)
         finally:
             conn.close()
     return 0
 
 
 if __name__=="__main__":
-    try:
-        raise SystemExit(main())
+    try: raise SystemExit(main())
     except Exception as exc:
         print(f"build_backtest.py failed: {exc}",file=sys.stderr)
         raise
