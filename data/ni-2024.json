@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "uk-v08-ni-constituency",
-    "generated_at": "2026-08-26T23:57:54.446923+00:00",
+    "generated_at": "2026-08-27T00:19:34.756351+00:00",
     "seats": 18,
     "mode": "constituency-baseline-plus-weak-assembly-trend",
     "signal_weight": 0.25,
