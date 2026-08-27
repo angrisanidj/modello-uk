@@ -36,6 +36,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Restore Democracy Club source cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/democracy-club
+          key: dc-v0922-${{ runner.os }}-${{ hashFiles('tools/build_mrp_lite.py') }}
+          restore-keys: |
+            dc-v0922-${{ runner.os }}-
+
       - name: Update election data and territorial inputs
         run: python tools/build_data.py
 
@@ -58,10 +66,11 @@ jobs:
               "builder_integrity":"bes-integrity-v0922.json",
               "builder_hotfix":"V0922_HOTFIX=\"explicit-noop-candidate-fallback-and-traceback\"",
               "builder_hotfix_region":"V0922_HOTFIX_REGION_KEY=\"idempotent-region-key\"",
+              "builder_hotfix_dc":"V0922_HOTFIX_DC_IO=\"retry-memory-disk-cache\"",
               "app":"uk-v0922-20260827-unified-solution-search",
               "index":"Versione 0.9.22 · solution search unificata (shadow)",
           }
-          observed={"builder":builder,"builder_version":builder,"builder_integrity":builder,"builder_hotfix":builder,"builder_hotfix_region":builder,"app":app,"index":index}
+          observed={"builder":builder,"builder_version":builder,"builder_integrity":builder,"builder_hotfix":builder,"builder_hotfix_region":builder,"builder_hotfix_dc":builder,"app":app,"index":index}
           for key,needle in required.items():
               if needle not in observed[key]:
                   raise SystemExit(f"ERROR: mixed-version upload: {key} is not v0.9.22 (missing {needle!r})")
