@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.24 — external MRP geography bridge (shadow research)
+modello-uk v0.9.25 — external MRP geography bridge (shadow research)
 
 Core idea
 ---------
 The existing model keeps ownership of the national GB vote target.  External
 pre-election MRP data are used only as a *relative constituency geography*
-prior.  Provider toplines are stripped out and every bridged projection is
-raked back to the model's own national target.
+prior. Provider toplines are stripped out. The constituency pattern is then
+interpolated in log-space between the internal v0.9.15 geography and the
+external MRP geography; every blended projection is raked back to the model's
+own national target.
 
 Temporal discipline
 -------------------
@@ -51,32 +53,32 @@ import requests
 # Import the proven v0.9.22 engine as a library; importing it does not run main().
 import build_mrp_lite as core
 
-V0924_BRIDGE="external-mrp-relative-geography-plus-national-rake"
-V0924_SELECTION="yougov-2019-only-strength-selection"
-V0924_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-relative-shift"
-V0924_BASELINE="reconstruct-v0915-local-strength-both-elections"
-V0924_DIAGNOSTICS="all-strengths-scored-2024-no-selection"
+V0925_BRIDGE="logspace-internal-to-external-geography-replacement"
+V0925_SELECTION="yougov-2019-only-blend-selection"
+V0925_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-relative-shift"
+V0925_BASELINE="reconstruct-v0915-local-strength-both-elections"
+V0925_DIAGNOSTICS="full-zero-to-pure-external-blend-sweep-2024"
 
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"data"
 CACHE=ROOT/".cache"/"mrp-bridge"
 CACHE.mkdir(parents=True,exist_ok=True)
 
-BACKTEST_OUT=DATA/"backtest-v0924-geography-bridge.json"
-DIAGNOSTIC_OUT=DATA/"mrp-geography-bridge-v0924.json"
-LIVE_OUT=DATA/"mrp-lite-live-v0924-shadow.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v0924.json"
+BACKTEST_OUT=DATA/"backtest-v0925-geography-bridge.json"
+DIAGNOSTIC_OUT=DATA/"mrp-geography-bridge-v0925.json"
+LIVE_OUT=DATA/"mrp-lite-live-v0925-shadow.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v0925.json"
 
 PARTIES=core.PARTIES
-EPS=0.35
-FACTOR_MIN=0.25
-FACTOR_MAX=4.0
+EPS=0.05
+FACTOR_MIN=0.01
+FACTOR_MAX=100.0
 EVOLUTION_MIN=0.40
 EVOLUTION_MAX=2.50
 
 # Small, predeclared grid.  It is selected on 2019 only and then frozen before
 # the 2024 benchmark is inspected.
-STRENGTH_GRID=(0.0,0.25,0.50,0.75,1.00,1.25)
+STRENGTH_GRID=(0.0,0.125,0.25,0.375,0.50,0.625,0.75,0.875,1.00)
 
 YOUGOV_2019_URL=(
     "https://raw.githubusercontent.com/calbal91/project-understanding-elections/"
@@ -95,7 +97,7 @@ MIC_2026_URL=(
     "jul26-mrp-datatables-final-3.xlsx"
 )
 
-UA="FocusAmerica-UK-election-model/0.9.24 geography-bridge (+https://angrisanidj.github.io/modello-uk/)"
+UA="FocusAmerica-UK-election-model/0.9.25 geography-replacement-blend (+https://angrisanidj.github.io/modello-uk/)"
 
 
 def _json_safe(obj:Any)->Any:
@@ -395,20 +397,64 @@ def relative_factors(
     return factors,nat
 
 
-def apply_factors(base_rows:pd.DataFrame,base_election:dict[str,Any],target:dict[str,float],factors:pd.DataFrame,strength:float)->pd.DataFrame:
+def _internal_relative_factors(base_rows:pd.DataFrame,base_election:dict[str,Any])->tuple[pd.DataFrame,dict[str,float]]:
+    """Convert the internal constituency rows into party-specific geography.
+
+    The denominator is calculated with the same pre-election constituency
+    weights used by the scored projection.  Because the base rows have already
+    been raked, these national shares should be extremely close to the target.
+    """
     frame=base_election["frame"]
+    nat=core.weighted_nat_rows(base_rows,base_election)
+    factors=pd.DataFrame(1.0,index=frame.index,columns=PARTIES,dtype=float)
+    for idx,row in frame.iterrows():
+        country=str(row["country"])
+        for p in PARTIES:
+            if not core.allowed(p,country):
+                factors.at[idx,p]=0.0;continue
+            b=max(EPS,float(base_rows.at[idx,p]))
+            n=max(EPS,float(nat.get(p,0.0)))
+            factors.at[idx,p]=core.clamp(b/n,FACTOR_MIN,FACTOR_MAX)
+    return factors,{p:float(nat.get(p,0.0)) for p in PARTIES}
+
+
+def apply_factors(base_rows:pd.DataFrame,base_election:dict[str,Any],target:dict[str,float],external_factors:pd.DataFrame,strength:float)->pd.DataFrame:
+    """True geography replacement/blend rather than multiplicative stacking.
+
+    strength=0   -> exact v0.9.15 constituency rows
+    strength=1   -> external MRP relative geography, with our national topline
+    0<s<1        -> geometric/log-space interpolation of the two geographies
+
+    Formally R = R_internal^(1-s) * R_external^s.  We then multiply by our
+    national target, normalise within each seat, and perform the final rake.
+    """
+    strength=float(strength)
+    if strength < -1e-12 or strength > 1.0+1e-12:
+        raise ValueError(f"replacement blend strength must be in [0,1], got {strength}")
+    if abs(strength)<1e-12:
+        # Preserve the frozen reference exactly; this is both a methodological
+        # invariant and a guard against epsilon/normalisation drift.
+        return base_rows.copy()
+
+    frame=base_election["frame"]
+    internal_factors,_=_internal_relative_factors(base_rows,base_election)
+    target_n=core.normalize_target(target)
     out=pd.DataFrame(index=base_rows.index,columns=PARTIES,dtype=float)
     for idx,row in frame.iterrows():
         vals={}
+        country=str(row["country"])
         for p in PARTIES:
-            if not core.allowed(p,str(row["country"])):
+            if not core.allowed(p,country):
                 vals[p]=0.0;continue
-            b=max(0.0001,float(base_rows.at[idx,p]))
-            f=max(0.0001,float(factors.at[idx,p]))
-            vals[p]=b*(f**float(strength))
-        s=sum(vals.values()) or 1.0
-        for p in PARTIES:out.at[idx,p]=vals[p]/s*100.0
-    return core.rake(out,base_election,target)
+            ri=max(FACTOR_MIN,float(internal_factors.at[idx,p]))
+            re=max(FACTOR_MIN,float(external_factors.at[idx,p]))
+            # Linear interpolation in log relative-geography space.
+            blend=math.exp((1.0-strength)*math.log(ri)+strength*math.log(re))
+            vals[p]=max(0.0,float(target_n.get(p,0.0)))*blend
+        total=sum(vals.values()) or 1.0
+        for p in PARTIES:
+            out.at[idx,p]=vals[p]/total*100.0
+    return core.rake(out,base_election,target_n)
 
 
 def ensemble_factors(*factor_frames:pd.DataFrame)->pd.DataFrame:
@@ -462,7 +508,7 @@ def build_core_state()->dict[str,Any]:
         e19n=core.merge_demo(core.extract_election(curr_df,"19"),curr_demo)
         e24=core.merge_demo(core.extract_election(curr_df,"24"),curr_demo)
 
-        # Redirect the parser audit to a v0.9.24 research artefact while keeping
+        # Redirect the parser audit to a v0.9.25 research artefact while keeping
         # the already-validated v0.9.22 parser implementation unchanged.
         old_integrity=core.INTEGRITY_OUT
         core.INTEGRITY_OUT=INTEGRITY_OUT
@@ -477,7 +523,7 @@ def build_core_state()->dict[str,Any]:
             ])
         finally:
             core.INTEGRITY_OUT=old_integrity
-        integrity["version"]="uk-v0924-bes-integrity-wrapper"
+        integrity["version"]="uk-v0925-bes-integrity-wrapper"
         integrity["engine_parser_version"]="uk-v0922-bes-integrity"
         _write_json(INTEGRITY_OUT,integrity)
         print("BES integrity gate: PASSED")
@@ -505,7 +551,7 @@ def build_core_state()->dict[str,Any]:
 
         reference,_,v0915_hold_rows,_,local24=core.evaluate_v0915_reference(val_rows,hold_rows,e17,e19,e19n,e24)
 
-        # v0.9.24 methodological correction: reconstruct the ACTUAL constituency-level
+        # v0.9.25 methodological correction: reconstruct the ACTUAL constituency-level
         # v0.9.15 validation rows for 2019.  v0.9.23 verified only the frozen 585/632
         # aggregate but accidentally passed the older 583/632 canonical rows into the
         # geography bridge.  The zero-strength bridge must be exactly the v0.9.15
@@ -595,6 +641,22 @@ def _self_test()->int:
         raise RuntimeError(f"self-test national rake failed: {nat} vs {target}")
     if float(out.loc[0,"lab"])<=float(rows.loc[0,"lab"]):raise RuntimeError("self-test geography factor did not move seat 0")
     if float(out.loc[1,"con"])<=float(rows.loc[1,"con"]):raise RuntimeError("self-test geography factor did not move seat 1")
+    zero=apply_factors(rows,election,core.nat_shares(election),factors,0.0)
+    if not zero.equals(rows):raise RuntimeError("self-test strength=0 is not exact baseline")
+    pure=apply_factors(rows,election,core.nat_shares(election),factors,1.0)
+    half=apply_factors(rows,election,core.nat_shares(election),factors,0.5)
+    # The half blend must lie between the internal and pure-external direction
+    # for the deliberately boosted party/seat combinations.
+    if not (float(rows.loc[0,"lab"]) < float(half.loc[0,"lab"]) < float(pure.loc[0,"lab"])):
+        raise RuntimeError("self-test log-space interpolation failed for Labour")
+    alt=rows.copy()
+    alt.loc[0,"lab"],alt.loc[0,"con"]=60.0,20.0
+    alt.loc[1,"lab"],alt.loc[1,"con"]=20.0,60.0
+    # Re-rake the alternate internal geography to the same national target.
+    alt=core.rake(alt,election,core.nat_shares(election))
+    pure_alt=apply_factors(alt,election,core.nat_shares(election),factors,1.0)
+    if float((pure_alt-pure).abs().to_numpy().max())>1e-7:
+        raise RuntimeError("self-test strength=1 still depends on internal geography")
 
     # Exercise the flexible XLSX scanner with a realistic title row.
     buf=io.BytesIO()
@@ -605,7 +667,7 @@ def _self_test()->int:
     with pd.ExcelWriter(buf,engine="openpyxl") as writer:synth.to_excel(writer,index=False,header=False,sheet_name="Constituencies")
     xdf,xmeta=parse_mic_2026_xlsx(buf.getvalue())
     if len(xdf)!=620 or xmeta["sheet"]!="Constituencies":raise RuntimeError("self-test XLSX parser failed")
-    print("v0.9.24 geography bridge self-test: PASSED")
+    print("v0.9.25 geography replacement/blend self-test: PASSED")
     return 0
 
 
@@ -700,7 +762,7 @@ def main()->int:
     live_projection=core.live_projection(
         e24,state["target_now"],live_bridge_rows,state["live_contest_scores"],
         {
-            "kind":"v0924_external_mrp_geography_bridge_shadow",
+            "kind":"v0925_external_mrp_geography_replacement_blend_shadow",
             "national_target_source":"internal_polling_model",
             "geography_strength":selected,
             "live_geography":live_source["status"],
@@ -710,7 +772,7 @@ def main()->int:
 
     generated=core.utcnow().isoformat()
     common={
-        "version":"uk-v0924-mrp-geography-bridge","status":"ok","generated_at":generated,
+        "version":"uk-v0925-mrp-geography-bridge","status":"ok","generated_at":generated,
         "diagnostic_only":True,"shadow_only":True,"approved_for_live":False,"publication_ready":False,
         "uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
         "parameter_selection_source":"YouGov pre-election MRP 2019-11-27",
@@ -755,15 +817,20 @@ def main()->int:
             "provider_or_strength_selected_on_2024":False,
             "all_strengths_diagnostic":sweep_2024,
             "best_expost_by_provider":best_expost_by_provider,
-            "warning":"The full 2024 sweep is diagnostic only. It cannot select provider or strength in v0.9.24.",
+            "pure_external_geography":{
+                provider:next(x["metrics"] for x in sweep_2024 if x["provider"]==provider and abs(float(x["strength"])-1.0)<1e-12)
+                for provider,_ in providers
+            },
+            "warning":"The full 2024 replacement/blend sweep is diagnostic only. It cannot select provider or strength in v0.9.25.",
         },
         "coverage":{"yougov2019":y19_cov,"yougov2024":y24_cov,"mic2024":m24_cov,"mic2026":mic26_cov},
         "external_source_meta":{**sources["source_meta"],"mic2026":mic26_meta},
         "relative_prior_national_shares":{"yougov2019":y19_nat,"yougov2024":y24_nat,"mic2024":m24_nat},
         "changed_or_wrong_seats_2024":_seat_records(state["v0915_hold_rows"],primary_rows,e24,e19n),
         "method_note":(
-            "External MRP toplines are discarded. Constituency vote shares are converted into relative geographic factors; "
-            "those factors are blended with the fully reconstructed v0.9.15 constituency rows at a strength selected on 2019, then raked to the internal national target."
+            "External MRP toplines are discarded. Internal and external constituency vote shares are each converted into relative geographic factors. "
+            "The two geographies are interpolated in log space: s=0 is exactly v0.9.15, s=1 is the external MRP geography with the internal national topline. "
+            "The blend strength is selected on 2019 only and every projection is finally raked to the internal national target."
         ),
     }
     _write_json(BACKTEST_OUT,backtest)
@@ -771,8 +838,9 @@ def main()->int:
     diagnostic={
         **common,
         "architecture":{
-            "formula":"internal_local_share * (external_local_share / external_weighted_national_share)^strength; normalize seat; rake to internal target",
+            "formula":"R_internal=(internal_local/internal_weighted_national); R_external=(external_local/external_weighted_national); R_blend=R_internal^(1-s)*R_external^s; local=internal_target*R_blend; normalize seat; rake to internal target",
             "epsilon":EPS,"factor_clip":[FACTOR_MIN,FACTOR_MAX],
+            "endpoint_semantics":{"strength_0":"exact reconstructed v0.9.15 geography","strength_1":"pure external relative MRP geography with internal national target"},
             "external_topline_weighting":"pre-score-election constituency weights: 2017 for 2019; notional-2019 for 2024; 2024 for live 2026",
             "live_formula":"YouGov2024_relative_geography * clip(MiC2026_relative / MiC2024_relative); then same selected strength and final internal-target rake",
             "live_evolution_clip":[EVOLUTION_MIN,EVOLUTION_MAX],
@@ -788,8 +856,8 @@ def main()->int:
 
     live_payload={
         **common,
-        "version":"uk-v0924-mrp-geography-bridge-live-shadow",
-        "model_type":"external-mrp-relative-geography-bridge-shadow",
+        "version":"uk-v0925-mrp-geography-bridge-live-shadow",
+        "model_type":"external-mrp-geography-replacement-blend-shadow",
         "applied_to_production":False,
         "live_geography":live_source,
         "target_gb":state["target_now"],"poll_meta":state["poll_meta"],
@@ -799,15 +867,18 @@ def main()->int:
     }
     _write_json(LIVE_OUT,live_payload)
 
-    print("v0.9.24 MRP geography bridge: COMPLETE")
+    print("v0.9.25 MRP geography replacement/blend: COMPLETE")
     print(f"2019 selected strength={selected:.2f}: {val_metrics['correct_winners']}/632, seat error {val_metrics['seat_abs_error_sum']}")
-    print(f"2024 PRIMARY YouGov bridge: {primary_metrics['correct_winners']}/632 = {primary_metrics['winner_accuracy']*100:.2f}%, seat error {primary_metrics['seat_abs_error_sum']}")
+    print(f"2024 PRIMARY YouGov replacement/blend: {primary_metrics['correct_winners']}/632 = {primary_metrics['winner_accuracy']*100:.2f}%, seat error {primary_metrics['seat_abs_error_sum']}")
     print(f"2024 diagnostic MiC: {mic_metrics['correct_winners']}/632 = {mic_metrics['winner_accuracy']*100:.2f}%")
     print(f"2024 diagnostic ensemble: {ens_metrics['correct_winners']}/632 = {ens_metrics['winner_accuracy']*100:.2f}%")
     for provider in ("yougov","more_in_common","equal_provider_ensemble"):
         best=best_expost_by_provider[provider]
         bm=best["metrics"]
         print(f"2024 EX-POST diagnostic best {provider}: strength={best['strength']:.2f}, {bm['correct_winners']}/632 = {bm['winner_accuracy']*100:.2f}%, seat error {bm['seat_abs_error_sum']} [NOT SELECTED]")
+    for provider in ("yougov","more_in_common","equal_provider_ensemble"):
+        pure=next(x["metrics"] for x in sweep_2024 if x["provider"]==provider and abs(float(x["strength"])-1.0)<1e-12)
+        print(f"2024 PURE external geography {provider}: {pure['correct_winners']}/632 = {pure['winner_accuracy']*100:.2f}%, seat error {pure['seat_abs_error_sum']} [DIAGNOSTIC]")
     print(f"Gate 85={gate_85}; breakthrough 87={breakthrough_87}; stretch 90={stretch_90}; validation={validation_gate}")
     print(f"Live geography={live_source['status']}")
     return 0
@@ -822,12 +893,12 @@ if __name__=="__main__":
     except SystemExit:
         raise
     except Exception as exc:
-        print(f"build_mrp_geography_bridge.py v0.9.24 failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_geography_bridge.py v0.9.25 failed: {exc}",file=sys.stderr)
         traceback.print_exc()
         # Leave an explicit failure artefact when DATA exists, but never disguise
         # a technical failure as a scientific gate failure.
         try:
-            _write_json(DIAGNOSTIC_OUT,{"version":"uk-v0924-mrp-geography-bridge","status":"failed","generated_at":core.utcnow().isoformat(),"error":f"{type(exc).__name__}: {exc}"})
+            _write_json(DIAGNOSTIC_OUT,{"version":"uk-v0925-mrp-geography-bridge","status":"failed","generated_at":core.utcnow().isoformat(),"error":f"{type(exc).__name__}: {exc}"})
         except Exception:
             pass
         raise SystemExit(1)
