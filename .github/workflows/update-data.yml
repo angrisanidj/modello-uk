@@ -1,4 +1,4 @@
-# UI release v0.9.38: Germany-parity editorial utilities (mobile sticky summary, modular graphic exports, JSON snapshot) plus AI prompt version hotfix; statistical production engine remains frozen on v0.9.29.
+# UI release v0.9.39: professional UK editorial interface (Union Jack masthead, fixed scrolling nowcast bar, vector social sharing, metadata strip); statistical production engine remains frozen on v0.9.29.
 name: Update and deploy UK model
 
 on:
