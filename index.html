@@ -11,7 +11,7 @@
 <meta property="og:url" content="https://angrisanidj.github.io/modello-uk/" />
 <meta property="og:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta property="og:description" content="Nowcast probabilistico della House of Commons: sondaggi, proiezione dei seggi, Monte Carlo e probabilità collegio per collegio." />
-<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.34.1" />
+<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.35" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="Nowcast delle elezioni nel Regno Unito — proiezione della House of Commons" />
@@ -19,9 +19,10 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta name="twitter:description" content="Nowcast probabilistico della House of Commons: sondaggi, seggi, collegi e probabilità." />
-<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.34.1" />
-<link rel="stylesheet" href="styles.css?v=0.9.34.1" />
-<link rel="stylesheet" href="map-performance.css?v=0.9.34.1" />
+<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.35" />
+<link rel="stylesheet" href="styles.css?v=0.9.35" />
+<link rel="stylesheet" href="styles-v0935.css?v=0.9.35" />
+<link rel="stylesheet" href="map-performance.css?v=0.9.35" />
 </head>
 <body>
 <div class="flag-ribbon" aria-hidden="true"></div>
@@ -42,10 +43,9 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Sondaggi: —</span>
-      <span class="badge badge-strong">UI 0.9.34.1 · motore statistico 0.9.29 congelato</span>
+      <span class="badge badge-strong">UI 0.9.35 · motore statistico 0.9.29 congelato</span>
     </div>
   </section>
-
   <nav class="share-rail" aria-label="Condividi il nowcast">
     <span class="share-label">Condividi</span>
     <button class="share-btn" type="button" data-share="x" title="Condividi su X" aria-label="Condividi su X">X</button>
@@ -58,16 +58,22 @@
     <button class="share-btn" type="button" data-share="native" title="Apri il menu di condivisione del dispositivo" aria-label="Condividi">↗</button>
     <button class="share-btn" type="button" data-share="copy" title="Copia il link" aria-label="Copia il link">⧉</button>
   </nav>
-
+  <details class="read-guide">
+    <summary>Come leggere il modello</summary>
+    <div class="read-guide-grid">
+      <p><strong>È un nowcast, non una previsione del giorno delle elezioni.</strong> Risponde a una domanda precisa: che cosa accadrebbe se si votasse oggi con il quadro dei sondaggi disponibile.</p>
+      <p><strong>Il numero centrale non è una certezza.</strong> Le mediane dei seggi vanno lette insieme all’intervallo centrale 80% e alle probabilità prodotte dalle 50.000 simulazioni Monte Carlo.</p>
+      <p><strong>Nel Regno Unito conta la geografia.</strong> Il voto nazionale viene tradotto nei 632 collegi della Gran Bretagna con il geography stack MRP; i 18 seggi dell’Irlanda del Nord sono trattati separatamente.</p>
+      <p><strong>Mappa e scenari hanno funzioni diverse.</strong> La mappa live usa uno scenario territoriale rappresentativo coerente con le mediane; il what-if dell’utente è deterministico e non modifica né il modello di produzione né le probabilità Monte Carlo.</p>
+    </div>
+  </details>
   <div id="errorBox" class="errorbox"></div>
-
   <section class="grid kpis" aria-label="Indicatori principali">
     <article class="card kpi"><div class="label">Ultimo sondaggio</div><div id="kpiLastPoll" class="value">—</div><div id="kpiLastPollMeta" class="meta">—</div></article>
     <article class="card kpi"><div class="label">Leader nel voto</div><div id="kpiLeader" class="value">—</div><div id="kpiLeaderMeta" class="meta">—</div></article>
     <article class="card kpi"><div class="label">Primo partito</div><div id="kpiLargest" class="value">—</div><div id="kpiLargestMeta" class="meta">Monte Carlo</div></article>
     <article class="card kpi"><div class="label">Chance di maggioranza</div><div id="kpiMajority" class="value">—</div><div id="kpiMajorityMeta" class="meta">326 seggi</div></article>
   </section>
-
   <div class="section-title"><div><div class="section-kicker">Nowcast</div><h2>Il quadro in una frase</h2><p>Dallo scenario centrale alla distribuzione probabilistica completa.</p></div></div>
   <section class="card outcome-card">
     <div class="outcome-main">
@@ -77,12 +83,10 @@
     </div>
     <div id="largestPartyGrid" class="largest-party-grid"></div>
   </section>
-
   <section class="card export-card" aria-label="Esporta il nowcast">
     <div class="export-copy"><div class="export-kicker">Export</div><strong>Trasforma il nowcast in una card pronta da condividere</strong><p>PNG 16:9 per web e social, formato 4:5 per Instagram. Le card sono generate nel browser dai dati live, senza inviare dati a servizi esterni.</p></div>
     <div class="export-actions"><button id="downloadSocialCardBtn" class="small-action" type="button">Scarica PNG 16:9</button><button id="downloadInstagramCardBtn" class="small-action" type="button">Scarica 4:5</button><button id="shareSocialCardBtn" class="primary compact-primary" type="button">Condividi card</button></div>
   </section>
-
   <div class="section-title"><div><div class="section-kicker">Voto nazionale</div><h2>Media dei sondaggi</h2><p>Il topline è del modello Focus America; i provider MRP forniscono geografia relativa, non il voto nazionale.</p></div></div>
   <section class="grid two">
     <article class="card feature">
@@ -100,7 +104,6 @@
       <div class="audit-chip"><strong>Motore live validato:</strong> 609/632 nel 2019 · 578/632 benchmark YouGov 2024 · 584/632 provider-stack CV regionale 2024.</div>
     </article>
   </section>
-
   <div class="section-title"><div><div class="section-kicker">House of Commons</div><h2>Proiezione dei seggi</h2><p>Mediane e intervallo centrale 80%. La maggioranza assoluta è a quota 326.</p></div></div>
   <section class="projection-layout">
     <article class="card parliament-card">
@@ -135,7 +138,6 @@
       </article>
     </aside>
   </section>
-
   <div class="section-title" id="territorio"><div><div class="section-kicker">Territorio</div><h2>Mappa dei 650 collegi</h2><p>Scenario rappresentativo, margine centrale e probabilità di vittoria nello stesso pannello.</p></div></div>
   <section class="map-stage">
     <article class="card map-card">
@@ -169,7 +171,6 @@
       </article>
     </aside>
   </section>
-
   <div class="section-title" id="regioni"><div><div class="section-kicker">Geografia politica</div><h2>Regioni e flussi di seggi</h2><p>Una lettura territoriale del nowcast: chi domina ogni area, dove cambiano i seggi e quali trasferimenti contano di più.</p></div><div class="regional-title-actions"><label class="compact-select"><span>Scenario</span><select id="regionalSource"><option value="live">Nowcast live</option><option value="custom" disabled>Scenario utente</option></select></label></div></div>
   <section class="regional-dashboard">
     <div id="countrySummary" class="country-summary"></div>
@@ -203,7 +204,6 @@
     <div class="table-scroll"><table class="marginal-table explorer-table"><thead><tr><th>Collegio</th><th>Area</th><th>2024</th><th>Scenario</th><th>Margine</th><th>P favorito live</th></tr></thead><tbody id="marginalTableBody"></tbody></table></div>
     <div class="explorer-footer"><span class="table-note" id="seatExplorerFooter">Clicca una riga per aprire il dettaglio sulla mappa.</span><button id="seatShowMore" class="small-action" hidden>Mostra altri 50</button></div>
   </section>
-
   <div class="section-title"><div><div class="section-kicker">What-if</div><h2>Costruisci il tuo scenario nazionale</h2><p>Modifica il voto GB e osserva come cambiano i vincitori mantenendo congelata la geografia relativa del modello live.</p></div></div>
   <section class="card scenario-builder-card">
     <div class="scenario-builder-grid">
@@ -221,7 +221,6 @@
       </div>
     </div>
   </section>
-
   <div class="section-title"><div><div class="section-kicker">Scenari</div><h2>Costruisci una maggioranza</h2><p>Somma i seggi mediani e misura la probabilità che la combinazione superi la soglia operativa.</p></div></div>
   <section class="card coalition-card">
     <div class="coalition-dashboard">
@@ -231,22 +230,39 @@
     <div class="winning-head"><h4>Coalizioni minime vincenti</h4><p>Combinazioni aritmetiche fra i principali partiti: nessuna valutazione di compatibilità politica è implicita.</p></div>
     <div id="coalitionOptions" class="coalition-options"></div>
   </section>
-
   <div class="section-title"><div><div class="section-kicker">Sondaggi</div><h2>Rilevazioni recenti</h2><p>I record vengono acquisiti automaticamente e conservati in uno snapshot locale.</p></div></div>
   <section class="card poll-table-card"><div class="table-scroll"><table><thead><tr><th>Data</th><th>Istituto</th><th>Area</th><th>n</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>Green</th><th>SNP</th><th>PC</th><th>RB</th></tr></thead><tbody id="pollTableBody"></tbody></table></div></section>
-
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La UI cambia; il motore statistico di produzione resta congelato sulla v0.9.29.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.34.1 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.35 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
     <article class="card"><div class="cardhead"><div><h3>Pipeline di produzione</h3><p>Il live viene promosso solo dopo l’audit.</p></div></div><div class="pipeline"><span>Sondaggi</span><b>→</b><span>target nazionale</span><b>→</b><span>MRP geography stack</span><b>→</b><span>632 GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>La GitHub Action ricostruisce il candidato statistico congelato, verifica backtest, copertura provider, assenza dei topline esterni e stabilità fra scenari. Il watcher MRP segnala eventuali nuove pubblicazioni ma non le adotta automaticamente.</p></div></article>
   </section>
-
+  <div class="section-title ai-section-break"><div><div class="section-kicker">Lettura assistita</div><h2>Verifica e interpreta le stime con un’IA</h2><p>Genera un prompt dai valori già visibili nella dashboard e chiedi una lettura indipendente del nowcast.</p></div><span class="ai-lab-badge">VERIFICA STIME</span></div>
+  <section class="card ai-card">
+    <div class="ai-card-copy">
+      <h3>Una seconda lettura, senza toccare il modello</h3>
+      <p>Il prompt raccoglie media dei sondaggi, seggi mediani, probabilità complessive, collegi più incerti e principali coalizioni mostrate nella pagina. Chiede all’assistente scelto di distinguere fra dati della dashboard, verifiche web e inferenze proprie.</p>
+      <div class="ai-actions" aria-label="Apri il prompt in un assistente IA">
+        <button type="button" data-ai="perplexity">Perplexity</button>
+        <button type="button" data-ai="openai">ChatGPT</button>
+        <button type="button" data-ai="claude">Claude</button>
+        <button type="button" data-ai="gemini">Gemini</button>
+        <button type="button" data-ai="copy" class="small-action">Copia prompt</button>
+      </div>
+      <div id="aiStatus" class="ai-status" aria-live="polite">Il prompt viene generato al momento del click con i dati correnti.</div>
+    </div>
+    <details class="ai-prompt-box" id="aiPromptDetails">
+      <summary>Anteprima del prompt</summary>
+      <pre id="aiPromptPreview">Apri questa sezione dopo il caricamento del nowcast per vedere il prompt aggiornato.</pre>
+    </details>
+  </section>
   <footer>
     <p><strong>Fonti:</strong> Wikipedia/MediaWiki per i sondaggi; House of Commons Library e UK Parliament per le generali; Democracy Club per elezioni locali e by-election; ONS per confini e lookup geografici. Modello indipendente a fini informativi.</p>
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.34.1"></script>
-<script src="scripts/map-performance.js?v=0.9.34.1"></script>
+<script src="scripts/app.js?v=0.9.35"></script>
+<script src="scripts/map-performance.js?v=0.9.35"></script>
+<script src="scripts/interpretation.js?v=0.9.35"></script>
 </body>
 </html>
