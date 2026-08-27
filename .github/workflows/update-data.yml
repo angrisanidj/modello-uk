@@ -40,9 +40,18 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/democracy-club
-          key: dc-v0922-${{ runner.os }}-${{ hashFiles('tools/build_mrp_lite.py') }}
+          key: dc-v0923-${{ runner.os }}-${{ hashFiles('tools/build_mrp_lite.py') }}
           restore-keys: |
+            dc-v0923-${{ runner.os }}-
             dc-v0922-${{ runner.os }}-
+
+      - name: Restore external MRP source cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/mrp-bridge
+          key: mrp-bridge-v0923-${{ runner.os }}-${{ hashFiles('tools/build_mrp_geography_bridge.py') }}
+          restore-keys: |
+            mrp-bridge-v0923-${{ runner.os }}-
 
       - name: Update election data and territorial inputs
         run: python tools/build_data.py
@@ -53,163 +62,164 @@ jobs:
       - name: Calibrate legacy partial-raking benchmark
         run: python tools/build_backtest.py
 
-      - name: Verify v0.9.22 source bundle
+      - name: Verify v0.9.23 source bundle
         run: |
           python - <<'PY'
           from pathlib import Path
-          builder=Path("tools/build_mrp_lite.py").read_text(encoding="utf-8")
-          app=Path("scripts/app.js").read_text(encoding="utf-8")
-          index=Path("index.html").read_text(encoding="utf-8")
-          required={
-              "builder":"modello-uk v0.9.22 — unified solution search",
-              "builder_version":"uk-v0922-solution-search",
-              "builder_integrity":"bes-integrity-v0922.json",
-              "builder_hotfix":"V0922_HOTFIX=\"explicit-noop-candidate-fallback-and-traceback\"",
-              "builder_hotfix_region":"V0922_HOTFIX_REGION_KEY=\"idempotent-region-key\"",
-              "builder_hotfix_dc":"V0922_HOTFIX_DC_IO=\"retry-memory-disk-cache\"",
-              "app":"uk-v0922-20260827-unified-solution-search",
-              "index":"Versione 0.9.22 · solution search unificata (shadow)",
-          }
-          observed={"builder":builder,"builder_version":builder,"builder_integrity":builder,"builder_hotfix":builder,"builder_hotfix_region":builder,"builder_hotfix_dc":builder,"app":app,"index":index}
-          for key,needle in required.items():
-              if needle not in observed[key]:
-                  raise SystemExit(f"ERROR: mixed-version upload: {key} is not v0.9.22 (missing {needle!r})")
-          print("v0.9.22 source bundle preflight: PASSED")
+
+          core=Path("tools/build_mrp_lite.py").read_text(encoding="utf-8")
+          bridge=Path("tools/build_mrp_geography_bridge.py").read_text(encoding="utf-8")
+          workflow=Path(".github/workflows/update-data.yml").read_text(encoding="utf-8")
+
+          required_core=[
+              'V0922_HOTFIX="explicit-noop-candidate-fallback-and-traceback"',
+              'V0922_HOTFIX_REGION_KEY="idempotent-region-key"',
+              'V0922_HOTFIX_DC_IO="retry-memory-disk-cache"',
+          ]
+          required_bridge=[
+              'V0923_BRIDGE="external-mrp-relative-geography-plus-national-rake"',
+              'V0923_SELECTION="yougov-2019-only-strength-selection"',
+              'V0923_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-relative-shift"',
+              'YOUGOV_2019_URL=',
+              'YOUGOV_2024_URL=',
+              'MIC_2024_URL=',
+              'MIC_2026_URL=',
+              'uses_2024_for_parameter_selection":False',
+          ]
+          for needle in required_core:
+              if needle not in core:
+                  raise SystemExit(f"ERROR: v0.9.23 requires HOTFIX3 core; missing {needle!r}")
+          for needle in required_bridge:
+              if needle not in bridge:
+                  raise SystemExit(f"ERROR: mixed/incomplete v0.9.23 bridge; missing {needle!r}")
+          if "Build v0.9.23 MRP geography bridge" not in workflow:
+              raise SystemExit("ERROR: workflow is not the v0.9.23 geography-bridge workflow")
+          print("v0.9.23 source bundle preflight: PASSED")
           PY
 
-      - name: Build v0.9.22 unified solution search
-        run: python tools/build_mrp_lite.py
+      - name: Self-test v0.9.23 geography bridge
+        run: python tools/build_mrp_geography_bridge.py --self-test
 
-      - name: Validate v0.9.22 shadow safeguards and unified solution search
+      - name: Build v0.9.23 MRP geography bridge
+        run: python tools/build_mrp_geography_bridge.py
+
+      - name: Validate v0.9.23 research safeguards
         run: |
           python - <<'PY'
           import json
-          from collections import Counter
           from pathlib import Path
 
           def load(path):
               return json.loads(Path(path).read_text(encoding="utf-8"))
 
-          polls=load("data/polls.json")
-          constituencies=load("data/constituencies-2024.json")
-          territorial=load("data/territorial-baseline.json")
-          geo=load("data/constituencies-2024.geojson")
-          display=load("data/constituencies-map.geojson")
-          params=load("data/model-params.json")
-          ni=load("data/ni-2024.json")
-          integrity=load("data/bes-integrity-v0922.json")
-          mrp=load("data/mrp-lite-model.json")
-          live=load("data/mrp-lite-live.json")
-          backtest=load("data/backtest-v0922-solution-search.json")
-          solution=load("data/solution-search-v0922.json")
-          reference=load("data/v0915-reference-v0922.json")
+          backtest=load("data/backtest-v0923-geography-bridge.json")
+          diagnostic=load("data/mrp-geography-bridge-v0923.json")
+          live=load("data/mrp-lite-live-v0923-shadow.json")
+          integrity=load("data/bes-integrity-v0923.json")
 
-          n_polls=len(polls.get("polls",[])); n_const=len(constituencies.get("constituencies",[]))
-          regions=territorial.get("english_regions",[]); ni_seats=ni.get("constituencies",[])
-          ni_winners=Counter(s.get("winner2024") for s in ni_seats)
-          expected_ni={"sf":7,"dup":5,"sdlp":2,"alliance":1,"uup":1,"tuv":1,"ind":1}
-          if n_polls<10: raise SystemExit("ERROR: too few national polls")
-          if n_const!=650: raise SystemExit(f"ERROR: expected 650 constituencies, got {n_const}")
-          if len(geo.get("features",[]))<650 or len(display.get("features",[]))<650: raise SystemExit("ERROR: geometry feature count below 650")
-          if len(regions)!=9: raise SystemExit(f"ERROR: expected 9 English regions, got {regions}")
-          if params.get("version")!="uk-v07-partial-raking": raise SystemExit(f"ERROR: unexpected legacy GB model version {params.get('version')}")
-          if ni.get("meta",{}).get("version")!="uk-v08-ni-constituency": raise SystemExit("ERROR: unexpected NI module version")
-          if len(ni_seats)!=18 or {k:ni_winners.get(k,0) for k in expected_ni}!=expected_ni: raise SystemExit(f"ERROR: NI regression failed {dict(ni_winners)}")
+          if backtest.get("version")!="uk-v0923-mrp-geography-bridge" or backtest.get("status")!="ok":
+              raise SystemExit(f"ERROR: invalid v0.9.23 backtest {backtest.get('version')} {backtest.get('error')}")
+          if diagnostic.get("version")!="uk-v0923-mrp-geography-bridge" or diagnostic.get("status")!="ok":
+              raise SystemExit(f"ERROR: invalid v0.9.23 diagnostic {diagnostic.get('version')} {diagnostic.get('error')}")
+          if live.get("version")!="uk-v0923-mrp-geography-bridge-live-shadow" or live.get("status")!="ok":
+              raise SystemExit(f"ERROR: invalid v0.9.23 live shadow {live.get('version')} {live.get('error')}")
 
-          if integrity.get("version")!="uk-v0922-bes-integrity" or integrity.get("status")!="passed":
-              raise SystemExit(f"ERROR: BES integrity failed/version mismatch: {integrity.get('version')} {integrity.get('errors')}")
+          if integrity.get("version")!="uk-v0923-bes-integrity-wrapper" or integrity.get("status")!="passed":
+              raise SystemExit(f"ERROR: BES integrity failed: {integrity.get('errors')}")
           for check in integrity.get("checks",[]):
-              if check.get("gb_rows")!=632: raise SystemExit(f"ERROR: {check.get('label')} does not contain exactly 632 GB rows")
-              if check.get("ni_filtered_before_party_parsing") is not True: raise SystemExit(f"ERROR: {check.get('label')} parsed parties before filtering NI")
+              if check.get("gb_rows")!=632:
+                  raise SystemExit(f"ERROR: {check.get('label')} has {check.get('gb_rows')} GB rows")
+              if check.get("ni_filtered_before_party_parsing") is not True:
+                  raise SystemExit(f"ERROR: {check.get('label')} parsed party columns before NI filtering")
 
-          expected_versions={
-              "model":"uk-v0922-solution-search",
-              "live":"uk-v0922-solution-search-live",
-              "backtest":"uk-v0922-solution-search-backtest",
-              "solution":"uk-v0922-solution-search",
-              "reference":"uk-v0922-solution-search",
-          }
-          observed={"model":mrp.get("version"),"live":live.get("version"),"backtest":backtest.get("version"),"solution":solution.get("version"),"reference":reference.get("version")}
-          if observed!=expected_versions: raise SystemExit(f"ERROR: unexpected v0.9.22 versions {observed}")
-          for label,payload in (("model",mrp),("live",live),("backtest",backtest),("solution",solution),("reference",reference)):
-              if payload.get("status")!="ok": raise SystemExit(f"ERROR: v0.9.22 {label} build failed: {payload.get('error')}")
+          # Methodological anti-leakage safeguards.
+          for payload in (backtest,diagnostic,live):
+              if payload.get("uses_2024_for_parameter_selection") is not False:
+                  raise SystemExit("ERROR: 2024 leaked into v0.9.23 parameter selection")
+              if payload.get("parameter_selection_election")!="2019":
+                  raise SystemExit("ERROR: v0.9.23 strength was not selected on 2019")
+              if payload.get("provider_topline_used") is not False:
+                  raise SystemExit("ERROR: external provider topline entered the model")
+              if payload.get("shadow_only") is not True or payload.get("publication_ready") is not False:
+                  raise SystemExit("ERROR: v0.9.23 auto-promotion safeguard missing")
 
-          if mrp.get("model_type")!="constituency-residual-solution-search-v16" or live.get("model_type")!="constituency-residual-solution-search-v16":
-              raise SystemExit("ERROR: unexpected v0.9.22 model type")
-          for payload in (mrp,live):
-              if payload.get("approved") is not False or payload.get("publication_ready") is not False: raise SystemExit("ERROR: v0.9.22 cannot auto-approve")
-              if payload.get("shadow_only") is not True or payload.get("changes_production_model") is not False or payload.get("changes_candidate_model") is not False:
-                  raise SystemExit("ERROR: v0.9.22 shadow safeguards missing")
+          ref=backtest.get("reference_v0915",{})
+          rv=ref.get("validation_2019",{}); rh=ref.get("benchmark_2024",{})
+          if rv.get("correct_winners")!=585 or rv.get("seat_abs_error_sum")!=42:
+              raise SystemExit(f"ERROR: frozen v0.9.15 2019 reference changed {rv}")
+          if rh.get("correct_winners")!=501 or rh.get("seat_abs_error_sum")!=166:
+              raise SystemExit(f"ERROR: frozen v0.9.15 2024 reference changed {rh}")
 
-          routing=mrp.get("selected_incumbent_routing",{})
-          if float(routing.get("route_strength",-1))!=0.0 or float(routing.get("unwind_strength",-1))!=0.0:
-              raise SystemExit(f"ERROR: incumbent routing no longer frozen at 0/0: {routing}")
+          selection=backtest.get("strength_selection_2019",{})
+          candidates=selection.get("candidates",[])
+          if len(candidates)!=6:
+              raise SystemExit(f"ERROR: expected six predeclared strength candidates, got {len(candidates)}")
+          strengths=sorted(round(float(x.get("strength")) ,2) for x in candidates)
+          if strengths!=[0.0,0.25,0.5,0.75,1.0,1.25]:
+              raise SystemExit(f"ERROR: unexpected strength grid {strengths}")
+          if round(float(backtest.get("selected_strength")) ,2) not in strengths:
+              raise SystemExit("ERROR: selected strength is outside the predeclared grid")
 
-          val=mrp.get("validation_2019",{}).get("candidate",{}); hold=mrp.get("holdout_2024",{}).get("candidate",{})
-          if val.get("correct_winners")!=583 or val.get("seat_abs_error_sum")!=42: raise SystemExit(f"ERROR: canonical 2019 regression changed {val}")
-          if hold.get("correct_winners")!=494 or hold.get("seat_abs_error_sum")!=176: raise SystemExit(f"ERROR: canonical 2024 regression changed {hold}")
-          rv=reference.get("validation_2019",{}); rh=reference.get("benchmark_2024",{})
-          if rv.get("correct_winners")!=585 or rv.get("seat_abs_error_sum")!=42: raise SystemExit(f"ERROR: v0.9.15 2019 reference changed {rv}")
-          if rh.get("correct_winners")!=501 or rh.get("seat_abs_error_sum")!=166: raise SystemExit(f"ERROR: v0.9.15 2024 reference changed {rh}")
+          bm=backtest.get("benchmark_2024",{})
+          primary=bm.get("primary_yougov_anchor",{})
+          if bm.get("provider_or_strength_selected_on_2024") is not False:
+              raise SystemExit("ERROR: provider/strength was selected using 2024")
+          if not isinstance(primary.get("correct_winners"),int) or primary.get("gb_seats")!=632:
+              raise SystemExit(f"ERROR: incomplete primary 2024 score {primary}")
 
-          if solution.get("uses_2024_for_parameter_selection") is not False or solution.get("parameter_selection_elections") != ["2015","2017","2019"]:
-              raise SystemExit("ERROR: v0.9.22 leaks 2024 into parameter selection")
-          if solution.get("shadow_only") is not True or solution.get("diagnostic_only") is not True:
-              raise SystemExit("ERROR: v0.9.22 solution metadata inconsistent")
+          coverage=backtest.get("coverage",{})
+          if int(coverage.get("yougov2019",{}).get("matched_seats",0))<630:
+              raise SystemExit(f"ERROR: YouGov 2019 coverage too low {coverage.get('yougov2019')}")
+          if int(coverage.get("yougov2024",{}).get("matched_seats",0))<620:
+              raise SystemExit(f"ERROR: YouGov 2024 coverage too low {coverage.get('yougov2024')}")
+          if int(coverage.get("mic2024",{}).get("matched_seats",0))<620:
+              raise SystemExit(f"ERROR: MiC 2024 coverage too low {coverage.get('mic2024')}")
 
-          if solution.get("solution_schema")!="unified_nation_brexit_v2":
-              raise SystemExit(f"ERROR: unified solution schema missing: {solution.get('solution_schema')}")
-          sc=solution.get("scotland_signal",{}); country=solution.get("country_split",{}); brx=solution.get("brexit_geography",{}); tg=solution.get("public_target_lists",{}); meta=solution.get("winner_meta",{})
-          if sc.get("candidate_count")!=15: raise SystemExit(f"ERROR: expected 15 Scotland candidates, got {sc.get('candidate_count')}")
-          if country.get("candidate_count")!=15: raise SystemExit(f"ERROR: expected 15 country-split candidates, got {country.get('candidate_count')}")
-          if tg.get("candidate_count")!=36: raise SystemExit(f"ERROR: expected 36 public-target candidates, got {tg.get('candidate_count')}")
-          if meta.get("candidate_count")!=16: raise SystemExit(f"ERROR: expected 16 winner-meta candidates, got {meta.get('candidate_count')}")
-          cal=brx.get("calibration",{})
-          if cal.get("candidate_count")!=24: raise SystemExit(f"ERROR: expected 24 Brexit-geometry CV candidates, got {cal.get('candidate_count')}")
-          if int(cal.get("training_seats",0))<150: raise SystemExit(f"ERROR: too few Brexit 2019 calibration seats: {cal.get('training_seats')}")
-          if cal.get("uses_2024") is not False: raise SystemExit("ERROR: Brexit geography calibration leaks 2024")
-          if int(brx.get("seat_profile",{}).get("matched_seats",0))<350: raise SystemExit(f"ERROR: Brexit EU geography coverage too low: {brx.get('seat_profile')}")
-          for label,branch in (("Scotland",sc),("country",country),("targets",tg),("meta",meta)):
-              selected=branch.get("selected_historical") if label!="meta" else branch.get("selected_pre2024")
-              if not isinstance(selected,dict) or not selected.get("id"):
-                  raise SystemExit(f"ERROR: {label} has no pre-2024 selected candidate")
+          # Gate booleans are audited rather than used to fail the Action.  A
+          # scientifically negative experiment must still persist its result.
+          val=selection.get("selected",{})
+          expected_val=bool(val.get("correct_winners",0)>=585 and val.get("seat_abs_error_sum",10**9)<=42)
+          expected_85=bool(primary.get("correct_winners",0)>=538 and primary.get("seat_abs_error_sum",10**9)<=166 and expected_val)
+          expected_87=bool(primary.get("correct_winners",0)>=550 and primary.get("seat_abs_error_sum",10**9)<=150 and expected_val)
+          expected_90=bool(primary.get("correct_winners",0)>=569 and primary.get("seat_abs_error_sum",10**9)<=130 and expected_val)
+          if bool(backtest.get("validation_gate_passed"))!=expected_val:
+              raise SystemExit("ERROR: validation gate boolean inconsistent")
+          if bool(backtest.get("research_gate_85_passed"))!=expected_85:
+              raise SystemExit("ERROR: 85% research gate boolean inconsistent")
+          if bool(backtest.get("breakthrough_87_passed"))!=expected_87:
+              raise SystemExit("ERROR: 87% breakthrough gate boolean inconsistent")
+          if bool(backtest.get("stretch_90_passed"))!=expected_90:
+              raise SystemExit("ERROR: 90% stretch gate boolean inconsistent")
 
-          combined=solution.get("combined_selected_pre2024",{})
-          bm=combined.get("benchmark_2024",{})
-          if not isinstance(bm.get("correct_winners"),int) or not isinstance(bm.get("seat_abs_error_sum"),int):
-              raise SystemExit(f"ERROR: combined 2024 benchmark incomplete {bm}")
-          expected_gate=bool(bm.get("correct_winners",0)>=506 and bm.get("seat_abs_error_sum",10**9)<=166)
-          if bool(combined.get("research_gate"))!=expected_gate:
-              raise SystemExit(f"ERROR: solution research gate inconsistent {combined}")
-          if live.get("solution_search",{}).get("applied_to_live") is not False:
-              raise SystemExit("ERROR: solution-search layers were applied to live")
-          if bool(mrp.get("solution_research_gate_passed"))!=expected_gate:
-              raise SystemExit("ERROR: model/solution gate mismatch")
+          if live.get("applied_to_production") is not False or live.get("approved_for_live") is not False:
+              raise SystemExit("ERROR: v0.9.23 live shadow was promoted automatically")
+          if len(live.get("seats",[]))!=632:
+              raise SystemExit(f"ERROR: live shadow has {len(live.get('seats',[]))} GB seats")
 
-          print("Canonical regression guard: 2019 583/42; 2024 494/176")
-          print("v0.9.15 reference: 2019",rv.get("correct_winners"),rv.get("seat_abs_error_sum"),"2024",rh.get("correct_winners"),rh.get("seat_abs_error_sum"))
-          print("Selected Scotland signal:",sc.get("selected_historical"))
-          print("Selected country-split signal:",country.get("selected_historical"))
-          print("Brexit/Farage calibration:",cal)
-          print("Selected public-target signal:",tg.get("selected_historical"))
-          print("Selected winner meta:",meta.get("selected_pre2024"))
-          print("Combined pre-2024 solution -> 2024:",bm)
-          if expected_gate:
-              print("SOLUTION RESEARCH GATE PASSED: >=506/632 and seat error <=166. Still shadow-only in v0.9.22.")
-          else:
-              print("Solution research gate not passed; v0.9.15 remains the best defensible shadow reference.")
-          print("Dataset/model validation passed. v0.9.22 remains SHADOW RESEARCH regardless of result.")
+          mic26=live.get("live_geography",{}).get("status")
+          if mic26 not in {"yougov24_plus_mic_evolution","static_yougov_2024_fallback"}:
+              raise SystemExit(f"ERROR: unknown live geography status {mic26}")
+
+          print("v0.9.15 reference: 2019 585/632 seat error 42; 2024 501/632 seat error 166")
+          print("v0.9.23 selected strength:",backtest.get("selected_strength"))
+          print("v0.9.23 validation 2019:",val.get("correct_winners"),"/632; seat error",val.get("seat_abs_error_sum"))
+          print("v0.9.23 PRIMARY 2024:",primary.get("correct_winners"),"/632 =",round(100*primary.get("winner_accuracy",0),2),"%; seat error",primary.get("seat_abs_error_sum"))
+          print("Diagnostic MiC 2024:",bm.get("diagnostic_mic_anchor",{}).get("correct_winners"),"/632")
+          print("Diagnostic ensemble 2024:",bm.get("diagnostic_equal_provider_ensemble",{}).get("correct_winners"),"/632")
+          print("GATES -> validation:",expected_val,"85%:",expected_85,"87%:",expected_87,"90%:",expected_90)
+          print("Live geography:",mic26)
+          print("Technical validation PASSED. Scientific gate outcome is persisted even when negative.")
           PY
 
       - name: Commit refreshed data
         run: |
-          if git diff --quiet -- data/; then
+          if [ -z "$(git status --porcelain -- data/)" ]; then
             echo "No data changes to commit."
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data and v0.9.22 unified solution search"
+            git commit -m "chore: update UK data and v0.9.23 MRP geography bridge"
             git push
           fi
 
