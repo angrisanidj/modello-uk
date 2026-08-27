@@ -57,10 +57,11 @@ jobs:
               "builder_version":"uk-v0922-solution-search",
               "builder_integrity":"bes-integrity-v0922.json",
               "builder_hotfix":"V0922_HOTFIX=\"explicit-noop-candidate-fallback-and-traceback\"",
+              "builder_hotfix_region":"V0922_HOTFIX_REGION_KEY=\"idempotent-region-key\"",
               "app":"uk-v0922-20260827-unified-solution-search",
               "index":"Versione 0.9.22 · solution search unificata (shadow)",
           }
-          observed={"builder":builder,"builder_version":builder,"builder_integrity":builder,"builder_hotfix":builder,"app":app,"index":index}
+          observed={"builder":builder,"builder_version":builder,"builder_integrity":builder,"builder_hotfix":builder,"builder_hotfix_region":builder,"app":app,"index":index}
           for key,needle in required.items():
               if needle not in observed[key]:
                   raise SystemExit(f"ERROR: mixed-version upload: {key} is not v0.9.22 (missing {needle!r})")
