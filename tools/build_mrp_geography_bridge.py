@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.26 — external MRP geography bridge (shadow research)
+modello-uk v0.9.27 — calibrated temporal MRP geography bridge (shadow research)
 
 Core idea
 ---------
@@ -53,24 +53,26 @@ import requests
 # Import the proven v0.9.22 engine as a library; importing it does not run main().
 import build_mrp_lite as core
 
-V0926_BRIDGE="logspace-internal-to-external-geography-replacement"
-V0926_SELECTION="yougov-2019-only-blend-selection"
-V0926_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-relative-shift"
-V0926_BASELINE="reconstruct-v0915-local-strength-both-elections"
-V0926_DIAGNOSTICS="full-zero-to-pure-external-blend-sweep-2024"
-V0926_LIVE_CANDIDATE="latest-mic26-required-green-complete-plus-dynamic-internal-topline"
-V0926_MRP_SOURCE="more-in-common-2026-07-19-fieldwork-2026-06-05-to-2026-06-28"
-V0926_PARSER_HOTFIX="mic26-leading-article-aliases-complete-header-selection"
+V0927_BRIDGE="logspace-internal-to-external-geography-replacement"
+V0927_SELECTION="yougov-2019-only-blend-selection"
+V0927_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-shrunk-relative-shift"
+V0927_BASELINE="reconstruct-v0915-local-strength-both-elections"
+V0927_DIAGNOSTICS="full-zero-to-pure-external-blend-sweep-2024"
+V0927_LIVE_CANDIDATE="latest-mic26-dynamic-topline-cross-provider-temporal-calibration"
+V0927_MRP_SOURCE="more-in-common-2026-07-19-fieldwork-2026-06-05-to-2026-06-28"
+V0927_PARSER_HOTFIX="mic26-leading-article-aliases-complete-header-selection"
+V0927_TEMPORAL_TRANSFER="lambda-selected-on-2024-mrp-wave-movement-not-election-result"
+V0927_TEMPORAL_VALIDATION="train-2024-06-03-to-06-19-validate-06-19-to-07-03"
 
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"data"
 CACHE=ROOT/".cache"/"mrp-bridge"
 CACHE.mkdir(parents=True,exist_ok=True)
 
-BACKTEST_OUT=DATA/"backtest-v0926-geography-bridge.json"
-DIAGNOSTIC_OUT=DATA/"mrp-geography-bridge-v0926.json"
-LIVE_OUT=DATA/"mrp-lite-live-v0926-candidate.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v0926.json"
+BACKTEST_OUT=DATA/"backtest-v0927-geography-bridge.json"
+DIAGNOSTIC_OUT=DATA/"mrp-geography-bridge-v0927.json"
+LIVE_OUT=DATA/"mrp-lite-live-v0927-candidate.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v0927.json"
 
 PARTIES=core.PARTIES
 EPS=0.05
@@ -78,6 +80,8 @@ FACTOR_MIN=0.01
 FACTOR_MAX=100.0
 EVOLUTION_MIN=0.40
 EVOLUTION_MAX=2.50
+TEMPORAL_LAMBDA_GRID=(0.0,0.125,0.25,0.375,0.50,0.625,0.75,0.875,1.00)
+TEMPORAL_RELEVANCE_SHARE=3.0
 
 # Small, predeclared grid.  It is selected on 2019 only and then frozen before
 # the 2024 benchmark is inspected.
@@ -87,9 +91,25 @@ YOUGOV_2019_URL=(
     "https://raw.githubusercontent.com/calbal91/project-understanding-elections/"
     "refs/heads/master/CSVs/YouGov.csv"
 )
+YOUGOV_2024_EARLY_URL=(
+    "https://raw.githubusercontent.com/inglesp/apogee/refs/heads/main/"
+    "data/processed/yougov/2024-06-03/data.csv"
+)
+YOUGOV_2024_MID_URL=(
+    "https://raw.githubusercontent.com/inglesp/apogee/refs/heads/main/"
+    "data/processed/yougov/2024-06-19/data.csv"
+)
 YOUGOV_2024_URL=(
     "https://raw.githubusercontent.com/inglesp/apogee/refs/heads/main/"
     "data/processed/yougov/2024-07-03/data.csv"
+)
+MIC_2024_EARLY_URL=(
+    "https://raw.githubusercontent.com/inglesp/apogee/refs/heads/main/"
+    "data/processed/moreincommon/2024-06-03/data.csv"
+)
+MIC_2024_MID_URL=(
+    "https://raw.githubusercontent.com/inglesp/apogee/refs/heads/main/"
+    "data/processed/moreincommon/2024-06-19/data.csv"
 )
 MIC_2024_URL=(
     "https://raw.githubusercontent.com/inglesp/apogee/refs/heads/main/"
@@ -100,7 +120,7 @@ MIC_2026_URL=(
     "jul26-mrp-datatables-final-3.xlsx"
 )
 
-UA="FocusAmerica-UK-election-model/0.9.26 geography-replacement-blend (+https://angrisanidj.github.io/modello-uk/)"
+UA="FocusAmerica-UK-election-model/0.9.27 calibrated-temporal-geography (+https://angrisanidj.github.io/modello-uk/)"
 
 
 def _json_safe(obj:Any)->Any:
@@ -499,15 +519,142 @@ def ensemble_factors(*factor_frames:pd.DataFrame)->pd.DataFrame:
     return out
 
 
-def evolution_factors(anchor:pd.DataFrame,mic24:pd.DataFrame,mic26:pd.DataFrame)->pd.DataFrame:
+def evolution_factors(anchor:pd.DataFrame,old_provider:pd.DataFrame,new_provider:pd.DataFrame,temporal_lambda:float=1.0)->pd.DataFrame:
+    """Transfer only a calibrated fraction of another provider's geographic movement.
+
+    lambda=0 keeps the structural anchor unchanged. lambda=1 reproduces the full
+    old v0.9.26 MiC evolution. Intermediate values shrink the log movement toward
+    zero before it is applied to the YouGov anchor. The raw per-seat movement is
+    still clipped to the predeclared [EVOLUTION_MIN, EVOLUTION_MAX] interval.
+    """
+    lam=float(temporal_lambda)
+    if lam < -1e-12 or lam > 1.0+1e-12:
+        raise ValueError(f"temporal lambda must be in [0,1], got {lam}")
     out=anchor.copy().astype(float)
     for p in PARTIES:
         a=np.maximum(0.0001,anchor[p].to_numpy(dtype=float))
-        old=np.maximum(0.0001,mic24[p].to_numpy(dtype=float))
-        new=np.maximum(0.0001,mic26[p].to_numpy(dtype=float))
-        shift=np.clip(new/old,EVOLUTION_MIN,EVOLUTION_MAX)
+        old=np.maximum(0.0001,old_provider[p].to_numpy(dtype=float))
+        new=np.maximum(0.0001,new_provider[p].to_numpy(dtype=float))
+        raw_shift=np.clip(new/old,EVOLUTION_MIN,EVOLUTION_MAX)
+        shift=np.exp(lam*np.log(raw_shift))
         out[p]=np.clip(a*shift,FACTOR_MIN,FACTOR_MAX)
     return out
+
+
+def _movement_error(predicted:pd.DataFrame,target:pd.DataFrame,*share_frames:pd.DataFrame)->dict[str,Any]:
+    """Robust distance between two relative-geography factor fields.
+
+    Only party-seat pairs with at least TEMPORAL_RELEVANCE_SHARE percent in at
+    least one supplied MRP wave are scored. This avoids letting tiny local shares
+    dominate a log-ratio objective while using no realised election result.
+    """
+    errors=[]
+    by_party={p:[] for p in PARTIES}
+    for idx in predicted.index:
+        for p in PARTIES:
+            pv=float(predicted.at[idx,p]); tv=float(target.at[idx,p])
+            if pv<=0 or tv<=0: continue
+            if share_frames:
+                vals=[]
+                for sf in share_frames:
+                    try:
+                        v=float(sf.at[idx,p])
+                        if math.isfinite(v): vals.append(v)
+                    except Exception:
+                        pass
+                if vals and max(vals)<TEMPORAL_RELEVANCE_SHARE: continue
+            err=abs(math.log(max(1e-6,pv)/max(1e-6,tv)))
+            errors.append(err);by_party[p].append(err)
+    if not errors:
+        return {"pairs":0,"median_abs_log_error":float("inf"),"mean_abs_log_error":float("inf"),"rmse_log_error":float("inf"),"by_party":{}}
+    arr=np.asarray(errors,dtype=float)
+    return {
+        "pairs":int(len(arr)),
+        "median_abs_log_error":float(np.median(arr)),
+        "mean_abs_log_error":float(np.mean(arr)),
+        "rmse_log_error":float(np.sqrt(np.mean(arr*arr))),
+        "by_party":{p:{"pairs":len(v),"mean_abs_log_error":float(np.mean(v)),"median_abs_log_error":float(np.median(v))} for p,v in by_party.items() if v},
+    }
+
+
+def calibrate_temporal_transfer(
+    y_early_f:pd.DataFrame,m_early_f:pd.DataFrame,m_mid_f:pd.DataFrame,y_mid_f:pd.DataFrame,
+    y_mid_shares:pd.DataFrame,m_early_shares:pd.DataFrame,m_mid_shares:pd.DataFrame,
+    y_final_f:pd.DataFrame,m_final_f:pd.DataFrame,
+    y_final_shares:pd.DataFrame,m_final_shares:pd.DataFrame,
+)->dict[str,Any]:
+    """Select temporal transfer lambda on MRP wave movement, never on election results.
+
+    Training: 2024-06-03 -> 2024-06-19. Apply MiC movement to the YouGov
+    2024-06-03 anchor and select the lambda that best reproduces YouGov 06-19.
+    Validation: freeze lambda, then test 06-19 -> 07-03 against YouGov 07-03.
+    """
+    candidates=[]
+    for lam in TEMPORAL_LAMBDA_GRID:
+        pred=evolution_factors(y_early_f,m_early_f,m_mid_f,lam)
+        metrics=_movement_error(pred,y_mid_f,y_mid_shares,m_early_shares,m_mid_shares)
+        candidates.append({"lambda":float(lam),"metrics":metrics})
+    selected_row=min(candidates,key=lambda x:(x["metrics"]["median_abs_log_error"],x["metrics"]["mean_abs_log_error"],x["lambda"]))
+    selected=float(selected_row["lambda"])
+
+    def score_validation(lam:float)->dict[str,Any]:
+        pred=evolution_factors(y_mid_f,m_mid_f,m_final_f,lam)
+        return _movement_error(pred,y_final_f,y_final_shares,y_mid_shares,m_mid_shares,m_final_shares)
+    val_selected=score_validation(selected)
+    val_static=score_validation(0.0)
+    val_raw=score_validation(1.0)
+    validated=(
+        val_selected["median_abs_log_error"] <= val_static["median_abs_log_error"]+1e-12
+        and val_selected["mean_abs_log_error"] <= val_static["mean_abs_log_error"]+1e-12
+        and (val_selected["median_abs_log_error"] < val_static["median_abs_log_error"]-1e-12
+             or val_selected["mean_abs_log_error"] < val_static["mean_abs_log_error"]-1e-12)
+    )
+    return {
+        "selection_role":"MRP-wave movement only; no realised election result",
+        "training_interval":"2024-06-03/2024-06-19",
+        "validation_interval":"2024-06-19/2024-07-03",
+        "grid":list(TEMPORAL_LAMBDA_GRID),
+        "relevance_share_threshold_pct":TEMPORAL_RELEVANCE_SHARE,
+        "training_candidates":candidates,
+        "selected_lambda":selected,
+        "validation_selected":val_selected,
+        "validation_static_lambda_0":val_static,
+        "validation_raw_lambda_1":val_raw,
+        "validation_passed_vs_static":bool(validated),
+        "uses_realised_2024_result_for_selection":False,
+    }
+
+
+def _projection_stability(projections:dict[str,dict[str,Any]])->dict[str,Any]:
+    maps={name:{str(x.get("id")):str(x.get("centralWinner")) for x in payload.get("seats",[]) if x.get("id")} for name,payload in projections.items()}
+    names=list(maps)
+    pairwise={}
+    for i,a in enumerate(names):
+        for b in names[i+1:]:
+            common=sorted(set(maps[a])&set(maps[b]))
+            changed=[k for k in common if maps[a][k]!=maps[b][k]]
+            transitions=Counter(f"{maps[a][k]}->{maps[b][k]}" for k in changed)
+            pairwise[f"{a}__vs__{b}"]={"changed_winners":len(changed),"transitions":dict(transitions.most_common())}
+    common_ids=set.intersection(*(set(m) for m in maps.values())) if maps else set()
+    all_agree=0;majority=0;all_different=0;consensus_totals=Counter()
+    for k in common_ids:
+        ws=[maps[n][k] for n in names]
+        c=Counter(ws)
+        if len(c)==1: all_agree+=1
+        winner,count=c.most_common(1)[0]
+        if count>=2:
+            majority+=1;consensus_totals[winner]+=1
+        else:
+            all_different+=1
+    return {
+        "scenario_names":names,
+        "pairwise":pairwise,
+        "all_scenarios_agree":all_agree,
+        "majority_consensus_available":majority,
+        "all_scenarios_different":all_different,
+        "majority_consensus_totals":dict(consensus_totals),
+        "note":"Consensus is diagnostic only and never selects the live route.",
+    }
 
 
 def _seat_records(reference_rows:pd.DataFrame,bridge_rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,Any])->list[dict[str,Any]]:
@@ -556,7 +703,7 @@ def build_core_state()->dict[str,Any]:
             ])
         finally:
             core.INTEGRITY_OUT=old_integrity
-        integrity["version"]="uk-v0926-bes-integrity-wrapper"
+        integrity["version"]="uk-v0927-bes-integrity-wrapper"
         integrity["engine_parser_version"]="uk-v0922-bes-integrity"
         _write_json(INTEGRITY_OUT,integrity)
         print("BES integrity gate: PASSED")
@@ -637,20 +784,25 @@ def build_core_state()->dict[str,Any]:
 
 
 def _load_prior_sources()->dict[str,Any]:
-    y19_raw,y19_src=fetch_remote_bytes(YOUGOV_2019_URL)
-    y24_raw,y24_src=fetch_remote_bytes(YOUGOV_2024_URL)
-    m24_raw,m24_src=fetch_remote_bytes(MIC_2024_URL)
-    y19,y19_meta=parse_yougov_2019(y19_raw)
-    y24,y24_meta=parse_apogee_csv(y24_raw,"YouGov","2024-07-03")
-    m24,m24_meta=parse_apogee_csv(m24_raw,"More in Common","2024-07-03")
-    return {
-        "yougov2019":y19,"yougov2024":y24,"mic2024":m24,
-        "source_meta":{
-            "yougov2019":{**y19_meta,**y19_src},
-            "yougov2024":{**y24_meta,**y24_src},
-            "mic2024":{**m24_meta,**m24_src},
-        }
-    }
+    specs=[
+        ("yougov2019",YOUGOV_2019_URL,"YouGov","2019-11-27",True),
+        ("yougov2024_early",YOUGOV_2024_EARLY_URL,"YouGov","2024-06-03",False),
+        ("yougov2024_mid",YOUGOV_2024_MID_URL,"YouGov","2024-06-19",False),
+        ("yougov2024",YOUGOV_2024_URL,"YouGov","2024-07-03",False),
+        ("mic2024_early",MIC_2024_EARLY_URL,"More in Common","2024-06-03",False),
+        ("mic2024_mid",MIC_2024_MID_URL,"More in Common","2024-06-19",False),
+        ("mic2024",MIC_2024_URL,"More in Common","2024-07-03",False),
+    ]
+    out={};meta={}
+    for key,url,provider,date,is_y19 in specs:
+        raw,src=fetch_remote_bytes(url)
+        if is_y19:
+            df,pmeta=parse_yougov_2019(raw)
+        else:
+            df,pmeta=parse_apogee_csv(raw,provider,date)
+        out[key]=df;meta[key]={**pmeta,**src}
+    out["source_meta"]=meta
+    return out
 
 
 def _self_test()->int:
@@ -706,7 +858,20 @@ def _self_test()->int:
     if len(xdf)!=620 or xmeta["sheet"]!="Constituencies":raise RuntimeError("self-test XLSX parser failed")
     if set(xmeta.get("mapped_columns",{}))!=set(PARTIES):
         raise RuntimeError(f"self-test XLSX party coverage failed: {xmeta.get('mapped_columns')}")
-    print("v0.9.26 geography replacement/blend self-test: PASSED")
+
+    # Temporal transfer endpoint and shrinkage checks.
+    anchor=pd.DataFrame(1.0,index=idx,columns=PARTIES)
+    oldp=pd.DataFrame(1.0,index=idx,columns=PARTIES)
+    newp=pd.DataFrame(1.0,index=idx,columns=PARTIES)
+    newp.loc[0,"lab"]=2.0;newp.loc[1,"con"]=0.5
+    ev0=evolution_factors(anchor,oldp,newp,0.0)
+    ev1=evolution_factors(anchor,oldp,newp,1.0)
+    evh=evolution_factors(anchor,oldp,newp,0.5)
+    if float((ev0-anchor).abs().to_numpy().max())>1e-10:
+        raise RuntimeError("self-test temporal lambda=0 does not preserve anchor")
+    if not (1.0<float(evh.loc[0,"lab"])<float(ev1.loc[0,"lab"])):
+        raise RuntimeError("self-test temporal shrinkage is not monotonic")
+    print("v0.9.27 geography replacement + temporal transfer self-test: PASSED")
     return 0
 
 
@@ -717,11 +882,30 @@ def main()->int:
     sources=_load_prior_sources()
 
     y19_aligned,y19_cov=align_prior(sources["yougov2019"],e19,"YouGov 2019",min_match=630)
-    y24_aligned,y24_cov=align_prior(sources["yougov2024"],e24,"YouGov 2024",min_match=620)
-    m24_aligned,m24_cov=align_prior(sources["mic2024"],e24,"More in Common 2024",min_match=620)
+    y24e_aligned,y24e_cov=align_prior(sources["yougov2024_early"],e24,"YouGov 2024-06-03",min_match=620)
+    y24m_aligned,y24m_cov=align_prior(sources["yougov2024_mid"],e24,"YouGov 2024-06-19",min_match=620)
+    y24_aligned,y24_cov=align_prior(sources["yougov2024"],e24,"YouGov 2024-07-03",min_match=620)
+    m24e_aligned,m24e_cov=align_prior(sources["mic2024_early"],e24,"More in Common 2024-06-03",min_match=620)
+    m24m_aligned,m24m_cov=align_prior(sources["mic2024_mid"],e24,"More in Common 2024-06-19",min_match=620)
+    m24_aligned,m24_cov=align_prior(sources["mic2024"],e24,"More in Common 2024-07-03",min_match=620)
     y19_factors,y19_nat=relative_factors(y19_aligned,e19,e17)
+    y24e_factors,y24e_nat=relative_factors(y24e_aligned,e24,e19n)
+    y24m_factors,y24m_nat=relative_factors(y24m_aligned,e24,e19n)
     y24_factors,y24_nat=relative_factors(y24_aligned,e24,e19n)
+    m24e_factors,m24e_nat=relative_factors(m24e_aligned,e24,e19n)
+    m24m_factors,m24m_nat=relative_factors(m24m_aligned,e24,e19n)
     m24_factors,m24_nat=relative_factors(m24_aligned,e24,e19n)
+
+    # Calibrate how much geographic *movement* from MiC transfers to a YouGov
+    # structural anchor. This uses only successive pre-election MRP waves and
+    # never the realised 2024 election outcome. Training and validation windows
+    # are chronologically separated.
+    temporal_transfer=calibrate_temporal_transfer(
+        y24e_factors,m24e_factors,m24m_factors,y24m_factors,
+        y24m_aligned,m24e_aligned,m24m_aligned,
+        y24_factors,m24_factors,y24_aligned,m24_aligned,
+    )
+    temporal_lambda=float(temporal_transfer["selected_lambda"])
 
     # Select geography blend strength on 2019 only.
     calibration=[];cal_rows={}
@@ -781,6 +965,39 @@ def main()->int:
     breakthrough_87=(primary_metrics["correct_winners"]>=550 and primary_metrics["seat_abs_error_sum"]<=150 and validation_gate)
     stretch_90=(primary_metrics["correct_winners"]>=569 and primary_metrics["seat_abs_error_sum"]<=130 and validation_gate)
 
+    # Frozen-lambda election replay. Lambda was selected above solely from the
+    # 03-Jun -> 19-Jun MRP wave movement. We now test, without re-tuning, whether
+    # transferring the 19-Jun -> 03-Jul MiC movement to the 19-Jun YouGov anchor
+    # improved the eventual 2024 election projection. This is validation only.
+    replay_static_rows=apply_factors(state["v0915_hold_rows"],e19n,target24,y24m_factors,selected)
+    replay_cal_factors=evolution_factors(y24m_factors,m24m_factors,m24_factors,temporal_lambda)
+    replay_cal_rows=apply_factors(state["v0915_hold_rows"],e19n,target24,replay_cal_factors,selected)
+    replay_raw_factors=evolution_factors(y24m_factors,m24m_factors,m24_factors,1.0)
+    replay_raw_rows=apply_factors(state["v0915_hold_rows"],e19n,target24,replay_raw_factors,selected)
+    replay_static=core.evaluate_rows(replay_static_rows,e24,e19n)
+    replay_cal=core.evaluate_rows(replay_cal_rows,e24,e19n)
+    replay_raw=core.evaluate_rows(replay_raw_rows,e24,e19n)
+    replay_final_youg=primary_metrics
+    replay_final_mic=mic_metrics
+    temporal_replay_passed=(
+        replay_cal["correct_winners"]>=replay_static["correct_winners"]
+        and replay_cal["seat_abs_error_sum"]<=replay_static["seat_abs_error_sum"]
+        and (replay_cal["correct_winners"]>replay_static["correct_winners"]
+             or replay_cal["seat_abs_error_sum"]<replay_static["seat_abs_error_sum"])
+    )
+    temporal_transfer["election_replay_2024"]={
+        "selection_role":"validation_only_lambda_already_frozen",
+        "anchor_date":"2024-06-19",
+        "movement_source_interval":"More in Common 2024-06-19/2024-07-03",
+        "static_yougov_0619":replay_static,
+        "calibrated_transfer":replay_cal,
+        "raw_full_transfer_lambda_1":replay_raw,
+        "final_yougov_0703":replay_final_youg,
+        "final_mic_0703":replay_final_mic,
+        "passed_vs_static":bool(temporal_replay_passed),
+        "uses_result_for_lambda_selection":False,
+    }
+
     # Live 2026 candidate. The latest full-GB constituency MRP located for this
     # release is More in Common, published 2026-07-19 (fieldwork 5-28 June).
     # Unlike v0.9.25 shadow mode, v0.9.26 refuses to emit a "latest-data" live
@@ -793,23 +1010,29 @@ def main()->int:
         raise RuntimeError(f"MiC 2026 Green geography failed sanity check: weighted share={m26_nat.get('green')}")
 
     # Primary live route: preserve the historically validated YouGov-2024
-    # structural anchor and update it with the MiC 2024->2026 geographic shift.
-    live_factors=evolution_factors(y24_factors,m24_factors,m26_factors)
+    # structural anchor and transfer only the fraction of MiC 2024->2026
+    # geographic movement supported by the pre-election cross-provider wave test.
+    live_factors=evolution_factors(y24_factors,m24_factors,m26_factors,temporal_lambda)
     live_source={
-        "status":"yougov24_plus_latest_mic26_evolution",
+        "status":"yougov24_plus_calibrated_mic26_evolution",
         "provider":"More in Common",
         "publication_date":"2026-07-19",
         "fieldwork":"2026-06-05/2026-06-28",
         "latest_full_gb_mrp_checked_for_release":True,
+        "temporal_lambda":temporal_lambda,
+        "temporal_lambda_selected_from":"2024 pre-election cross-provider MRP wave movement",
+        "temporal_wave_validation_passed_vs_static":bool(temporal_transfer.get("validation_passed_vs_static")),
+        "temporal_election_replay_passed_vs_static":bool(temporal_replay_passed),
     }
 
     live_bridge_rows=apply_factors(state["live_rows"],e24,state["target_now"],live_factors,selected)
     live_projection=core.live_projection(
         e24,state["target_now"],live_bridge_rows,state["live_contest_scores"],
         {
-            "kind":"v0926_validated_mrp_geography_live_candidate",
+            "kind":"v0927_calibrated_temporal_mrp_geography_live_candidate",
             "national_target_source":"internal_polling_model_dynamic_each_run",
             "geography_strength":selected,
+            "temporal_evolution_lambda":temporal_lambda,
             "live_geography":live_source["status"],
             "provider_topline_used":False,
             "external_geography_publication_date":"2026-07-19",
@@ -817,36 +1040,53 @@ def main()->int:
     )
 
     # Non-selecting live sensitivities. There is no realised 2026 general-election
-    # outcome, so these cannot choose the live route; they only expose how much
-    # the seat picture depends on the temporal anchoring choice.
+    # outcome, so these cannot choose the live route. Include the old full-evolution
+    # route explicitly to quantify how much the new shrinkage resolves instability.
+    live_full_rows=apply_factors(
+        state["live_rows"],e24,state["target_now"],
+        evolution_factors(y24_factors,m24_factors,m26_factors,1.0),selected
+    )
+    live_full=core.live_projection(
+        e24,state["target_now"],live_full_rows,state["live_contest_scores"],
+        {"kind":"v0927_full_evolution_lambda_1_sensitivity","geography_strength":selected,"provider_topline_used":False}
+    )
     live_direct_rows=apply_factors(state["live_rows"],e24,state["target_now"],m26_factors,selected)
     live_direct=core.live_projection(
         e24,state["target_now"],live_direct_rows,state["live_contest_scores"],
-        {"kind":"v0926_direct_mic26_sensitivity","geography_strength":selected,"provider_topline_used":False}
+        {"kind":"v0927_direct_mic26_sensitivity","geography_strength":selected,"provider_topline_used":False}
     )
     live_static_rows=apply_factors(state["live_rows"],e24,state["target_now"],y24_factors,selected)
     live_static=core.live_projection(
         e24,state["target_now"],live_static_rows,state["live_contest_scores"],
-        {"kind":"v0926_static_yougov24_sensitivity","geography_strength":selected,"provider_topline_used":False}
+        {"kind":"v0927_static_yougov24_sensitivity","geography_strength":selected,"provider_topline_used":False}
     )
     def _winner_map(payload):
         return {str(x.get("id")):str(x.get("centralWinner")) for x in payload.get("seats",[]) if x.get("id")}
-    primary_w=_winner_map(live_projection); direct_w=_winner_map(live_direct); static_w=_winner_map(live_static)
+    primary_w=_winner_map(live_projection); full_w=_winner_map(live_full); direct_w=_winner_map(live_direct); static_w=_winner_map(live_static)
+    stability=_projection_stability({
+        "calibrated_primary":live_projection,
+        "full_evolution_lambda_1":live_full,
+        "direct_mic26":live_direct,
+        "static_yougov24":live_static,
+    })
     live_sensitivity={
         "selection_role":"diagnostic_only_no_2026_ground_truth",
-        "primary_anchor_evolution_totals":live_projection.get("totals",{}),
+        "calibrated_primary_totals":live_projection.get("totals",{}),
+        "full_evolution_lambda_1_totals":live_full.get("totals",{}),
         "direct_mic26_totals":live_direct.get("totals",{}),
         "static_yougov24_totals":live_static.get("totals",{}),
         "changed_winners_vs_primary":{
+            "full_evolution_lambda_1":sum(primary_w.get(k)!=full_w.get(k) for k in primary_w),
             "direct_mic26":sum(primary_w.get(k)!=direct_w.get(k) for k in primary_w),
             "static_yougov24":sum(primary_w.get(k)!=static_w.get(k) for k in primary_w),
         },
+        "stability_audit":stability,
     }
     mic26_meta={**m26_parse,**m26_src,"relative_national_share":m26_nat}
 
     generated=core.utcnow().isoformat()
     common={
-        "version":"uk-v0926-mrp-geography-bridge","status":"ok","generated_at":generated,
+        "version":"uk-v0927-mrp-geography-bridge","status":"ok","generated_at":generated,
         "diagnostic_only":False,"shadow_only":False,"live_candidate":True,"approved_for_live":False,"publication_ready":False,
         "uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
         "parameter_selection_source":"YouGov pre-election MRP 2019-11-27",
@@ -854,6 +1094,10 @@ def main()->int:
         "provider_topline_used":False,
         "national_target_after_bridge":"internal model target via final rake",
         "selected_strength":selected,"strength_grid":list(STRENGTH_GRID),
+        "temporal_evolution_lambda":temporal_lambda,
+        "temporal_lambda_selection_uses_election_result":False,
+        "temporal_transfer_validation_passed":bool(temporal_transfer.get("validation_passed_vs_static")),
+        "temporal_election_replay_passed":bool(temporal_replay_passed),
         "corrected_v0915_baseline":True,
         "zero_strength_invariant_passed":True,
         "research_gate_85_passed":gate_85,"breakthrough_87_passed":breakthrough_87,"stretch_90_passed":stretch_90,
@@ -865,8 +1109,9 @@ def main()->int:
             "stretch_90":{"min_correct_winners_2024":569,"max_seat_abs_error_sum_2024":130},
         },
         "source_urls":{
-            "yougov_2019":YOUGOV_2019_URL,"yougov_2024":YOUGOV_2024_URL,
-            "mic_2024":MIC_2024_URL,"mic_2026":MIC_2026_URL,
+            "yougov_2019":YOUGOV_2019_URL,
+            "yougov_2024_early":YOUGOV_2024_EARLY_URL,"yougov_2024_mid":YOUGOV_2024_MID_URL,"yougov_2024":YOUGOV_2024_URL,
+            "mic_2024_early":MIC_2024_EARLY_URL,"mic_2024_mid":MIC_2024_MID_URL,"mic_2024":MIC_2024_URL,"mic_2026":MIC_2026_URL,
         },
     }
 
@@ -895,11 +1140,18 @@ def main()->int:
                 provider:next(x["metrics"] for x in sweep_2024 if x["provider"]==provider and abs(float(x["strength"])-1.0)<1e-12)
                 for provider,_ in providers
             },
-            "warning":"The full 2024 replacement/blend sweep is diagnostic only. It cannot select provider or strength in v0.9.26.",
+            "warning":"The full 2024 replacement/blend sweep is diagnostic only. It cannot select provider or strength in v0.9.27.",
         },
-        "coverage":{"yougov2019":y19_cov,"yougov2024":y24_cov,"mic2024":m24_cov,"mic2026":mic26_cov},
+        "coverage":{
+            "yougov2019":y19_cov,"yougov2024_early":y24e_cov,"yougov2024_mid":y24m_cov,"yougov2024":y24_cov,
+            "mic2024_early":m24e_cov,"mic2024_mid":m24m_cov,"mic2024":m24_cov,"mic2026":mic26_cov,
+        },
         "external_source_meta":{**sources["source_meta"],"mic2026":mic26_meta},
-        "relative_prior_national_shares":{"yougov2019":y19_nat,"yougov2024":y24_nat,"mic2024":m24_nat},
+        "relative_prior_national_shares":{
+            "yougov2019":y19_nat,"yougov2024_early":y24e_nat,"yougov2024_mid":y24m_nat,"yougov2024":y24_nat,
+            "mic2024_early":m24e_nat,"mic2024_mid":m24m_nat,"mic2024":m24_nat,
+        },
+        "temporal_transfer_calibration":temporal_transfer,
         "changed_or_wrong_seats_2024":_seat_records(state["v0915_hold_rows"],primary_rows,e24,e19n),
         "method_note":(
             "External MRP toplines are discarded. Internal and external constituency vote shares are each converted into relative geographic factors. "
@@ -916,10 +1168,14 @@ def main()->int:
             "epsilon":EPS,"factor_clip":[FACTOR_MIN,FACTOR_MAX],
             "endpoint_semantics":{"strength_0":"exact reconstructed v0.9.15 geography","strength_1":"pure external relative MRP geography with internal national target"},
             "external_topline_weighting":"pre-score-election constituency weights: 2017 for 2019; notional-2019 for 2024; 2024 for live 2026",
-            "live_formula":"YouGov2024_relative_geography * clip(latest_MiC2026_relative / MiC2024_relative); then validated 2019-selected strength and final internal-target rake",
+            "live_formula":"YouGov2024_relative_geography * exp(lambda_temporal * log(clip(latest_MiC2026_relative / MiC2024_relative))); then validated 2019-selected geography strength and final internal-target rake",
             "live_evolution_clip":[EVOLUTION_MIN,EVOLUTION_MAX],
+            "temporal_lambda_grid":list(TEMPORAL_LAMBDA_GRID),
+            "temporal_lambda_selection":"2024-06-03 to 2024-06-19 cross-provider MRP wave movement only; no election result",
+            "temporal_lambda_validation":"frozen lambda on 2024-06-19 to 2024-07-03 cross-provider MRP wave movement plus election replay diagnostic",
         },
         "selection_result_2019":val_metrics,
+        "temporal_transfer_calibration":temporal_transfer,
         "primary_result_2024":primary_metrics,
         "diagnostics_2024":{"more_in_common":mic_metrics,"equal_provider_ensemble":ens_metrics,
                             "all_strengths":sweep_2024,"best_expost_by_provider":best_expost_by_provider},
@@ -930,18 +1186,22 @@ def main()->int:
 
     live_payload={
         **common,
-        "version":"uk-v0926-mrp-geography-bridge-live-candidate",
+        "version":"uk-v0927-mrp-geography-bridge-live-candidate",
         "model_type":"external-mrp-geography-replacement-blend-live-candidate",
         "applied_to_production":False,"live_candidate":True,
         "live_geography":live_source,"live_2026_sensitivity":live_sensitivity,
         "target_gb":state["target_now"],"poll_meta":state["poll_meta"],
         "selected_strength":selected,
-        "source_meta":{"yougov2024":sources["source_meta"]["yougov2024"],"mic2024":sources["source_meta"]["mic2024"],"mic2026":mic26_meta},
+        "source_meta":{
+            "yougov2024_early":sources["source_meta"]["yougov2024_early"],"yougov2024_mid":sources["source_meta"]["yougov2024_mid"],"yougov2024":sources["source_meta"]["yougov2024"],
+            "mic2024_early":sources["source_meta"]["mic2024_early"],"mic2024_mid":sources["source_meta"]["mic2024_mid"],"mic2024":sources["source_meta"]["mic2024"],"mic2026":mic26_meta,
+        },
+        "temporal_transfer_calibration":temporal_transfer,
         **live_projection,
     }
     _write_json(LIVE_OUT,live_payload)
 
-    print("v0.9.26 MRP geography replacement/blend: COMPLETE")
+    print("v0.9.27 calibrated temporal MRP geography bridge: COMPLETE")
     print(f"2019 selected strength={selected:.2f}: {val_metrics['correct_winners']}/632, seat error {val_metrics['seat_abs_error_sum']}")
     print(f"2024 PRIMARY YouGov replacement/blend: {primary_metrics['correct_winners']}/632 = {primary_metrics['winner_accuracy']*100:.2f}%, seat error {primary_metrics['seat_abs_error_sum']}")
     print(f"2024 diagnostic MiC: {mic_metrics['correct_winners']}/632 = {mic_metrics['winner_accuracy']*100:.2f}%")
@@ -954,6 +1214,9 @@ def main()->int:
         pure=next(x["metrics"] for x in sweep_2024 if x["provider"]==provider and abs(float(x["strength"])-1.0)<1e-12)
         print(f"2024 PURE external geography {provider}: {pure['correct_winners']}/632 = {pure['winner_accuracy']*100:.2f}%, seat error {pure['seat_abs_error_sum']} [DIAGNOSTIC]")
     print(f"Gate 85={gate_85}; breakthrough 87={breakthrough_87}; stretch 90={stretch_90}; validation={validation_gate}")
+    print(f"Temporal lambda selected from MRP waves={temporal_lambda:.3f}; wave validation={temporal_transfer.get('validation_passed_vs_static')}; election replay={temporal_replay_passed}")
+    print(f"2026 calibrated totals={live_projection.get('totals',{})}")
+    print(f"2026 changed winners vs calibrated={live_sensitivity.get('changed_winners_vs_primary',{})}")
     print(f"Live geography={live_source['status']}")
     return 0
 
@@ -967,12 +1230,12 @@ if __name__=="__main__":
     except SystemExit:
         raise
     except Exception as exc:
-        print(f"build_mrp_geography_bridge.py v0.9.26 failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_geography_bridge.py v0.9.27 failed: {exc}",file=sys.stderr)
         traceback.print_exc()
         # Leave an explicit failure artefact when DATA exists, but never disguise
         # a technical failure as a scientific gate failure.
         try:
-            _write_json(DIAGNOSTIC_OUT,{"version":"uk-v0926-mrp-geography-bridge","status":"failed","generated_at":core.utcnow().isoformat(),"error":f"{type(exc).__name__}: {exc}"})
+            _write_json(DIAGNOSTIC_OUT,{"version":"uk-v0927-mrp-geography-bridge","status":"failed","generated_at":core.utcnow().isoformat(),"error":f"{type(exc).__name__}: {exc}"})
         except Exception:
             pass
         raise SystemExit(1)
