@@ -34,11 +34,11 @@
       `Maggioranza Labour: ${text("probLabMaj")}`,
       `Maggioranza Conservative: ${text("probConMaj")}`,
       `Maggioranza Reform UK: ${text("probRefMaj")}`,
-      `Hung parliament: ${text("probHung")}`,
+      `Parlamento senza maggioranza: ${text("probHung")}`,
       `Labour sopra la soglia operativa: ${text("probLabWorkMaj")}`,
       `Conservative sopra la soglia operativa: ${text("probConWorkMaj")}`,
       `Reform UK sopra la soglia operativa: ${text("probRefWorkMaj")}`,
-      `Soglia operativa indicata dalla dashboard: ${text("workingThreshold")}`,
+      `Soglia operativa indicata nella pagina: ${text("workingThreshold")}`,
       `Monte Carlo: ${text("mcCount")} · ${text("mcStatus")}`,
     ];
 
@@ -52,30 +52,28 @@
     return clean(`
 Sto consultando un nowcast sulle elezioni generali britanniche. Voglio una lettura pensata per un normale lettore interessato alle elezioni, non un audit del codice o dello sviluppo del modello.
 
-Dashboard: ${dashboardUrl()}
-Versione interfaccia: 0.9.40. Motore statistico di produzione: v0.9.29 congelato.
-
+Pagina: ${dashboardUrl()}
 INDICATORI PRINCIPALI
 ${kpis.map((row) => `- ${row}`).join("\n")}
-${section("MEDIA CORRENTE DEI SONDAGGI", voteRows)}${section("STIME CORRENTI PER PARTITO", seatRows)}${section("PROBABILITÀ MONTE CARLO", probabilityRows)}${section("DISTRIBUZIONE DEI SEGGI — MEDIANA E INTERVALLO 80%", uncertaintyRows)}${section("QUADRO TERRITORIALE", countryRows)}${section("BATTLEFIELD — COLLEGI PIÙ INCERTI", battlefieldRows)}${section("COLLEGI PIÙ INCERTI MOSTRATI DAL CONSTITUENCY EXPLORER", marginalRows)}${section("COMBINAZIONI MINIME DI MAGGIORANZA MOSTRATE", coalitionRows)}
+${section("MEDIA CORRENTE DEI SONDAGGI", voteRows)}${section("STIME CORRENTI PER PARTITO", seatRows)}${section("PROBABILITÀ MONTE CARLO", probabilityRows)}${section("DISTRIBUZIONE DEI SEGGI — MEDIANA E INTERVALLO 80%", uncertaintyRows)}${section("QUADRO TERRITORIALE", countryRows)}${section("COLLEGI IN BILICO — SEGGI PIÙ INCERTI", battlefieldRows)}${section("COLLEGI PIÙ INCERTI MOSTRATI NELL’ESPLORATORE", marginalRows)}${section("COMBINAZIONI MINIME DI MAGGIORANZA MOSTRATE", coalitionRows)}
 VALIDAZIONE DICHIARATA DAL MODELLO
-- Backtest 2019 del Geography Blend: 609/632 vincitori corretti, errore assoluto complessivo sui seggi 14.
-- Benchmark 2024 contro la geografia YouGov: 578/632, errore seggi 56.
-- Cross-validation leave-one-region-out 2024 del provider stack: 584/632, errore seggi 44. Questa misura non va descritta come un holdout elettorale puro e incontaminato: serve a validare il weighting geografico del provider stack.
+- Backtest 2019 della componente geografica: 609/632 vincitori corretti, errore assoluto complessivo sui seggi 14.
+- Confronto 2024 sulla geografia YouGov: 578/632, errore seggi 56.
+- Validazione incrociata geografica 2024, escludendo a turno una regione, della combinazione delle fonti esterne: 584/632, errore seggi 44. Questa misura non usa un’elezione interamente separata dalla calibrazione: serve a validare la ponderazione geografica delle fonti esterne.
 - La forza geografica 0,875 è stata selezionata sul 2019; il 2024 non è usato per selezionare quel parametro storico.
-- I topline nazionali dei provider MRP esterni non vengono importati nel modello: vengono usate soltanto informazioni geografiche secondo le regole dichiarate.
+- I valori nazionali delle fonti MRP esterne non vengono importati nel modello: vengono usate soltanto informazioni geografiche secondo le regole dichiarate.
 
 COSA TI CHIEDO
 1. Spiega in modo chiaro che cosa dice oggi il nowcast, distinguendo voto nazionale, seggi e probabilità. Non trattare lo scenario centrale come una certezza.
-2. Se puoi consultare il web, verifica indipendentemente gli ultimi sondaggi britannici disponibili: indica date e fonti, segnala se esistono rilevazioni più recenti di quella inclusa nella dashboard e non sostituire i dati del modello senza dirlo esplicitamente.
-3. Valuta se la trasformazione da voto nazionale a seggi è plausibile alla luce del First Past the Post, della geografia britannica e del trattamento separato dell'Irlanda del Nord. Usa intervalli e probabilità, non soltanto mediane.
+2. Se puoi consultare il web, verifica indipendentemente gli ultimi sondaggi britannici disponibili: indica date e fonti, segnala se esistono rilevazioni più recenti di quella inclusa nella pagina e non sostituire i dati del modello senza dirlo esplicitamente.
+3. Valuta se la trasformazione da voto nazionale a seggi è plausibile alla luce del sistema maggioritario uninominale (First Past the Post), della geografia britannica e del trattamento separato dell'Irlanda del Nord. Usa intervalli e probabilità, non soltanto mediane.
 4. Individua 3-5 fonti principali di incertezza e le regioni o i collegi marginali che potrebbero cambiare maggiormente il risultato.
 5. Per le coalizioni, separa sempre l'aritmetica parlamentare dalla plausibilità politica attuale. Se fai affermazioni su veti, compatibilità o disponibilità dei partiti, verificale online e cita la fonte.
 6. Costruisci tre scenari qualitativi plausibili: scenario centrale; scenario favorevole ai partiti oggi in crescita; scenario favorevole ai loro principali rivali. Evita falsa precisione e non inventare percentuali mancanti.
 7. Concludi con una valutazione sintetica dell'affidabilità del quadro (alta/media/bassa), spiegando quali elementi sono robusti e quali fragili.
 
 REGOLE DI LETTURA
-- Distingui sempre: (a) dati riportati dalla dashboard, (b) fatti verificati da fonti esterne, (c) tue inferenze.
+- Distingui sempre: (a) dati riportati nella pagina, (b) fatti verificati da fonti esterne, (c) tue inferenze.
 - Un nowcast risponde a “cosa accadrebbe se si votasse oggi?” e non è una previsione certa del giorno delle elezioni.
 - Non entrare nei dettagli del codice salvo che servano a spiegare un'anomalia sostanziale nei risultati.
 - Se un dato necessario non è presente, dichiaralo invece di ricostruirlo arbitrariamente.

@@ -12,35 +12,36 @@
 <meta property="og:url" content="https://angrisanidj.github.io/modello-uk/" />
 <meta property="og:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta property="og:description" content="Nowcast probabilistico della House of Commons: sondaggi, proiezione dei seggi, Monte Carlo e probabilità collegio per collegio." />
-<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.40" />
+<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.41" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="Nowcast delle elezioni nel Regno Unito — proiezione della House of Commons" />
-<meta property="og:site_name" content="Focus America election model" />
+<meta property="og:site_name" content="Daniele Angrisani · modello elettorale" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta name="twitter:description" content="Nowcast probabilistico della House of Commons: sondaggi, seggi, collegi e probabilità." />
-<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.40" />
-<link rel="stylesheet" href="styles.css?v=0.9.40" />
-<link rel="stylesheet" href="styles-v0935.css?v=0.9.40" />
-<link rel="stylesheet" href="styles-v0936.css?v=0.9.40" />
-<link rel="stylesheet" href="styles-v0937.css?v=0.9.40" />
-<link rel="stylesheet" href="styles-v0938.css?v=0.9.40" />
-<link rel="stylesheet" href="styles-v0939.css?v=0.9.40" />
-<link rel="stylesheet" href="styles-v0940.css?v=0.9.40" />
-<link rel="stylesheet" href="map-performance.css?v=0.9.40" />
+<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.41" />
+<link rel="stylesheet" href="styles.css?v=0.9.41" />
+<link rel="stylesheet" href="styles-v0935.css?v=0.9.41" />
+<link rel="stylesheet" href="styles-v0936.css?v=0.9.41" />
+<link rel="stylesheet" href="styles-v0937.css?v=0.9.41" />
+<link rel="stylesheet" href="styles-v0938.css?v=0.9.41" />
+<link rel="stylesheet" href="styles-v0939.css?v=0.9.41" />
+<link rel="stylesheet" href="styles-v0940.css?v=0.9.41" />
+<link rel="stylesheet" href="styles-v0941.css?v=0.9.41" />
+<link rel="stylesheet" href="map-performance.css?v=0.9.41" />
 </head>
 <body>
 <div id="mobileNowcastSticky" class="mobile-nowcast-sticky" aria-label="Riepilogo rapido del nowcast">
   <div class="mobile-nowcast-shell">
     <div class="mobile-nowcast-flag" aria-hidden="true"></div>
     <div class="mobile-nowcast-inner">
-      <div class="mobile-nowcast-brand"><span class="mobile-nowcast-badge" aria-hidden="true"></span><span class="mobile-nowcast-label">UK General Election · Focus America</span></div>
+      <div class="mobile-nowcast-brand"><span class="mobile-nowcast-badge" aria-hidden="true"></span><span class="mobile-nowcast-label">Elezioni nel Regno Unito · Daniele Angrisani</span></div>
       <div class="mobile-nowcast-stats">
         <span class="mobile-nowcast-now">Nowcast</span>
         <span class="mobile-nowcast-party"><i id="mobileParty1Dot" class="mobile-nowcast-dot"></i><span id="mobileParty1Name">—</span><strong id="mobileParty1Seats">—</strong></span>
         <span class="mobile-nowcast-party"><i id="mobileParty2Dot" class="mobile-nowcast-dot"></i><span id="mobileParty2Name">—</span><strong id="mobileParty2Seats">—</strong></span>
-        <span class="mobile-nowcast-hung"><span>Hung</span><strong id="mobileHungProb">—</strong></span>
+        <span class="mobile-nowcast-hung"><span>Senza magg.</span><strong id="mobileHungProb">—</strong></span>
         <span class="mobile-nowcast-majority"><strong>326</strong><span>maggioranza</span></span>
       </div>
     </div>
@@ -51,9 +52,9 @@
   <section class="hero">
     <div class="hero-grid">
       <div>
-        <div class="eyebrow"><span class="flag-dot" aria-hidden="true"></span> Focus America · election model</div>
+        <div class="eyebrow"><span class="flag-dot" aria-hidden="true"></span> Daniele Angrisani · modello elettorale</div>
         <h1>Elezioni nel Regno Unito</h1>
-        <p class="subtitle">Un nowcast dei <strong>650 seggi</strong> della House of Commons: polling nazionale, geography stack MRP, simulazioni Monte Carlo e probabilità di vittoria collegio per collegio. <strong>La domanda è: cosa accadrebbe se si votasse oggi?</strong></p>
+        <p class="subtitle">Un nowcast indipendente dei <strong>650 seggi</strong> della Camera dei Comuni: media nazionale dei sondaggi, struttura geografica MRP, simulazioni Monte Carlo e probabilità di vittoria collegio per collegio. <strong>La domanda è: che cosa accadrebbe se si votasse oggi?</strong></p>
       </div>
       <div class="actions">
         <button id="refreshBtn" class="primary">Aggiorna dati</button>
@@ -64,7 +65,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Sondaggi: —</span>
-      <span class="badge badge-strong">UI 0.9.40 · motore statistico 0.9.29 congelato</span>
+      <span class="badge badge-strong">Motore statistico congelato · controlli superati</span>
     </div>
   </section>
   <section class="editorial-meta" aria-label="Stato del modello">
@@ -72,7 +73,7 @@
       <div><span class="meta-kicker">Ultimo sondaggio</span><strong id="metaLatestPoll">—</strong></div>
       <div><span class="meta-kicker">Modello aggiornato</span><strong id="metaModelUpdated">—</strong></div>
       <div><span class="meta-kicker">Monte Carlo</span><strong>50.000 simulazioni</strong></div>
-      <div><span class="meta-kicker">House of Commons</span><strong>650 seggi · maggioranza 326</strong></div>
+      <div><span class="meta-kicker">Camera dei Comuni</span><strong>650 seggi · maggioranza 326</strong></div>
     </div>
   </section>
   <nav class="share-rail" aria-label="Condividi il nowcast">
@@ -86,15 +87,6 @@
     <button class="share-btn" type="button" data-share="instagram" title="Genera e condividi la card Instagram" aria-label="Condividi la card su Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></svg></button>
     <button class="share-btn" type="button" data-share="copy" title="Copia il link" aria-label="Copia il link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 1 0-7l1.5-1.5a5 5 0 0 1 7 7L17 13"/><path d="M14 11a5 5 0 0 1 0 7L12.5 19.5a5 5 0 0 1-7-7L7 11"/></svg></button>
   </nav>
-  <details class="read-guide">
-    <summary>Come leggere il modello</summary>
-    <div class="read-guide-grid">
-      <p><strong>È un nowcast, non una previsione del giorno delle elezioni.</strong> Risponde a una domanda precisa: che cosa accadrebbe se si votasse oggi con il quadro dei sondaggi disponibile.</p>
-      <p><strong>Il numero centrale non è una certezza.</strong> Le mediane dei seggi vanno lette insieme all’intervallo centrale 80% e alle probabilità prodotte dalle 50.000 simulazioni Monte Carlo.</p>
-      <p><strong>Nel Regno Unito conta la geografia.</strong> Il voto nazionale viene tradotto nei 632 collegi della Gran Bretagna con il geography stack MRP; i 18 seggi dell’Irlanda del Nord sono trattati separatamente.</p>
-      <p><strong>Mappa e scenari hanno funzioni diverse.</strong> La mappa live usa uno scenario territoriale rappresentativo coerente con le mediane; il what-if dell’utente è deterministico e non modifica né il modello di produzione né le probabilità Monte Carlo.</p>
-    </div>
-  </details>
   <div id="errorBox" class="errorbox"></div>
   <section class="grid kpis" aria-label="Indicatori principali">
     <article class="card kpi"><div class="label">Ultimo sondaggio</div><div id="kpiLastPoll" class="value">—</div><div id="kpiLastPollMeta" class="meta">—</div></article>
@@ -102,37 +94,46 @@
     <article class="card kpi"><div class="label">Primo partito</div><div id="kpiLargest" class="value">—</div><div id="kpiLargestMeta" class="meta">Monte Carlo</div></article>
     <article class="card kpi"><div class="label">Chance di maggioranza</div><div id="kpiMajority" class="value">—</div><div id="kpiMajorityMeta" class="meta">326 seggi</div></article>
   </section>
+  <details class="read-guide read-guide-separated">
+    <summary>Come leggere il modello</summary>
+    <div class="read-guide-grid">
+      <p><strong>È un nowcast, non una previsione del giorno delle elezioni.</strong> Risponde a una domanda precisa: che cosa accadrebbe se si votasse oggi con il quadro dei sondaggi disponibile.</p>
+      <p><strong>Il numero centrale non è una certezza.</strong> Le mediane dei seggi vanno lette insieme all’intervallo centrale 80% e alle probabilità prodotte dalle 50.000 simulazioni Monte Carlo.</p>
+      <p><strong>Nel Regno Unito conta la geografia.</strong> Il voto nazionale viene tradotto nei 632 collegi della Gran Bretagna con la struttura geografica MRP; i 18 seggi dell’Irlanda del Nord sono trattati separatamente.</p>
+      <p><strong>Mappa e scenari hanno funzioni diverse.</strong> La mappa corrente usa uno scenario territoriale rappresentativo coerente con le mediane; lo scenario personalizzato dell’utente è deterministico e non modifica né il modello di produzione né le probabilità Monte Carlo.</p>
+    </div>
+  </details>
   <div class="section-title"><div><div class="section-kicker">Nowcast</div><h2>Il quadro in una frase</h2><p>Dallo scenario centrale alla distribuzione probabilistica completa.</p></div></div>
   <section class="card outcome-card">
     <div class="outcome-main">
       <div class="outcome-label">Esito più probabile</div>
       <h2 id="outcomeHeadline">In attesa del modello</h2>
-      <p id="outcomeSub">Il Monte Carlo parte automaticamente quando sono disponibili tutti i collegi.</p>
+      <p id="outcomeSub">Il Monte Carlo parte automaticamente quando sono disponibili i dati di tutti i collegi.</p>
     </div>
     <div id="largestPartyGrid" class="largest-party-grid"></div>
   </section>
   <section class="card export-card" aria-label="Esporta il nowcast">
-    <div class="export-copy"><div class="export-kicker">Export</div><strong>Trasforma il nowcast in una card pronta da condividere</strong><p>PNG 16:9 per web e social, formato 4:5 per Instagram. Le card sono generate nel browser dai dati live, senza inviare dati a servizi esterni.</p></div>
-    <div class="export-actions"><button id="downloadSocialCardBtn" class="small-action" type="button">Scarica PNG 16:9</button><button id="downloadInstagramCardBtn" class="small-action" type="button">Scarica 4:5</button><button id="downloadSnapshotJsonBtn" class="small-action" type="button">Snapshot JSON</button><button id="shareSocialCardBtn" class="primary compact-primary" type="button">Condividi card</button></div>
+    <div class="export-copy"><div class="export-kicker">Export</div><strong>Trasforma il nowcast in una card pronta da condividere</strong><p>PNG 16:9 per web e social, formato 4:5 per Instagram. Le card sono generate nel browser dai dati correnti, senza inviare dati a servizi esterni.</p></div>
+    <div class="export-actions"><button id="downloadSocialCardBtn" class="small-action" type="button">Scarica PNG 16:9</button><button id="downloadInstagramCardBtn" class="small-action" type="button">Scarica 4:5</button><button id="downloadSnapshotJsonBtn" class="small-action" type="button">Istantanea JSON</button><button id="shareSocialCardBtn" class="primary compact-primary" type="button">Condividi card</button></div>
   </section>
-  <div class="section-title"><div><div class="section-kicker">Voto nazionale</div><h2>Media dei sondaggi</h2><p>Il topline è del modello Focus America; i provider MRP forniscono geografia relativa, non il voto nazionale.</p></div></div>
+  <div class="section-title"><div><div class="section-kicker">Voto nazionale</div><h2>Media dei sondaggi</h2><p>La media nazionale nasce esclusivamente dai sondaggi; le fonti MRP aggiungono informazione geografica relativa e non sostituiscono il voto nazionale.</p></div></div>
   <section class="grid two">
     <article class="card feature">
-      <div class="cardhead"><div><h3>Intenzione di voto</h3><p id="pollAverageMeta">—</p></div><div class="controls"><button class="active" data-window="all">Media</button><button data-window="latest">Ultimi poll</button></div></div>
+      <div class="cardhead"><div><h3>Intenzione di voto</h3><p id="pollAverageMeta">—</p></div><div class="controls"><button class="active" data-window="all">Media</button><button data-window="latest">Ultimi sondaggi</button></div></div>
       <div id="voteBars" class="vote-bars"></div>
     </article>
     <article class="card methodbox">
-      <div class="cardhead"><div><h3>Dal voto ai collegi</h3><p>Il FPTP britannico rende decisiva la distribuzione geografica.</p></div></div>
+      <div class="cardhead"><div><h3>Dal voto ai collegi</h3><p>Il sistema maggioritario uninominale (First Past the Post) rende decisiva la distribuzione geografica del voto.</p></div></div>
       <div class="method-list">
-        <div class="method-row"><span class="method-num">1</span><div><strong>Target nazionale interno</strong><span>Media dei sondaggi aggiornata; nessun topline YouGov/MiC viene importato.</span></div></div>
-        <div class="method-row"><span class="method-num">2</span><div><strong>632 collegi GB</strong><span>Geography stack MRP: YouGov 2024 + More in Common 2026, pesati per precisione e freschezza.</span></div></div>
-        <div class="method-row"><span class="method-num">3</span><div><strong>18 collegi NI</strong><span>Modulo separato con base Westminster 2024 e segnale Assembly solo debole.</span></div></div>
+        <div class="method-row"><span class="method-num">1</span><div><strong>Media nazionale interna</strong><span>Media ponderata dei sondaggi; i valori nazionali delle fonti MRP non vengono importati.</span></div></div>
+        <div class="method-row"><span class="method-num">2</span><div><strong>632 collegi della Gran Bretagna</strong><span>Struttura geografica MRP: YouGov 2024 + More in Common 2026, pesati per precisione e freschezza.</span></div></div>
+        <div class="method-row"><span class="method-num">3</span><div><strong>18 collegi dell’Irlanda del Nord</strong><span>Modulo separato con base Westminster 2024 e un segnale debole dalle elezioni dell’Assemblea nordirlandese.</span></div></div>
         <div class="method-row"><span class="method-num">4</span><div><strong>50.000 simulazioni</strong><span>Incertezza nazionale, regionale e locale propagata fino ai vincitori di collegio.</span></div></div>
       </div>
-      <div class="audit-chip"><strong>Motore live validato:</strong> 609/632 nel 2019 · 578/632 benchmark YouGov 2024 · 584/632 provider-stack CV regionale 2024.</div>
+      <div class="audit-chip"><strong>Motore validato:</strong> 609/632 nel 2019 · 578/632 nel confronto YouGov 2024 · 584/632 nella validazione geografica 2024.</div>
     </article>
   </section>
-  <div class="section-title" id="trend-polling"><div><div class="section-kicker">Trend dei sondaggi</div><h2>Come si sta muovendo il voto</h2><p>Una serie storica calcolata con la stessa ponderazione temporale della media live, ricostruita a ogni data senza modificare il nowcast.</p></div><span class="badge">Solo lettura · frontend</span></div>
+  <div class="section-title" id="trend-polling"><div><div class="section-kicker">Trend dei sondaggi</div><h2>Come si sta muovendo il voto</h2><p>Una serie storica ricostruita giorno per giorno con la stessa ponderazione temporale usata dalla media corrente.</p></div><span class="badge">Serie storica ricostruita</span></div>
   <section class="poll-trend-layout">
     <article class="card poll-trend-card">
       <div class="cardhead poll-trend-head"><div><h3>Media storica del modello</h3><p id="pollTrendMeta">In attesa dei sondaggi…</p></div><div class="controls poll-trend-controls" aria-label="Intervallo serie storica"><button type="button" data-poll-trend-range="90">90 giorni</button><button type="button" class="active" data-poll-trend-range="180">6 mesi</button><button type="button" data-poll-trend-range="365">1 anno</button><button type="button" data-poll-trend-range="all">Tutto</button></div></div>
@@ -142,9 +143,10 @@
         <button type="button" data-export-graphic="trend">PNG</button>
         <button type="button" data-share-graphic="trend">Condividi</button>
       </div>
-      <div class="poll-trend-chart-wrap"><svg id="pollTrendSvg" viewBox="0 0 860 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Andamento storico della media dei sondaggi"></svg><div id="pollTrendEmpty" class="poll-trend-empty">Serie storica non disponibile.</div></div>
+      <div class="poll-trend-chart-wrap"><svg id="pollTrendSvg" viewBox="0 0 860 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Andamento storico della media dei sondaggi"></svg><div id="pollTrendTooltip" class="poll-trend-tooltip" hidden></div><div id="pollTrendEmpty" class="poll-trend-empty">Serie storica non disponibile.</div></div>
       <div id="pollTrendLegend" class="poll-trend-legend"></div>
-      <div class="poll-trend-note">La linea non è un forecast: per ogni giorno ricalcola retrospettivamente la media nazionale usando half-life di 7 giorni e lookback di 100 giorni, come il topline live. I provider MRP non entrano in questa serie.</div>
+      <div class="chart-interaction-hint">Passa il cursore sul grafico per leggere i valori di ogni giorno; clicca un partito nella legenda o sulla linea per isolarlo.</div>
+      <div class="poll-trend-note">Questa serie non è una previsione: per ogni giorno ricalcola retrospettivamente la media nazionale con un’emivita di 7 giorni e una finestra massima di 100 giorni, usando lo stesso metodo della media corrente. Le fonti MRP non entrano nel calcolo.</div>
     </article>
     <aside class="poll-trend-side">
       <article class="card poll-move-card">
@@ -152,7 +154,7 @@
         <div id="pollMoveGrid" class="poll-move-grid"><div class="empty-small">Calcolo in corso…</div></div>
       </article>
       <article class="card poll-activity-card">
-        <div class="cardhead"><div><h3>Attività demoscopica</h3><p>Volume delle rilevazioni che alimentano lo snapshot nazionale.</p></div></div>
+        <div class="cardhead"><div><h3>Attività demoscopica</h3><p>Volume delle rilevazioni che alimentano la media nazionale corrente.</p></div></div>
         <div id="pollActivityStats" class="poll-activity-stats"><div class="empty-small">Calcolo in corso…</div></div>
         <div class="pollster-head"><strong>Istituti più attivi · 30 giorni</strong><span id="pollsterActivityMeta">—</span></div>
         <div id="pollsterActivity" class="pollster-activity"></div>
@@ -169,19 +171,20 @@
         <button type="button" data-export-graphic="projection">PNG</button>
         <button type="button" data-share-graphic="projection">Condividi</button>
       </div>
-      <div class="hemicycle-wrap"><svg id="hemicycle" viewBox="0 0 620 330" role="img" aria-label="Proiezione della House of Commons"></svg><div class="majority-marker">326</div></div>
+      <div class="hemicycle-wrap"><svg id="hemicycle" viewBox="0 0 620 330" role="img" aria-label="Proiezione della Camera dei Comuni"></svg><div class="majority-marker">326</div></div>
       <div id="seatStrip" class="seat-strip"></div>
       <div id="seatTable" class="seat-table"></div>
+      <div class="hemicycle-interaction-note">Clicca un partito nella legenda per evidenziarne i seggi nell’emiciclo; clicca di nuovo per tornare alla vista completa.</div>
     </article>
     <aside class="projection-side">
       <article class="card probability-card">
-        <div class="cardhead"><div><h3>Probabilità di governo</h3><p>Frequenze nelle 50.000 simulazioni.</p></div></div>
+        <div class="cardhead"><div><h3>Probabilità di governo</h3><p>Frequenza dell’esito nelle 50.000 simulazioni.</p></div></div>
         <div class="prob-section-label">Maggioranza assoluta</div>
         <div class="prob-list compact-probs">
           <div><span><i class="party-dot" style="background:var(--lab)"></i>Labour</span><strong id="probLabMaj">—</strong></div>
           <div><span><i class="party-dot" style="background:var(--con)"></i>Conservative</span><strong id="probConMaj">—</strong></div>
           <div><span><i class="party-dot" style="background:var(--ref)"></i>Reform UK</span><strong id="probRefMaj">—</strong></div>
-          <div class="prob-highlight"><span>Hung Parliament</span><strong id="probHung">—</strong></div>
+          <div class="prob-highlight"><span>Parlamento senza maggioranza</span><strong id="probHung">—</strong></div>
         </div>
         <div class="prob-section-label">Maggioranza operativa</div>
         <div class="prob-list compact-probs">
@@ -190,7 +193,7 @@
           <div><span>Reform UK</span><strong id="probRefWorkMaj">—</strong></div>
         </div>
         <div class="mc-progress"><div><span id="mcStatus">Monte Carlo non avviato</span><span id="mcCount">0 / 50.000</span></div><progress id="mcProgress" value="0" max="50000"></progress></div>
-        <div class="small-note">Seed deterministico. La soglia operativa indicativa esclude i seggi Sinn Féin astensionisti ed è circa <strong id="workingThreshold">—</strong>.</div>
+        <div class="small-note">Seme casuale deterministico. La soglia operativa indicativa esclude i seggi Sinn Féin astensionisti ed è circa <strong id="workingThreshold">—</strong>.</div>
       </article>
       <article class="card side-note">
         <div class="side-note-kicker">Come leggere la mappa</div>
@@ -199,12 +202,12 @@
       </article>
     </aside>
   </section>
-  <div class="section-title" id="incertezza"><div><div class="section-kicker">Incertezza</div><h2>Quanto è aperta davvero la corsa</h2><p>La stessa distribuzione delle 50.000 simulazioni letta in tre modi: intervalli dei seggi, probabilità di primo partito e collegi più contendibili.</p></div><span class="badge">Nessuna nuova simulazione</span></div>
+  <div class="section-title" id="incertezza"><div><div class="section-kicker">Incertezza</div><h2>Quanto è aperta davvero la corsa</h2><p>La distribuzione delle 50.000 simulazioni letta in tre modi: intervalli dei seggi, probabilità di primo partito e collegi più contendibili.</p></div><span class="badge">Nessuna nuova simulazione</span></div>
   <section class="uncertainty-layout">
     <article class="card uncertainty-card">
-      <div class="cardhead"><div><h3>Distribuzione dei seggi</h3><p>Mediana e intervallo centrale 80%. Tutte le barre usano la stessa scala.</p></div></div>
+      <div class="cardhead"><div><h3>Distribuzione dei seggi</h3><p>Mediana e intervallo centrale 80%. Tutte le barre usano la stessa scala. Clicca un partito per aprire la sezione «Esplora tutti i 650 collegi» già filtrata sui seggi assegnati a quel partito nello scenario selezionato.</p></div></div>
       <div id="uncertaintyPartyGrid" class="uncertainty-party-grid"><div class="empty-small">In attesa del Monte Carlo.</div></div>
-      <div class="uncertainty-note">Questa sezione non modifica il nowcast: visualizza soltanto risultati già prodotti dal motore v0.9.29.</div>
+      <div class="uncertainty-note">Questa sezione non modifica il nowcast: rende interattivi i risultati già prodotti dal motore statistico.</div>
     </article>
     <aside class="uncertainty-side">
       <article class="card uncertainty-leader-card">
@@ -212,7 +215,7 @@
         <div id="uncertaintyLeaderGrid" class="uncertainty-leader-grid"><div class="empty-small">Calcolo in corso…</div></div>
       </article>
       <article class="card battlefield-card">
-        <div class="cardhead"><div><h3>Battlefield</h3><p>Quanti collegi restano realmente contendibili nelle simulazioni.</p></div></div>
+        <div class="cardhead"><div><h3>Collegi in bilico</h3><p>Quanti collegi restano realmente contendibili nelle simulazioni.</p></div></div>
         <div id="battlefieldStats" class="battlefield-stats"><div class="empty-small">In attesa delle probabilità di collegio.</div></div>
         <div class="battlefield-head"><strong>Collegi più incerti</strong><span id="battlefieldRegionNote">—</span></div>
         <div id="battlefieldList" class="battlefield-list"></div>
@@ -223,7 +226,7 @@
   <section class="map-stage">
     <article class="card map-card">
       <div class="map-head">
-        <div><h3>Westminster constituencies</h3><p id="mapMeta">Caricamento geometrie ONS…</p></div>
+        <div><h3>Collegi di Westminster</h3><p id="mapMeta">Caricamento geometrie ONS…</p></div>
         <div class="controls map-mode" id="mapModeControls"><button id="mapCentralBtn" class="active">Proiezione</button><button id="mapMarginBtn">Margine</button><button id="mapProbBtn" disabled aria-disabled="true" title="Disponibile al termine delle 50.000 simulazioni">Probabilità</button><button id="mapUserBtn" disabled aria-disabled="true" title="Crea prima uno scenario nazionale">Scenario utente</button></div>
       </div>
       <div class="graphic-export-inline" data-graphic-panel="map">
@@ -242,13 +245,13 @@
           <button type="button" class="map-fit" data-mapzoom="filtered" title="Inquadra i collegi corrispondenti ai filtri">Filtrati</button>
         </div>
         <svg id="ukMap" viewBox="0 0 640 760" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mappa dei collegi parlamentari britannici"></svg>
-        <div id="mapEmpty" class="empty-state">Le geometrie saranno caricate dalla build automatica.</div>
+        <div id="mapEmpty" class="empty-state">Le geometrie saranno caricate dall’aggiornamento automatico.</div>
       </div>
     </article>
     <aside class="map-side">
       <article class="card seat-detail">
         <div class="cardhead detail-head"><div><div class="detail-kicker">Dettaglio del collegio</div><h3 id="detailName">Seleziona un collegio</h3><p id="detailRegion">—</p></div><div class="detail-actions"><button id="detailZoomBtn" class="small-action" type="button" disabled>Zoom collegio</button><button id="detailPngBtn" class="small-action" type="button" disabled>PNG collegio</button><button id="detailShareBtn" class="small-action" type="button" disabled>Condividi</button><button id="detailCopyBtn" class="small-action" type="button" disabled>Copia link</button></div></div>
-        <div id="detailBody" class="detail-body"><p>Clicca un collegio sulla mappa o nella tabella dei marginali per vedere risultato 2024, margine centrale, scenario rappresentativo e probabilità di vittoria.</p></div>
+        <div id="detailBody" class="detail-body"><p>Clicca un collegio sulla mappa o nella tabella dei collegi più incerti per vedere risultato 2024, margine centrale, scenario rappresentativo e probabilità di vittoria.</p></div>
       </article>
 
     </aside>
@@ -259,22 +262,22 @@
     <div class="map-read"><b>Margine</b><span>Più il colore è scuro, più ampio è il vantaggio centrale.</span></div>
     <div class="map-read"><b>Probabilità</b><span>Più il colore è intenso, più alta è la probabilità simulata del favorito.</span></div>
   </article>
-  <div class="section-title" id="regioni"><div><div class="section-kicker">Geografia politica</div><h2>Regioni e flussi di seggi</h2><p>Una lettura territoriale del nowcast: chi domina ogni area, dove cambiano i seggi e quali trasferimenti contano di più.</p></div><div class="regional-title-actions"><label class="compact-select"><span>Scenario</span><select id="regionalSource"><option value="live">Nowcast live</option><option value="custom" disabled>Scenario utente</option></select></label></div></div>
+  <div class="section-title" id="regioni"><div><div class="section-kicker">Geografia politica</div><h2>Regioni e flussi di seggi</h2><p>Una lettura territoriale del nowcast: chi domina ogni area, dove cambiano i seggi e quali trasferimenti contano di più.</p></div><div class="regional-title-actions"><label class="compact-select"><span>Scenario</span><select id="regionalSource"><option value="live">Nowcast corrente</option><option value="custom" disabled>Scenario utente</option></select></label></div></div>
   <section class="regional-dashboard">
     <div id="countrySummary" class="country-summary"></div>
     <div class="regional-grid">
       <article class="card regional-table-card">
         <div class="cardhead"><div><h3>Bilancio per area</h3><p id="regionalMeta">Scenario rappresentativo quando il Monte Carlo è pronto.</p></div></div>
         <div class="table-scroll regional-scroll"><table class="regional-table"><thead><tr><th>Area</th><th>Seggi</th><th>Primo partito</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>SNP</th><th>PC</th><th>Cambi</th><th>Incerti</th></tr></thead><tbody id="regionalTableBody"></tbody></table></div>
-        <div class="regional-note">Clicca un'area per applicarla come filtro nel Constituency Explorer.</div>
+        <div class="regional-note">Clicca un’area per applicarla come filtro nell’Esploratore dei collegi.</div>
       </article>
       <aside class="regional-side">
-        <article class="card party-net-card"><div class="cardhead"><div><h3>Saldo seggi vs 2024</h3><p>Guadagni e perdite nello scenario selezionato.</p></div></div><div id="partyNetGrid" class="party-net-grid"></div></article>
-        <article class="card seat-flow-card"><div class="cardhead"><div><h3>Principali passaggi di seggio</h3><p>Solo cambi di vincitore rispetto alle elezioni del 2024.</p></div></div><div id="seatFlowList" class="seat-flow-list"></div></article>
+        <article class="card party-net-card"><div class="cardhead"><div><h3>Saldo dei seggi rispetto al 2024</h3><p>Guadagni e perdite nello scenario selezionato.</p></div></div><div id="partyNetGrid" class="party-net-grid"></div></article>
       </aside>
     </div>
+    <article class="card seat-flow-card seat-flow-wide"><div class="cardhead"><div><h3>Principali passaggi di seggio</h3><p>I cambi di vincitore più frequenti rispetto alle elezioni del 2024. Clicca un passaggio per filtrare subito i collegi interessati.</p></div></div><div id="seatFlowList" class="seat-flow-list"></div></article>
   </section>
-  <div class="section-title" id="collegi"><div><div class="section-kicker">Constituency explorer</div><h2>Esplora tutti i 650 collegi</h2><p id="marginalMeta">Cerca, filtra e ordina ogni collegio. I filtri possono essere applicati anche alla mappa.</p></div></div>
+  <div class="section-title" id="collegi"><div><div class="section-kicker">Collegi</div><h2>Esplora tutti i 650 collegi</h2><p id="marginalMeta">Cerca, filtra e ordina ogni collegio. I filtri possono essere applicati anche alla mappa.</p></div></div>
   <section class="card marginal-card explorer-card">
     <div class="explorer-toolbar">
       <label class="filter-field search-field"><span>Cerca collegio</span><input id="seatSearch" type="search" placeholder="Es. Birmingham, Glasgow, Ynys Môn…" autocomplete="off"></label>
@@ -282,34 +285,17 @@
       <label class="filter-field"><span>Regione</span><select id="seatRegion"><option value="">Tutte</option></select></label>
       <label class="filter-field"><span>Vincitore scenario</span><select id="seatWinner"><option value="">Tutti</option></select></label>
       <label class="filter-field"><span>Vincitore 2024</span><select id="seatWinner2024"><option value="">Tutti</option></select></label>
-      <label class="filter-field"><span>Tipo di collegio</span><select id="seatStatus"><option value="">Tutti</option><option value="changed">Cambio rispetto al 2024</option><option value="held">Confermato</option><option value="margin25">Margine &lt; 2,5 p.p.</option><option value="margin5">Margine &lt; 5 p.p.</option><option value="tossup55">P favorito live &lt; 55%</option><option value="uncertain65">P favorito live &lt; 65%</option><option value="safe80">P favorito live ≥ 80%</option></select></label>
+      <label class="filter-field"><span>Tipo di collegio</span><select id="seatStatus"><option value="">Tutti</option><option value="changed">Cambio rispetto al 2024</option><option value="held">Confermato</option><option value="margin25">Margine &lt; 2,5 p.p.</option><option value="margin5">Margine &lt; 5 p.p.</option><option value="tossup55">Probabilità del favorito &lt; 55%</option><option value="uncertain65">Probabilità del favorito &lt; 65%</option><option value="safe80">Probabilità del favorito ≥ 80%</option></select></label>
       <label class="filter-field"><span>Ordina per</span><select id="seatSort"><option value="uncertainty">Più incerti</option><option value="margin">Margine più stretto</option><option value="change">Cambi di partito</option><option value="name">Nome A–Z</option><option value="winner">Partito previsto</option></select></label>
-      <label class="filter-field"><span>Scenario tabella</span><select id="seatSource"><option value="live">Nowcast live</option><option value="custom" disabled>Scenario utente</option></select></label>
+      <label class="filter-field"><span>Scenario della tabella</span><select id="seatSource"><option value="live">Nowcast corrente</option><option value="custom" disabled>Scenario utente</option></select></label>
       <div class="explorer-actions"><label class="filter-toggle"><input id="seatFilterMap" type="checkbox" checked><span>Evidenzia filtrati sulla mappa</span></label><button id="seatExportFiltered" class="small-action" type="button">CSV filtrati</button><button id="seatExportAll" class="small-action" type="button">CSV 650</button><button id="seatResetFilters" class="small-action">Azzera filtri</button></div>
     </div>
     <div class="explorer-presets"><button data-seat-preset="uncertain">Più incerti</button><button data-seat-preset="changed">Cambi di partito</button><button data-seat-preset="marginal">Marginali &lt;5 p.p.</button><button data-seat-preset="all">Tutti i collegi</button></div>
-    <div class="explorer-meta"><strong id="seatExplorerCount">—</strong><span id="seatExplorerNote">La graduatoria usa l'incertezza Monte Carlo quando disponibile.</span></div>
-    <div class="table-scroll"><table class="marginal-table explorer-table"><thead><tr><th>Collegio</th><th>Area</th><th>2024</th><th>Scenario</th><th>Margine</th><th>P favorito live</th></tr></thead><tbody id="marginalTableBody"></tbody></table></div>
+    <div class="explorer-meta"><strong id="seatExplorerCount">—</strong><span id="seatExplorerNote">La graduatoria usa l’incertezza Monte Carlo quando disponibile.</span></div>
+    <div class="table-scroll"><table class="marginal-table explorer-table"><thead><tr><th>Collegio</th><th>Area</th><th>2024</th><th>Scenario</th><th>Margine</th><th>Probabilità del favorito</th></tr></thead><tbody id="marginalTableBody"></tbody></table></div>
     <div class="explorer-footer explorer-footer-paged"><span class="table-note" id="seatExplorerFooter">Clicca una riga per aprire il dettaglio sulla mappa.</span><nav id="seatPagination" class="pagination" aria-label="Pagine collegi"></nav></div>
   </section>
-  <div class="section-title"><div><div class="section-kicker">What-if</div><h2>Costruisci il tuo scenario nazionale</h2><p>Modifica il voto GB e osserva come cambiano i vincitori mantenendo congelata la geografia relativa del modello live.</p></div></div>
-  <section class="card scenario-builder-card">
-    <div class="scenario-builder-grid">
-      <div>
-        <div class="scenario-intro"><strong>Scenario deterministico, separato dal nowcast</strong><p>Non modifica il modello di produzione e non ricalcola le probabilità Monte Carlo. Le quote locali relative della v0.9.29 restano congelate; cambia soltanto il target nazionale inserito qui sotto.</p></div>
-        <div id="scenarioInputs" class="scenario-inputs"></div>
-        <div class="scenario-total"><span>Totale</span><strong id="scenarioTotal">100,0%</strong><button id="scenarioNormalizeBtn" class="small-action">Normalizza a 100</button></div>
-        <div class="scenario-actions"><button id="scenarioRunBtn" class="primary">Calcola scenario</button><button id="scenarioResetBtn" class="small-action">Ripristina nowcast</button><button id="scenarioMapBtn" class="small-action" disabled>Mostra sulla mappa</button></div>
-        <div id="scenarioMessage" class="small-note">Restore Britain non entra nella conversione per collegio finché non esiste una baseline geografica difendibile; lo scenario lavora sui partiti attualmente modellati nei seggi.</div>
-      </div>
-      <div class="scenario-results">
-        <div class="scenario-results-head"><span>Risultato scenario</span><strong id="scenarioChanges">—</strong></div>
-        <div id="scenarioSeatStrip" class="seat-strip scenario-strip"></div>
-        <div id="scenarioSeatTable" class="seat-table scenario-seat-table"><div class="empty-small">Calcola uno scenario per vedere la distribuzione dei seggi.</div></div>
-      </div>
-    </div>
-  </section>
-  <div class="section-title"><div><div class="section-kicker">Scenari</div><h2>Costruisci una maggioranza</h2><p>Somma i seggi mediani e misura la probabilità che la combinazione superi la soglia operativa.</p></div></div>
+  <div class="section-title"><div><div class="section-kicker">Maggioranze</div><h2>Costruisci una maggioranza</h2><p>Somma i seggi mediani e misura la probabilità che la combinazione superi la soglia operativa.</p></div></div>
   <section class="card coalition-card">
     <div class="coalition-dashboard">
       <div class="coalition-select"><div class="coalition-label">Seleziona i partiti</div><div id="coalitionButtons" class="coalition-buttons"></div></div>
@@ -318,7 +304,24 @@
     <div class="winning-head"><h4>Coalizioni minime vincenti</h4><p>Combinazioni aritmetiche fra i principali partiti: nessuna valutazione di compatibilità politica è implicita.</p></div>
     <div id="coalitionOptions" class="coalition-options"></div>
   </section>
-  <div class="section-title"><div><div class="section-kicker">Sondaggi</div><h2>Rilevazioni dalla General Election 2024</h2><p>Tutte le rilevazioni disponibili dal 4 luglio 2024, ordinate dalla più recente. Filtra per istituto o area e sfoglia 25 record alla volta.</p></div><span id="pollTableCount" class="badge">—</span></div>
+  <div class="section-title"><div><div class="section-kicker">Scenario personalizzato</div><h2>Costruisci il tuo scenario nazionale</h2><p>Modifica il voto GB e osserva come cambiano i vincitori mantenendo invariata la geografia relativa del modello corrente.</p></div></div>
+  <section class="card scenario-builder-card">
+    <div class="scenario-builder-grid">
+      <div>
+        <div class="scenario-intro"><strong>Scenario deterministico, separato dal nowcast</strong><p>Non modifica il modello di produzione e non ricalcola le probabilità Monte Carlo. Le quote locali relative restano invariate; cambia soltanto il voto nazionale inserito qui sotto.</p></div>
+        <div id="scenarioInputs" class="scenario-inputs"></div>
+        <div class="scenario-total"><span>Totale</span><strong id="scenarioTotal">100,0%</strong><button id="scenarioNormalizeBtn" class="small-action">Normalizza a 100</button></div>
+        <div class="scenario-actions"><button id="scenarioRunBtn" class="primary">Calcola scenario</button><button id="scenarioResetBtn" class="small-action">Ripristina nowcast</button><button id="scenarioMapBtn" class="small-action" disabled>Mostra sulla mappa</button></div>
+        <div id="scenarioMessage" class="small-note">Restore Britain non entra nella conversione per collegio finché non esiste una base geografica sufficientemente solida; lo scenario lavora sui partiti attualmente modellati nei seggi.</div>
+      </div>
+      <div class="scenario-results">
+        <div class="scenario-results-head"><span>Risultato scenario</span><strong id="scenarioChanges">—</strong></div>
+        <div id="scenarioSeatStrip" class="seat-strip scenario-strip"></div>
+        <div id="scenarioSeatTable" class="seat-table scenario-seat-table"><div class="empty-small">Calcola uno scenario per vedere la distribuzione dei seggi.</div></div>
+      </div>
+    </div>
+  </section>
+  <div class="section-title"><div><div class="section-kicker">Sondaggi</div><h2>Tutti i sondaggi dalle elezioni del 2024</h2><p>Dal 4 luglio 2024 a oggi, ordinati dal più recente. Puoi filtrare per istituto o area e sfogliare 25 rilevazioni alla volta.</p></div><span id="pollTableCount" class="badge">—</span></div>
   <section class="card poll-table-card poll-browser-card">
     <div class="poll-filterbar">
       <label class="filter-field poll-search"><span>Cerca</span><input id="pollSearch" type="search" placeholder="Istituto o committente…" autocomplete="off"></label>
@@ -329,30 +332,30 @@
     <div class="table-scroll poll-table-scroll"><table><thead><tr><th>Data</th><th>Istituto</th><th>Committente</th><th>Area</th><th>n</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>Green</th><th>SNP</th><th>PC</th><th>RB</th></tr></thead><tbody id="pollTableBody"></tbody></table></div>
     <div class="poll-browser-footer"><span id="pollTableMeta" class="table-note">25 rilevazioni per pagina.</span><nav id="pollPagination" class="pagination" aria-label="Pagine sondaggi"></nav></div>
   </section>
-  <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La validazione è separata dall’interfaccia: il live resta sul motore v0.9.29 e viene pubblicato solo se i gate automatici restano superati.</p></div><span class="validation-badge">AUDIT SUPERATO</span></div>
+  <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La validazione è separata dall’interfaccia: il modello viene pubblicato soltanto se supera tutti i controlli automatici previsti.</p></div><span class="validation-badge">CONTROLLI SUPERATI</span></div>
   <section class="backtest-pro">
     <article class="card backtest-summary-card">
-      <div class="backtest-head"><div><h3>Prestazioni validate</h3><p>Accuracy a livello di collegio e controllo dell’errore sui seggi.</p></div><span class="engine-lock">v0.9.29 · frozen</span></div>
+      <div class="backtest-head"><div><h3>Prestazioni validate</h3><p>Accuratezza a livello di collegio e controllo dell’errore complessivo sui seggi.</p></div><span class="engine-lock">MOTORE CONGELATO</span></div>
       <div class="backtest-metrics">
         <div class="bt-metric"><strong>96,36%</strong><span>2019 · vincitori corretti</span><small>609 / 632 · errore seggi 14</small></div>
-        <div class="bt-metric"><strong>91,46%</strong><span>2024 · benchmark YouGov</span><small>578 / 632 · errore seggi 56</small></div>
-        <div class="bt-metric featured"><strong>92,41%</strong><span>2024 · provider stack CV</span><small>584 / 632 · errore seggi 44</small></div>
-        <div class="bt-metric"><strong>0,875</strong><span>Strength geografica</span><small>selezionata esclusivamente sul 2019</small></div>
+        <div class="bt-metric"><strong>91,46%</strong><span>2024 · confronto YouGov</span><small>578 / 632 · errore seggi 56</small></div>
+        <div class="bt-metric featured"><strong>92,41%</strong><span>2024 · validazione geografica regionale</span><small>584 / 632 · errore seggi 44</small></div>
+        <div class="bt-metric"><strong>0,875</strong><span>Intensità geografica</span><small>selezionata esclusivamente sul 2019</small></div>
       </div>
-      <div class="backtest-verdict"><strong>✓ Gate di produzione superato.</strong><span>Il 92,41% è una validazione spaziale leave-one-region-out del layer provider sul 2024, non un holdout elettorale incontaminato. La UI v0.9.40 non ritocca parametri, sorgenti o criteri di promozione.</span></div>
+      <div class="backtest-verdict"><strong>✓ Controllo di pubblicazione superato.</strong><span>Il 92,41% deriva da una validazione geografica in cui, a turno, una regione viene esclusa dal calcolo: non è quindi una verifica su un’elezione interamente tenuta fuori dalla calibrazione. Le modifiche dell’interfaccia non cambiano parametri, fonti o criteri di promozione.</span></div>
     </article>
     <article class="card production-pipeline-card">
-      <div class="cardhead"><div><h3>Pipeline di produzione</h3><p>Dal dato grezzo al live, con controlli prima della pubblicazione.</p></div></div>
-      <div class="pipeline pipeline-pro"><span>Sondaggi</span><b>→</b><span>Target nazionale</span><b>→</b><span>MRP geography stack</span><b>→</b><span>632 GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div>
-      <div class="pipeline-checks"><div><b>01</b><span>Ricostruzione candidato congelato</span></div><div><b>02</b><span>Backtest e provider coverage</span></div><div><b>03</b><span>Nessun topline MRP esterno</span></div><div><b>04</b><span>Stabilità fra scenari</span></div></div>
-      <div class="explain compact"><p>Il watcher MRP segnala eventuali nuove pubblicazioni ma non le adotta automaticamente. Solo un audit superato può promuovere il candidato nel live.</p></div>
+      <div class="cardhead"><div><h3>Processo di produzione</h3><p>Dal dato grezzo al modello corrente, con controlli prima della pubblicazione.</p></div></div>
+      <div class="pipeline pipeline-pro"><span>Sondaggi</span><b>→</b><span>Media nazionale</span><b>→</b><span>Struttura geografica MRP</span><b>→</b><span>632 collegi GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>18 collegi NI</span></div>
+      <div class="pipeline-checks"><div><b>01</b><span>Ricostruzione della configurazione congelata</span></div><div><b>02</b><span>Verifica storica e copertura delle fonti</span></div><div><b>03</b><span>Nessun valore nazionale MRP esterno</span></div><div><b>04</b><span>Stabilità fra scenari</span></div></div>
+      <div class="explain compact"><p>Il controllo automatico delle fonti MRP segnala eventuali nuove pubblicazioni ma non le adotta da solo. Un aggiornamento può entrare nel modello soltanto dopo aver superato tutti i controlli previsti.</p></div>
     </article>
   </section>
-  <div class="section-title ai-section-break"><div><div class="section-kicker">Lettura assistita</div><h2>Verifica e interpreta le stime con un’IA</h2><p>Genera un prompt dai valori già visibili nella dashboard e chiedi una lettura indipendente del nowcast.</p></div><span class="ai-lab-badge">VERIFICA STIME</span></div>
+  <div class="section-title ai-section-break"><div><div class="section-kicker">Lettura assistita</div><h2>Verifica e interpreta le stime con un’IA</h2><p>Genera un prompt dai valori già visibili nella pagina e chiedi una lettura indipendente del nowcast.</p></div><span class="ai-lab-badge">VERIFICA STIME</span></div>
   <section class="card ai-card ai-card-pro">
     <div class="ai-card-copy">
       <h3>Una seconda lettura, senza toccare il modello</h3>
-      <p>Il prompt raccoglie media dei sondaggi, seggi mediani, intervalli, probabilità, collegi più incerti e principali coalizioni. La struttura riprende il pannello del modello Germania.</p>
+      <p>Il prompt raccoglie media dei sondaggi, seggi mediani, intervalli, probabilità, collegi più incerti e principali combinazioni di maggioranza, senza modificare i calcoli del modello.</p>
       <div class="ai-grid-brands" aria-label="Apri il prompt in un assistente IA">
         <button type="button" class="ai-brand-btn perplexity" data-ai="perplexity"><span class="ai-brandmark"><img alt="Perplexity" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACkAAAAuCAYAAAC1ZTBOAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALjSURBVFhH7ZjtsaMgFIbfu7N1nDRgCaEB7SBUYAlUQAlUgB2QBkgJNnApIQ24fzwOQY2g7ty7O/eZYSYBJE+Qr8PH8/kc8M35lWZ8R34kz+L/kPTew1qbZi/Sti3atk2zV/HeI4SQZs/YlMT44zmi3nt479PsRbTWaJomzV4kSxKjqNY6zd5F0zRFbWVLYvz3JY2nhBDQNE12bzPZklJKENEkmjOWYkIIqOsa3nsIISClTKuski1JROj7fpeo9x5VVSGEAGMMnHNplbdkSzJ930NKCWst2rbdFI0niHOuqAeZYkkAMMZASgnvPeq6XhXlyUZEcM5BCJFWyWKXJEZRpdQ01lLRpmlgrYUQAn3f7xbEEUkAUErNROMZLIQoHn9LfKRHtXQXCCFAaw0hBG63W1x1ouu62bJCRFBKveTF8DPGmCmPiJZ7/Pl8DnGSUg4AviRJKV9cOP1OpRmlFIgozV7k8XjMts2S5/ltrTF73bxP85q4hfd+WmLi+iGE7DZCCKiqClLKl9fPHJo4sWA8QYwxIKJpAT/KbslUMB7wQohTRXdJvhNkzhQtlswRZM4SLZIsEWTOEM2W3CPIHBXNkjwiyBwR3ZTkvRgHBJm9opuSn5+fwLiDHBFkhBBTO9z2FpuSf4OcXShmVdJaC601uq5Lixbh0xOnHLqug9Z6tu+nrB4w3m34KRxKMHVd436/b/bYlhwzk7zdbi/nxhDC21sJDspYiHuxqqopzFhDKYXr9Tp9v1wuL+UT6dktTc65AcCglJqV8dmTiAbn3EBEL58BDMaY2XNKqQHA4JyblS2l1TG5BccwNIa68cyPl5ozbj52ScYxTN/3aTEwivK4LI3TU4olS4IsIjpFNFuSd55cQYaHQ8mFQkq2pLUW3ntIKbMFY+ILhdylh8mWxPhDSzFILnyhUEq25N57nBS+UNha6GOyJHNPP5fLJasei64u3gmzkPY7ktWTX82P5Fn8E5J/AIHoiY0JdVzXAAAAAElFTkSuQmCC"></span><span><strong>PERPLEXITY</strong><small>Verifica dati e stime</small></span></button>
         <button type="button" class="ai-brand-btn openai" data-ai="openai"><span class="ai-brandmark"><img alt="ChatGPT" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACkAAAArCAYAAADlqKH9AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAQ5SURBVFhH7Vjtbaw6ED33FZASZhugBKaBpYNQgTsIFZAOXAHbgbcBpwQ3sC6BBnh/GGts8C7k3ivlSe9IlhLw2sfjM1/8mud5wQ/HP+WDn4j/Sf4p/PquJr33uN1u8N4DAGKMYGa0bYu2bcHM5U++jdMkvff4/PxM5GpgZlhrQUTlq9M4RdJ7j67rsmd936NtWwDA7XbD4/FAjBEAQES43+8gouzZWRwmqQkSEay11SsdxxHTNCViGiKJvu8PEz5MsmkaxBhBRAghlK8TYowwxryUAwAMw3CI7CHvHscxWcVaW75OGMcRTdNkBPu+h7UWIQQ45zAMQyI1jiOu1+uuxTPM87zUhnNusdYuABYACxFt5szzvFhrFyJK8wAs1trNPD2GYUhzh2FYQgibOTKqJPu+zzaVxfQc59zCzNmcvu+fbqhHSbR8L2NDMoSw2ViGc253AwALM2fv9ag9n+c53QARVQ+XkQwhbKzinEv/60XkIERUJaFvg5l3Sej1a+tkjjOOY/rbOffUSbCGohDCJhRN04S3tzdM05ScxHuPpmlgjMkchZnTnJoDJZIxRkzTBKyhodz4CCSWGmNARHDOIYSQZZ5pmtA0TRZHL5cLAODr6ytbT5BICkGsJM8gxoiu69B1Hbz3YGbc7/d00L7vEULIYqIxBtfr9VA8TSTlFGctqGOjkPDe7wZ0ay3u9zv6vgfU4WReLagnko/HAwBSHj6CGCPGcQQzJw2LxR6PR7p6rTVJqc65Dana3pkmvwPZUN+AtphoUGctrDcWQsik9VKTrzxsD0SUrq4EEWWWkRSotY9V/0JUCpMSiaRYwnufEb1cLukAIomz0OHMGIOu67I9dD6/3W7puSCRlFPHGDPBi7WIKHnwGWsLxMOZGd77jcXEmqWRoEnq8FDqZxiGpDEJyqXnHoXsUepPy6ZcO8s4uoouS6g9r4wqAZSIMe5e3TPU/CIjSUQp+scYn3qlZBHRmD79Xl15BLJPGZo2RW+5cM0rdRbRMVEOxsxVz99DaT2NjGSpQ9FpXFuC0mJYY6KIXvKxyKIWnPegjVAebmNJgWhQN1xeFRByIGMMjDHAuvg8z5tNXiGumQuVumGjyVIPOuXJO8kiUo5pnWo8u0INOSR2rIiSJFTZVHqmaFAHXlrLsb08bIzJ6tM9yM2IhPTaGcoqWLcFe5X0vFbwtSq6bCvK5q3WmpzqceaDfUc5nHObjnFv45Lcs/Yj/aZ8MK+W0kSfLbLXuNU6Rt1DMfPLtldG9QvGOI6ZppgZ7+/vWVbQX9VkzsfHR7VwFv3Ri68gG5Ss9di7wtp4ZRXdOe7J4NnYeLeGLkxZdXUlnr2La4sgwZqZd2PhM1SvuwadX/ck0bZtylKxKEAk5p7FaZIlpmnaFCF70BX4Wfw2ScE0TdlHVCJKMvguOcEfI/k38dRxfgr+EyT/BZ1ALiO6ohIBAAAAAElFTkSuQmCC"></span><span><strong>CHATGPT</strong><small>Interpreta lo scenario</small></span></button>
@@ -368,12 +371,13 @@
     </details>
   </section>
   <footer>
-    <p><strong>Fonti:</strong> Wikipedia/MediaWiki per i sondaggi; House of Commons Library e UK Parliament per le generali; Democracy Club per elezioni locali e by-election; ONS per confini e lookup geografici. Modello indipendente a fini informativi.</p>
-    <p id="footerBuild">Build dati: —</p>
+    <p><strong>Fonti:</strong> Wikipedia/MediaWiki per i sondaggi; Biblioteca della Camera dei Comuni e UK Parliament per le elezioni generali; Democracy Club per elezioni locali e suppletive; ONS per confini e corrispondenze geografiche. Modello indipendente a fini informativi.</p>
+    <p id="footerBuild">Dati: —</p>
   </footer>
+  <div class="author-signature">Daniele Angrisani · Nowcast probabilistico delle elezioni nel Regno Unito · <a href="https://x.com/putino" target="_blank" rel="noopener">@putino</a></div>
 </main>
-<script src="scripts/app.js?v=0.9.40"></script>
-<script src="scripts/map-performance.js?v=0.9.40"></script>
-<script src="scripts/interpretation.js?v=0.9.40"></script>
+<script src="scripts/app.js?v=0.9.41"></script>
+<script src="scripts/map-performance.js?v=0.9.41"></script>
+<script src="scripts/interpretation.js?v=0.9.41"></script>
 </body>
 </html>

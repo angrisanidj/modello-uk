@@ -40,8 +40,8 @@ const PARTY_ORDER = ['lab','con','ref','ld','green','snp','pc','rb','other'];
 const SEAT_MODEL_PARTIES = PARTY_ORDER.filter(p=>p!=='rb');
 const PARTY = {
   lab:{name:'Labour',short:'Lab',color:'#e4003b'},
-  con:{name:'Conservative',short:'Con',color:'#0087dc'},
-  ref:{name:'Reform UK',short:'Ref',color:'#12b6cf'},
+  con:{name:'Conservative',short:'Con',color:'#2f8fff'},
+  ref:{name:'Reform UK',short:'Ref',color:'#24c7c9'},
   ld:{name:'Liberal Democrats',short:'LD',color:'#faa61a'},
   green:{name:'Green',short:'Green',color:'#6ab023'},
   snp:{name:'SNP',short:'SNP',color:'#f6e642',text:'#111'},
@@ -68,11 +68,11 @@ const MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:
 const OFFLINE = new URLSearchParams(location.search).get('offline') === '1';
 
 const state = {
-  polls:[], pollSource:'', average:null, latestAverage:null, pollTrendRange:180,
+  polls:[], pollSource:'', average:null, latestAverage:null, pollTrendRange:180, pollTrendFocus:null,
   constituencies:[], constituencyIndex:new Map(), byId:new Map(), geometry:null, ni:null,
   modelParams:null, mrpLite:null, subnational:[], territorialBaseline:null, geographicTargets:null,
   mapPaths:new Map(), selectedPath:null,
-  central:null, mc:null, representative:null, customScenario:null, selectedSeat:null, mapMode:'central', coalition:new Set(), explorerPage:1, explorerPageSize:25, explorerMatchingIds:null, pollPage:1, pollPageSize:25,
+  central:null, mc:null, representative:null, customScenario:null, selectedSeat:null, mapMode:'central', coalition:new Set(), explorerPage:1, explorerPageSize:25, explorerMatchingIds:null, pollPage:1, pollPageSize:25, hemiFocus:null,
 };
 
 const MAP_BASE_VIEW={x:0,y:0,w:640,h:760};
@@ -84,7 +84,7 @@ const mapZoomState={
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 const fmt1 = n => Number.isFinite(n) ? n.toLocaleString('it-IT',{minimumFractionDigits:1,maximumFractionDigits:1}) : '—';
-const fmt0 = n => Number.isFinite(n) ? Math.round(n).toLocaleString('it-IT') : '—';
+const fmt0 = n => Number.isFinite(n) ? String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.') : '—';
 const pctFmt = n => Number.isFinite(n) ? `${fmt1(n)}%` : '—';
 const clamp = (x,a,b) => Math.max(a,Math.min(b,x));
 const sleepFrame = () => new Promise(resolve => requestAnimationFrame(() => resolve()));
@@ -157,9 +157,9 @@ function parseWikipediaPolls(html){
 }
 
 async function loadPolls(){
-  try { const j=await fetchJson(CONFIG.pollsLocal,5000); if(j?.polls?.length>=20){state.pollSource='snapshot automatico';return j.polls;} } catch(_){ }
-  if(!OFFLINE) try { const j=await fetchJson(CONFIG.wikiApi,12000); const polls=parseWikipediaPolls(j.parse.text['*']); if(polls.length>=20){state.pollSource='MediaWiki live';return polls;} } catch(_){ }
-  const f=await fetchJson(CONFIG.pollsFallback,5000); state.pollSource='snapshot di sicurezza'; return f.polls||[];
+  try { const j=await fetchJson(CONFIG.pollsLocal,5000); if(j?.polls?.length>=20){state.pollSource='archivio automatico';return j.polls;} } catch(_){ }
+  if(!OFFLINE) try { const j=await fetchJson(CONFIG.wikiApi,12000); const polls=parseWikipediaPolls(j.parse.text['*']); if(polls.length>=20){state.pollSource='MediaWiki in tempo reale';return polls;} } catch(_){ }
+  const f=await fetchJson(CONFIG.pollsFallback,5000); state.pollSource='archivio di sicurezza'; return f.polls||[];
 }
 
 function parseCsv(text){
@@ -306,20 +306,26 @@ function historicalDelta(days,p){
 }
 function signedPp(v){if(!Number.isFinite(v))return '—';const sign=v>0?'+':'';return `${sign}${fmt1(v)} p.p.`;}
 function renderPollTrend(){
-  const svg=$('#pollTrendSvg'),empty=$('#pollTrendEmpty'),legend=$('#pollTrendLegend'),move=$('#pollMoveGrid'),stats=$('#pollActivityStats'),pollsters=$('#pollsterActivity');if(!svg||!legend||!move||!stats||!pollsters)return;
-  const series=pollTrendSeries(state.pollTrendRange),parties=['lab','con','ref','ld','green'];
-  if(series.length<2){svg.innerHTML='';empty.style.display='grid';legend.innerHTML='';return;}empty.style.display='none';
+  const svg=$('#pollTrendSvg'),empty=$('#pollTrendEmpty'),legend=$('#pollTrendLegend'),move=$('#pollMoveGrid'),stats=$('#pollActivityStats'),pollsters=$('#pollsterActivity'),tooltip=$('#pollTrendTooltip');if(!svg||!legend||!move||!stats||!pollsters)return;
+  const series=pollTrendSeries(state.pollTrendRange),parties=['lab','con','ref','ld','green'],focus=state.pollTrendFocus&&parties.includes(state.pollTrendFocus)?state.pollTrendFocus:null;
+  if(series.length<2){svg.innerHTML='';empty.style.display='grid';legend.innerHTML='';if(tooltip)tooltip.hidden=true;return;}empty.style.display='none';
   const W=860,H=360,pad={l:46,r:18,t:18,b:42};const vals=series.flatMap(x=>parties.map(p=>x.values[p]).filter(Number.isFinite));let lo=Math.floor((Math.min(...vals)-2)/5)*5,hi=Math.ceil((Math.max(...vals)+2)/5)*5;lo=Math.max(0,lo);if(hi-lo<20)hi=lo+20;
   const x=i=>pad.l+(W-pad.l-pad.r)*(i/(series.length-1)),y=v=>pad.t+(H-pad.t-pad.b)*(1-(v-lo)/(hi-lo));const grid=[];
   for(let v=lo;v<=hi+.001;v+=5){const yy=y(v);grid.push(`<line x1="${pad.l}" x2="${W-pad.r}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" class="poll-trend-gridline"/><text x="${pad.l-9}" y="${(yy+4).toFixed(1)}" class="poll-trend-axis" text-anchor="end">${fmt0(v)}%</text>`);}
   const tickCount=4;for(let i=0;i<=tickCount;i++){const idx=Math.round((series.length-1)*i/tickCount),xx=x(idx);grid.push(`<text x="${xx.toFixed(1)}" y="${H-13}" class="poll-trend-axis poll-trend-date" text-anchor="middle">${formatDate(series[idx].date).slice(0,5)}</text>`);}
-  const lines=parties.map(p=>{const pts=series.map((d,i)=>`${x(i).toFixed(1)},${y(d.values[p]).toFixed(1)}`).join(' '),last=series[series.length-1];return `<polyline points="${pts}" fill="none" stroke="${PARTY[p].color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="poll-trend-line"><title>${PARTY[p].name}</title></polyline><circle cx="${x(series.length-1).toFixed(1)}" cy="${y(last.values[p]).toFixed(1)}" r="4.2" fill="${PARTY[p].color}"><title>${PARTY[p].name}: ${pctFmt(last.values[p])}</title></circle>`;}).join('');
+  const lines=parties.map(p=>{const pts=series.map((d,i)=>`${x(i).toFixed(1)},${y(d.values[p]).toFixed(1)}`).join(' '),last=series[series.length-1],cls=focus?(focus===p?'is-focused':'is-dimmed'):'';return `<polyline points="${pts}" fill="none" stroke="${PARTY[p].color}" stroke-width="${focus===p?4:3}" stroke-linecap="round" stroke-linejoin="round" class="poll-trend-line ${cls}" data-trend-party="${p}" tabindex="0"><title>${PARTY[p].name}</title></polyline><circle cx="${x(series.length-1).toFixed(1)}" cy="${y(last.values[p]).toFixed(1)}" r="${focus===p?5.2:4.2}" fill="${PARTY[p].color}" class="poll-trend-end ${cls}" data-trend-party="${p}"><title>${PARTY[p].name}: ${pctFmt(last.values[p])}</title></circle>`;}).join('');
   svg.innerHTML=`<g>${grid.join('')}</g><line x1="${pad.l}" x2="${W-pad.r}" y1="${H-pad.b}" y2="${H-pad.b}" class="poll-trend-baseline"/>${lines}`;
-  legend.innerHTML=parties.map(p=>`<span><i style="background:${PARTY[p].color}"></i><strong>${PARTY[p].short}</strong><b>${pctFmt(state.average.values[p])}</b></span>`).join('');
-  const first=series[0],last=series[series.length-1];$('#pollTrendMeta').textContent=`${formatDate(first.date)} → ${formatDate(last.date)} · ${series.length} punti · stessa ponderazione del topline live`;
+  legend.innerHTML=parties.map(p=>`<button type="button" class="poll-trend-legend-btn ${focus===p?'active':focus?'muted':''}" data-trend-party="${p}" aria-pressed="${focus===p?'true':'false'}"><i style="background:${PARTY[p].color}"></i><strong>${PARTY[p].short}</strong><b>${pctFmt(state.average.values[p])}</b></button>`).join('');
+  const selectParty=p=>{state.pollTrendFocus=state.pollTrendFocus===p?null:p;renderPollTrend();};
+  legend.querySelectorAll('[data-trend-party]').forEach(el=>el.addEventListener('click',()=>selectParty(el.dataset.trendParty)));
+  svg.onclick=e=>{const el=e.target.closest?.('[data-trend-party]');if(el)selectParty(el.dataset.trendParty);};
+  svg.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target?.dataset?.trendParty){e.preventDefault();selectParty(e.target.dataset.trendParty);}};
+  svg.onpointermove=e=>{if(!tooltip)return;const rect=svg.getBoundingClientRect(),wrap=svg.parentElement.getBoundingClientRect(),sx=(e.clientX-rect.left)/Math.max(1,rect.width)*W,raw=(sx-pad.l)/(W-pad.l-pad.r),idx=Math.round(clamp(raw,0,1)*(series.length-1)),d=series[idx],shown=focus?[focus]:parties;tooltip.innerHTML=`<strong>${formatDate(d.date)}</strong>${shown.map(p=>`<span><i style="background:${PARTY[p].color}"></i>${PARTY[p].short}<b>${pctFmt(d.values[p])}</b></span>`).join('')}`;tooltip.hidden=false;const left=clamp(e.clientX-wrap.left+14,8,Math.max(8,wrap.width-188)),top=clamp(e.clientY-wrap.top-18,8,Math.max(8,wrap.height-140));tooltip.style.left=`${left}px`;tooltip.style.top=`${top}px`;};
+  svg.onpointerleave=()=>{if(tooltip)tooltip.hidden=true;};
+  const first=series[0],last=series[series.length-1];$('#pollTrendMeta').textContent=`${formatDate(first.date)} → ${formatDate(last.date)} · ${series.length} punti · stessa ponderazione della media corrente`;
   move.innerHTML=parties.map(p=>{const d7=historicalDelta(7,p),d30=historicalDelta(30,p),cls=v=>!Number.isFinite(v)?'flat':v>.05?'up':v<-.05?'down':'flat';return `<div class="poll-move-row"><span><i class="party-dot" style="background:${PARTY[p].color}"></i><strong>${PARTY[p].short}</strong></span><b>${pctFmt(state.average.values[p])}</b><em class="${cls(d7)}">7g ${signedPp(d7)}</em><em class="${cls(d30)}">30g ${signedPp(d30)}</em></div>`;}).join('');
   const latest=new Date(`${state.polls[0].date}T12:00:00Z`),cut7=addDaysUTC(latest,-7),cut30=addDaysUTC(latest,-30),recent7=state.polls.filter(p=>new Date(`${p.date}T12:00:00Z`)>=cut7),recent30=state.polls.filter(p=>new Date(`${p.date}T12:00:00Z`)>=cut30),uniq=new Set(recent30.map(p=>p.pollster).filter(Boolean)),sample30=recent30.reduce((n,p)=>n+(Number(p.sample)||0),0);
-  stats.innerHTML=`<div class="poll-activity-stat"><span>Poll · 7 giorni</span><strong>${fmt0(recent7.length)}</strong></div><div class="poll-activity-stat"><span>Poll · 30 giorni</span><strong>${fmt0(recent30.length)}</strong></div><div class="poll-activity-stat"><span>Istituti · 30 giorni</span><strong>${fmt0(uniq.size)}</strong></div><div class="poll-activity-stat"><span>Campione cumulato</span><strong>${fmt0(sample30)}</strong></div>`;
+  stats.innerHTML=`<div class="poll-activity-stat"><span>Sondaggi · 7 giorni</span><strong>${fmt0(recent7.length)}</strong></div><div class="poll-activity-stat"><span>Sondaggi · 30 giorni</span><strong>${fmt0(recent30.length)}</strong></div><div class="poll-activity-stat"><span>Istituti · 30 giorni</span><strong>${fmt0(uniq.size)}</strong></div><div class="poll-activity-stat"><span>Campione cumulato</span><strong>${fmt0(sample30)}</strong></div>`;
   const counts=new Map();for(const p of recent30){const name=p.pollster||'Non indicato';counts.set(name,(counts.get(name)||0)+1);}const ranking=[...counts.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'en-GB')).slice(0,6),max=Math.max(1,...ranking.map(x=>x[1]));
   pollsters.innerHTML=ranking.length?ranking.map(([name,n])=>`<div class="pollster-row"><span title="${escapeHtml(name)}">${escapeHtml(name)}</span><div><i style="width:${(n/max*100).toFixed(1)}%"></i></div><strong>${n}</strong></div>`).join(''):'<div class="empty-small">Nessuna rilevazione negli ultimi 30 giorni.</div>';$('#pollsterActivityMeta').textContent=`${recent30.length} rilevazioni`;
 }
@@ -695,14 +701,14 @@ function renderPolls(){
   const a=state.average.values; const ordered=PARTY_ORDER.map(p=>[p,a[p]]).sort((x,y)=>y[1]-x[1]);
   $('#voteBars').innerHTML=ordered.map(([p,v])=>`<div class="vote-row"><div class="party-label"><i class="party-dot" style="background:${PARTY[p].color}"></i>${PARTY[p].short}</div><div class="bar-track"><div class="bar-fill" style="background:${PARTY[p].color};width:${clamp(v/35*100,0,100)}%"></div></div><div class="vote-val">${pctFmt(v)}</div></div>`).join('');
   const leader=ordered[0], second=ordered[1]; $('#kpiLeader').textContent=PARTY[leader[0]].short; $('#kpiLeaderMeta').textContent=`${pctFmt(leader[1])} · +${fmt1(leader[1]-second[1])} su ${PARTY[second[0]].short}`;
-  $('#pollAverageMeta').textContent=`${state.average.effective} rilevazioni con peso significativo · half-life ${CONFIG.halfLifeDays} giorni`;
+  $('#pollAverageMeta').textContent=`${state.average.effective} rilevazioni con peso significativo · emivita ${CONFIG.halfLifeDays} giorni`;
   const latest=state.polls[0]; if(latest){$('#kpiLastPoll').textContent=formatDate(latest.date);$('#kpiLastPollMeta').textContent=`${latest.pollster} · ${latest.area} · n=${fmt0(latest.sample)}`;}
   $('#dataBadge').textContent=`Sondaggi: ${state.pollSource}`;updateEditorialMeta();populatePollTableFilters();
   const filtered=pollTableFiltered(),pages=Math.max(1,Math.ceil(filtered.length/state.pollPageSize));state.pollPage=clamp(state.pollPage||1,1,pages);const start=(state.pollPage-1)*state.pollPageSize,visible=filtered.slice(start,start+state.pollPageSize);
   const rows=visible.map(p=>`<tr><td>${escapeHtml(p.fieldwork||formatDate(p.date))}</td><td><strong>${escapeHtml(p.pollster)}</strong></td><td>${escapeHtml(p.client||'—')}</td><td>${escapeHtml(p.area)}</td><td>${fmt0(p.sample)}</td>${['lab','con','ref','ld','green','snp','pc','rb'].map(k=>`<td>${Number.isFinite(p[k])?fmt1(p[k]):'—'}</td>`).join('')}</tr>`).join('');
   $('#pollTableBody').innerHTML=rows||'<tr><td colspan="13"><div class="empty-small">Nessuna rilevazione corrisponde ai filtri.</div></td></tr>';
   const count=$('#pollTableCount');if(count)count.textContent=`${fmt0(filtered.length)} rilevazioni`;
-  const meta=$('#pollTableMeta');if(meta)meta.textContent=filtered.length?`Pagina ${state.pollPage} di ${pages} · record ${fmt0(start+1)}–${fmt0(start+visible.length)} · dalla General Election del 4 luglio 2024.`:'Nessuna rilevazione filtrata.';
+  const meta=$('#pollTableMeta');if(meta)meta.textContent=filtered.length?`Pagina ${state.pollPage} di ${pages} · record ${fmt0(start+1)}–${fmt0(start+visible.length)} · dalle elezioni generali del 4 luglio 2024.`:'Nessuna rilevazione filtrata.';
   renderPagination($('#pollPagination'),pages,state.pollPage,p=>{state.pollPage=p;renderPolls();document.querySelector('.poll-browser-card')?.scrollIntoView({behavior:'smooth',block:'start'});});
 }
 function formatDate(iso){ try{return new Date(`${iso}T12:00:00Z`).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(_){return iso;} }
@@ -809,7 +815,7 @@ function fingerprint(){
     : 'fallback';
   return `${CONFIG.cacheVersion}:${hashString(p+'|'+sp+'|'+state.constituencies.length+'|'+cal+'|'+ni+'|'+mrp)}`;
 }
-function mcCacheKey(){return `focusamerica:${fingerprint()}`;}
+function mcCacheKey(){return `danieleangrisani:ukmodel:${fingerprint()}`;}
 function saveMcCache(summary){
   try{localStorage.setItem(mcCacheKey(),JSON.stringify(summary));}catch(_){}
 }
@@ -940,7 +946,7 @@ function renderUncertaintyDashboard(){
   if(partyGrid){
     partyGrid.innerHTML=ranges.map(x=>{
       const left=clamp(x.low/maxHigh*100,0,100),right=clamp(x.high/maxHigh*100,0,100),med=clamp(x.median/maxHigh*100,0,100),width=Math.max(.7,right-left);
-      return `<button type="button" class="uncertainty-party" data-uncertainty-party="${x.p}" style="--party:${PARTY[x.p].color}" title="Filtra i collegi con ${escapeHtml(PARTY[x.p].name)} vincitore nello scenario live"><div class="uncertainty-party-top"><span><i class="party-dot" style="background:${PARTY[x.p].color}"></i><strong>${escapeHtml(PARTY[x.p].name)}</strong></span><b>${fmt0(x.median)}</b></div><div class="uncertainty-range-track" aria-label="${escapeHtml(PARTY[x.p].name)}: mediana ${fmt0(x.median)}, intervallo 80% ${fmt0(x.low)}-${fmt0(x.high)}"><i class="uncertainty-range" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%"></i><i class="uncertainty-median" style="left:${med.toFixed(2)}%"></i></div><div class="uncertainty-party-meta"><span>80%: <strong>${fmt0(x.low)}–${fmt0(x.high)}</strong></span><span>Ampiezza: ${fmt0(x.high-x.low)}</span></div><span class="uncertainty-action">Apri i collegi →</span></button>`;
+      return `<button type="button" class="uncertainty-party" data-uncertainty-party="${x.p}" style="--party:${PARTY[x.p].color}" title="Filtra i collegi con ${escapeHtml(PARTY[x.p].name)} vincitore nello scenario corrente"><div class="uncertainty-party-top"><span><i class="party-dot" style="background:${PARTY[x.p].color}"></i><strong>${escapeHtml(PARTY[x.p].name)}</strong></span><b>${fmt0(x.median)}</b></div><div class="uncertainty-range-track" aria-label="${escapeHtml(PARTY[x.p].name)}: mediana ${fmt0(x.median)}, intervallo 80% ${fmt0(x.low)}-${fmt0(x.high)}"><i class="uncertainty-range" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%"></i><i class="uncertainty-median" style="left:${med.toFixed(2)}%"></i></div><div class="uncertainty-party-meta"><span>80%: <strong>${fmt0(x.low)}–${fmt0(x.high)}</strong></span><span>Ampiezza: ${fmt0(x.high-x.low)}</span></div><span class="uncertainty-action">Apri i collegi →</span></button>`;
     }).join('')||'<div class="empty-small">Intervalli non disponibili.</div>';
     partyGrid.querySelectorAll('[data-uncertainty-party]').forEach(btn=>btn.addEventListener('click',()=>filterExplorerByWinner(btn.dataset.uncertaintyParty)));
   }
@@ -959,21 +965,21 @@ function renderUncertaintyDashboard(){
   for(const x of seats){if(x.prob<.55)buckets.tossup++;else if(x.prob<.65)buckets.uncertain++;else if(x.prob<.80)buckets.competitive++;else buckets.safe++;}
   if(stats){
     stats.innerHTML=[
-      ['Toss-up','<55%',buckets.tossup,'tossup'],
+      ['Testa a testa','<55%',buckets.tossup,'tossup'],
       ['Incerti','55–65%',buckets.uncertain,'uncertain'],
       ['Competitivi','65–80%',buckets.competitive,'competitive'],
       ['Solidi','≥80%',buckets.safe,'safe']
-    ].map(([label,range,n,cls])=>`<div class="battlefield-stat ${cls}"><span>${label}<small>${range} P favorito</small></span><strong>${fmt0(n)}</strong></div>`).join('');
+    ].map(([label,range,n,cls])=>`<div class="battlefield-stat ${cls}"><span>${label}<small>${range} · prob. favorito</small></span><strong>${fmt0(n)}</strong></div>`).join('');
   }
 
   const regionCounts=new Map();
   for(const x of seats.filter(x=>x.prob<.65)){const area=regionLabelForSeat(x.seat)||x.seat.country||'Altro';regionCounts.set(area,(regionCounts.get(area)||0)+1);}
   const topRegion=[...regionCounts.entries()].sort((a,b)=>b[1]-a[1])[0];
-  if(regionNote)regionNote.textContent=topRegion?`${topRegion[0]}: ${fmt0(topRegion[1])} sotto il 65%`:'Nessun collegio sotto il 65%';
+  if(regionNote)regionNote.textContent=topRegion?`${regionalDisplayName(topRegion[0])}: ${fmt0(topRegion[1])} sotto il 65%`:'Nessun collegio sotto il 65%';
 
   if(list){
     const mostUncertain=seats.sort((a,b)=>a.prob-b.prob||String(a.seat.name).localeCompare(String(b.seat.name),'en-GB')).slice(0,8);
-    list.innerHTML=mostUncertain.map(x=>`<button type="button" class="battlefield-seat" data-battlefield-seat="${escapeHtml(x.seat.id)}"><span class="battlefield-seat-name"><strong>${escapeHtml(x.seat.name||x.seat.id)}</strong><small>${escapeHtml(regionLabelForSeat(x.seat)||x.seat.country||'')}</small></span><span class="battlefield-seat-party"><i class="party-dot" style="background:${PARTY[x.p].color}"></i>${escapeHtml(PARTY[x.p].short)}</span><b>${pctFmt(x.prob*100)}</b></button>`).join('')||'<div class="empty-small">Probabilità di collegio non disponibili.</div>';
+    list.innerHTML=mostUncertain.map(x=>`<button type="button" class="battlefield-seat" data-battlefield-seat="${escapeHtml(x.seat.id)}"><span class="battlefield-seat-name"><strong>${escapeHtml(x.seat.name||x.seat.id)}</strong><small>${escapeHtml(regionalDisplayName(regionLabelForSeat(x.seat)||x.seat.country||''))}</small></span><span class="battlefield-seat-party"><i class="party-dot" style="background:${PARTY[x.p].color}"></i>${escapeHtml(PARTY[x.p].short)}</span><b>${pctFmt(x.prob*100)}</b></button>`).join('')||'<div class="empty-small">Probabilità di collegio non disponibili.</div>';
     list.querySelectorAll('[data-battlefield-seat]').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.dataset.battlefieldSeat;if(!id)return;selectSeat(id);document.querySelector('#territorio')?.scrollIntoView({behavior:'smooth',block:'start'});}));
   }
 }
@@ -982,8 +988,8 @@ function renderCentral(){
   const totals=state.central.totals;
   $('#projectionTitle').textContent='Scenario alla media dei sondaggi';
   const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales;
-  const sub=[sm?.polls?`Scozia: ${sm.polls} poll`:null,wm?.polls?`Galles: ${wm.polls} poll`:null].filter(Boolean).join(' · ');
-  $('#projectionSubtitle').textContent=`${productionModelLabel()}${sub?` · ${sub}`:''}${state.central?.ni?.signalWeight?` · NI: tracker Assembly ×${state.central.ni.signalWeight.toFixed(2)}`:' · NI: baseline 2024'} · Il Monte Carlo sta costruendo la distribuzione probabilistica e lo scenario territoriale rappresentativo.`;
+  const sub=[sm?.polls?`Scozia: ${sm.polls} sondaggi`:null,wm?.polls?`Galles: ${wm.polls} sondaggi`:null].filter(Boolean).join(' · ');
+  $('#projectionSubtitle').textContent=`Struttura geografica validata${sub?` · ${sub}`:''}${state.central?.ni?.signalWeight?` · Irlanda del Nord: segnale Assemblea ×${state.central.ni.signalWeight.toFixed(2)}`:' · Irlanda del Nord: base 2024'} · Il Monte Carlo sta costruendo la distribuzione probabilistica e lo scenario territoriale rappresentativo.`;
   renderSeats(totals,null);
   $('#kpiLargest').textContent=PARTY[Object.entries(totals).sort((a,b)=>b[1]-a[1])[0][0]]?.short||'—';
   $('#kpiLargestMeta').textContent='scenario centrale provvisorio';
@@ -1000,7 +1006,7 @@ function renderMc(){
   state.representative=buildRepresentativeScenario(m);
   renderSeats(m.medians,m.intervals);
   $('#projectionTitle').textContent='Scenario rappresentativo Monte Carlo';
-  $('#projectionSubtitle').textContent=`${productionModelLabel()} · Mediane di 50.000 simulazioni; intervallo centrale 80% tra parentesi. La mappa viene ricomposta per aderire il più possibile alle mediane dei seggi.`;
+  $('#projectionSubtitle').textContent='Mediane di 50.000 simulazioni; intervallo centrale 80% tra parentesi. La mappa viene ricomposta per aderire il più possibile alle mediane dei seggi.';
   $('#probLabMaj').textContent=pctFmt(m.labMaj*100);$('#probConMaj').textContent=pctFmt(m.conMaj*100);$('#probRefMaj').textContent=pctFmt(m.refMaj*100);$('#probHung').textContent=pctFmt(m.hung*100);
   if($('#probLabWorkMaj'))$('#probLabWorkMaj').textContent=pctFmt((m.labWorkMaj||0)*100);if($('#probConWorkMaj'))$('#probConWorkMaj').textContent=pctFmt((m.conWorkMaj||0)*100);if($('#probRefWorkMaj'))$('#probRefWorkMaj').textContent=pctFmt((m.refWorkMaj||0)*100);if($('#workingThreshold'))$('#workingThreshold').textContent=fmt0(m.workingThreshold||326);
   const largest=Object.entries(m.largest).sort((a,b)=>b[1]-a[1])[0];$('#kpiLargest').textContent=PARTY[largest[0]]?.short||largest[0];$('#kpiLargestMeta').textContent=`${pctFmt(largest[1]*100)} di essere il primo partito`;
@@ -1019,14 +1025,17 @@ function renderMc(){
   updateMobileNowcastSticky();
 }
 function renderSeats(totals,intervals){
-  const sum=SEAT_ORDER.reduce((s,p)=>s+(totals[p]||0),0)||650; $('#seatStrip').innerHTML=SEAT_ORDER.filter(p=>(totals[p]||0)>0).map(p=>`<span style="width:${(totals[p]/sum)*100}%;background:${PARTY[p].color}" title="${PARTY[p].name}: ${fmt0(totals[p])}"></span>`).join('');
-  $('#seatTable').innerHTML=SEAT_ORDER.filter(p=>(totals[p]||0)>0).map(p=>`<div class="seat-row"><div class="left"><i class="party-dot" style="background:${PARTY[p].color}"></i>${PARTY[p].short}</div><strong>${fmt0(totals[p])}${intervals?.[p]?` <small>${fmt0(intervals[p][0])}–${fmt0(intervals[p][1])}</small>`:''}</strong></div>`).join('');
+  const sum=SEAT_ORDER.reduce((acc,p)=>acc+(totals[p]||0),0)||650;
+  $('#seatStrip').innerHTML=SEAT_ORDER.filter(p=>(totals[p]||0)>0).map(p=>`<span data-hemi-party="${p}" role="button" tabindex="0" aria-label="Evidenzia ${PARTY[p].name}" aria-pressed="${state.hemiFocus===p?'true':'false'}" class="${state.hemiFocus===p?'active':state.hemiFocus?'muted':''}" style="width:${(totals[p]/sum)*100}%;background:${PARTY[p].color}" title="${PARTY[p].name}: ${fmt0(totals[p])}"></span>`).join('');
+  $('#seatTable').innerHTML=SEAT_ORDER.filter(p=>(totals[p]||0)>0).map(p=>`<div class="seat-row hemi-legend-row ${state.hemiFocus===p?'active':state.hemiFocus?'muted':''}" data-hemi-party="${p}" role="button" tabindex="0" aria-pressed="${state.hemiFocus===p?'true':'false'}" title="Clicca per evidenziare ${PARTY[p].name} nell’emiciclo"><div class="left"><i class="party-dot" style="background:${PARTY[p].color}"></i>${PARTY[p].short}</div><strong>${fmt0(totals[p])}${intervals?.[p]?` <small>${fmt0(intervals[p][0])}–${fmt0(intervals[p][1])}</small>`:''}</strong></div>`).join('');
   renderHemicycle(totals);
+  const activate=p=>{state.hemiFocus=state.hemiFocus===p?null:p;renderSeats(totals,intervals);};
+  [...$('#seatTable').querySelectorAll('[data-hemi-party]'),...$('#seatStrip').querySelectorAll('[data-hemi-party]')].forEach(el=>{el.addEventListener('click',()=>activate(el.dataset.hemiParty));el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activate(el.dataset.hemiParty);}});});
 }
 function hemicyclePoints(){
   const rows=18,ideals=[];
   for(let row=0;row<rows;row++){const r=63+row*9.6;ideals.push({row,r,ideal:Math.max(8,Math.PI*r/11)});}
-  const scale=650/ideals.reduce((s,x)=>s+x.ideal,0),caps=ideals.map(x=>Math.max(8,Math.floor(x.ideal*scale)));
+  const scale=650/ideals.reduce((acc,x)=>acc+x.ideal,0),caps=ideals.map(x=>Math.max(8,Math.floor(x.ideal*scale)));
   let missing=650-caps.reduce((a,b)=>a+b,0);
   const order=ideals.map((x,i)=>({i,frac:x.ideal*scale-Math.floor(x.ideal*scale)})).sort((a,b)=>b.frac-a.frac);
   for(let k=0;k<missing;k++)caps[order[k%order.length].i]++;
@@ -1037,7 +1046,7 @@ function hemicyclePoints(){
 const hemiPts=hemicyclePoints();
 function renderHemicycle(totals){
   const seats=[];for(const p of SEAT_ORDER){for(let i=0;i<Math.round(totals[p]||0);i++)seats.push(p);}while(seats.length<650)seats.push('other');if(seats.length>650)seats.length=650;
-  $('#hemicycle').innerHTML=hemiPts.map((pt,i)=>`<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="3.7" fill="${PARTY[seats[i]||'other'].color}" opacity=".96"><title>${PARTY[seats[i]||'other'].name}</title></circle>`).join('');
+  $('#hemicycle').innerHTML=hemiPts.map((pt,i)=>{const p=seats[i]||'other',focus=state.hemiFocus,cls=focus?(p===focus?'hemi-focus':'hemi-dim'):'';return `<circle class="hemi-seat ${cls}" data-party="${p}" cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="3.7" fill="${PARTY[p].color}" opacity="${focus?(p===focus?1:.13):.96}"><title>${PARTY[p].name}</title></circle>`;}).join('');
 }
 
 function geometryCode(props){return props.PCON24CD||props.PCON24CDH||props.PCONCD||props.GSS_CODE||props.code||props.id||'';}
@@ -1049,7 +1058,7 @@ function pathForGeometry(geom,project){
 }
 function renderMap(){
   const map=$('#ukMap');
-  if(!state.geometry?.features?.length){$('#mapEmpty').style.display='grid';$('#mapMeta').textContent='Geometrie non disponibili: esegui la build dati.';return;}
+  if(!state.geometry?.features?.length){$('#mapEmpty').style.display='grid';$('#mapMeta').textContent='Geometrie non disponibili: esegui l’aggiornamento dei dati.';return;}
   // Web Mercator for display only. The previous renderer treated one degree
   // of longitude as the same physical distance as one degree of latitude; at
   // UK latitudes that makes Britain look much too wide / vertically squashed.
@@ -1142,7 +1151,7 @@ function selectSeat(id){
   renderDetail(id);
 }
 function margin2024(seat){return seatMarginFromShares(seat,seat?.shares||{});}
-function probabilityLabel(p){if(p==null)return 'Monte Carlo in corso';if(p<.55)return 'Toss-up';if(p<.65)return 'Incerto';if(p<.80)return 'Competitivo';return 'Solido';}
+function probabilityLabel(p){if(p==null)return 'Monte Carlo in corso';if(p<.55)return 'Testa a testa';if(p<.65)return 'Incerto';if(p<.80)return 'Competitivo';return 'Solido';}
 function copySeatDeepLink(){
   if(!state.selectedSeat)return;const url=new URL(location.href);url.searchParams.set('seat',state.selectedSeat);url.hash='territorio';const text=url.toString();
   const btn=$('#detailCopyBtn'),done=()=>{if(!btn)return;const old=btn.textContent;btn.textContent='Link copiato';setTimeout(()=>btn.textContent=old,1400);};
@@ -1151,7 +1160,7 @@ function copySeatDeepLink(){
 function fallbackCopy(text,done){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done?.();}catch(_){}ta.remove();}
 function restoreSeatDeepLink(){const id=new URLSearchParams(location.search).get('seat');if(!id||!state.byId.has(id))return;selectSeat(id);setTimeout(()=>fitSelectedSeat(),0);}
 function renderDetail(id){
-  const seat=state.byId.get(id)||state.constituencies.find(x=>x.id===id);if(!seat)return;$('#detailName').textContent=seat.name;$('#detailRegion').textContent=[seat.region,seat.country,seat.id].filter(Boolean).join(' · ');
+  const seat=state.byId.get(id)||state.constituencies.find(x=>x.id===id);if(!seat)return;$('#detailName').textContent=seat.name;$('#detailRegion').textContent=[seat.region,seat.country,seat.id].filter(Boolean).map((v,i)=>i<2?regionalDisplayName(v):v).join(' · ');
   const customActive=state.mapMode==='custom'&&state.customScenario?.sharesById?.[id],proj=customActive?state.customScenario.sharesById[id]:(seat.projected||{}),liveProj=seat.projected||{},prob=state.mc?.seatProb?.[id]||null;
   const cm=seatMarginFromShares(seat,proj),liveCm=seatMarginFromShares(seat,liveProj),prev=margin2024(seat);const scenarioWinner=customActive?state.customScenario.assignment[id]:(state.representative?.assignment?.[id]||seat.centralWinner||seat.winner2024),centralWinner=seat.centralWinner||seat.winner2024;
   const scenarioLabel=customActive?'Scenario utente':(state.representative?'Scenario rappresentativo':'Proiezione centrale');const bestProb=prob?Math.max(...Object.values(prob)):null;const probWinner=prob?Object.entries(prob).sort((a,b)=>b[1]-a[1])[0]?.[0]:null;const changed=scenarioWinner!==(seat.winner2024||'other');
@@ -1159,8 +1168,8 @@ function renderDetail(id){
   const probRows=prob?Object.entries(prob).filter(([p,v])=>PARTY[p]&&v>.003).sort((a,b)=>b[1]-a[1]).slice(0,5):[];
   const candidate=seat.winner2024_candidate?` · ${escapeHtml(seat.winner2024_candidate)}`:'';const majorityVotes=Number(seat.majority2024)||0,validVotes=Number(seat.valid_votes)||0;
   const scenarioBadge=`<span class="seat-status-badge ${changed?'gain':'hold'}">${changed?'Cambio':'Conferma'} vs 2024</span>${bestProb!=null?`<span class="seat-status-badge risk">${probabilityLabel(bestProb)} · ${pctFmt(bestProb*100)}</span>`:''}`;
-  const scenarioNote=customActive?'Scenario personalizzato: quote deterministiche. Le probabilità sotto restano quelle del nowcast live.':state.representative&&scenarioWinner!==centralWinner?'Lo scenario territoriale rappresentativo rialloca questo collegio rispetto al centro deterministico per aderire alle mediane nazionali.':'Il vincitore rappresentativo coincide con il centro deterministico in questo collegio.';
-  $('#detailBody').innerHTML=`<div class="detail-badges">${scenarioBadge}</div><div class="detail-stat"><span>Vincitore 2024</span><strong>${escapeHtml(seat.winner2024_name||PARTY[seat.winner2024]?.name||'Altro')}${candidate}</strong></div><div class="detail-stat"><span>Margine 2024</span><strong>${fmt1(prev.margin)} p.p.${majorityVotes?` · ${fmt0(majorityVotes)} voti`:''}</strong></div><div class="detail-stat"><span>${scenarioLabel}</span><strong>${PARTY[scenarioWinner]?.name||'—'}</strong></div><div class="detail-stat"><span>Margine ${customActive?'scenario':'centrale'}</span><strong>${fmt1(customActive?cm.margin:liveCm.margin)} p.p. · ${PARTY[(customActive?cm:liveCm).runner]?.short||'—'} secondo</strong></div>${customActive?`<div class="detail-stat"><span>Nowcast live</span><strong>${PARTY[centralWinner]?.name||'—'} · ${fmt1(liveCm.margin)} p.p.</strong></div>`:''}${validVotes?`<div class="detail-stat"><span>Voti validi 2024</span><strong>${fmt0(validVotes)}</strong></div>`:''}<div class="detail-section-title">Quote ${customActive?'scenario':'centrali'}</div><div class="detail-score share-mode">${shareRows.map(p=>`<div><span>${PARTY[p].short}</span><span class="mini-track"><i style="width:${clamp((proj[p]||0)*2,0,100)}%;background:${PARTY[p].color}"></i></span><strong>${pctFmt(proj[p]||0)}</strong></div>`).join('')}</div><div class="detail-section-title">Probabilità di vittoria live</div>${probRows.length?`<div class="detail-score probability-mode">${probRows.map(([p,v])=>`<div><span>${PARTY[p].short}</span><span class="mini-track"><i style="width:${clamp(v*100,0,100)}%;background:${PARTY[p].color}"></i></span><strong>${pctFmt(v*100)}</strong></div>`).join('')}</div>`:'<div class="detail-pending">Disponibile al termine delle 50.000 simulazioni.</div>'}<p class="small-note">${scenarioNote}${seat.isNorthernIreland?' NI: candidature 2024 mantenute; tracker Assembly usato solo come segnale debole.':''}</p>`;
+  const scenarioNote=customActive?'Scenario personalizzato: quote deterministiche. Le probabilità sotto restano quelle del nowcast corrente.':state.representative&&scenarioWinner!==centralWinner?'Lo scenario territoriale rappresentativo rialloca questo collegio rispetto al centro deterministico per aderire alle mediane nazionali.':'Il vincitore rappresentativo coincide con il centro deterministico in questo collegio.';
+  $('#detailBody').innerHTML=`<div class="detail-badges">${scenarioBadge}</div><div class="detail-stat"><span>Vincitore 2024</span><strong>${escapeHtml(seat.winner2024_name||PARTY[seat.winner2024]?.name||'Altro')}${candidate}</strong></div><div class="detail-stat"><span>Margine 2024</span><strong>${fmt1(prev.margin)} p.p.${majorityVotes?` · ${fmt0(majorityVotes)} voti`:''}</strong></div><div class="detail-stat"><span>${scenarioLabel}</span><strong>${PARTY[scenarioWinner]?.name||'—'}</strong></div><div class="detail-stat"><span>Margine ${customActive?'scenario':'centrale'}</span><strong>${fmt1(customActive?cm.margin:liveCm.margin)} p.p. · ${PARTY[(customActive?cm:liveCm).runner]?.short||'—'} secondo</strong></div>${customActive?`<div class="detail-stat"><span>Nowcast corrente</span><strong>${PARTY[centralWinner]?.name||'—'} · ${fmt1(liveCm.margin)} p.p.</strong></div>`:''}${validVotes?`<div class="detail-stat"><span>Voti validi 2024</span><strong>${fmt0(validVotes)}</strong></div>`:''}<div class="detail-section-title">Quote ${customActive?'scenario':'centrali'}</div><div class="detail-score share-mode">${shareRows.map(p=>`<div><span>${PARTY[p].short}</span><span class="mini-track"><i style="width:${clamp((proj[p]||0)*2,0,100)}%;background:${PARTY[p].color}"></i></span><strong>${pctFmt(proj[p]||0)}</strong></div>`).join('')}</div><div class="detail-section-title">Probabilità di vittoria nel nowcast</div>${probRows.length?`<div class="detail-score probability-mode">${probRows.map(([p,v])=>`<div><span>${PARTY[p].short}</span><span class="mini-track"><i style="width:${clamp(v*100,0,100)}%;background:${PARTY[p].color}"></i></span><strong>${pctFmt(v*100)}</strong></div>`).join('')}</div>`:'<div class="detail-pending">Disponibile al termine delle 50.000 simulazioni.</div>'}<p class="small-note">${scenarioNote}${seat.isNorthernIreland?' NI: candidature 2024 mantenute; segnale dell’Assemblea usato solo come segnale debole.':''}</p>`;
 }
 
 function applyMapColors(){
@@ -1240,7 +1249,7 @@ function renderMapSummary(){
   const tight=seats.filter(s=>centralSeatMargin(s).margin<5).length;
   const uncertain=state.mc?.seatProb?seats.filter(s=>Math.max(...Object.values(state.mc.seatProb[s.id]||{other:1}))<.65).length:null;
   const mode=state.mapMode==='custom'?'Scenario utente':state.mapMode==='prob'?'Probabilità di vittoria':state.mapMode==='margin'?'Margine centrale':state.mapMode==='representative'?'Scenario rappresentativo':'Scenario alla media';
-  const repNote=state.mapMode==='representative'&&state.representative?`<span class="map-summary-chip"><strong>${state.representative.centralChanged}</strong> collegi riallocati per aderire alle mediane</span>`:state.mapMode==='custom'&&state.customScenario?`<span class="map-summary-chip"><strong>${state.customScenario.changedFromLive}</strong> vincitori diversi dal live</span>`:'';
+  const repNote=state.mapMode==='representative'&&state.representative?`<span class="map-summary-chip"><strong>${state.representative.centralChanged}</strong> collegi riallocati per aderire alle mediane</span>`:state.mapMode==='custom'&&state.customScenario?`<span class="map-summary-chip"><strong>${state.customScenario.changedFromLive}</strong> vincitori diversi dal nowcast corrente</span>`:'';
   const filterNote=$('#seatFilterMap')?.checked&&state.explorerMatchingIds&&state.explorerMatchingIds.size<seats.length?`<span class="map-summary-chip accent"><strong>${state.explorerMatchingIds.size}</strong> collegi evidenziati dai filtri</span>`:'';
   el.innerHTML=`<span class="map-summary-chip accent"><strong>${mode}</strong></span><span class="map-summary-chip"><strong>${changes}</strong> cambi di vincitore vs 2024</span><span class="map-summary-chip"><strong>${tight}</strong> collegi entro 5 p.p.</span>${uncertain==null?'':`<span class="map-summary-chip"><strong>${uncertain}</strong> con max P(vittoria) &lt;65%</span>`}${repNote}${filterNote}`;
 }
@@ -1313,13 +1322,13 @@ function renderCustomScenario(){
   const sum=SEAT_ORDER.reduce((a,p)=>a+(s.totals[p]||0),0)||650;
   strip.innerHTML=SEAT_ORDER.filter(p=>(s.totals[p]||0)>0).map(p=>`<span style="width:${(s.totals[p]/sum)*100}%;background:${PARTY[p]?.color||PARTY.other.color}" title="${PARTY[p]?.name||p}: ${fmt0(s.totals[p])}"></span>`).join('');
   table.innerHTML=SEAT_ORDER.filter(p=>(s.totals[p]||0)>0).map(p=>{const live=state.mc?.medians?.[p]??state.central?.totals?.[p]??0,d=(s.totals[p]||0)-live;return `<div class="seat-row"><div class="left"><i class="party-dot" style="background:${PARTY[p]?.color||PARTY.other.color}"></i>${PARTY[p]?.short||p}</div><strong>${fmt0(s.totals[p])} <small class="scenario-delta ${d>0?'up':d<0?'down':''}">${d===0?'=':(d>0?'+':'')+fmt0(d)}</small></strong></div>`;}).join('');
-  $('#scenarioChanges').textContent=`${fmt0(s.changedFromLive)} collegi cambiano vincitore rispetto allo scenario live`;
+  $('#scenarioChanges').textContent=`${fmt0(s.changedFromLive)} collegi cambiano vincitore rispetto al nowcast corrente`;
   $('#scenarioMapBtn').disabled=false;$('#mapUserBtn').disabled=false;$('#mapUserBtn').setAttribute('aria-disabled','false');const src=$('#seatSource');if(src){const o=src.querySelector('option[value="custom"]');if(o)o.disabled=false;}
 }
 function runCustomScenario(){
   const originalTotal=updateScenarioTotal(),raw=scenarioInputValues();state.customScenario=buildCustomScenario(raw);renderCustomScenario();
   renderRegionalDashboard();
-  const msg=$('#scenarioMessage');if(msg)msg.textContent=`Scenario calcolato su ${fmt0(Object.values(state.customScenario?.totals||{}).reduce((a,b)=>a+b,0))} seggi. ${Math.abs(originalTotal-100)>.051?`Gli input (${pctFmt(originalTotal)}) sono stati normalizzati automaticamente a 100%. `:''}Le probabilità Monte Carlo restano quelle del nowcast live e non vengono riutilizzate come probabilità dello scenario utente.`;
+  const msg=$('#scenarioMessage');if(msg)msg.textContent=`Scenario calcolato su ${fmt0(Object.values(state.customScenario?.totals||{}).reduce((a,b)=>a+b,0))} seggi. ${Math.abs(originalTotal-100)>.051?`Gli input (${pctFmt(originalTotal)}) sono stati normalizzati automaticamente a 100%. `:''}Le probabilità Monte Carlo restano quelle del nowcast corrente e non vengono riutilizzate come probabilità dello scenario utente.`;
   state.explorerPage=1;renderMarginals();
 }
 function resetCustomScenario(){
@@ -1330,10 +1339,10 @@ function resetCustomScenario(){
 }
 function populateSeatExplorerFilters(){
   if(!state.central?.seats?.length)return;const seats=state.central.seats;
-  const fill=(sel,vals,label)=>{const el=$(sel);if(!el)return;const current=el.value;el.innerHTML=`<option value="">${label}</option>`+vals.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');if(vals.includes(current))el.value=current;};
+  const fill=(sel,vals,label,display=v=>v)=>{const el=$(sel);if(!el)return;const current=el.value;el.innerHTML=`<option value="">${label}</option>`+vals.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(display(v))}</option>`).join('');if(vals.includes(current))el.value=current;};
   const countries=[...new Set(seats.map(s=>s.country).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));
   const selectedCountry=$('#seatCountry')?.value||'';const regions=[...new Set(seats.filter(s=>!selectedCountry||s.country===selectedCountry).map(s=>s.region).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));
-  fill('#seatCountry',countries,'Tutti');fill('#seatRegion',regions,'Tutte');
+  fill('#seatCountry',countries,'Tutti',regionalDisplayName);fill('#seatRegion',regions,'Tutte',regionalDisplayName);
   const parties=[...new Set(seats.flatMap(s=>[s.winner2024,liveScenarioWinner(s),state.customScenario?.assignment?.[s.id]]).filter(p=>PARTY[p]))].sort((a,b)=>(PARTY[a]?.name||a).localeCompare(PARTY[b]?.name||b,'it'));
   const partyOpts=parties.map(p=>`<option value="${p}">${escapeHtml(PARTY[p]?.name||p)}</option>`).join('');
   for(const sel of ['#seatWinner','#seatWinner2024']){const el=$(sel);if(!el)continue;const current=el.value;el.innerHTML='<option value="">Tutti</option>'+partyOpts;if(parties.includes(current))el.value=current;}
@@ -1383,11 +1392,11 @@ function renderMarginals(){
   state.explorerMatchingIds=new Set(filtered.map(x=>x.seat.id));applyExplorerMapFilter();
   const pages=Math.max(1,Math.ceil(filtered.length/state.explorerPageSize));state.explorerPage=clamp(state.explorerPage||1,1,pages);const start=(state.explorerPage-1)*state.explorerPageSize,visible=filtered.slice(start,start+state.explorerPageSize);
   const count=$('#seatExplorerCount');if(count)count.textContent=`${fmt0(filtered.length)} di ${fmt0(all.length)} collegi`;
-  if(meta)meta.textContent=f.source==='custom'?'Filtri applicati allo scenario utente; le probabilità indicate restano quelle del Monte Carlo live.':'Cerca, filtra e ordina ogni collegio del nowcast live; l’incertezza è quella delle 50.000 simulazioni.';
-  body.innerHTML=visible.length?visible.map(x=>{const prev=x.seat.winner2024||'other';return `<tr data-marginal-seat="${escapeHtml(x.seat.id)}"><td><strong>${escapeHtml(x.seat.name)}</strong><small>${escapeHtml(x.seat.id||'')}</small></td><td>${escapeHtml([x.seat.region,x.seat.country].filter(Boolean).join(' · ')||'—')}</td><td><span class="party-pill"><i style="background:${PARTY[prev]?.color||PARTY.other.color}"></i>${PARTY[prev]?.short||'Altro'}</span></td><td><span class="party-pill ${x.changed?'changed':''}"><i style="background:${PARTY[x.projected]?.color||PARTY.other.color}"></i>${PARTY[x.projected]?.short||'Altro'}</span></td><td>${fmt1(x.cm.margin)} p.p.</td><td>${x.bestProb==null?'—':pctFmt(x.bestProb*100)}</td></tr>`;}).join(''):'<tr><td colspan="6"><div class="empty-small">Nessun collegio corrisponde ai filtri selezionati.</div></td></tr>';
+  if(meta)meta.textContent=f.source==='custom'?'Filtri applicati allo scenario utente; le probabilità indicate restano quelle del Monte Carlo corrente.':'Cerca, filtra e ordina ogni collegio del nowcast corrente; l’incertezza è quella delle 50.000 simulazioni.';
+  body.innerHTML=visible.length?visible.map(x=>{const prev=x.seat.winner2024||'other';return `<tr data-marginal-seat="${escapeHtml(x.seat.id)}"><td><strong>${escapeHtml(x.seat.name)}</strong><small>${escapeHtml(x.seat.id||'')}</small></td><td>${escapeHtml([x.seat.region,x.seat.country].filter(Boolean).map(regionalDisplayName).join(' · ')||'—')}</td><td><span class="party-pill"><i style="background:${PARTY[prev]?.color||PARTY.other.color}"></i>${PARTY[prev]?.short||'Altro'}</span></td><td><span class="party-pill ${x.changed?'changed':''}"><i style="background:${PARTY[x.projected]?.color||PARTY.other.color}"></i>${PARTY[x.projected]?.short||'Altro'}</span></td><td>${fmt1(x.cm.margin)} p.p.</td><td>${x.bestProb==null?'—':pctFmt(x.bestProb*100)}</td></tr>`;}).join(''):'<tr><td colspan="6"><div class="empty-small">Nessun collegio corrisponde ai filtri selezionati.</div></td></tr>';
   body.querySelectorAll('tr[data-marginal-seat]').forEach(tr=>tr.addEventListener('click',()=>{selectSeat(tr.dataset.marginalSeat);document.querySelector('#territorio')?.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>fitSelectedSeat(),420);}));
   renderPagination($('#seatPagination'),pages,state.explorerPage,p=>{state.explorerPage=p;renderMarginals();document.querySelector('.explorer-table')?.scrollIntoView({behavior:'smooth',block:'center'});});
-  const note=$('#seatExplorerNote');if(note)note.textContent=state.mc?.seatProb?`${f.source==='custom'?'Scenario utente · ':''}P favorito = Monte Carlo live. Clic su una riga → dettaglio mappa.`:'Il Monte Carlo è ancora in corso: i filtri probabilistici saranno disponibili al termine.';
+  const note=$('#seatExplorerNote');if(note)note.textContent=state.mc?.seatProb?`${f.source==='custom'?'Scenario utente · ':''}Probabilità del favorito = Monte Carlo corrente. Clic su una riga → dettaglio mappa.`:'Il Monte Carlo è ancora in corso: i filtri probabilistici saranno disponibili al termine.';
   const footer=$('#seatExplorerFooter');if(footer)footer.textContent=filtered.length?`Pagina ${state.explorerPage} di ${pages} · collegi ${fmt0(start+1)}–${fmt0(start+visible.length)} su ${fmt0(filtered.length)} filtrati.`:'Nessun collegio filtrato.';
 }
 
@@ -1404,6 +1413,13 @@ function regionLabelForSeat(seat){
   if(/northern ireland/i.test(c))return 'Northern Ireland';
   return (seat.region||'England').trim()||'England';
 }
+const REGION_LABEL_IT={
+  'England':'Inghilterra','Scotland':'Scozia','Wales':'Galles','Northern Ireland':'Irlanda del Nord',
+  'North East':'Nord-Est','North West':'Nord-Ovest','Yorkshire and The Humber':'Yorkshire e Humber',
+  'East Midlands':'Midlands orientali','West Midlands':'Midlands occidentali','East of England':'Est dell’Inghilterra',
+  'London':'Londra','South East':'Sud-Est','South West':'Sud-Ovest'
+};
+function regionalDisplayName(name){return REGION_LABEL_IT[name]||name;}
 function regionalPartySet(){return ['lab','con','ref','ld','green','snp','pc','sf','dup','alliance','other'];}
 function bestLiveProbability(seat){
   const prob=state.mc?.seatProb?.[seat.id];if(!prob)return null;
@@ -1440,11 +1456,11 @@ function renderRegionalDashboard(){
   const table=$('#regionalTableBody'),summary=$('#countrySummary'),netEl=$('#partyNetGrid'),flowEl=$('#seatFlowList');if(!table||!summary||!netEl||!flowEl||!state.central?.seats?.length)return;
   const source=regionalSource(),snap=buildRegionalSnapshot(source),mainCols=['lab','con','ref','ld','snp','pc'];
   const customOpt=$('#regionalSource option[value="custom"]');if(customOpt)customOpt.disabled=!state.customScenario;
-  summary.innerHTML=snap.countries.map(g=>`<button class="country-card" type="button" data-region-shortcut="${escapeHtml(g.name)}"><span class="country-name">${escapeHtml(g.name)}</span><strong><i style="background:${PARTY[g.leader]?.color||PARTY.other.color}"></i>${PARTY[g.leader]?.short||g.leader}</strong><small>${fmt0(g.leaderSeats)} / ${fmt0(g.total)} seggi · ${fmt0(g.changes)} cambi${state.mc?.seatProb?` · ${fmt0(g.uncertain)} incerti`:''}</small></button>`).join('');
-  table.innerHTML=snap.areas.map(g=>`<tr data-region-shortcut="${escapeHtml(g.name)}"><td><strong>${escapeHtml(g.name)}</strong></td><td>${fmt0(g.total)}</td><td><span class="party-pill"><i style="background:${PARTY[g.leader]?.color||PARTY.other.color}"></i>${PARTY[g.leader]?.short||g.leader} ${fmt0(g.leaderSeats)}</span></td>${mainCols.map(p=>`<td>${fmt0(g.current[p]||0)}</td>`).join('')}<td>${fmt0(g.changes)}</td><td>${state.mc?.seatProb?fmt0(g.uncertain):'—'}</td></tr>`).join('');
+  summary.innerHTML=snap.countries.map(g=>`<button class="country-card" type="button" data-region-shortcut="${escapeHtml(g.name)}"><span class="country-name">${escapeHtml(regionalDisplayName(g.name))}</span><strong><i style="background:${PARTY[g.leader]?.color||PARTY.other.color}"></i>${PARTY[g.leader]?.short||g.leader}</strong><small>${fmt0(g.leaderSeats)} / ${fmt0(g.total)} seggi · ${fmt0(g.changes)} cambi${state.mc?.seatProb?` · ${fmt0(g.uncertain)} incerti`:''}</small></button>`).join('');
+  table.innerHTML=snap.areas.map(g=>`<tr data-region-shortcut="${escapeHtml(g.name)}"><td><strong>${escapeHtml(regionalDisplayName(g.name))}</strong></td><td>${fmt0(g.total)}</td><td><span class="party-pill"><i style="background:${PARTY[g.leader]?.color||PARTY.other.color}"></i>${PARTY[g.leader]?.short||g.leader} ${fmt0(g.leaderSeats)}</span></td>${mainCols.map(p=>`<td>${fmt0(g.current[p]||0)}</td>`).join('')}<td>${fmt0(g.changes)}</td><td>${state.mc?.seatProb?fmt0(g.uncertain):'—'}</td></tr>`).join('');
   netEl.innerHTML=snap.net.slice(0,10).map(x=>`<div class="party-net-row"><span><i style="background:${PARTY[x.p]?.color||PARTY.other.color}"></i>${PARTY[x.p]?.short||x.p}</span><b>${fmt0(x.current)}</b><strong class="${x.delta>0?'net-up':x.delta<0?'net-down':'net-flat'}">${x.delta>0?'+':''}${fmt0(x.delta)}</strong><small>da ${fmt0(x.previous)}</small></div>`).join('');
   flowEl.innerHTML=snap.flows.length?snap.flows.slice(0,12).map(x=>`<button type="button" class="seat-flow-row" data-flow-from="${escapeHtml(x.from)}" data-flow-to="${escapeHtml(x.to)}"><span><i style="background:${PARTY[x.from]?.color||PARTY.other.color}"></i>${PARTY[x.from]?.short||x.from}<b>→</b><i style="background:${PARTY[x.to]?.color||PARTY.other.color}"></i>${PARTY[x.to]?.short||x.to}</span><strong>${fmt0(x.count)}</strong></button>`).join(''):'<div class="empty-small">Nessun cambio di vincitore nello scenario selezionato.</div>';
-  const meta=$('#regionalMeta');if(meta)meta.textContent=source==='custom'?'Scenario utente deterministico; le colonne “incerti” restano riferite al Monte Carlo live.':state.representative?'Scenario territoriale rappresentativo coerente con le mediane Monte Carlo.':'Proiezione centrale provvisoria; passerà allo scenario rappresentativo al termine delle simulazioni.';
+  const meta=$('#regionalMeta');if(meta)meta.textContent=source==='custom'?'Scenario utente deterministico; le colonne “incerti” restano riferite al Monte Carlo corrente.':state.representative?'Scenario territoriale rappresentativo coerente con le mediane Monte Carlo.':'Proiezione centrale provvisoria; passerà allo scenario rappresentativo al termine delle simulazioni.';
   summary.querySelectorAll('[data-region-shortcut]').forEach(el=>el.addEventListener('click',()=>setExplorerArea(el.dataset.regionShortcut)));
   table.querySelectorAll('[data-region-shortcut]').forEach(el=>el.addEventListener('click',()=>setExplorerArea(el.dataset.regionShortcut)));
   flowEl.querySelectorAll('[data-flow-from]').forEach(el=>el.addEventListener('click',()=>setExplorerFlow(el.dataset.flowFrom,el.dataset.flowTo)));
@@ -1484,12 +1500,12 @@ function renderOutcomeDashboard(){
   const headline=$('#outcomeHeadline'),sub=$('#outcomeSub'),grid=$('#largestPartyGrid');if(!headline||!sub||!grid)return;
   const totals=state.mc?.medians||state.central?.totals||{},rankedSeats=Object.entries(totals).filter(([p])=>PARTY[p]).sort((a,b)=>b[1]-a[1]);
   if(!state.mc){
-    const [p,n]=rankedSeats[0]||['other',0];headline.textContent=`${PARTY[p]?.name||p} è il primo partito nello scenario centrale`;sub.textContent=n>=CONFIG.majority?`Lo scenario centrale supera quota ${CONFIG.majority}. Il Monte Carlo sta misurando quanto è robusta questa maggioranza.`:`Nessun partito raggiunge ${CONFIG.majority} seggi nello scenario centrale. Il Monte Carlo sta misurando il rischio di Hung Parliament.`;
+    const [p,n]=rankedSeats[0]||['other',0];headline.textContent=`${PARTY[p]?.name||p} è il primo partito nello scenario centrale`;sub.textContent=n>=CONFIG.majority?`Lo scenario centrale supera quota ${CONFIG.majority}. Il Monte Carlo sta misurando quanto è robusta questa maggioranza.`:`Nessun partito raggiunge ${CONFIG.majority} seggi nello scenario centrale. Il Monte Carlo sta misurando il rischio di Parlamento senza maggioranza.`;
     grid.innerHTML=rankedSeats.slice(0,3).map(([k,seats])=>`<div class="outcome-party"><span><i style="background:${PARTY[k].color}"></i>${PARTY[k].name}</span><strong>${fmt0(seats)}</strong><small>seggi centrali</small></div>`).join('');return;
   }
   const m=state.mc,maj=[['lab',m.labMaj],['con',m.conMaj],['ref',m.refMaj]].sort((a,b)=>b[1]-a[1]),largest=Object.entries(m.largest||{}).sort((a,b)=>b[1]-a[1]);
-  if(m.hung>=Math.max(...maj.map(x=>x[1])))headline.textContent='Hung Parliament è l’esito complessivo più probabile';else headline.textContent=`${PARTY[maj[0][0]].name}: maggioranza assoluta è l’esito singolo più probabile`;
-  sub.textContent=`Hung Parliament ${pctFmt(m.hung*100)} · soglia assoluta ${CONFIG.majority} · soglia operativa mediana ~${fmt0(m.workingThreshold||326)}.`;
+  if(m.hung>=Math.max(...maj.map(x=>x[1])))headline.textContent='Parlamento senza maggioranza è l’esito complessivo più probabile';else headline.textContent=`${PARTY[maj[0][0]].name}: maggioranza assoluta è l’esito singolo più probabile`;
+  sub.textContent=`Parlamento senza maggioranza ${pctFmt(m.hung*100)} · soglia assoluta ${CONFIG.majority} · soglia operativa mediana ~${fmt0(m.workingThreshold||326)}.`;
   grid.innerHTML=largest.slice(0,3).map(([k,pr])=>`<div class="outcome-party"><span><i style="background:${PARTY[k]?.color||PARTY.other.color}"></i>${PARTY[k]?.name||k}</span><strong>${pctFmt(pr*100)}</strong><small>probabilità di essere primo partito · mediana ${fmt0(m.medians?.[k]||0)}</small></div>`).join('');
 }
 function coalitionProbability(parties){
@@ -1540,19 +1556,19 @@ function cardPollRows(){const a=state.average?.values||{};return PARTY_ORDER.fil
 function drawCardHemicycle(ctx,totals,box){const seats=[];for(const p of SEAT_ORDER){for(let i=0;i<Math.round(totals[p]||0);i++)seats.push(p);}while(seats.length<650)seats.push('other');if(seats.length>650)seats.length=650;const minX=Math.min(...hemiPts.map(p=>p.x)),maxX=Math.max(...hemiPts.map(p=>p.x)),minY=Math.min(...hemiPts.map(p=>p.y)),maxY=Math.max(...hemiPts.map(p=>p.y)),sx=box.w/(maxX-minX),sy=box.h/(maxY-minY),s=Math.min(sx,sy),ox=box.x+(box.w-(maxX-minX)*s)/2,oy=box.y+(box.h-(maxY-minY)*s)/2;hemiPts.forEach((pt,i)=>{ctx.fillStyle=PARTY[seats[i]||'other']?.color||PARTY.other.color;ctx.beginPath();ctx.arc(ox+(pt.x-minX)*s,oy+(pt.y-minY)*s,Math.max(2.1,3.2*s),0,Math.PI*2);ctx.fill();});}
 async function buildModelCardCanvas(format='landscape'){
   const totals=projectedTotalsForCard();if(!totals)throw new Error('Proiezione non ancora disponibile');const ig=format==='instagram',W=ig?1080:1200,H=ig?1350:630,c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');ctx.fillStyle='#0a0f17';ctx.fillRect(0,0,W,H);const grad=ctx.createLinearGradient(0,0,W,H);grad.addColorStop(0,'rgba(28,56,91,.66)');grad.addColorStop(.55,'rgba(14,22,34,.1)');grad.addColorStop(1,'rgba(116,24,46,.22)');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
-  if(!ig){roundRect(ctx,24,24,W-48,H-48,28,'rgba(17,24,35,.96)','#344255',1.3);drawUkFlagMark(ctx,55,50,46,30);cardText(ctx,'FOCUS AMERICA · ELECTION MODEL',116,73,'800 15px system-ui','#8ea0b7');cardText(ctx,'Elezioni nel Regno Unito',55,132,'900 42px system-ui','#f7f9fc');cardText(ctx,state.mc?'Scenario rappresentativo Monte Carlo':'Scenario centrale',55,166,'600 19px system-ui','#98a8bc');roundRect(ctx,55,192,690,337,22,'#0e151f','#2c3a4c',1);drawCardHemicycle(ctx,totals,{x:85,y:216,w:630,h:272});cardText(ctx,'326',400,512,'900 24px system-ui','#f5f7fb','center');cardText(ctx,'maggioranza assoluta',400,533,'600 12px system-ui','#8594a8','center');const rows=cardPartyRows().slice(0,6);rows.forEach((r,i)=>{const y=202+i*49;roundRect(ctx,785,y,354,40,10,'#121b27','#293747',1);ctx.fillStyle=PARTY[r.p].color;ctx.fillRect(785,y,6,40);cardText(ctx,PARTY[r.p].name,806,y+26,'750 16px system-ui','#eef3f9');cardText(ctx,fmt0(r.seats),1120,y+27,'900 19px system-ui',PARTY[r.p].color,'right');});const top=Object.entries(state.mc?.largest||{}).sort((a,b)=>b[1]-a[1])[0];roundRect(ctx,785,504,354,46,11,'#182334','#33445a',1);cardText(ctx,top?`${PARTY[top[0]]?.short||top[0]} primo partito ${pctFmt(top[1]*100)}`:'Nowcast in aggiornamento',806,533,'800 15px system-ui','#dce6f2');const polls=cardPollRows().slice(0,5);let px=55;polls.forEach((r,i)=>{cardText(ctx,PARTY[r.p].short,px,582,'700 13px system-ui',PARTY[r.p].color);cardText(ctx,pctFmt(r.v),px+42,582,'900 15px system-ui','#f0f4fa');px+=132;});cardText(ctx,`Aggiornato ${formatDate(state.polls?.[0]?.date||exportDateStamp())}`,1138,582,'600 12px system-ui','#7f8ea2','right');}
-  else {roundRect(ctx,24,24,W-48,H-48,32,'rgba(17,24,35,.97)','#344255',1.4);drawUkFlagMark(ctx,54,54,52,34);cardText(ctx,'FOCUS AMERICA · ELECTION MODEL',122,80,'800 17px system-ui','#8ea0b7');cardText(ctx,'Elezioni nel Regno Unito',W/2,154,'900 43px system-ui','#f7f9fc','center');cardText(ctx,state.mc?'Nowcast probabilistico · 50.000 simulazioni':'Scenario centrale',W/2,194,'600 20px system-ui','#98a8bc','center');roundRect(ctx,54,230,W-108,525,24,'#0e151f','#2c3a4c',1);drawCardHemicycle(ctx,totals,{x:95,y:270,w:890,h:390});cardText(ctx,'326 · maggioranza assoluta',W/2,716,'800 18px system-ui','#9baabd','center');const rows=cardPartyRows().slice(0,6),gap=12,cw=(W-108-gap*2)/3;rows.forEach((r,i)=>{const col=i%3,row=Math.floor(i/3),x=54+col*(cw+gap),y=790+row*150;roundRect(ctx,x,y,cw,132,18,'#121b27','#2d3b4d',1);ctx.fillStyle=PARTY[r.p].color;ctx.beginPath();ctx.arc(x+35,y+35,12,0,Math.PI*2);ctx.fill();cardText(ctx,PARTY[r.p].short,x+58,y+41,'800 18px system-ui',PARTY[r.p].color);cardText(ctx,fmt0(r.seats),x+cw/2,y+101,'900 38px system-ui','#f5f8fc','center');});const polls=cardPollRows().slice(0,5);roundRect(ctx,54,1110,W-108,145,19,'#101824','#2d3b4d',1);cardText(ctx,'Media sondaggi',80,1150,'800 18px system-ui','#9eadc0');const cell=(W-160)/5;polls.forEach((r,i)=>{const x=80+i*cell+cell/2;cardText(ctx,PARTY[r.p].short,x,1193,'750 16px system-ui',PARTY[r.p].color,'center');cardText(ctx,pctFmt(r.v),x,1232,'900 25px system-ui','#f5f8fc','center');});cardText(ctx,`Aggiornato ${formatDate(state.polls?.[0]?.date||exportDateStamp())}`,W/2,1297,'600 14px system-ui','#8090a4','center');}
+  if(!ig){roundRect(ctx,24,24,W-48,H-48,28,'rgba(17,24,35,.96)','#344255',1.3);drawUkFlagMark(ctx,55,50,46,30);cardText(ctx,'DANIELE ANGRISANI · MODELLO ELETTORALE',116,73,'800 15px system-ui','#8ea0b7');cardText(ctx,'Elezioni nel Regno Unito',55,132,'900 42px system-ui','#f7f9fc');cardText(ctx,state.mc?'Scenario rappresentativo Monte Carlo':'Scenario centrale',55,166,'600 19px system-ui','#98a8bc');roundRect(ctx,55,192,690,337,22,'#0e151f','#2c3a4c',1);drawCardHemicycle(ctx,totals,{x:85,y:216,w:630,h:272});cardText(ctx,'326',400,512,'900 24px system-ui','#f5f7fb','center');cardText(ctx,'maggioranza assoluta',400,533,'600 12px system-ui','#8594a8','center');const rows=cardPartyRows().slice(0,6);rows.forEach((r,i)=>{const y=202+i*49;roundRect(ctx,785,y,354,40,10,'#121b27','#293747',1);ctx.fillStyle=PARTY[r.p].color;ctx.fillRect(785,y,6,40);cardText(ctx,PARTY[r.p].name,806,y+26,'750 16px system-ui','#eef3f9');cardText(ctx,fmt0(r.seats),1120,y+27,'900 19px system-ui',PARTY[r.p].color,'right');});const top=Object.entries(state.mc?.largest||{}).sort((a,b)=>b[1]-a[1])[0];roundRect(ctx,785,504,354,46,11,'#182334','#33445a',1);cardText(ctx,top?`${PARTY[top[0]]?.short||top[0]} primo partito ${pctFmt(top[1]*100)}`:'Nowcast in aggiornamento',806,533,'800 15px system-ui','#dce6f2');const polls=cardPollRows().slice(0,5);let px=55;polls.forEach((r,i)=>{cardText(ctx,PARTY[r.p].short,px,582,'700 13px system-ui',PARTY[r.p].color);cardText(ctx,pctFmt(r.v),px+42,582,'900 15px system-ui','#f0f4fa');px+=132;});cardText(ctx,`Aggiornato ${formatDate(state.polls?.[0]?.date||exportDateStamp())}`,1138,582,'600 12px system-ui','#7f8ea2','right');}
+  else {roundRect(ctx,24,24,W-48,H-48,32,'rgba(17,24,35,.97)','#344255',1.4);drawUkFlagMark(ctx,54,54,52,34);cardText(ctx,'DANIELE ANGRISANI · MODELLO ELETTORALE',122,80,'800 17px system-ui','#8ea0b7');cardText(ctx,'Elezioni nel Regno Unito',W/2,154,'900 43px system-ui','#f7f9fc','center');cardText(ctx,state.mc?'Nowcast probabilistico · 50.000 simulazioni':'Scenario centrale',W/2,194,'600 20px system-ui','#98a8bc','center');roundRect(ctx,54,230,W-108,525,24,'#0e151f','#2c3a4c',1);drawCardHemicycle(ctx,totals,{x:95,y:270,w:890,h:390});cardText(ctx,'326 · maggioranza assoluta',W/2,716,'800 18px system-ui','#9baabd','center');const rows=cardPartyRows().slice(0,6),gap=12,cw=(W-108-gap*2)/3;rows.forEach((r,i)=>{const col=i%3,row=Math.floor(i/3),x=54+col*(cw+gap),y=790+row*150;roundRect(ctx,x,y,cw,132,18,'#121b27','#2d3b4d',1);ctx.fillStyle=PARTY[r.p].color;ctx.beginPath();ctx.arc(x+35,y+35,12,0,Math.PI*2);ctx.fill();cardText(ctx,PARTY[r.p].short,x+58,y+41,'800 18px system-ui',PARTY[r.p].color);cardText(ctx,fmt0(r.seats),x+cw/2,y+101,'900 38px system-ui','#f5f8fc','center');});const polls=cardPollRows().slice(0,5);roundRect(ctx,54,1110,W-108,145,19,'#101824','#2d3b4d',1);cardText(ctx,'Media sondaggi',80,1150,'800 18px system-ui','#9eadc0');const cell=(W-160)/5;polls.forEach((r,i)=>{const x=80+i*cell+cell/2;cardText(ctx,PARTY[r.p].short,x,1193,'750 16px system-ui',PARTY[r.p].color,'center');cardText(ctx,pctFmt(r.v),x,1232,'900 25px system-ui','#f5f8fc','center');});cardText(ctx,`Aggiornato ${formatDate(state.polls?.[0]?.date||exportDateStamp())}`,W/2,1297,'600 14px system-ui','#8090a4','center');}
   return c;
 }
-function modelShareText(){const totals=projectedTotalsForCard()||{},lead=Object.entries(totals).filter(([p])=>PARTY[p]).sort((a,b)=>b[1]-a[1])[0]||['other',0],hung=state.mc?.hung;const line1=`Elezioni UK: ${PARTY[lead[0]]?.name||lead[0]} primo partito con ${fmt0(lead[1])} seggi nello scenario ${state.mc?'Monte Carlo':'centrale'}.`;const line2=state.mc?`Hung Parliament ${pctFmt(hung*100)} · 50.000 simulazioni · probabilità collegio per collegio.`:'Nowcast Focus America: sondaggi, seggi e collegi aggiornati.';return `${line1}\n${line2}`;}
+function modelShareText(){const totals=projectedTotalsForCard()||{},lead=Object.entries(totals).filter(([p])=>PARTY[p]).sort((a,b)=>b[1]-a[1])[0]||['other',0],hung=state.mc?.hung;const line1=`Elezioni UK: ${PARTY[lead[0]]?.name||lead[0]} primo partito con ${fmt0(lead[1])} seggi nello scenario ${state.mc?'Monte Carlo':'centrale'}.`;const line2=state.mc?`Parlamento senza maggioranza ${pctFmt(hung*100)} · 50.000 simulazioni · probabilità collegio per collegio.`:'Modello indipendente di Daniele Angrisani: sondaggi, seggi e collegi aggiornati.';return `${line1}\n${line2}`;}
 async function downloadModelCard(format='landscape'){const c=await buildModelCardCanvas(format),b=await canvasBlob(c);downloadBlob(b,`uk_nowcast_${format==='instagram'?'instagram_4x5':'social_16x9'}_${exportDateStamp()}.png`);return b;}
 async function shareModelCard(format='landscape',trigger=null){const c=await buildModelCardCanvas(format),b=await canvasBlob(c),file=new File([b],`uk_nowcast_${format==='instagram'?'instagram_4x5':'social_16x9'}_${exportDateStamp()}.png`,{type:'image/png'}),text=modelShareText(),url=currentSiteUrl();if(navigator.share&&navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:'Elezioni nel Regno Unito — Nowcast',text:`${text}\n\n${url}`});return true;}downloadBlob(b,file.name);try{await navigator.clipboard?.writeText(`${text}\n\n${url}`);}catch(_){}if(trigger)flashButton(trigger,'PNG + testo copiato');return false;}
 function flashButton(btn,label='Fatto ✓'){if(!btn)return;const oldHtml=btn.innerHTML,oldTitle=btn.title,oldAria=btn.getAttribute('aria-label');if(btn.classList.contains('share-btn')){btn.classList.add('copied');btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';btn.title='Copiato';btn.setAttribute('aria-label','Copiato');}else{btn.textContent=label;}setTimeout(()=>{btn.innerHTML=oldHtml;btn.classList.remove('copied');btn.title=oldTitle;if(oldAria)btn.setAttribute('aria-label',oldAria);else btn.removeAttribute('aria-label');},1600);}
-function shareUrl(kind,url,text){const u=encodeURIComponent(url),t=encodeURIComponent(text);if(kind==='x')return `https://twitter.com/intent/tweet?text=${t}&url=${u}`;if(kind==='threads')return `https://www.threads.net/intent/post?text=${encodeURIComponent(text+'\n\n'+url)}`;if(kind==='facebook')return `https://www.facebook.com/sharer/sharer.php?u=${u}`;if(kind==='linkedin')return `https://www.linkedin.com/sharing/share-offsite/?url=${u}`;if(kind==='telegram')return `https://t.me/share/url?url=${u}&text=${t}`;if(kind==='whatsapp')return `https://api.whatsapp.com/send?text=${encodeURIComponent(text+'\n\n'+url)}`;return null;}
+function shareUrl(kind,url,text){const u=encodeURIComponent(url),t=encodeURIComponent(text);if(kind==='x')return `https://x.com/intent/post?text=${encodeURIComponent(text+' '+url)}`;if(kind==='threads')return `https://www.threads.net/intent/post?text=${encodeURIComponent(text+'\n\n'+url)}`;if(kind==='facebook')return `https://www.facebook.com/sharer/sharer.php?u=${u}`;if(kind==='linkedin')return `https://www.linkedin.com/sharing/share-offsite/?url=${u}`;if(kind==='telegram')return `https://t.me/share/url?url=${u}&text=${t}`;if(kind==='whatsapp')return `https://api.whatsapp.com/send?text=${encodeURIComponent(text+'\n\n'+url)}`;return null;}
 async function openModelShare(kind,btn){const url=currentSiteUrl(),text=modelShareText();if(kind==='copy'){const copy=`${text}\n\n${url}`;if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(copy).catch(()=>fallbackCopy(copy));else fallbackCopy(copy);flashButton(btn,'Copiato ✓');return;}if(kind==='instagram'){await shareModelCard('instagram',btn);return;}if(kind==='native'){if(navigator.share){await navigator.share({title:'Elezioni nel Regno Unito — Nowcast',text,url});return;}const copy=`${text}\n\n${url}`;fallbackCopy(copy,()=>flashButton(btn,'Copiato ✓'));return;}const target=shareUrl(kind,url,text);if(target)window.open(target,'_blank','noopener,noreferrer');}
 function seatExportData(id=state.selectedSeat){const seat=state.byId.get(id);if(!seat)return null;const live=seat.projected||{},cm=seatMarginFromShares(seat,live),prob=state.mc?.seatProb?.[id]||null,bestProb=prob?Object.entries(prob).sort((a,b)=>b[1]-a[1])[0]:null,rep=state.representative?.assignment?.[id]||seat.centralWinner||seat.winner2024;return {seat,live,cm,prob,bestProb,rep};}
-async function buildSeatCardCanvas(id=state.selectedSeat){const d=seatExportData(id);if(!d)throw new Error('Seleziona prima un collegio');const {seat,live,cm,prob,bestProb,rep}=d,W=1200,H=630,c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');ctx.fillStyle='#0a0f17';ctx.fillRect(0,0,W,H);const grad=ctx.createLinearGradient(0,0,W,H);grad.addColorStop(0,'rgba(24,55,90,.72)');grad.addColorStop(1,'rgba(91,22,44,.25)');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);roundRect(ctx,24,24,W-48,H-48,28,'rgba(17,24,35,.97)','#344255',1.3);drawUkFlagMark(ctx,54,50,46,30);cardText(ctx,'FOCUS AMERICA · CONSTITUENCY NOWCAST',114,73,'800 15px system-ui','#8ea0b7');cardText(ctx,seat.name,54,132,seat.name.length>34?'900 34px system-ui':'900 42px system-ui','#f7f9fc');cardText(ctx,[seat.region,seat.country,seat.id].filter(Boolean).join(' · '),54,163,'600 16px system-ui','#91a1b5');const changed=rep!==(seat.winner2024||'other');roundRect(ctx,54,194,520,102,18,'#101925','#2e3c4e',1);cardText(ctx,'Scenario rappresentativo',78,226,'700 14px system-ui','#8e9db0');ctx.fillStyle=PARTY[rep]?.color||PARTY.other.color;ctx.beginPath();ctx.arc(84,262,12,0,Math.PI*2);ctx.fill();cardText(ctx,PARTY[rep]?.name||rep,108,270,'900 28px system-ui','#f5f8fc');cardText(ctx,`${changed?'Cambio':'Conferma'} vs 2024 · margine centrale ${fmt1(cm.margin)} p.p.`,78,322,'650 15px system-ui',changed?'#ffb6c5':'#9dd9b2');const prev=seat.winner2024||'other';roundRect(ctx,54,350,520,102,18,'#101925','#2e3c4e',1);cardText(ctx,'Risultato 2024',78,382,'700 14px system-ui','#8e9db0');cardText(ctx,PARTY[prev]?.name||seat.winner2024_name||prev,78,421,'850 24px system-ui',PARTY[prev]?.color||'#d7dce5');cardText(ctx,seat.winner2024_candidate||'',78,445,'600 13px system-ui','#8e9db0');const shareRows=Object.entries(live).filter(([p,v])=>PARTY[p]&&v>.2).sort((a,b)=>b[1]-a[1]).slice(0,5);shareRows.forEach(([p,v],i)=>{const y=198+i*56,x=625;cardText(ctx,PARTY[p].short,x,y+20,'800 15px system-ui',PARTY[p].color);roundRect(ctx,x+62,y+7,360,14,7,'#263243');roundRect(ctx,x+62,y+7,Math.max(5,360*clamp(v/50,0,1)),14,7,PARTY[p].color);cardText(ctx,pctFmt(v),1074,y+21,'900 16px system-ui','#f0f4fa','right');});roundRect(ctx,625,493,449,58,14,'#121d2b','#35475d',1);const probText=bestProb?`${PARTY[bestProb[0]]?.short||bestProb[0]} ${pctFmt(bestProb[1]*100)} di vittoria · ${probabilityLabel(bestProb[1])}`:'Monte Carlo in corso';cardText(ctx,probText,649,529,'800 17px system-ui','#dce6f3');cardText(ctx,`Aggiornato ${formatDate(state.polls?.[0]?.date||exportDateStamp())}`,54,578,'600 12px system-ui','#8090a4');cardText(ctx,'angrisanidj.github.io/modello-uk/',1145,578,'600 12px system-ui','#8090a4','right');return c;}
-function seatShareText(id=state.selectedSeat){const d=seatExportData(id);if(!d)return'';const p=d.bestProb,prob=p?` · P vittoria ${PARTY[p[0]]?.short||p[0]} ${pctFmt(p[1]*100)}`:'';return `${d.seat.name}: ${PARTY[d.rep]?.name||d.rep} nello scenario rappresentativo, margine centrale ${fmt1(d.cm.margin)} p.p.${prob}.\nNowcast UK · Focus America.`;}
+async function buildSeatCardCanvas(id=state.selectedSeat){const d=seatExportData(id);if(!d)throw new Error('Seleziona prima un collegio');const {seat,live,cm,prob,bestProb,rep}=d,W=1200,H=630,c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');ctx.fillStyle='#0a0f17';ctx.fillRect(0,0,W,H);const grad=ctx.createLinearGradient(0,0,W,H);grad.addColorStop(0,'rgba(24,55,90,.72)');grad.addColorStop(1,'rgba(91,22,44,.25)');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);roundRect(ctx,24,24,W-48,H-48,28,'rgba(17,24,35,.97)','#344255',1.3);drawUkFlagMark(ctx,54,50,46,30);cardText(ctx,'DANIELE ANGRISANI · NOWCAST DEL COLLEGIO',114,73,'800 15px system-ui','#8ea0b7');cardText(ctx,seat.name,54,132,seat.name.length>34?'900 34px system-ui':'900 42px system-ui','#f7f9fc');cardText(ctx,[seat.region,seat.country,seat.id].filter(Boolean).map((v,i)=>i<2?regionalDisplayName(v):v).join(' · '),54,163,'600 16px system-ui','#91a1b5');const changed=rep!==(seat.winner2024||'other');roundRect(ctx,54,194,520,102,18,'#101925','#2e3c4e',1);cardText(ctx,'Scenario rappresentativo',78,226,'700 14px system-ui','#8e9db0');ctx.fillStyle=PARTY[rep]?.color||PARTY.other.color;ctx.beginPath();ctx.arc(84,262,12,0,Math.PI*2);ctx.fill();cardText(ctx,PARTY[rep]?.name||rep,108,270,'900 28px system-ui','#f5f8fc');cardText(ctx,`${changed?'Cambio':'Conferma'} vs 2024 · margine centrale ${fmt1(cm.margin)} p.p.`,78,322,'650 15px system-ui',changed?'#ffb6c5':'#9dd9b2');const prev=seat.winner2024||'other';roundRect(ctx,54,350,520,102,18,'#101925','#2e3c4e',1);cardText(ctx,'Risultato 2024',78,382,'700 14px system-ui','#8e9db0');cardText(ctx,PARTY[prev]?.name||seat.winner2024_name||prev,78,421,'850 24px system-ui',PARTY[prev]?.color||'#d7dce5');cardText(ctx,seat.winner2024_candidate||'',78,445,'600 13px system-ui','#8e9db0');const shareRows=Object.entries(live).filter(([p,v])=>PARTY[p]&&v>.2).sort((a,b)=>b[1]-a[1]).slice(0,5);shareRows.forEach(([p,v],i)=>{const y=198+i*56,x=625;cardText(ctx,PARTY[p].short,x,y+20,'800 15px system-ui',PARTY[p].color);roundRect(ctx,x+62,y+7,360,14,7,'#263243');roundRect(ctx,x+62,y+7,Math.max(5,360*clamp(v/50,0,1)),14,7,PARTY[p].color);cardText(ctx,pctFmt(v),1074,y+21,'900 16px system-ui','#f0f4fa','right');});roundRect(ctx,625,493,449,58,14,'#121d2b','#35475d',1);const probText=bestProb?`${PARTY[bestProb[0]]?.short||bestProb[0]} ${pctFmt(bestProb[1]*100)} di vittoria · ${probabilityLabel(bestProb[1])}`:'Monte Carlo in corso';cardText(ctx,probText,649,529,'800 17px system-ui','#dce6f3');cardText(ctx,`Aggiornato ${formatDate(state.polls?.[0]?.date||exportDateStamp())}`,54,578,'600 12px system-ui','#8090a4');cardText(ctx,'angrisanidj.github.io/modello-uk/',1145,578,'600 12px system-ui','#8090a4','right');return c;}
+function seatShareText(id=state.selectedSeat){const d=seatExportData(id);if(!d)return'';const p=d.bestProb,prob=p?` · P vittoria ${PARTY[p[0]]?.short||p[0]} ${pctFmt(p[1]*100)}`:'';return `${d.seat.name}: ${PARTY[d.rep]?.name||d.rep} nello scenario rappresentativo, margine centrale ${fmt1(d.cm.margin)} p.p.${prob}.\nNowcast UK · Daniele Angrisani.`;}
 async function downloadSeatCard(){if(!state.selectedSeat)return;const c=await buildSeatCardCanvas(),b=await canvasBlob(c);downloadBlob(b,`uk_collegio_${state.selectedSeat}_${exportDateStamp()}.png`);}
 async function shareSeatCard(btn=null){if(!state.selectedSeat)return;const c=await buildSeatCardCanvas(),b=await canvasBlob(c),file=new File([b],`uk_collegio_${state.selectedSeat}_${exportDateStamp()}.png`,{type:'image/png'}),text=seatShareText(),url=selectedSeatUrl();if(navigator.share&&navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:`${state.byId.get(state.selectedSeat)?.name||'Collegio'} — Nowcast UK`,text:`${text}\n\n${url}`});return;}downloadBlob(b,file.name);const copy=`${text}\n\n${url}`;if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(copy).catch(()=>fallbackCopy(copy));else fallbackCopy(copy);flashButton(btn,'PNG + testo copiato');}
 
@@ -1565,7 +1581,7 @@ function formatModelTimestamp(raw){
 }
 function updateEditorialMeta(){
   const latest=$('#metaLatestPoll');if(latest)latest.textContent=state.polls?.[0]?.date?formatDate(state.polls[0].date):'—';
-  const updated=$('#metaModelUpdated');if(updated){const raw=state.mrpLite?.generated_at||state.ni?.meta?.generated_at||state.territorialBaseline?.generated_at;updated.textContent=raw?formatModelTimestamp(raw):'snapshot corrente';}
+  const updated=$('#metaModelUpdated');if(updated){const raw=state.mrpLite?.generated_at||state.ni?.meta?.generated_at||state.territorialBaseline?.generated_at;updated.textContent=raw?formatModelTimestamp(raw):'dati correnti';}
 }
 
 // v0.9.38 — Germany-parity editorial utilities. Frontend only: no statistical inputs or simulations change.
@@ -1608,8 +1624,8 @@ function drawContainedImage(ctx,img,x,y,w,h){
 }
 function moduleGraphicSubtitle(kind){
   if(kind==='projection')return state.mc?'Mediane e intervallo centrale 80% · 50.000 simulazioni':'Scenario centrale · Monte Carlo in preparazione';
-  if(kind==='map'){const lab={central:'Proiezione centrale',representative:'Scenario rappresentativo',margin:'Margine centrale',prob:'Probabilità di vittoria',custom:'Scenario utente'};return `${lab[state.mapMode]||'Mappa dei collegi'} · 650 constituencies`;}
-  if(kind==='trend'){const r=state.pollTrendRange==='all'?'tutto l’archivio':`${state.pollTrendRange||180} giorni`;return `Media storica del modello · ${r} · half-life 7 giorni`;}
+  if(kind==='map'){const lab={central:'Proiezione centrale',representative:'Scenario rappresentativo',margin:'Margine centrale',prob:'Probabilità di vittoria',custom:'Scenario utente'};return `${lab[state.mapMode]||'Mappa dei collegi'} · 650 collegi`;}
+  if(kind==='trend'){const r=state.pollTrendRange==='all'?'tutto l’archivio':`${state.pollTrendRange||180} giorni`;return `Media storica del modello · ${r} · emivita 7 giorni`;}
   return 'Nowcast UK';
 }
 async function buildModuleGraphicCanvas(kind,ratio='16:9'){
@@ -1617,7 +1633,7 @@ async function buildModuleGraphicCanvas(kind,ratio='16:9'){
   ctx.fillStyle='#080d14';ctx.fillRect(0,0,W,H);const grad=ctx.createLinearGradient(0,0,W,H);grad.addColorStop(0,'rgba(25,58,96,.72)');grad.addColorStop(1,'rgba(98,22,47,.24)');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
   const pad=ratio==='5:2'?34:44;roundRect(ctx,pad,pad,W-pad*2,H-pad*2,26,'rgba(16,23,34,.97)','#354357',1.4);drawUkFlagMark(ctx,pad+28,pad+24,48,31);
   const title={projection:'Proiezione della House of Commons',map:'Mappa dei 650 collegi',trend:'Andamento dei sondaggi'}[kind]||'Nowcast UK';
-  cardText(ctx,'FOCUS AMERICA · ELECTION MODEL',pad+94,pad+48,'800 16px system-ui','#8fa2b9');
+  cardText(ctx,'DANIELE ANGRISANI · MODELLO ELETTORALE',pad+94,pad+48,'800 16px system-ui','#8fa2b9');
   cardText(ctx,title,pad+28,pad+104,ratio==='5:2'?'900 31px system-ui':'900 38px system-ui','#f5f8fc');
   cardText(ctx,moduleGraphicSubtitle(kind),pad+28,pad+134,'600 15px system-ui','#93a3b7');
   const contentY=pad+158,contentH=H-contentY-pad-48,contentX=pad+28,contentW=W-pad*2-56;
@@ -1653,8 +1669,6 @@ function buildCurrentSnapshot(){
   return {
     schema:'modello-uk-snapshot-v1',
     generated_at:new Date().toISOString(),
-    ui_version:'0.9.38',
-    statistical_engine:'v0.9.29',
     latest_poll_date:state.polls?.[0]?.date||null,
     poll_source:state.pollSource||null,
     poll_average:Object.fromEntries(PARTY_ORDER.filter(p=>Number.isFinite(state.average?.values?.[p])).map(p=>[p,Number(state.average.values[p].toFixed(4))])),
@@ -1667,8 +1681,7 @@ function buildCurrentSnapshot(){
       working_majority_threshold:m.workingThreshold||state.central?.ni?.workingThreshold||CONFIG.majority,
       simulations:m.sims||0
     },
-    representative_assignment:state.representative?.assignment||null,
-    model_label:productionModelLabel()
+    representative_assignment:state.representative?.assignment||null
   };
 }
 function downloadSnapshotJson(){
@@ -1739,8 +1752,8 @@ async function init(force=false){
     state.constituencies=constituencies;state.constituencyIndex=new Map(constituencies.map(c=>[c.id,c]));
     state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;state.mrpLite=mrpLite;state.subnational=subnational;state.territorialBaseline=territorialBaseline;
     renderPolls();renderPollTrend();renderCoalitionButtons();
-    if(constituencies.length===650){buildCentral();renderScenarioInputs(true);renderCustomScenario();renderCentral();renderMap();restoreSeatDeepLink();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource} · seat model: ${productionModelLabel()} · poll subnazionali: ${state.subnational.length} · NI: ${niModuleReady()?'18 collegi simulati':'fallback fisso'}`;await runMonteCarlo(force);}else{
-      setStatus('Sondaggi caricati · manca la baseline territoriale','error');showError('La dashboard nazionale è attiva, ma i 650 risultati di collegio non sono ancora nello snapshot locale e il browser non è riuscito a recuperarli direttamente. Esegui la GitHub Action “Update UK election data”: genererà automaticamente baseline e geometrie.');renderMap();
+    if(constituencies.length===650){buildCentral();renderScenarioInputs(true);renderCustomScenario();renderCentral();renderMap();restoreSeatDeepLink();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Dati: 650 collegi · sondaggi: ${state.pollSource} · rilevazioni subnazionali: ${state.subnational.length} · Irlanda del Nord: ${niModuleReady()?'18 collegi simulati':'base fissa'}`;await runMonteCarlo(force);}else{
+      setStatus('Sondaggi caricati · manca la base territoriale','error');showError('La dashboard nazionale è attiva, ma i 650 risultati di collegio non sono ancora nello archivio locale e il browser non è riuscito a recuperarli direttamente. Esegui la GitHub Action “Update UK election data”: genererà automaticamente baseline e geometrie.');renderMap();
     }
   }catch(err){console.error(err);setStatus('Errore di caricamento','error');showError(`Errore: ${err.message||err}`);}finally{$('#refreshBtn').disabled=false;}
 }
