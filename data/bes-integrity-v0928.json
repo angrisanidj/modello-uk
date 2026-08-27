@@ -1,0 +1,382 @@
+{
+  "version": "uk-v0928-bes-integrity-wrapper",
+  "generated_at": "2026-08-27T12:19:42.691972+00:00",
+  "status": "passed",
+  "checks": [
+    {
+      "label": "2010 actual",
+      "year": "10",
+      "boundary": "old",
+      "share_source": "vote_counts",
+      "countries": {
+        "Wales": 40,
+        "Scotland": 59,
+        "England": 533
+      },
+      "english_regions": {
+        "south_east": 84,
+        "west_midlands": 59,
+        "north_west": 75,
+        "east_midlands": 46,
+        "london": 73,
+        "yorkshire": 54,
+        "east_england": 58,
+        "south_west": 55,
+        "north_east": 29
+      },
+      "winner_counts": {
+        "lab": 258,
+        "con": 306,
+        "ld": 57,
+        "green": 1,
+        "snp": 6,
+        "pc": 3,
+        "other": 1
+      },
+      "official_winner_source": true,
+      "gb_rows": 632,
+      "ni_filtered_before_party_parsing": true,
+      "unknown_winner_labels": [],
+      "unknown_second_labels": [],
+      "raw_winner_labels": [
+        "Conservative",
+        "Green",
+        "Labour",
+        "Liberal Democrat",
+        "Plaid Cymru",
+        "Scottish National Party",
+        "Speaker"
+      ],
+      "raw_second_labels": [],
+      "other_winner_seats": 1,
+      "other_runnerup_seats": 0,
+      "ref_primary_source": "vote_counts",
+      "ref_primary_stood_count": 558,
+      "ref_primary_coverage": 0.8829113924050633,
+      "errors": []
+    },
+    {
+      "label": "2015 actual",
+      "year": "15",
+      "boundary": "old",
+      "share_source": "vote_counts",
+      "countries": {
+        "Wales": 40,
+        "Scotland": 59,
+        "England": 533
+      },
+      "english_regions": {
+        "south_east": 84,
+        "west_midlands": 59,
+        "north_west": 75,
+        "east_midlands": 46,
+        "london": 73,
+        "yorkshire": 54,
+        "east_england": 58,
+        "south_west": 55,
+        "north_east": 29
+      },
+      "winner_counts": {
+        "lab": 232,
+        "con": 330,
+        "ref": 1,
+        "ld": 8,
+        "green": 1,
+        "snp": 56,
+        "pc": 3,
+        "other": 1
+      },
+      "official_winner_source": true,
+      "gb_rows": 632,
+      "ni_filtered_before_party_parsing": true,
+      "unknown_winner_labels": [],
+      "unknown_second_labels": [],
+      "raw_winner_labels": [
+        "Conservative",
+        "Green",
+        "Labour",
+        "Liberal Democrat",
+        "Plaid Cymru",
+        "Scottish National Party",
+        "Speaker.",
+        "UKIP"
+      ],
+      "raw_second_labels": [],
+      "other_winner_seats": 1,
+      "other_runnerup_seats": 0,
+      "ref_primary_source": "vote_counts",
+      "ref_primary_stood_count": 614,
+      "ref_primary_coverage": 0.9715189873417721,
+      "errors": []
+    },
+    {
+      "label": "2017 actual",
+      "year": "17",
+      "boundary": "old",
+      "share_source": "vote_counts",
+      "countries": {
+        "Wales": 40,
+        "Scotland": 59,
+        "England": 533
+      },
+      "english_regions": {
+        "south_east": 84,
+        "west_midlands": 59,
+        "north_west": 75,
+        "east_midlands": 46,
+        "london": 73,
+        "yorkshire": 54,
+        "east_england": 58,
+        "south_west": 55,
+        "north_east": 29
+      },
+      "winner_counts": {
+        "lab": 262,
+        "con": 317,
+        "ld": 12,
+        "green": 1,
+        "snp": 35,
+        "pc": 4,
+        "other": 1
+      },
+      "official_winner_source": true,
+      "gb_rows": 632,
+      "ni_filtered_before_party_parsing": true,
+      "unknown_winner_labels": [],
+      "unknown_second_labels": [],
+      "raw_winner_labels": [
+        "Conservative",
+        "Green",
+        "Labour",
+        "Liberal Democrat",
+        "Plaid Cymru",
+        "Scottish National Party",
+        "Speaker"
+      ],
+      "raw_second_labels": [],
+      "other_winner_seats": 1,
+      "other_runnerup_seats": 0,
+      "ref_primary_source": "vote_counts",
+      "ref_primary_stood_count": 378,
+      "ref_primary_coverage": 0.5981012658227848,
+      "errors": []
+    },
+    {
+      "label": "2019 actual",
+      "year": "19",
+      "boundary": "old",
+      "share_source": "vote_counts",
+      "countries": {
+        "Wales": 40,
+        "Scotland": 59,
+        "England": 533
+      },
+      "english_regions": {
+        "south_east": 84,
+        "west_midlands": 59,
+        "north_west": 75,
+        "east_midlands": 46,
+        "london": 73,
+        "yorkshire": 54,
+        "east_england": 58,
+        "south_west": 55,
+        "north_east": 29
+      },
+      "winner_counts": {
+        "lab": 202,
+        "con": 365,
+        "ld": 11,
+        "green": 1,
+        "snp": 48,
+        "pc": 4,
+        "other": 1
+      },
+      "official_winner_source": true,
+      "gb_rows": 632,
+      "ni_filtered_before_party_parsing": true,
+      "unknown_winner_labels": [],
+      "unknown_second_labels": [],
+      "raw_winner_labels": [
+        "Conservative",
+        "Green",
+        "Labour",
+        "Liberal Democrat",
+        "Plaid Cymru",
+        "Scottish National Party",
+        "Speaker"
+      ],
+      "raw_second_labels": [],
+      "other_winner_seats": 1,
+      "other_runnerup_seats": 0,
+      "ref_primary_source": "vote_counts",
+      "ref_primary_stood_count": 275,
+      "ref_primary_coverage": 0.435126582278481,
+      "errors": []
+    },
+    {
+      "label": "2019 notional on 2024 boundaries",
+      "year": "19",
+      "boundary": "new",
+      "share_source": "vote_counts",
+      "countries": {
+        "Wales": 32,
+        "England": 543,
+        "Scotland": 57
+      },
+      "english_regions": {
+        "south_east": 91,
+        "west_midlands": 57,
+        "north_west": 73,
+        "east_midlands": 47,
+        "london": 75,
+        "yorkshire": 54,
+        "east_england": 61,
+        "south_west": 58,
+        "north_east": 27
+      },
+      "winner_counts": {
+        "lab": 200,
+        "con": 372,
+        "ld": 8,
+        "green": 1,
+        "snp": 48,
+        "pc": 2,
+        "other": 1
+      },
+      "official_winner_source": true,
+      "gb_rows": 632,
+      "ni_filtered_before_party_parsing": true,
+      "unknown_winner_labels": [],
+      "unknown_second_labels": [],
+      "raw_winner_labels": [
+        "Con",
+        "Green",
+        "LD",
+        "Lab",
+        "PC",
+        "SNP",
+        "Spkr"
+      ],
+      "raw_second_labels": [
+        "Brexit",
+        "Con",
+        "Green",
+        "LD",
+        "Lab",
+        "Other",
+        "PC",
+        "SNP"
+      ],
+      "other_winner_seats": 1,
+      "other_runnerup_seats": 5,
+      "ref_primary_source": "vote_counts",
+      "ref_primary_stood_count": 336,
+      "ref_primary_coverage": 0.5316455696202531,
+      "errors": []
+    },
+    {
+      "label": "2024 actual",
+      "year": "24",
+      "boundary": "new",
+      "share_source": "vote_counts",
+      "countries": {
+        "Wales": 32,
+        "England": 543,
+        "Scotland": 57
+      },
+      "english_regions": {
+        "south_east": 91,
+        "west_midlands": 57,
+        "north_west": 73,
+        "east_midlands": 47,
+        "london": 75,
+        "yorkshire": 54,
+        "east_england": 61,
+        "south_west": 58,
+        "north_east": 27
+      },
+      "winner_counts": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "official_winner_source": true,
+      "gb_rows": 632,
+      "ni_filtered_before_party_parsing": true,
+      "unknown_winner_labels": [],
+      "unknown_second_labels": [
+        "INet",
+        "NIP",
+        "WPB"
+      ],
+      "raw_winner_labels": [
+        "Con",
+        "Green",
+        "Ind",
+        "LD",
+        "Lab",
+        "PC",
+        "RUK",
+        "SNP",
+        "Spk"
+      ],
+      "raw_second_labels": [
+        "Con",
+        "Green",
+        "INet",
+        "Ind",
+        "LD",
+        "Lab",
+        "NIP",
+        "PC",
+        "RUK",
+        "SNP",
+        "WPB"
+      ],
+      "other_winner_seats": 6,
+      "other_runnerup_seats": 17,
+      "ref_primary_source": "vote_counts",
+      "ref_primary_stood_count": 609,
+      "ref_primary_coverage": 0.9636075949367089,
+      "errors": []
+    }
+  ],
+  "errors": [],
+  "hard_expectations": {
+    "2019_actual_gb": {
+      "con": 365,
+      "lab": 202,
+      "snp": 48,
+      "ld": 11,
+      "pc": 4,
+      "green": 1,
+      "other": 1
+    },
+    "2024_actual_gb": {
+      "lab": 411,
+      "con": 121,
+      "ld": 72,
+      "snp": 9,
+      "ref": 5,
+      "green": 4,
+      "pc": 4,
+      "other": 6
+    },
+    "old_boundaries": {
+      "England": 533,
+      "Scotland": 59,
+      "Wales": 40
+    },
+    "new_boundaries": {
+      "England": 543,
+      "Scotland": 57,
+      "Wales": 32
+    }
+  },
+  "engine_parser_version": "uk-v0922-bes-integrity"
+}
