@@ -20,7 +20,6 @@ concurrency:
 jobs:
   update-and-deploy:
     runs-on: ubuntu-latest
-
     environment:
       name: github-pages
 
@@ -46,7 +45,7 @@ jobs:
       - name: Calibrate legacy partial-raking benchmark
         run: python tools/build_backtest.py
 
-      - name: Verify v0.9.20 source bundle
+      - name: Verify v0.9.21 source bundle
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -54,22 +53,22 @@ jobs:
           app=Path("scripts/app.js").read_text(encoding="utf-8")
           index=Path("index.html").read_text(encoding="utf-8")
           required={
-              "builder":"modello-uk v0.9.20 — Scotland + Conservative/Labour pairwise validation",
-              "builder_integrity":"bes-integrity-v0920.json",
-              "app":"uk-v0920-20260827-scotland-conlab",
-              "index":"Versione 0.9.20 · sweep Scozia + Conservative/Labour (shadow)",
+              "builder":"modello-uk v0.9.21 — Scotland STV local-residual validation",
+              "builder_integrity":"bes-integrity-v0921.json",
+              "app":"uk-v0921-20260827-scotland-local",
+              "index":"Versione 0.9.21 · residui locali Scozia SNP/Labour (shadow)",
           }
           observed={"builder":builder,"builder_integrity":builder,"app":app,"index":index}
           for key,needle in required.items():
               if needle not in observed[key]:
-                  raise SystemExit(f"ERROR: mixed-version upload: {key} is not v0.9.20 (missing {needle!r})")
-          print("v0.9.20 source bundle preflight: PASSED")
+                  raise SystemExit(f"ERROR: mixed-version upload: {key} is not v0.9.21 (missing {needle!r})")
+          print("v0.9.21 source bundle preflight: PASSED")
           PY
 
-      - name: Build v0.9.20 Scotland and ConLab sweep
+      - name: Build v0.9.21 Scotland local residual validation
         run: python tools/build_mrp_lite.py
 
-      - name: Validate v0.9.20 shadow safeguards
+      - name: Validate v0.9.21 shadow safeguards
         run: |
           python - <<'PY'
           import json
@@ -86,13 +85,12 @@ jobs:
           display=load("data/constituencies-map.geojson")
           params=load("data/model-params.json")
           ni=load("data/ni-2024.json")
-
-          integrity=load("data/bes-integrity-v0920.json")
+          integrity=load("data/bes-integrity-v0921.json")
           mrp=load("data/mrp-lite-model.json")
           live=load("data/mrp-lite-live.json")
-          backtest=load("data/backtest-v0920-scotland-conlab.json")
-          sweep=load("data/scotland-conlab-sweep-v0920.json")
-          reference=load("data/v0915-reference-v0920.json")
+          backtest=load("data/backtest-v0921-scotland-local-residual.json")
+          sweep=load("data/scotland-local-residual-v0921.json")
+          reference=load("data/v0915-reference-v0921.json")
 
           n_polls=len(polls.get("polls",[])); n_const=len(constituencies.get("constituencies",[]))
           regions=territorial.get("english_regions",[]); ni_seats=ni.get("constituencies",[])
@@ -106,30 +104,30 @@ jobs:
           if ni.get("meta",{}).get("version")!="uk-v08-ni-constituency": raise SystemExit("ERROR: unexpected NI module version")
           if len(ni_seats)!=18 or {k:ni_winners.get(k,0) for k in expected_ni}!=expected_ni: raise SystemExit(f"ERROR: NI regression failed {dict(ni_winners)}")
 
-          if integrity.get("version")!="uk-v0920-bes-integrity" or integrity.get("status")!="passed":
+          if integrity.get("version")!="uk-v0921-bes-integrity" or integrity.get("status")!="passed":
               raise SystemExit(f"ERROR: BES integrity failed/version mismatch: {integrity.get('version')} {integrity.get('errors')}")
           for check in integrity.get("checks",[]):
               if check.get("gb_rows")!=632: raise SystemExit(f"ERROR: {check.get('label')} does not contain exactly 632 GB rows")
               if check.get("ni_filtered_before_party_parsing") is not True: raise SystemExit(f"ERROR: {check.get('label')} parsed parties before filtering NI")
 
           expected_versions={
-              "model":"uk-v0920-scotland-conlab-sweep",
-              "live":"uk-v0920-scotland-conlab-sweep-live",
-              "backtest":"uk-v0920-scotland-conlab-sweep-backtest",
-              "sweep":"uk-v0920-scotland-conlab-sweep",
-              "reference":"uk-v0920-scotland-conlab-sweep",
+              "model":"uk-v0921-scotland-local-residual",
+              "live":"uk-v0921-scotland-local-residual-live",
+              "backtest":"uk-v0921-scotland-local-residual-backtest",
+              "sweep":"uk-v0921-scotland-local-residual",
+              "reference":"uk-v0921-scotland-local-residual",
           }
           observed={"model":mrp.get("version"),"live":live.get("version"),"backtest":backtest.get("version"),"sweep":sweep.get("version"),"reference":reference.get("version")}
-          if observed!=expected_versions: raise SystemExit(f"ERROR: unexpected v0.9.20 versions {observed}")
+          if observed!=expected_versions: raise SystemExit(f"ERROR: unexpected v0.9.21 versions {observed}")
           for label,payload in (("model",mrp),("live",live),("backtest",backtest),("sweep",sweep),("reference",reference)):
-              if payload.get("status")!="ok": raise SystemExit(f"ERROR: v0.9.20 {label} build failed: {payload.get('error')}")
+              if payload.get("status")!="ok": raise SystemExit(f"ERROR: v0.9.21 {label} build failed: {payload.get('error')}")
 
-          if mrp.get("model_type")!="constituency-residual-scotland-conlab-v14" or live.get("model_type")!="constituency-residual-scotland-conlab-v14":
-              raise SystemExit("ERROR: unexpected v0.9.20 model type")
+          if mrp.get("model_type")!="constituency-residual-scotland-local-v15" or live.get("model_type")!="constituency-residual-scotland-local-v15":
+              raise SystemExit("ERROR: unexpected v0.9.21 model type")
           for payload in (mrp,live):
-              if payload.get("approved") is not False or payload.get("publication_ready") is not False: raise SystemExit("ERROR: v0.9.20 cannot be approved/publication-ready")
+              if payload.get("approved") is not False or payload.get("publication_ready") is not False: raise SystemExit("ERROR: v0.9.21 cannot be approved/publication-ready")
               if payload.get("shadow_only") is not True or payload.get("changes_production_model") is not False or payload.get("changes_candidate_model") is not False:
-                  raise SystemExit("ERROR: v0.9.20 shadow safeguards missing")
+                  raise SystemExit("ERROR: v0.9.21 shadow safeguards missing")
 
           routing=mrp.get("selected_incumbent_routing",{})
           if float(routing.get("route_strength",-1))!=0.0 or float(routing.get("unwind_strength",-1))!=0.0:
@@ -142,48 +140,42 @@ jobs:
           if rv.get("correct_winners")!=585 or rv.get("seat_abs_error_sum")!=42: raise SystemExit(f"ERROR: v0.9.15 2019 reference changed {rv}")
           if rh.get("correct_winners")!=501 or rh.get("seat_abs_error_sum")!=166: raise SystemExit(f"ERROR: v0.9.15 2024 reference changed {rh}")
 
-          if sweep.get("uses_2024_for_parameter_selection") is not False or sweep.get("parameter_selection_elections") != ["2017","2019"]:
-              raise SystemExit("ERROR: v0.9.20 leaks 2024 into parameter selection")
-          if sweep.get("used_for_parameter_selection") is not True or sweep.get("changes_production_model") is not False or sweep.get("changes_candidate_model") is not False:
-              raise SystemExit("ERROR: v0.9.20 sweep metadata inconsistent")
+          if sweep.get("uses_2024_for_parameter_selection") is not False or sweep.get("parameter_selection_elections") != ["2015","2017","2019"]:
+              raise SystemExit("ERROR: v0.9.21 leaks 2024 into parameter selection")
+          if sweep.get("changes_production_model") is not False or sweep.get("changes_candidate_model") is not False:
+              raise SystemExit("ERROR: v0.9.21 sweep metadata inconsistent")
           grid=sweep.get("grid",{})
-          if grid.get("strength") != [0.0,0.2,0.4,0.6]: raise SystemExit(f"ERROR: unexpected strength grid {grid}")
-          if grid.get("margin_cap") != [10.0,20.0,None]: raise SystemExit(f"ERROR: unexpected margin grid {grid}")
-          if grid.get("local_adv_floor") != [0.0,2.0]: raise SystemExit(f"ERROR: unexpected local-adv grid {grid}")
-          if float(grid.get("local_conf_floor",-1)) != 0.35: raise SystemExit(f"ERROR: unexpected local confidence floor {grid}")
+          if grid.get("alpha") != [0.5,2.0,8.0,25.0]: raise SystemExit(f"ERROR: unexpected alpha grid {grid}")
+          if grid.get("multiplier") != [0.0,0.5,0.75,1.0,1.25]: raise SystemExit(f"ERROR: unexpected multiplier grid {grid}")
+          if grid.get("cap") != [3.0,5.0,7.0,9.0]: raise SystemExit(f"ERROR: unexpected cap grid {grid}")
+          if sweep.get("candidate_count")!=65: raise SystemExit(f"ERROR: expected 65 Scotland candidates, got {sweep.get('candidate_count')}")
+          if int(sweep.get("admissible_count") or 0)<1: raise SystemExit("ERROR: no admissible Scotland candidates")
 
-          sc=sweep.get("scotland_snp_lab",{}); cl=sweep.get("conservative_labour",{}); co=sweep.get("combined",{})
-          for label,block in (("scotland",sc),("conlab",cl)):
-              if block.get("candidate_count")!=24: raise SystemExit(f"ERROR: {label} expected 24 candidates, got {block.get('candidate_count')}")
-              if int(block.get("admissible_count") or 0)<1: raise SystemExit(f"ERROR: {label} has no admissible candidates")
-              sel=block.get("selected_historical",{})
-              if not sel.get("id") or not isinstance(sel.get("benchmark_2024",{}).get("correct_winners"),int): raise SystemExit(f"ERROR: {label} selected candidate incomplete")
-              if len(block.get("all_historical_candidates",[]))!=24: raise SystemExit(f"ERROR: {label} historical candidate table incomplete")
-              if not block.get("benchmark_2024_diagnostic",{}).get("ranking"): raise SystemExit(f"ERROR: {label} 2024 diagnostic missing")
+          cov=sweep.get("coverage",{})
+          for year in ("2015","2017","2019","2024"):
+              if int(cov.get(year,{}).get("matched_seats") or 0)<45:
+                  raise SystemExit(f"ERROR: Scotland {year} coverage too low {cov.get(year)}")
+          src=sweep.get("sources",{}).get("scot_elex",{})
+          usable=src.get("usable_wards",{})
+          for y in ("2012","2017","2022"):
+              # JSON object keys are strings after serialization.
+              if int(usable.get(y,0))<300: raise SystemExit(f"ERROR: scot-elex {y} usable wards too low {usable}")
 
-          if co.get("candidate_count")!=36: raise SystemExit(f"ERROR: combined expected 36 shortlist combinations, got {co.get('candidate_count')}")
-          if int(co.get("admissible_count") or 0)<1: raise SystemExit("ERROR: no admissible combined candidate")
-          selected=co.get("selected_historical",{}); sh=selected.get("benchmark_2024",{})
-          if not selected.get("id") or not isinstance(sh.get("correct_winners"),int): raise SystemExit("ERROR: combined selected candidate incomplete")
+          selected=sweep.get("selected_historical",{}); sh=selected.get("benchmark_2024",{})
+          if not selected.get("id") or not isinstance(sh.get("correct_winners"),int): raise SystemExit("ERROR: selected Scotland candidate incomplete")
           expected_gate=bool(sh.get("correct_winners",0)>=506 and sh.get("seat_abs_error_sum",10**9)<=166)
-          if bool(selected.get("research_gate"))!=expected_gate: raise SystemExit(f"ERROR: combined research gate inconsistent {selected}")
-          if live.get("pairwise_structural_sweep",{}).get("applied_to_live") is not False: raise SystemExit("ERROR: pairwise layers were applied to live")
+          if bool(selected.get("research_gate"))!=expected_gate: raise SystemExit(f"ERROR: Scotland research gate inconsistent {selected}")
+          if live.get("scotland_local_residual",{}).get("applied_to_live") is not False: raise SystemExit("ERROR: Scotland residual layer was applied to live")
 
           diag=sweep.get("error_family_diagnostics",{})
           if diag.get("baseline_2024_snp_to_lab")!=12: raise SystemExit(f"ERROR: v0.9.17 SNP→Lab audit not reproduced {diag}")
-          if diag.get("baseline_2024_con_to_lab")!=25: raise SystemExit(f"ERROR: v0.9.17 Con→Lab audit not reproduced {diag}")
-          cov=sweep.get("coverage",{})
-          if int(cov.get("local_2017",{}).get("matched_seats") or 0)<250 or int(cov.get("local_2019",{}).get("matched_seats") or 0)<300 or int(cov.get("local_2024",{}).get("matched_seats") or 0)<300:
-              raise SystemExit(f"ERROR: local coverage too low {cov}")
 
           print("Canonical regression guard: 2019 583/42; 2024 494/176")
           print("v0.9.15 reference: 2019",rv.get("correct_winners"),rv.get("seat_abs_error_sum"),"2024",rh.get("correct_winners"),rh.get("seat_abs_error_sum"))
-          print("Scotland selected:",sc.get("selected_historical"))
-          print("ConLab selected:",cl.get("selected_historical"))
-          print("Combined selected:",selected)
-          print("Error-family diagnostic:",diag)
-          print("Combined 2024 passing configs:",co.get("benchmark_2024_diagnostic",{}).get("passing_research_gate"))
-          print("Dataset/model validation passed. v0.9.20 remains SHADOW RESEARCH regardless of 2024 result.")
+          print("Scotland selected on 2015/2017/2019 LOEO:",selected)
+          print("Scotland error-family diagnostic:",diag)
+          print("Scotland 2024 passing configs:",sweep.get("benchmark_2024_diagnostic",{}).get("passing_research_gate"))
+          print("Dataset/model validation passed. v0.9.21 remains SHADOW RESEARCH regardless of 2024 result.")
           PY
 
       - name: Commit refreshed data
@@ -194,7 +186,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data and v0.9.20 Scotland ConLab sweep"
+            git commit -m "chore: update UK data and v0.9.21 Scotland local residual"
             git push
           fi
 
