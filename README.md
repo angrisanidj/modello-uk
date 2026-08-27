@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.44 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.45 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,7 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.44.
+- **Interfaccia:** v0.9.45.
 - **Motore statistico di produzione:** **v0.9.29**, congelato durante le modifiche esclusivamente frontend.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche in 50 blocchi asincroni da 1.000; il risultato corrente viene persistito dal workflow delle social card e riutilizzato finché il fingerprint degli input non cambia.
@@ -40,7 +40,7 @@ Il progetto resta nella serie **0.x**: il passaggio a v1.0 richiede una qualità
 - calcola probabilità di maggioranza per i principali partiti e probabilità di hung parliament;
 - calcola la probabilità di vittoria constituency-by-constituency;
 - riutilizza prima il riepilogo Monte Carlo persistito nel repository e poi la cache locale; un nuovo calcolo parte soltanto quando il fingerprint degli input è cambiato;
-- il pulsante di aggiornamento della pagina non forza più inutilmente una nuova simulazione.
+- il pulsante **Aggiorna dati** confronta la fonte nazionale live con i dati caricati: se non trova variazioni dichiara esplicitamente che il Monte Carlo resta invariato; se trova una nuova rilevazione o una correzione, aggiorna il nowcast e autorizza un solo nuovo Monte Carlo per quel fingerprint.
 
 ### Dashboard e strumenti di lettura
 
@@ -133,6 +133,7 @@ modello-uk/
 ├── styles-v0942.css
 ├── styles-v0943.css
 ├── styles-v0944.css
+├── styles-v0945.css
 ├── map-performance.css
 ├── scripts/
 │   ├── app.js
@@ -177,28 +178,33 @@ Per una modifica esclusivamente frontend è sufficiente pubblicare i file dell'i
 
 La dashboard è un **nowcast**, non una previsione certa del risultato finale delle prossime elezioni. Il numero centrale dei seggi va letto insieme agli intervalli di probabilità, alla distribuzione Monte Carlo e alla geografia dei collegi. Lo scenario personalizzato dell'utente è uno strumento esplorativo deterministico e non modifica il modello di produzione.
 
-## UI v0.9.44
+## UI v0.9.45
 
-La v0.9.44 completa il secondo passaggio di ottimizzazione mobile. La barra sticky durante lo scorrimento usa ora un trattamento editoriale blu notte, più compatto e coerente con il template; l’export JSON viene nascosto sui telefoni; i controlli PNG/condivisione restano sulla stessa riga; la mappa mantiene sempre visibile il comando Reset.
+La v0.9.45 rifinisce il passaggio mobile sulla base della verifica reale su telefono. La barra sticky diventa una card flottante color grafite, con tre celle compatte e numeri separati in capsule; il riquadro “Parlamento senza maggioranza” torna coerente con il tema scuro; i comandi PNG/Condividi sono trattati come utility compatte e non come call-to-action principali. Sulla mappa mobile restano contemporaneamente disponibili `−`, livello di zoom, `+`, `Reset` e `Filtrati`.
 
-La serie storica dispone di una guida verticale durante l’esplorazione touch. L’Explorer dei collegi e l’archivio sondaggi mostrano 10 elementi per pagina sui dispositivi mobili e 25 su desktop. Il riquadro “Parlamento senza maggioranza” riceve un trattamento dedicato più leggibile.
+### Verifica manuale degli aggiornamenti
+
+- **Aggiorna dati** interroga direttamente la fonte nazionale MediaWiki e confronta le rilevazioni recenti con quelle già caricate;
+- se non trova alcuna novità mostra chiaramente **“Nessun nuovo sondaggio trovato · Monte Carlo non ricalcolato”**;
+- se trova una nuova rilevazione o una correzione, aggiorna media e proiezione centrale e avvia un nuovo Monte Carlo da 50.000 simulazioni in 50 blocchi asincroni da 1.000;
+- il ricalcolo manuale è autorizzato solo dopo una variazione effettiva del contenuto dei sondaggi e viene riutilizzato dalla cache se quel fingerprint è già stato simulato;
+- la review server-side ogni tre ore resta l'autorità che rende persistenti dataset, Monte Carlo e social card per tutti i visitatori.
 
 ### Review automatica degli aggiornamenti
 
-- `.github/workflows/review-poll-updates.yml` controlla ogni tre ore i soli contenuti delle rilevazioni nazionali e subnazionali;
+- `.github/workflows/review-poll-updates.yml` controlla ogni tre ore i contenuti delle rilevazioni nazionali e subnazionali;
 - `tools/review_poll_updates.py` confronta le nuove fonti con gli snapshot correnti ignorando timestamp e metadati di build;
 - solo se le rilevazioni sono cambiate viene avviato il workflow di produzione completo;
 - il rebuild giornaliero di sicurezza resta separato.
 
 ### Monte Carlo persistito
 
-- il calcolo resta di **50.000 simulazioni**, eseguite in **50 blocchi asincroni da 1.000** per non bloccare l’interfaccia;
-- il refresh della pagina non invalida più la simulazione corrente;
+- il calcolo resta di **50.000 simulazioni**, eseguite in **50 blocchi asincroni da 1.000** per non bloccare l'interfaccia;
+- il normale caricamento/refresh della pagina riutilizza `data/monte-carlo-current.json` o la cache e non duplica la simulazione;
 - `update-social-cards.yml` salva anche `data/monte-carlo-current.json`;
-- la dashboard riutilizza quel riepilogo su tutti i dispositivi quando il fingerprint coincide, evitando di ricalcolare il Monte Carlo per ogni nuovo browser;
-- i browser pubblici **non avviano più una nuova simulazione** quando il riepilogo è obsoleto: attendono e ricontrollano il file pubblicato;
-- una nuova simulazione è autorizzata soltanto nel contesto di build (`social_card_build=1`/`mc_build=1`) o in modalità offline di sviluppo; il workflow social la persiste subito dopo l’aggiornamento del modello.
+- una simulazione nel browser pubblico può partire soltanto dopo una richiesta esplicita **Aggiorna dati** che abbia trovato un contenuto di polling effettivamente diverso;
+- il workflow social continua a produrre e persistere il risultato autorevole dopo l'aggiornamento server-side.
 
 ### Manutenzione GitHub Actions
 
-I workflow passano alle release delle Action basate su Node.js 24 (`cache@v5`, `configure-pages@v6`, `upload-pages-artifact@v5`, `deploy-pages@v5`, `setup-node@v6` nel workflow social).
+I workflow restano sulle release delle Action basate su Node.js 24 (`cache@v5`, `configure-pages@v6`, `upload-pages-artifact@v5`, `deploy-pages@v5`, `setup-node@v6` nel workflow social).
