@@ -26,6 +26,8 @@
     const seatRows = rowTexts("#seatTable .seat-row", 14);
     const countryRows = rowTexts("#countrySummary .country-card", 4);
     const marginalRows = rowTexts("#marginalTableBody tr", 10);
+    const uncertaintyRows = rowTexts("#uncertaintyPartyGrid .uncertainty-party", 10);
+    const battlefieldRows = rowTexts("#battlefieldList .battlefield-seat", 8);
     const coalitionRows = rowTexts("#coalitionOptions .coalition-option", 6);
 
     const probabilityRows = [
@@ -51,11 +53,11 @@
 Sto consultando un nowcast sulle elezioni generali britanniche. Voglio una lettura pensata per un normale lettore interessato alle elezioni, non un audit del codice o dello sviluppo del modello.
 
 Dashboard: ${dashboardUrl()}
-Versione interfaccia: 0.9.35. Motore statistico di produzione: v0.9.29 congelato.
+Versione interfaccia: 0.9.36. Motore statistico di produzione: v0.9.29 congelato.
 
 INDICATORI PRINCIPALI
 ${kpis.map((row) => `- ${row}`).join("\n")}
-${section("MEDIA CORRENTE DEI SONDAGGI", voteRows)}${section("STIME CORRENTI PER PARTITO", seatRows)}${section("PROBABILITÀ MONTE CARLO", probabilityRows)}${section("QUADRO TERRITORIALE", countryRows)}${section("COLLEGI PIÙ INCERTI MOSTRATI DALLA DASHBOARD", marginalRows)}${section("COMBINAZIONI MINIME DI MAGGIORANZA MOSTRATE", coalitionRows)}
+${section("MEDIA CORRENTE DEI SONDAGGI", voteRows)}${section("STIME CORRENTI PER PARTITO", seatRows)}${section("PROBABILITÀ MONTE CARLO", probabilityRows)}${section("DISTRIBUZIONE DEI SEGGI — MEDIANA E INTERVALLO 80%", uncertaintyRows)}${section("QUADRO TERRITORIALE", countryRows)}${section("BATTLEFIELD — COLLEGI PIÙ INCERTI", battlefieldRows)}${section("COLLEGI PIÙ INCERTI MOSTRATI DAL CONSTITUENCY EXPLORER", marginalRows)}${section("COMBINAZIONI MINIME DI MAGGIORANZA MOSTRATE", coalitionRows)}
 VALIDAZIONE DICHIARATA DAL MODELLO
 - Backtest 2019 del Geography Blend: 609/632 vincitori corretti, errore assoluto complessivo sui seggi 14.
 - Benchmark 2024 contro la geografia YouGov: 578/632, errore seggi 56.

@@ -858,6 +858,65 @@ function setMonteCarloPending(pending){
   updateMapModeButtons();
 }
 
+function renderUncertaintyDashboard(){
+  const partyGrid=$('#uncertaintyPartyGrid'),leaderGrid=$('#uncertaintyLeaderGrid'),stats=$('#battlefieldStats'),list=$('#battlefieldList'),regionNote=$('#battlefieldRegionNote');
+  if(!partyGrid&&!leaderGrid&&!stats&&!list)return;
+  const m=state.mc;
+  if(!m){
+    if(partyGrid)partyGrid.innerHTML='<div class="empty-small">In attesa del Monte Carlo.</div>';
+    if(leaderGrid)leaderGrid.innerHTML='<div class="empty-small">Calcolo in corso…</div>';
+    if(stats)stats.innerHTML='<div class="empty-small">In attesa delle probabilità di collegio.</div>';
+    if(list)list.innerHTML='';
+    if(regionNote)regionNote.textContent='—';
+    return;
+  }
+
+  const ranges=SEAT_ORDER.map(p=>({
+    p,median:Number(m.medians?.[p]||0),
+    low:Number(m.intervals?.[p]?.[0]||0),high:Number(m.intervals?.[p]?.[1]||0),
+    leader:Number(m.largest?.[p]||0)
+  })).filter(x=>PARTY[x.p]&&x.p!=='other'&&x.p!=='ni_other'&&(x.median>=1||x.high>=2||x.leader>=.001)).sort((a,b)=>b.median-a.median||b.high-a.high);
+  const maxHigh=Math.max(1,...ranges.map(x=>x.high));
+  if(partyGrid){
+    partyGrid.innerHTML=ranges.map(x=>{
+      const left=clamp(x.low/maxHigh*100,0,100),right=clamp(x.high/maxHigh*100,0,100),med=clamp(x.median/maxHigh*100,0,100),width=Math.max(.7,right-left);
+      return `<div class="uncertainty-party" style="--party:${PARTY[x.p].color}"><div class="uncertainty-party-top"><span><i class="party-dot" style="background:${PARTY[x.p].color}"></i><strong>${escapeHtml(PARTY[x.p].name)}</strong></span><b>${fmt0(x.median)}</b></div><div class="uncertainty-range-track" aria-label="${escapeHtml(PARTY[x.p].name)}: mediana ${fmt0(x.median)}, intervallo 80% ${fmt0(x.low)}-${fmt0(x.high)}"><i class="uncertainty-range" style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%"></i><i class="uncertainty-median" style="left:${med.toFixed(2)}%"></i></div><div class="uncertainty-party-meta"><span>80%: <strong>${fmt0(x.low)}–${fmt0(x.high)}</strong></span><span>Ampiezza: ${fmt0(x.high-x.low)}</span></div></div>`;
+    }).join('')||'<div class="empty-small">Intervalli non disponibili.</div>';
+  }
+
+  if(leaderGrid){
+    const leaders=Object.entries(m.largest||{}).filter(([p])=>PARTY[p]&&p!=='other'&&p!=='ni_other').map(([p,v])=>({p,v:Number(v)||0})).sort((a,b)=>b.v-a.v).filter((x,i)=>x.v>=.001||i<3).slice(0,7);
+    leaderGrid.innerHTML=leaders.map(x=>`<div class="uncertainty-leader-row"><span><i class="party-dot" style="background:${PARTY[x.p].color}"></i>${escapeHtml(PARTY[x.p].name)}</span><div class="uncertainty-leader-meter"><i style="width:${clamp(x.v*100,0,100).toFixed(2)}%;background:${PARTY[x.p].color}"></i></div><strong>${pctFmt(x.v*100)}</strong></div>`).join('')||'<div class="empty-small">Probabilità non disponibili.</div>';
+  }
+
+  const seats=(state.central?.seats||[]).map(seat=>{
+    const prob=m.seatProb?.[seat.id];
+    const best=prob?Object.entries(prob).filter(([p])=>PARTY[p]).sort((a,b)=>b[1]-a[1])[0]:null;
+    return best?{seat,p:best[0],prob:Number(best[1])}:null;
+  }).filter(Boolean);
+  const buckets={tossup:0,uncertain:0,competitive:0,safe:0};
+  for(const x of seats){if(x.prob<.55)buckets.tossup++;else if(x.prob<.65)buckets.uncertain++;else if(x.prob<.80)buckets.competitive++;else buckets.safe++;}
+  if(stats){
+    stats.innerHTML=[
+      ['Toss-up','<55%',buckets.tossup,'tossup'],
+      ['Incerti','55–65%',buckets.uncertain,'uncertain'],
+      ['Competitivi','65–80%',buckets.competitive,'competitive'],
+      ['Solidi','≥80%',buckets.safe,'safe']
+    ].map(([label,range,n,cls])=>`<div class="battlefield-stat ${cls}"><span>${label}<small>${range} P favorito</small></span><strong>${fmt0(n)}</strong></div>`).join('');
+  }
+
+  const regionCounts=new Map();
+  for(const x of seats.filter(x=>x.prob<.65)){const area=regionLabelForSeat(x.seat)||x.seat.country||'Altro';regionCounts.set(area,(regionCounts.get(area)||0)+1);}
+  const topRegion=[...regionCounts.entries()].sort((a,b)=>b[1]-a[1])[0];
+  if(regionNote)regionNote.textContent=topRegion?`${topRegion[0]}: ${fmt0(topRegion[1])} sotto il 65%`:'Nessun collegio sotto il 65%';
+
+  if(list){
+    const mostUncertain=seats.sort((a,b)=>a.prob-b.prob||String(a.seat.name).localeCompare(String(b.seat.name),'en-GB')).slice(0,8);
+    list.innerHTML=mostUncertain.map(x=>`<button type="button" class="battlefield-seat" data-battlefield-seat="${escapeHtml(x.seat.id)}"><span class="battlefield-seat-name"><strong>${escapeHtml(x.seat.name||x.seat.id)}</strong><small>${escapeHtml(regionLabelForSeat(x.seat)||x.seat.country||'')}</small></span><span class="battlefield-seat-party"><i class="party-dot" style="background:${PARTY[x.p].color}"></i>${escapeHtml(PARTY[x.p].short)}</span><b>${pctFmt(x.prob*100)}</b></button>`).join('')||'<div class="empty-small">Probabilità di collegio non disponibili.</div>';
+    list.querySelectorAll('[data-battlefield-seat]').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.dataset.battlefieldSeat;if(!id)return;selectSeat(id);document.querySelector('#territorio')?.scrollIntoView({behavior:'smooth',block:'start'});}));
+  }
+}
+
 function renderCentral(){
   const totals=state.central.totals;
   $('#projectionTitle').textContent='Scenario alla media dei sondaggi';
@@ -872,6 +931,7 @@ function renderCentral(){
   renderRegionalDashboard();
   renderMapSummary();
   renderMinimalCoalitions();
+  renderUncertaintyDashboard();
 }
 function renderMc(){
   const m=state.mc;if(!m)return;
@@ -893,6 +953,7 @@ function renderMc(){
   renderMapSummary();
   updateCoalition();
   renderMinimalCoalitions();
+  renderUncertaintyDashboard();
 }
 function renderSeats(totals,intervals){
   const sum=SEAT_ORDER.reduce((s,p)=>s+(totals[p]||0),0)||650; $('#seatStrip').innerHTML=SEAT_ORDER.filter(p=>(totals[p]||0)>0).map(p=>`<span style="width:${(totals[p]/sum)*100}%;background:${PARTY[p].color}" title="${PARTY[p].name}: ${fmt0(totals[p])}"></span>`).join('');

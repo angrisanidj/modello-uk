@@ -11,7 +11,7 @@
 <meta property="og:url" content="https://angrisanidj.github.io/modello-uk/" />
 <meta property="og:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta property="og:description" content="Nowcast probabilistico della House of Commons: sondaggi, proiezione dei seggi, Monte Carlo e probabilità collegio per collegio." />
-<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.35" />
+<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.36" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="Nowcast delle elezioni nel Regno Unito — proiezione della House of Commons" />
@@ -19,10 +19,11 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta name="twitter:description" content="Nowcast probabilistico della House of Commons: sondaggi, seggi, collegi e probabilità." />
-<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.35" />
-<link rel="stylesheet" href="styles.css?v=0.9.35" />
-<link rel="stylesheet" href="styles-v0935.css?v=0.9.35" />
-<link rel="stylesheet" href="map-performance.css?v=0.9.35" />
+<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.36" />
+<link rel="stylesheet" href="styles.css?v=0.9.36" />
+<link rel="stylesheet" href="styles-v0935.css?v=0.9.36" />
+<link rel="stylesheet" href="styles-v0936.css?v=0.9.36" />
+<link rel="stylesheet" href="map-performance.css?v=0.9.36" />
 </head>
 <body>
 <div class="flag-ribbon" aria-hidden="true"></div>
@@ -43,7 +44,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Sondaggi: —</span>
-      <span class="badge badge-strong">UI 0.9.35 · motore statistico 0.9.29 congelato</span>
+      <span class="badge badge-strong">UI 0.9.36 · motore statistico 0.9.29 congelato</span>
     </div>
   </section>
   <nav class="share-rail" aria-label="Condividi il nowcast">
@@ -135,6 +136,26 @@
         <div class="side-note-kicker">Come leggere la mappa</div>
         <strong>La mappa non mostra una simulazione casuale.</strong>
         <p>Dopo il Monte Carlo passa automaticamente a uno <em>scenario territoriale rappresentativo</em>, ricomposto per aderire alle mediane dei seggi usando le probabilità di vittoria dei singoli collegi.</p>
+      </article>
+    </aside>
+  </section>
+  <div class="section-title" id="incertezza"><div><div class="section-kicker">Incertezza</div><h2>Quanto è aperta davvero la corsa</h2><p>La stessa distribuzione delle 50.000 simulazioni letta in tre modi: intervalli dei seggi, probabilità di primo partito e collegi più contendibili.</p></div><span class="badge">Nessuna nuova simulazione</span></div>
+  <section class="uncertainty-layout">
+    <article class="card uncertainty-card">
+      <div class="cardhead"><div><h3>Distribuzione dei seggi</h3><p>Mediana e intervallo centrale 80%. Tutte le barre usano la stessa scala.</p></div></div>
+      <div id="uncertaintyPartyGrid" class="uncertainty-party-grid"><div class="empty-small">In attesa del Monte Carlo.</div></div>
+      <div class="uncertainty-note">Questa sezione non modifica il nowcast: visualizza soltanto risultati già prodotti dal motore v0.9.29.</div>
+    </article>
+    <aside class="uncertainty-side">
+      <article class="card uncertainty-leader-card">
+        <div class="cardhead"><div><h3>Probabilità di primo partito</h3><p>Quota di simulazioni in cui ciascun partito ottiene più seggi.</p></div></div>
+        <div id="uncertaintyLeaderGrid" class="uncertainty-leader-grid"><div class="empty-small">Calcolo in corso…</div></div>
+      </article>
+      <article class="card battlefield-card">
+        <div class="cardhead"><div><h3>Battlefield</h3><p>Quanti collegi restano realmente contendibili nelle simulazioni.</p></div></div>
+        <div id="battlefieldStats" class="battlefield-stats"><div class="empty-small">In attesa delle probabilità di collegio.</div></div>
+        <div class="battlefield-head"><strong>Collegi più incerti</strong><span id="battlefieldRegionNote">—</span></div>
+        <div id="battlefieldList" class="battlefield-list"></div>
       </article>
     </aside>
   </section>
@@ -234,7 +255,7 @@
   <section class="card poll-table-card"><div class="table-scroll"><table><thead><tr><th>Data</th><th>Istituto</th><th>Area</th><th>n</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>Green</th><th>SNP</th><th>PC</th><th>RB</th></tr></thead><tbody id="pollTableBody"></tbody></table></div></section>
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La UI cambia; il motore statistico di produzione resta congelato sulla v0.9.29.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.35 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.36 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
     <article class="card"><div class="cardhead"><div><h3>Pipeline di produzione</h3><p>Il live viene promosso solo dopo l’audit.</p></div></div><div class="pipeline"><span>Sondaggi</span><b>→</b><span>target nazionale</span><b>→</b><span>MRP geography stack</span><b>→</b><span>632 GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>La GitHub Action ricostruisce il candidato statistico congelato, verifica backtest, copertura provider, assenza dei topline esterni e stabilità fra scenari. Il watcher MRP segnala eventuali nuove pubblicazioni ma non le adotta automaticamente.</p></div></article>
   </section>
   <div class="section-title ai-section-break"><div><div class="section-kicker">Lettura assistita</div><h2>Verifica e interpreta le stime con un’IA</h2><p>Genera un prompt dai valori già visibili nella dashboard e chiedi una lettura indipendente del nowcast.</p></div><span class="ai-lab-badge">VERIFICA STIME</span></div>
@@ -261,8 +282,8 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.35"></script>
-<script src="scripts/map-performance.js?v=0.9.35"></script>
-<script src="scripts/interpretation.js?v=0.9.35"></script>
+<script src="scripts/app.js?v=0.9.36"></script>
+<script src="scripts/map-performance.js?v=0.9.36"></script>
+<script src="scripts/interpretation.js?v=0.9.36"></script>
 </body>
 </html>

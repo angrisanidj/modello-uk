@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.35 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.36 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,7 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.35.
+- **Interfaccia:** v0.9.36.
 - **Motore statistico di produzione:** **v0.9.29**, congelato durante le modifiche esclusivamente frontend.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche con cache legata al fingerprint degli input.
@@ -43,6 +43,7 @@ Il progetto resta nella serie **0.x**: il passaggio a v1.0 richiede una qualità
 
 - emiciclo della House of Commons;
 - tabella dei seggi e probabilità;
+- dashboard **“Quanto è aperta davvero la corsa”** con intervalli 80% dei seggi, probabilità di primo partito e battlefield dei collegi più contendibili;
 - constituency explorer completo con ricerca, filtri per nazione/regione/partito/stato del seggio e ordinamento;
 - evidenziazione sulla mappa dei collegi filtrati;
 - dashboard regionale e seat flows;
@@ -114,6 +115,7 @@ modello-uk/
 ├── index.html
 ├── styles.css
 ├── styles-v0935.css
+├── styles-v0936.css
 ├── map-performance.css
 ├── scripts/
 │   ├── app.js
@@ -143,7 +145,7 @@ modello-uk/
 
 La GitHub Action `Update and deploy UK model` può essere avviata manualmente, parte anche su push a `main` ed è programmata quotidianamente. La pipeline aggiorna e committa automaticamente soltanto i file sotto `data/` quando esistono modifiche effettive, quindi esegue il deploy su GitHub Pages.
 
-Per una modifica frontend come la v0.9.35 è sufficiente pubblicare i file dell'interfaccia; **non è necessario ritoccare il motore statistico**.
+Per una modifica frontend come la v0.9.36 è sufficiente pubblicare i file dell'interfaccia; **non è necessario ritoccare il motore statistico**.
 
 ## Nota sulla lettura dei risultati
 
