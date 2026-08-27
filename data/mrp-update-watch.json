@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "mode": "shadow_only",
+  "policy": "detect_and_notify_never_auto_adopt",
+  "providers": {
+    "more_in_common": {
+      "display_name": "More in Common",
+      "baseline_date": "2026-07-19",
+      "baseline_title": "The Final MRP of Keir Starmer’s Premiership",
+      "baseline_url": "https://www.moreincommon.org.uk/research/the-final-mrp-of-keir-starmers-premiership/",
+      "latest_alerted_date": "2026-07-19",
+      "latest_alerted_title": "The Final MRP of Keir Starmer’s Premiership",
+      "latest_alerted_url": "https://www.moreincommon.org.uk/research/the-final-mrp-of-keir-starmers-premiership/"
+    },
+    "yougov": {
+      "display_name": "YouGov",
+      "baseline_date": "2025-09-26",
+      "baseline_title": "YouGov MRP shows a Reform UK government a near-certainty if an election were held tomorrow",
+      "baseline_url": "https://yougov.com/en-gb/articles/53059-yougov-mrp-shows-a-reform-uk-government-a-near-certainty-if-an-election-were-held-tomorrow",
+      "latest_alerted_date": "2025-09-26",
+      "latest_alerted_title": "YouGov MRP shows a Reform UK government a near-certainty if an election were held tomorrow",
+      "latest_alerted_url": "https://yougov.com/en-gb/articles/53059-yougov-mrp-shows-a-reform-uk-government-a-near-certainty-if-an-election-were-held-tomorrow"
+    },
+    "focaldata": {
+      "display_name": "Focaldata",
+      "baseline_date": "2025-02-03",
+      "baseline_title": "Focaldata / Hope Not Hate UK general election MRP",
+      "baseline_url": "https://www.focaldata.com/blog/focaldata-hope-not-hate-uk-general-election-mrp",
+      "latest_alerted_date": "2025-02-03",
+      "latest_alerted_title": "Focaldata / Hope Not Hate UK general election MRP",
+      "latest_alerted_url": "https://www.focaldata.com/blog/focaldata-hope-not-hate-uk-general-election-mrp"
+    }
+  },
+  "events": {}
+}

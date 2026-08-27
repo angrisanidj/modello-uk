@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.25 — external MRP geography bridge (shadow research)
+modello-uk v0.9.26 — external MRP geography bridge (shadow research)
 
 Core idea
 ---------
@@ -53,21 +53,23 @@ import requests
 # Import the proven v0.9.22 engine as a library; importing it does not run main().
 import build_mrp_lite as core
 
-V0925_BRIDGE="logspace-internal-to-external-geography-replacement"
-V0925_SELECTION="yougov-2019-only-blend-selection"
-V0925_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-relative-shift"
-V0925_BASELINE="reconstruct-v0915-local-strength-both-elections"
-V0925_DIAGNOSTICS="full-zero-to-pure-external-blend-sweep-2024"
+V0926_BRIDGE="logspace-internal-to-external-geography-replacement"
+V0926_SELECTION="yougov-2019-only-blend-selection"
+V0926_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-relative-shift"
+V0926_BASELINE="reconstruct-v0915-local-strength-both-elections"
+V0926_DIAGNOSTICS="full-zero-to-pure-external-blend-sweep-2024"
+V0926_LIVE_CANDIDATE="latest-mic26-required-green-complete-plus-dynamic-internal-topline"
+V0926_MRP_SOURCE="more-in-common-2026-07-19-fieldwork-2026-06-05-to-2026-06-28"
 
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"data"
 CACHE=ROOT/".cache"/"mrp-bridge"
 CACHE.mkdir(parents=True,exist_ok=True)
 
-BACKTEST_OUT=DATA/"backtest-v0925-geography-bridge.json"
-DIAGNOSTIC_OUT=DATA/"mrp-geography-bridge-v0925.json"
-LIVE_OUT=DATA/"mrp-lite-live-v0925-shadow.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v0925.json"
+BACKTEST_OUT=DATA/"backtest-v0926-geography-bridge.json"
+DIAGNOSTIC_OUT=DATA/"mrp-geography-bridge-v0926.json"
+LIVE_OUT=DATA/"mrp-lite-live-v0926-candidate.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v0926.json"
 
 PARTIES=core.PARTIES
 EPS=0.05
@@ -97,7 +99,7 @@ MIC_2026_URL=(
     "jul26-mrp-datatables-final-3.xlsx"
 )
 
-UA="FocusAmerica-UK-election-model/0.9.25 geography-replacement-blend (+https://angrisanidj.github.io/modello-uk/)"
+UA="FocusAmerica-UK-election-model/0.9.26 geography-replacement-blend (+https://angrisanidj.github.io/modello-uk/)"
 
 
 def _json_safe(obj:Any)->Any:
@@ -261,8 +263,8 @@ def _party_from_header(value:Any)->str|None:
         "other":"other","others":"other","otherparty":"other","indother":"other","otherind":"other",
     }
     if k in exact:return exact[k]
-    # Avoid loose matching of party names in long explanatory headers.
-    if len(k)>32:return None
+    # MiC 2026 uses descriptive party headers (notably a long Green label).
+    # Match a party-name prefix before applying a conservative length backstop.
     if k.startswith("conservative"):return "con"
     if k.startswith("labour"):return "lab"
     if k.startswith("liberaldem"):return "ld"
@@ -271,6 +273,7 @@ def _party_from_header(value:Any)->str|None:
     if k.startswith("snp") or k.startswith("scottishnational"):return "snp"
     if k.startswith("plaid"):return "pc"
     if k.startswith("other") or k.startswith("independent"):return "other"
+    if len(k)>80:return None
     return None
 
 
@@ -325,6 +328,13 @@ def parse_mic_2026_xlsx(raw:bytes)->tuple[pd.DataFrame,dict[str,Any]]:
         raise RuntimeError(f"MiC 2026 workbook: no constituency vote-share table found; sheets={book.sheet_names}")
     candidates.sort(key=lambda x:x[0],reverse=True)
     score,sheet,header_i,out,party_cols,headers=candidates[0]
+    required=set(PARTIES)
+    missing=sorted(required-set(party_cols))
+    if missing:
+        raise RuntimeError(
+            f"MiC 2026 workbook: constituency table is missing required party columns {missing}; "
+            f"mapped={sorted(party_cols)}. Refusing a live candidate with incomplete geography."
+        )
     out=out.drop_duplicates(subset=["name"],keep="first").reset_index(drop=True)
     if len(out)<600:
         raise RuntimeError(f"MiC 2026 workbook: best sheet {sheet!r} has only {len(out)} rows")
@@ -508,7 +518,7 @@ def build_core_state()->dict[str,Any]:
         e19n=core.merge_demo(core.extract_election(curr_df,"19"),curr_demo)
         e24=core.merge_demo(core.extract_election(curr_df,"24"),curr_demo)
 
-        # Redirect the parser audit to a v0.9.25 research artefact while keeping
+        # Redirect the parser audit to a v0.9.26 research artefact while keeping
         # the already-validated v0.9.22 parser implementation unchanged.
         old_integrity=core.INTEGRITY_OUT
         core.INTEGRITY_OUT=INTEGRITY_OUT
@@ -523,7 +533,7 @@ def build_core_state()->dict[str,Any]:
             ])
         finally:
             core.INTEGRITY_OUT=old_integrity
-        integrity["version"]="uk-v0925-bes-integrity-wrapper"
+        integrity["version"]="uk-v0926-bes-integrity-wrapper"
         integrity["engine_parser_version"]="uk-v0922-bes-integrity"
         _write_json(INTEGRITY_OUT,integrity)
         print("BES integrity gate: PASSED")
@@ -551,7 +561,7 @@ def build_core_state()->dict[str,Any]:
 
         reference,_,v0915_hold_rows,_,local24=core.evaluate_v0915_reference(val_rows,hold_rows,e17,e19,e19n,e24)
 
-        # v0.9.25 methodological correction: reconstruct the ACTUAL constituency-level
+        # v0.9.26 methodological correction: reconstruct the ACTUAL constituency-level
         # v0.9.15 validation rows for 2019.  v0.9.23 verified only the frozen 585/632
         # aggregate but accidentally passed the older 583/632 canonical rows into the
         # geography bridge.  The zero-strength bridge must be exactly the v0.9.15
@@ -662,12 +672,12 @@ def _self_test()->int:
     buf=io.BytesIO()
     synth=pd.DataFrame([
         ["More in Common synthetic MRP",None,None,None,None,None,None,None,None],
-        ["Constituency","Conservative","Labour","Liberal Democrats","Reform UK","Green","SNP","Plaid Cymru","Other"],
+        ["Constituency","Conservative","Labour","Liberal Democrats","Reform UK","Green Party (England and Wales only)","SNP","Plaid Cymru","Other"],
     ]+[[f"Seat {i}",25,30,12,20,8,0,0,5] for i in range(620)])
     with pd.ExcelWriter(buf,engine="openpyxl") as writer:synth.to_excel(writer,index=False,header=False,sheet_name="Constituencies")
     xdf,xmeta=parse_mic_2026_xlsx(buf.getvalue())
     if len(xdf)!=620 or xmeta["sheet"]!="Constituencies":raise RuntimeError("self-test XLSX parser failed")
-    print("v0.9.25 geography replacement/blend self-test: PASSED")
+    print("v0.9.26 geography replacement/blend self-test: PASSED")
     return 0
 
 
@@ -742,38 +752,73 @@ def main()->int:
     breakthrough_87=(primary_metrics["correct_winners"]>=550 and primary_metrics["seat_abs_error_sum"]<=150 and validation_gate)
     stretch_90=(primary_metrics["correct_winners"]>=569 and primary_metrics["seat_abs_error_sum"]<=130 and validation_gate)
 
-    # Live shadow.  Research result must survive a future MiC workbook outage.
-    live_source={"status":"static_yougov_2024_fallback","reason":None}
-    live_factors=y24_factors
-    mic26_meta=None;mic26_cov=None
-    try:
-        m26_raw,m26_src=fetch_remote_bytes(MIC_2026_URL)
-        m26,m26_parse=parse_mic_2026_xlsx(m26_raw)
-        m26_aligned,mic26_cov=align_prior(m26,e24,"More in Common 2026",min_match=600)
-        m26_factors,m26_nat=relative_factors(m26_aligned,e24,e24)
-        live_factors=evolution_factors(y24_factors,m24_factors,m26_factors)
-        mic26_meta={**m26_parse,**m26_src,"relative_national_share":m26_nat}
-        live_source={"status":"yougov24_plus_mic_evolution","reason":None}
-    except Exception as exc:
-        live_source={"status":"static_yougov_2024_fallback","reason":f"{type(exc).__name__}: {exc}"}
-        print(f"WARNING: MiC 2026 live evolution unavailable; static YouGov-2024 shadow used: {exc}",file=sys.stderr)
+    # Live 2026 candidate. The latest full-GB constituency MRP located for this
+    # release is More in Common, published 2026-07-19 (fieldwork 5-28 June).
+    # Unlike v0.9.25 shadow mode, v0.9.26 refuses to emit a "latest-data" live
+    # candidate if this source is unavailable or a major party column is missing.
+    m26_raw,m26_src=fetch_remote_bytes(MIC_2026_URL)
+    m26,m26_parse=parse_mic_2026_xlsx(m26_raw)
+    m26_aligned,mic26_cov=align_prior(m26,e24,"More in Common 2026",min_match=600)
+    m26_factors,m26_nat=relative_factors(m26_aligned,e24,e24)
+    if float(m26_nat.get("green",0.0))<=0.1:
+        raise RuntimeError(f"MiC 2026 Green geography failed sanity check: weighted share={m26_nat.get('green')}")
+
+    # Primary live route: preserve the historically validated YouGov-2024
+    # structural anchor and update it with the MiC 2024->2026 geographic shift.
+    live_factors=evolution_factors(y24_factors,m24_factors,m26_factors)
+    live_source={
+        "status":"yougov24_plus_latest_mic26_evolution",
+        "provider":"More in Common",
+        "publication_date":"2026-07-19",
+        "fieldwork":"2026-06-05/2026-06-28",
+        "latest_full_gb_mrp_checked_for_release":True,
+    }
 
     live_bridge_rows=apply_factors(state["live_rows"],e24,state["target_now"],live_factors,selected)
     live_projection=core.live_projection(
         e24,state["target_now"],live_bridge_rows,state["live_contest_scores"],
         {
-            "kind":"v0925_external_mrp_geography_replacement_blend_shadow",
-            "national_target_source":"internal_polling_model",
+            "kind":"v0926_validated_mrp_geography_live_candidate",
+            "national_target_source":"internal_polling_model_dynamic_each_run",
             "geography_strength":selected,
             "live_geography":live_source["status"],
             "provider_topline_used":False,
+            "external_geography_publication_date":"2026-07-19",
         }
     )
 
+    # Non-selecting live sensitivities. There is no realised 2026 general-election
+    # outcome, so these cannot choose the live route; they only expose how much
+    # the seat picture depends on the temporal anchoring choice.
+    live_direct_rows=apply_factors(state["live_rows"],e24,state["target_now"],m26_factors,selected)
+    live_direct=core.live_projection(
+        e24,state["target_now"],live_direct_rows,state["live_contest_scores"],
+        {"kind":"v0926_direct_mic26_sensitivity","geography_strength":selected,"provider_topline_used":False}
+    )
+    live_static_rows=apply_factors(state["live_rows"],e24,state["target_now"],y24_factors,selected)
+    live_static=core.live_projection(
+        e24,state["target_now"],live_static_rows,state["live_contest_scores"],
+        {"kind":"v0926_static_yougov24_sensitivity","geography_strength":selected,"provider_topline_used":False}
+    )
+    def _winner_map(payload):
+        return {str(x.get("id")):str(x.get("centralWinner")) for x in payload.get("seats",[]) if x.get("id")}
+    primary_w=_winner_map(live_projection); direct_w=_winner_map(live_direct); static_w=_winner_map(live_static)
+    live_sensitivity={
+        "selection_role":"diagnostic_only_no_2026_ground_truth",
+        "primary_anchor_evolution_totals":live_projection.get("totals",{}),
+        "direct_mic26_totals":live_direct.get("totals",{}),
+        "static_yougov24_totals":live_static.get("totals",{}),
+        "changed_winners_vs_primary":{
+            "direct_mic26":sum(primary_w.get(k)!=direct_w.get(k) for k in primary_w),
+            "static_yougov24":sum(primary_w.get(k)!=static_w.get(k) for k in primary_w),
+        },
+    }
+    mic26_meta={**m26_parse,**m26_src,"relative_national_share":m26_nat}
+
     generated=core.utcnow().isoformat()
     common={
-        "version":"uk-v0925-mrp-geography-bridge","status":"ok","generated_at":generated,
-        "diagnostic_only":True,"shadow_only":True,"approved_for_live":False,"publication_ready":False,
+        "version":"uk-v0926-mrp-geography-bridge","status":"ok","generated_at":generated,
+        "diagnostic_only":False,"shadow_only":False,"live_candidate":True,"approved_for_live":False,"publication_ready":False,
         "uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
         "parameter_selection_source":"YouGov pre-election MRP 2019-11-27",
         "primary_2024_provider_precommitted":"YouGov 2024-07-03",
@@ -821,7 +866,7 @@ def main()->int:
                 provider:next(x["metrics"] for x in sweep_2024 if x["provider"]==provider and abs(float(x["strength"])-1.0)<1e-12)
                 for provider,_ in providers
             },
-            "warning":"The full 2024 replacement/blend sweep is diagnostic only. It cannot select provider or strength in v0.9.25.",
+            "warning":"The full 2024 replacement/blend sweep is diagnostic only. It cannot select provider or strength in v0.9.26.",
         },
         "coverage":{"yougov2019":y19_cov,"yougov2024":y24_cov,"mic2024":m24_cov,"mic2026":mic26_cov},
         "external_source_meta":{**sources["source_meta"],"mic2026":mic26_meta},
@@ -842,24 +887,24 @@ def main()->int:
             "epsilon":EPS,"factor_clip":[FACTOR_MIN,FACTOR_MAX],
             "endpoint_semantics":{"strength_0":"exact reconstructed v0.9.15 geography","strength_1":"pure external relative MRP geography with internal national target"},
             "external_topline_weighting":"pre-score-election constituency weights: 2017 for 2019; notional-2019 for 2024; 2024 for live 2026",
-            "live_formula":"YouGov2024_relative_geography * clip(MiC2026_relative / MiC2024_relative); then same selected strength and final internal-target rake",
+            "live_formula":"YouGov2024_relative_geography * clip(latest_MiC2026_relative / MiC2024_relative); then validated 2019-selected strength and final internal-target rake",
             "live_evolution_clip":[EVOLUTION_MIN,EVOLUTION_MAX],
         },
         "selection_result_2019":val_metrics,
         "primary_result_2024":primary_metrics,
         "diagnostics_2024":{"more_in_common":mic_metrics,"equal_provider_ensemble":ens_metrics,
                             "all_strengths":sweep_2024,"best_expost_by_provider":best_expost_by_provider},
-        "live_geography_status":live_source,
+        "live_geography_status":live_source,"live_2026_sensitivity":live_sensitivity,
         "promotion_policy":"Never auto-promote. Passing the research gate only nominates the method for review and a fresh external validation.",
     }
     _write_json(DIAGNOSTIC_OUT,diagnostic)
 
     live_payload={
         **common,
-        "version":"uk-v0925-mrp-geography-bridge-live-shadow",
-        "model_type":"external-mrp-geography-replacement-blend-shadow",
-        "applied_to_production":False,
-        "live_geography":live_source,
+        "version":"uk-v0926-mrp-geography-bridge-live-candidate",
+        "model_type":"external-mrp-geography-replacement-blend-live-candidate",
+        "applied_to_production":False,"live_candidate":True,
+        "live_geography":live_source,"live_2026_sensitivity":live_sensitivity,
         "target_gb":state["target_now"],"poll_meta":state["poll_meta"],
         "selected_strength":selected,
         "source_meta":{"yougov2024":sources["source_meta"]["yougov2024"],"mic2024":sources["source_meta"]["mic2024"],"mic2026":mic26_meta},
@@ -867,7 +912,7 @@ def main()->int:
     }
     _write_json(LIVE_OUT,live_payload)
 
-    print("v0.9.25 MRP geography replacement/blend: COMPLETE")
+    print("v0.9.26 MRP geography replacement/blend: COMPLETE")
     print(f"2019 selected strength={selected:.2f}: {val_metrics['correct_winners']}/632, seat error {val_metrics['seat_abs_error_sum']}")
     print(f"2024 PRIMARY YouGov replacement/blend: {primary_metrics['correct_winners']}/632 = {primary_metrics['winner_accuracy']*100:.2f}%, seat error {primary_metrics['seat_abs_error_sum']}")
     print(f"2024 diagnostic MiC: {mic_metrics['correct_winners']}/632 = {mic_metrics['winner_accuracy']*100:.2f}%")
@@ -893,12 +938,12 @@ if __name__=="__main__":
     except SystemExit:
         raise
     except Exception as exc:
-        print(f"build_mrp_geography_bridge.py v0.9.25 failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_geography_bridge.py v0.9.26 failed: {exc}",file=sys.stderr)
         traceback.print_exc()
         # Leave an explicit failure artefact when DATA exists, but never disguise
         # a technical failure as a scientific gate failure.
         try:
-            _write_json(DIAGNOSTIC_OUT,{"version":"uk-v0925-mrp-geography-bridge","status":"failed","generated_at":core.utcnow().isoformat(),"error":f"{type(exc).__name__}: {exc}"})
+            _write_json(DIAGNOSTIC_OUT,{"version":"uk-v0926-mrp-geography-bridge","status":"failed","generated_at":core.utcnow().isoformat(),"error":f"{type(exc).__name__}: {exc}"})
         except Exception:
             pass
         raise SystemExit(1)
