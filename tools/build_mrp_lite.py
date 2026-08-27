@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.20 — Scotland + Conservative/Labour pairwise validation (shadow research)
+modello-uk v0.9.21 — Scotland STV local-residual validation (shadow research)
 
 This release keeps the frozen v0.9.15 local-election reference as the best defensible
 shadow candidate (585/632, seat error 42 in 2019; 501/632, seat error 166 in the 2024
@@ -26,6 +26,7 @@ audit.
 from __future__ import annotations
 
 import io
+import csv
 import json
 import math
 import re
@@ -33,6 +34,7 @@ import sys
 import tempfile
 import traceback
 import time
+import zipfile
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -52,10 +54,10 @@ DATA.mkdir(exist_ok=True)
 
 MODEL_OUT=DATA/"mrp-lite-model.json"
 LIVE_OUT=DATA/"mrp-lite-live.json"
-BACKTEST_OUT=DATA/"backtest-v0920-scotland-conlab.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v0920.json"
-DIAGNOSTIC_OUT=DATA/"scotland-conlab-sweep-v0920.json"
-SWEEP_OUT=DATA/"v0915-reference-v0920.json"
+BACKTEST_OUT=DATA/"backtest-v0921-scotland-local-residual.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v0921.json"
+DIAGNOSTIC_OUT=DATA/"scotland-local-residual-v0921.json"
+SWEEP_OUT=DATA/"v0915-reference-v0921.json"
 
 HIST_ARTICLE=20278599
 CURR_ARTICLE=28430672
@@ -110,13 +112,30 @@ LD_HIST_SCORE_FLOOR_GRID=(0.50,0.65)
 LD_HIST_LOCAL_ADV_FLOOR_GRID=(-1.5,0.0,2.0,4.0)
 LD_HIST_LOCAL_CONF_FLOOR_GRID=(0.0,0.35,0.55)
 
-# v0.9.20 pairwise local concentration.  These grids are fixed before 2024 is scored.
+# v0.9.21 pairwise local concentration.  These grids are fixed before 2024 is scored.
 PAIR_STRENGTH_GRID=(0.0,0.20,0.40,0.60)
 PAIR_MARGIN_CAP_GRID=(10.0,20.0,None)
 PAIR_LOCAL_ADV_FLOOR_GRID=(0.0,2.0)
 PAIR_LOCAL_CONF_FLOOR=0.35
 PAIR_MAX_SHIFT=6.0
 PAIR_COMBINED_SHORTLIST=6
+
+# v0.9.21 Scotland-specific data/model. Scottish council elections use STV, so
+# Democracy Club does not publish candidate vote totals for them. We therefore use
+# the open scot-elex archive, which contains ranked ballots for 2007/2012/2017/2022,
+# and derive party first-preference shares. 2012 -> GE2015, 2017 -> GE2017/2019,
+# 2022 -> GE2024. The 2024 result never selects parameters.
+SCOT_ELEX_ARCHIVE_URLS=(
+    "https://codeload.github.com/mggg/scot-elex/zip/refs/heads/main",
+    "https://github.com/mggg/scot-elex/archive/refs/heads/main.zip",
+)
+SCOT_LOCAL_ELECTION_DATE={2012:"2012-05-03",2017:"2017-05-04",2022:"2022-05-05"}
+SCOT_LOCAL_RECENCY_HALF_LIFE_YEARS=4.0
+SCOT_LOCAL_MIN_CONFIDENCE=0.15
+SCOT_RIDGE_ALPHA_GRID=(0.5,2.0,8.0,25.0)
+SCOT_RIDGE_MULTIPLIER_GRID=(0.0,0.50,0.75,1.00,1.25)
+SCOT_RIDGE_CAP_GRID=(3.0,5.0,7.0,9.0)
+SCOT_MAX_RESIDUAL_GAP=18.0
 ONS_LOOKUPS={
     "2019":{
         # Prefer ONS/Open Geography public Hub CSV downloads.  The underlying
@@ -132,14 +151,14 @@ ONS_LOOKUPS={
             "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/WD19_PCON19_LAD19_UTLA19_UK_LU_e5a0b74eff43407b86dcc7a4300ceb25/FeatureServer/0/query",
             "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/WD19_PCON19_LAD19_UK_LU_2b79d5f36feb42938063932a4d4a3533/FeatureServer/0/query",
         ),
-        "pcon":"PCON19NM","lad":"LAD19NM",
+        "pcon":"PCON19NM","lad":"LAD19NM","ward":"WD19NM",
     },
     "2024":{
         "downloads":(
             "https://open-geography-portalx-ons.hub.arcgis.com/api/download/v1/items/62eb9df29a2f4521b5076a419ff9a47e/csv?layers=0",
         ),
         "queries":(),
-        "pcon":"PCON24NM","lad":"LAD24NM",
+        "pcon":"PCON24NM","lad":"LAD24NM","ward":"WD24NM",
     },
 }
 
@@ -789,7 +808,7 @@ def run_integrity_checks(elections:list[tuple[str,dict[str,Any],str,dict[str,int
     checks=[integrity_record(label,e,boundary,winners) for label,e,boundary,winners in elections]
     errors=[f"{c['label']}: {err}" for c in checks for err in c["errors"]]
     payload={
-        "version":"uk-v0920-bes-integrity",
+        "version":"uk-v0921-bes-integrity",
         "generated_at":utcnow().isoformat(),
         "status":"passed" if not errors else "failed",
         "checks":checks,
@@ -1247,7 +1266,7 @@ def evaluate_ref_structural_sweep(
         reverse=True,
     )
     return {
-        "version":"uk-v0920-scotland-conlab-sweep",
+        "version":"uk-v0921-scotland-local-residual",
         "status":"ok",
         "generated_at":utcnow().isoformat(),
         "diagnostic_only":True,
@@ -2546,13 +2565,13 @@ def build_reform_diagnostics(
         raise RuntimeError("Reform diagnostic does not cover all 632 GB seats")
 
     return {
-        "version":"uk-v0920-scotland-conlab-sweep",
+        "version":"uk-v0921-scotland-local-residual",
         "status":"ok",
         "generated_at":utcnow().isoformat(),
         "diagnostic_only":True,
         "used_for_parameter_selection":False,
         "changes_production_model":False,
-        "source_model":"uk-v0920-scotland-conlab-sweep",
+        "source_model":"uk-v0921-scotland-local-residual",
         "benchmark":"2019_notional_to_2024",
         "benchmark_role":"development_diagnostic_not_pristine_holdout",
         "interpretation_warning":(
@@ -2954,7 +2973,7 @@ def build_error_structure(rows:pd.DataFrame,actual:dict[str,Any],base:dict[str,A
             })
     pair_rows=[{"predicted":a,"actual":b,"count":int(n)} for (a,b),n in pairs.most_common()]
     return {
-        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0921-scotland-local-residual","status":"ok","generated_at":utcnow().isoformat(),
         "canonical_candidate":"frozen_v0910_equivalent","total_seats":len(actual["frame"]),"wrong_seats":len(wrong),
         "correct_seats":len(actual["frame"])-len(wrong),"confusion_pairs":pair_rows,
         "regions":{r:{**v,"accuracy":1.0-v["wrong"]/v["n"] if v["n"] else None} for r,v in sorted(regions.items())},
@@ -3084,7 +3103,7 @@ def build_remaining_error_audit(
 
     local_available=sum(1 for r in wrong if r["local_profile"]["available"])
     return {
-        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0921-scotland-local-residual","status":"ok","generated_at":utcnow().isoformat(),
         "diagnostic_only":True,"shadow_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"changes_candidate_model":False,
         "source_candidate":"v0.9.15 reference local_strength=0.25 byelection_strength=0",
@@ -3144,7 +3163,7 @@ def evaluate_v0915_reference(
     if m24["correct_winners"]!=501 or m24["seat_abs_error_sum"]!=166:
         raise RuntimeError(f"v0.9.15 reference 2024 regression failed: {m24}")
     report={
-        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0921-scotland-local-residual","status":"ok","generated_at":utcnow().isoformat(),
         "diagnostic_only":True,"shadow_only":True,"uses_2024_for_parameter_selection":False,
         "parameter_selection_election":"2019","reference_parameters":dict(V0915_REFERENCE),
         "method":"frozen v0.9.15 local-authority advantage; local_strength=0.25, confidence_floor=0, no margin cap, by-election strength=0",
@@ -3218,7 +3237,7 @@ def evaluate_local_strength_sweep(
     baseline19=evaluate_rows(val_rows,e19,e17);baseline24=evaluate_rows(hold_rows,e24,e19n)
     selected_gate=bool(selected_2024["correct_winners"]>=506 and selected_2024["seat_abs_error_sum"]<=176)
     return {
-        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0921-scotland-local-residual","status":"ok","generated_at":utcnow().isoformat(),
         "shadow_only":True,"uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
         "selection_policy":"grid fixed in source; rank by 2019 correct winners, then seat error, then share MAE; 2024 labels never select strengths",
         "methods":{
@@ -3392,13 +3411,16 @@ def fetch_ons_ward_lookup(year:str)->tuple[list[dict[str,str]],dict[str,Any]]:
                         time.sleep(5);continue
                     raise RuntimeError(f"unexpected Hub JSON response: {payload}")
                 frame=pd.read_csv(io.BytesIO(body),dtype=str,encoding="utf-8-sig")
-                if spec["pcon"] not in frame.columns or spec["lad"] not in frame.columns:
-                    raise RuntimeError(f"CSV missing {spec['pcon']}/{spec['lad']}; columns={list(frame.columns)[:20]}")
+                needed=[spec["pcon"],spec["lad"],spec.get("ward")]
+                if any(c and c not in frame.columns for c in needed):
+                    raise RuntimeError(f"CSV missing one of {needed}; columns={list(frame.columns)[:20]}")
                 rows=[]
-                for pcon,lad in zip(frame[spec["pcon"]],frame[spec["lad"]]):
-                    pcon="" if pd.isna(pcon) else str(pcon).strip()
-                    lad="" if pd.isna(lad) else str(lad).strip()
-                    if pcon and lad:rows.append({"pcon":pcon,"lad":lad})
+                ward_col=spec.get("ward")
+                for _,rr in frame.iterrows():
+                    pcon="" if pd.isna(rr.get(spec["pcon"])) else str(rr.get(spec["pcon"])).strip()
+                    lad="" if pd.isna(rr.get(spec["lad"])) else str(rr.get(spec["lad"])).strip()
+                    ward="" if (not ward_col or pd.isna(rr.get(ward_col))) else str(rr.get(ward_col)).strip()
+                    if pcon and lad:rows.append({"pcon":pcon,"lad":lad,"ward":ward})
                 if len(rows)<5000:raise RuntimeError(f"lookup CSV unexpectedly small: {len(rows)}")
                 return rows,{"source":"ONS Open Geography Portal public Hub CSV","year":year,
                              "url":url,"resolved_url":response.url,"rows":len(rows),
@@ -3421,13 +3443,15 @@ def fetch_ons_ward_lookup(year:str)->tuple[list[dict[str,str]],dict[str,Any]]:
             rows=[]
             for i in range(0,len(object_ids),800):
                 batch=object_ids[i:i+800]
-                params={"objectIds":",".join(map(str,batch)),"outFields":f"{spec['pcon']},{spec['lad']}",
+                out_fields=",".join(x for x in (spec["pcon"],spec["lad"],spec.get("ward")) if x)
+                params={"objectIds":",".join(map(str,batch)),"outFields":out_fields,
                         "returnGeometry":"false","f":"json"}
                 r=requests.get(url,params=params,headers=headers,timeout=120);r.raise_for_status();j=r.json()
                 if "error" in j:raise RuntimeError(f"lookup error: {j['error']}")
                 for feat in j.get("features",[]):
                     a=feat.get("attributes",{});pcon=str(a.get(spec["pcon"]) or "");lad=str(a.get(spec["lad"]) or "")
-                    if pcon and lad:rows.append({"pcon":pcon,"lad":lad})
+                    ward=str(a.get(spec.get("ward")) or "") if spec.get("ward") else ""
+                    if pcon and lad:rows.append({"pcon":pcon,"lad":lad,"ward":ward})
             if len(rows)<5000:raise RuntimeError(f"lookup unexpectedly small: {len(rows)}")
             return rows,{"source":"ONS Open Geography Portal FeatureServer fallback","year":year,
                          "url":url,"rows":len(rows),"fallbacks_tried":len(failures),"transport":"feature_query"}
@@ -3594,7 +3618,7 @@ def evaluate_local_strength_sweep(val_rows:pd.DataFrame,hold_rows:pd.DataFrame,e
     baseline19=evaluate_rows(val_rows,e19,e17);baseline24=evaluate_rows(hold_rows,e24,e19n)
     gate=bool(selected24["correct_winners"]>=506 and selected24["seat_abs_error_sum"]<=166)
     return {
-        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0921-scotland-local-residual","status":"ok","generated_at":utcnow().isoformat(),
         "shadow_only":True,"uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
         "candidate_count":len(candidates),
         "grid":{"local_strength":list(LOCAL_STRENGTH_GRID),"confidence_floor":list(LOCAL_CONFIDENCE_FLOOR_GRID),
@@ -3715,7 +3739,7 @@ def evaluate_ld_target_sweep(
     benchmark.sort(key=lambda x:score_tuple(x["benchmark_2024"]),reverse=True)
     gate=bool(selected24["correct_winners"]>=506 and selected24["seat_abs_error_sum"]<=166)
     return {
-        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0921-scotland-local-residual","status":"ok","generated_at":utcnow().isoformat(),
         "diagnostic_only":True,"shadow_only":True,"used_for_parameter_selection":True,"uses_2024_for_parameter_selection":False,"changes_production_model":False,"changes_candidate_model":False,
         "hypothesis_origin":"nominated by v0.9.17 2024 error audit; therefore numerical success on 2024 is not sufficient for promotion",
         "parameter_selection_election":"2019","candidate_count":len(candidates),
@@ -3842,7 +3866,7 @@ def evaluate_ld_footprint_validation(
     benchmark.sort(key=lambda x:score_tuple(x["benchmark_2024"]),reverse=True)
     gate=bool(selected24["correct_winners"]>=506 and selected24["seat_abs_error_sum"]<=166)
     return {
-        "version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),
+        "version":"uk-v0921-scotland-local-residual","status":"ok","generated_at":utcnow().isoformat(),
         "diagnostic_only":True,"shadow_only":True,"used_for_parameter_selection":True,
         "parameter_selection_elections":["2017","2019"],"uses_2024_for_parameter_selection":False,
         "changes_production_model":False,"changes_candidate_model":False,
@@ -4057,7 +4081,7 @@ def evaluate_scotland_conlab_sweep(
         bench.append({"id":x["id"],"historically_admissible":True,"benchmark_2024":m,"research_gate":bool(m["correct_winners"]>=506 and m["seat_abs_error_sum"]<=166)})
     bench.sort(key=lambda x:score_tuple(x["benchmark_2024"]),reverse=True)
 
-    return {"version":"uk-v0920-scotland-conlab-sweep","status":"ok","generated_at":utcnow().isoformat(),"diagnostic_only":True,"shadow_only":True,
+    return {"version":"uk-v0921-scotland-local-residual","status":"ok","generated_at":utcnow().isoformat(),"diagnostic_only":True,"shadow_only":True,
         "used_for_parameter_selection":True,"parameter_selection_elections":["2017","2019"],"uses_2024_for_parameter_selection":False,"changes_production_model":False,"changes_candidate_model":False,
         "hypothesis_origin":"v0.9.17 audit: SNP→Lab and Conservative→Lab were the two remaining large non-Reform error families after LD research",
         "method":"symmetric pairwise local concentration; no realised 2024 labels or audit-region counts enter scoring",
@@ -4070,8 +4094,324 @@ def evaluate_scotland_conlab_sweep(
                                     "baseline_2024_con_to_lab":_pair_direction_count(reference24,e24,e19n,"con","lab",None),"selected_combined_2024_con_to_lab":_pair_direction_count(j24,e24,e19n,"con","lab",None)},
         "coverage":{"local_2017":{k:v for k,v in local17.items() if k!="seats"},"local_2019":{k:v for k,v in local19.items() if k!="seats"},"local_2024":{k:v for k,v in local24.items() if k!="seats"}},
         "sources":{"local_2017":src17,"ons_2017_mapping":ons19_meta},"research_gate_definition":"historically selected candidate must reach >=506/632 correct in 2024 AND seat_abs_error_sum <=166; informational only",
-        "promotion_policy":"always shadow in v0.9.20 because both hypotheses were nominated from the 2024 audit","parameter_updates":{}}
+        "promotion_policy":"always shadow in v0.9.21 because both hypotheses were nominated from the 2024 audit","parameter_updates":{}}
 
+
+
+def _country_nat_shares(election:dict[str,Any],country:str)->dict[str,float]:
+    df=election["frame"]
+    sub=df[df["country"].astype(str)==country]
+    if sub.empty:return {p:0.0 for p in PARTIES}
+    w=sub["weight"].to_numpy(dtype=float);den=float(np.sum(w)) or 1.0
+    raw={p:float(np.sum(sub[p].to_numpy(dtype=float)*w)/den) for p in PARTIES}
+    total=sum(raw.values()) or 1.0
+    return {p:raw[p]/total*100.0 for p in PARTIES}
+
+
+_SCOT_COUNCIL_ALIASES={
+    "aberdeen":"aberdeencity","aberdeenshire":"aberdeenshire","angus":"angus",
+    "argyllbute":"argyllandbute","clackmannanshire":"clackmannanshire",
+    "dumgal":"dumfriesandgalloway","dundee":"dundeecity","eastayrshire":"eastayrshire",
+    "eastdunbartonshire":"eastdunbartonshire","eastlothian":"eastlothian","eastrenfrewshire":"eastrenfrewshire",
+    "edinburgh":"cityofedinburgh","eileansiar":"naheileanan siar".replace(" ",""),"falkirk":"falkirk","fife":"fife",
+    "glasgow":"glasgowcity","highland":"highland","inverclyde":"inverclyde","midlothian":"midlothian",
+    "moray":"moray","northayrshire":"northayrshire","northlanarkshire":"northlanarkshire",
+    "orkney":"orkneyislands","perthkinross":"perthandkinross","renfrewshire":"renfrewshire",
+    "scottishborders":"scottishborders","shetland":"shetlandislands","southayrshire":"southayrshire",
+    "southlanarkshire":"southlanarkshire","stirling":"stirling","westdunbartonshire":"westdunbartonshire",
+    "westlothian":"westlothian",
+}
+
+
+def _scot_council_key(v:Any)->str:
+    k=nkey(str(v).replace("_"," "))
+    return _SCOT_COUNCIL_ALIASES.get(k,_authority_key(v))
+
+
+def _scot_party(field:Any)->str:
+    text=str(field or "").strip()
+    m=re.search(r"\(([^()]*)\)\s*$",text)
+    code=(m.group(1).strip() if m else text).lower().replace(" ","")
+    if code in {"snp"}:return "snp"
+    if code in {"lab","labco","labour"}:return "lab"
+    if code in {"con","conservative"}:return "con"
+    if code in {"ld","lib","libdem"}:return "ld"
+    if code in {"gr","green"}:return "green"
+    if code in {"ukip"}:return "ref"
+    return "other"
+
+
+def fetch_scot_elex_years(years:tuple[int,...])->tuple[dict[int,pd.DataFrame],dict[str,Any]]:
+    headers={"User-Agent":"modello-uk/0.9.21 research; public scot-elex data"}
+    payload=None;resolved=None;failures=[]
+    for url in SCOT_ELEX_ARCHIVE_URLS:
+        try:
+            r=requests.get(url,headers=headers,timeout=180,allow_redirects=True);r.raise_for_status()
+            if len(r.content)<100000:raise RuntimeError(f"archive unexpectedly small: {len(r.content)} bytes")
+            payload=r.content;resolved=r.url;break
+        except Exception as exc:failures.append({"url":url,"error":str(exc)})
+    if payload is None:raise RuntimeError(f"scot-elex archive unavailable: {failures}")
+    out={int(y):[] for y in years};files=Counter();skipped=Counter()
+    with zipfile.ZipFile(io.BytesIO(payload)) as zf:
+        for name in zf.namelist():
+            base_name=Path(name).name
+            m=re.match(r"(.+?)_(2007|2012|2017|2022)_ward(\d+)\.csv$",base_name,re.I)
+            if not m:continue
+            year=int(m.group(2))
+            if year not in out:continue
+            council=_scot_council_key(m.group(1));ward_no=int(m.group(3))
+            try:
+                text=zf.read(name).decode("utf-8-sig",errors="replace")
+                rows=list(csv.reader(io.StringIO(text)))
+                if not rows or len(rows[0])<2:raise ValueError("missing header")
+                nc=int(float(rows[0][0]));candidate_rows=[];ballot_rows=[];ward_name=""
+                for rr in rows[1:]:
+                    if not rr:continue
+                    first=str(rr[0]).strip()
+                    if first.lower().startswith("candidate"):
+                        candidate_rows.append(rr)
+                    elif candidate_rows:
+                        if first:ward_name=first
+                    else:
+                        try:
+                            freq=int(float(first))
+                            if freq>0 and len(rr)>1:ballot_rows.append((freq,rr[1:]))
+                        except Exception:pass
+                cmap={}
+                for rr in candidate_rows:
+                    mm=re.search(r"(\d+)",str(rr[0]));
+                    if not mm:continue
+                    idx=int(mm.group(1));party=_scot_party(rr[2] if len(rr)>2 else "")
+                    cmap[idx]=party
+                if len(cmap)<min(2,nc) or not ward_name:raise ValueError("candidate/ward parse failed")
+                votes=Counter();total=0
+                for freq,prefs in ballot_rows:
+                    first_choice=None
+                    for token in prefs:
+                        token=str(token).strip()
+                        if not token:continue
+                        try:i=int(float(token))
+                        except Exception:continue
+                        if i>0:first_choice=i;break
+                    if first_choice in cmap:
+                        votes[cmap[first_choice]]+=freq;total+=freq
+                if total<=0:raise ValueError("no first preferences")
+                rec={"year":year,"council_key":council,"ward_no":ward_no,"ward_name":ward_name,
+                     "ward_key":_place_key(ward_name),"effective_votes":float(total)}
+                for p in PARTIES:rec[p]=float(votes[p])/total*100.0
+                out[year].append(rec);files[year]+=1
+            except Exception as exc:
+                skipped[year]+=1
+    frames={y:pd.DataFrame(rows) for y,rows in out.items()}
+    for y,df in frames.items():
+        if len(df)<300:raise RuntimeError(f"scot-elex {y}: only {len(df)} usable wards")
+    return frames,{"source":"mggg/scot-elex GitHub archive","url":"https://github.com/mggg/scot-elex",
+                   "archive_resolved_url":resolved,"years":list(years),"usable_wards":dict(files),"skipped_files":dict(skipped),
+                   "note":"Party shares are derived from first preferences in the published ranked ballots."}
+
+
+def build_scotland_local_profile(base:dict[str,Any],wards:pd.DataFrame,lookup_rows:list[dict[str,str]],election_date:str,target_date:str)->dict[str,Any]:
+    if wards.empty:raise RuntimeError("empty Scottish local ward data")
+    # Local Scotland-wide benchmark removes election-specific national/midterm mood.
+    w=wards["effective_votes"].to_numpy(float);den=float(w.sum()) or 1.0
+    local_nat={p:float(np.sum(wards[p].to_numpy(float)*w)/den) for p in PARTIES}
+    base_nat=_country_nat_shares(base,"Scotland")
+    ward_map={(str(r.council_key),str(r.ward_key)):r for r in wards.itertuples(index=False)}
+    council_profiles={}
+    for council,g in wards.groupby("council_key"):
+        ww=g["effective_votes"].to_numpy(float);dd=float(ww.sum()) or 1.0
+        council_profiles[str(council)]={"effective_votes":dd,"wards":int(len(g)),
+            "shares":{p:float(np.sum(g[p].to_numpy(float)*ww)/dd) for p in PARTIES}}
+    by_pcon=defaultdict(list)
+    for r in lookup_rows:
+        pkey=_place_key(r.get("pcon",""));lad=_authority_key(r.get("lad",""));ward=_place_key(r.get("ward",""))
+        if pkey and lad:by_pcon[pkey].append((lad,ward))
+    target_dt=datetime.fromisoformat(target_date+"T00:00:00+00:00")
+    elect_dt=datetime.fromisoformat(election_date+"T00:00:00+00:00")
+    age=max(0.0,(target_dt-elect_dt).total_seconds()/31557600.0)
+    recency=.5**(age/SCOT_LOCAL_RECENCY_HALF_LIFE_YEARS)
+    seats={};matched=0;exact_seats=0;council_fallback_seats=0;coverages=[]
+    for idx,brow in base["frame"].iterrows():
+        if str(brow["country"])!="Scotland":continue
+        entries=by_pcon.get(_place_key(brow["name"]),[])
+        if not entries:continue
+        unique=[];seen=set()
+        for lad,ward in entries:
+            key=(lad,ward)
+            if key not in seen:seen.add(key);unique.append(key)
+        matched_wards=[]
+        for lad,ward in unique:
+            rr=ward_map.get((lad,ward))
+            if rr is not None:matched_wards.append(rr)
+        shares=None;coverage=0.0;source_mode=""
+        if matched_wards:
+            weights=np.asarray([float(r.effective_votes) for r in matched_wards]);dd=float(weights.sum()) or 1.0
+            shares={p:float(np.sum(np.asarray([float(getattr(r,p)) for r in matched_wards])*weights)/dd) for p in PARTIES}
+            coverage=len(matched_wards)/max(1,len(unique));source_mode="ward";exact_seats+=1
+        else:
+            lad_counts=Counter(lad for lad,_ in unique);parts=[]
+            for lad,n in lad_counts.items():
+                cp=council_profiles.get(lad)
+                if cp:parts.append((cp,float(n)))
+            if parts:
+                dd=sum(wt for _,wt in parts) or 1.0
+                shares={p:sum(cp["shares"][p]*wt for cp,wt in parts)/dd for p in PARTIES}
+                coverage=sum(wt for _,wt in parts)/max(1.0,float(len(unique)));source_mode="council_fallback";council_fallback_seats+=1
+        if shares is None:continue
+        quality=1.0 if source_mode=="ward" else 0.65
+        confidence=float(recency*quality*clamp(coverage,0.0,1.0))
+        adv={}
+        for p in PARTIES:
+            local_relative=float(shares[p])-float(local_nat[p])
+            base_relative=float(brow[p])-float(base_nat[p])
+            adv[p]=clamp(local_relative-base_relative,-35.0,35.0)
+        seats[str(idx)]={"confidence":confidence,"coverage":float(coverage),"advantage":adv,
+                         "source_mode":source_mode,"mean_age_years":float(age),"local_shares":shares}
+        matched+=1;coverages.append(coverage)
+    return {"seats":seats,"matched_seats":matched,"scotland_seats":int((base["frame"]["country"]=="Scotland").sum()),
+            "ward_exact_seats":exact_seats,"council_fallback_seats":council_fallback_seats,
+            "mean_coverage":float(np.mean(coverages)) if coverages else 0.0,"local_scotland_shares":local_nat,
+            "baseline_scotland_shares":base_nat,"election_date":election_date,"target_date":target_date,"recency":float(recency)}
+
+
+def _scot_feature_frame(rows:pd.DataFrame,base:dict[str,Any],profile:dict[str,Any])->tuple[pd.DataFrame,list[Any]]:
+    records=[];indices=[]
+    for idx,brow in base["frame"].iterrows():
+        if str(brow["country"])!="Scotland":continue
+        lp=profile.get("seats",{}).get(str(idx))
+        if not lp or float(lp.get("confidence") or 0.0)<SCOT_LOCAL_MIN_CONFIDENCE:continue
+        lab=float(rows.at[idx,"lab"]);snp=float(rows.at[idx,"snp"]);blab=float(brow["lab"]);bsnp=float(brow["snp"])
+        adv=lp.get("advantage",{})
+        records.append({
+            "canonical_gap":lab-snp,"canonical_pair_margin":abs(lab-snp),"baseline_gap":blab-bsnp,
+            "baseline_lab":blab,"baseline_snp":bsnp,"local_lab_adv":float(adv.get("lab",0.0)),
+            "local_snp_adv":float(adv.get("snp",0.0)),"local_gap_adv":float(adv.get("lab",0.0))-float(adv.get("snp",0.0)),
+            "confidence":float(lp.get("confidence") or 0.0),"coverage":float(lp.get("coverage") or 0.0),
+            "prior_lab_winner":1.0 if str(brow.get("actual_winner"))=="lab" else 0.0,
+            "prior_snp_winner":1.0 if str(brow.get("actual_winner"))=="snp" else 0.0,
+        });indices.append(idx)
+    return pd.DataFrame(records),indices
+
+
+def _scot_training_block(rows:pd.DataFrame,base:dict[str,Any],actual:dict[str,Any],profile:dict[str,Any],year:str)->dict[str,Any]:
+    X,idxs=_scot_feature_frame(rows,base,profile);ys=[]
+    for idx in idxs:
+        actual_gap=float(actual["frame"].at[idx,"lab"])-float(actual["frame"].at[idx,"snp"])
+        pred_gap=float(rows.at[idx,"lab"])-float(rows.at[idx,"snp"])
+        ys.append(clamp(actual_gap-pred_gap,-SCOT_MAX_RESIDUAL_GAP,SCOT_MAX_RESIDUAL_GAP))
+    return {"year":year,"X":X,"idxs":idxs,"y":np.asarray(ys,dtype=float),"n":len(idxs)}
+
+
+def _fit_scot_ridge(blocks:list[dict[str,Any]],alpha:float):
+    X=pd.concat([b["X"] for b in blocks],ignore_index=True);y=np.concatenate([b["y"] for b in blocks])
+    model=Pipeline([("scale",StandardScaler()),("ridge",Ridge(alpha=float(alpha)))])
+    model.fit(X,y);return model,list(X.columns)
+
+
+def _apply_scot_residual(rows:pd.DataFrame,base:dict[str,Any],target:dict[str,float],profile:dict[str,Any],model,features:list[str],multiplier:float,cap:float)->tuple[pd.DataFrame,dict[str,Any]]:
+    out=rows.copy().astype(float);X,idxs=_scot_feature_frame(rows,base,profile);adjusted=[]
+    if not idxs or multiplier<=1e-12:
+        return out,{"adjusted_seats":0,"eligible_seats":len(idxs),"multiplier":float(multiplier),"cap":float(cap),"national_target_preserved":True}
+    pred=model.predict(X.reindex(columns=features,fill_value=0.0))
+    for idx,resid in zip(idxs,pred):
+        gap_shift=clamp(float(multiplier)*float(resid),-2.0*float(cap),2.0*float(cap))
+        if abs(gap_shift)<1e-9:continue
+        party_shift=gap_shift/2.0
+        out.at[idx,"lab"]=max(.0001,float(out.at[idx,"lab"])+party_shift)
+        out.at[idx,"snp"]=max(.0001,float(out.at[idx,"snp"])-party_shift)
+        brow=base["frame"].loc[idx]
+        vals={p:(max(.0001,float(out.at[idx,p])) if allowed(p,str(brow["country"])) else 0.0) for p in PARTIES};dd=sum(vals.values()) or 1.0
+        for p in PARTIES:out.at[idx,p]=vals[p]/dd*100.0
+        adjusted.append({"id":str(brow["id"]),"name":str(brow["name"]),"predicted_gap_residual":float(resid),"applied_gap_shift":float(gap_shift)})
+    out=experimental_rake(out,base,target)
+    return out,{"adjusted_seats":len(adjusted),"eligible_seats":len(idxs),"multiplier":float(multiplier),"cap":float(cap),"national_target_preserved":True,
+                "top_adjustments":sorted(adjusted,key=lambda x:abs(x["applied_gap_shift"]),reverse=True)[:30]}
+
+
+def _scot_hist_admissible(metrics:dict[str,dict[str,Any]],baselines:dict[str,dict[str,Any]])->bool:
+    for year in ("2015","2017","2019"):
+        if metrics[year]["correct_winners"]<baselines[year]["correct_winners"]-2:return False
+        if metrics[year]["seat_abs_error_sum"]>baselines[year]["seat_abs_error_sum"]+8:return False
+    return True
+
+
+def evaluate_scotland_local_residual(reference24:pd.DataFrame,e10:dict[str,Any],e15:dict[str,Any],e17:dict[str,Any],e19:dict[str,Any],e19n:dict[str,Any],e24:dict[str,Any],val_rows:pd.DataFrame)->dict[str,Any]:
+    # Honest pre-2024 references: deterministic 2010->2015 and 2015->2017 proportional swing,
+    # plus the canonical 2019 temporal-validation rows. v0.9.15 is used only as the 2024 base.
+    ref15=base_prediction(e10,nat_shares(e15));ref17=base_prediction(e15,nat_shares(e17));ref19=val_rows
+    lookup19,ons19=fetch_ons_ward_lookup("2019");lookup24,ons24=fetch_ons_ward_lookup("2024")
+    yearly,src=fetch_scot_elex_years((2012,2017,2022))
+    prof15=build_scotland_local_profile(e10,yearly[2012],lookup19,SCOT_LOCAL_ELECTION_DATE[2012],"2015-05-07")
+    prof17=build_scotland_local_profile(e15,yearly[2017],lookup19,SCOT_LOCAL_ELECTION_DATE[2017],"2017-06-08")
+    prof19=build_scotland_local_profile(e17,yearly[2017],lookup19,SCOT_LOCAL_ELECTION_DATE[2017],"2019-12-12")
+    prof24=build_scotland_local_profile(e19n,yearly[2022],lookup24,SCOT_LOCAL_ELECTION_DATE[2022],"2024-07-04")
+    for label,pr in (("2015",prof15),("2017",prof17),("2019",prof19),("2024",prof24)):
+        if pr["matched_seats"]<45:raise RuntimeError(f"Scotland {label} local coverage too low: {pr['matched_seats']}")
+    blocks={
+        "2015":_scot_training_block(ref15,e10,e15,prof15,"2015"),
+        "2017":_scot_training_block(ref17,e15,e17,prof17,"2017"),
+        "2019":_scot_training_block(ref19,e17,e19,prof19,"2019"),
+    }
+    for year,b in blocks.items():
+        if int(b["n"])<45:raise RuntimeError(f"Scotland {year} training coverage too low: {b['n']}")
+    refs={"2015":(ref15,e10,e15,prof15),"2017":(ref17,e15,e17,prof17),"2019":(ref19,e17,e19,prof19)}
+    baselines={y:evaluate_rows(refs[y][0],refs[y][2],refs[y][1]) for y in refs}
+    baseline_scot={y:country_accuracy(refs[y][0],refs[y][2],refs[y][1],"Scotland") for y in refs}
+    candidates=[]
+    for alpha in SCOT_RIDGE_ALPHA_GRID:
+        for mult in SCOT_RIDGE_MULTIPLIER_GRID:
+            if mult==0.0 and alpha!=SCOT_RIDGE_ALPHA_GRID[0]:continue
+            for cap in SCOT_RIDGE_CAP_GRID:
+                if mult==0.0 and cap!=SCOT_RIDGE_CAP_GRID[0]:continue
+                fold_metrics={};fold_scot={};fold_meta={}
+                for hold_year in ("2015","2017","2019"):
+                    train=[blocks[y] for y in blocks if y!=hold_year]
+                    model,features=_fit_scot_ridge(train,alpha)
+                    rr,bb,aa,pp=refs[hold_year]
+                    adj,meta=_apply_scot_residual(rr,bb,nat_shares(aa),pp,model,features,mult,cap)
+                    fold_metrics[hold_year]=evaluate_rows(adj,aa,bb);fold_scot[hold_year]=country_accuracy(adj,aa,bb,"Scotland");fold_meta[hold_year]=meta
+                winner_gain_sum=sum(fold_metrics[y]["correct_winners"]-baselines[y]["correct_winners"] for y in fold_metrics)
+                scot_gain_sum=sum(fold_scot[y]["correct"]-baseline_scot[y]["correct"] for y in fold_scot)
+                seat_improve=sum(baselines[y]["seat_abs_error_sum"]-fold_metrics[y]["seat_abs_error_sum"] for y in fold_metrics)
+                cid=f"ridge_a{alpha:g}_m{mult:.2f}_c{cap:.0f}"
+                candidates.append({"id":cid,"alpha":float(alpha),"multiplier":float(mult),"cap":float(cap),"validation":fold_metrics,"scotland_validation":fold_scot,
+                                   "winner_gain_sum":int(winner_gain_sum),"scotland_gain_sum":int(scot_gain_sum),"seat_error_improvement_sum":int(seat_improve),
+                                   "admissible":_scot_hist_admissible(fold_metrics,baselines),"meta":fold_meta})
+    admissible=[c for c in candidates if c["admissible"]]
+    if not admissible:raise RuntimeError("No admissible Scotland residual candidate")
+    admissible.sort(key=lambda c:(c["winner_gain_sum"],c["scotland_gain_sum"],c["seat_error_improvement_sum"],-c["multiplier"],-c["alpha"],-c["cap"]),reverse=True)
+    selected=admissible[0]
+    final_model,features=_fit_scot_ridge(list(blocks.values()),selected["alpha"])
+    selected24,meta24=_apply_scot_residual(reference24,e19n,nat_shares(e24),prof24,final_model,features,selected["multiplier"],selected["cap"])
+    m24=evaluate_rows(selected24,e24,e19n);s24=country_accuracy(selected24,e24,e19n,"Scotland")
+    base24=evaluate_rows(reference24,e24,e19n);base_scot24=country_accuracy(reference24,e24,e19n,"Scotland")
+    # Diagnostic score of every historically-defined configuration. Models are fit only on 2015/2017/2019.
+    bench=[]
+    for c in candidates:
+        model,ff=_fit_scot_ridge(list(blocks.values()),c["alpha"])
+        rr,mm=_apply_scot_residual(reference24,e19n,nat_shares(e24),prof24,model,ff,c["multiplier"],c["cap"])
+        ev=evaluate_rows(rr,e24,e19n);sc=country_accuracy(rr,e24,e19n,"Scotland")
+        bench.append({"id":c["id"],"alpha":c["alpha"],"multiplier":c["multiplier"],"cap":c["cap"],"historically_admissible":c["admissible"],
+                      "benchmark_2024":ev,"scotland_2024":sc,"research_gate":bool(ev["correct_winners"]>=506 and ev["seat_abs_error_sum"]<=166)})
+    bench.sort(key=lambda x:score_tuple(x["benchmark_2024"]),reverse=True)
+    return {"version":"uk-v0921-scotland-local-residual","status":"ok","generated_at":utcnow().isoformat(),"diagnostic_only":True,"shadow_only":True,
+            "uses_2024_for_parameter_selection":False,"parameter_selection_elections":["2015","2017","2019"],"changes_production_model":False,"changes_candidate_model":False,
+            "method":"Scotland-only ridge model of SNP/Lab canonical gap residual using pre-election Scottish local STV first-preference geography; leave-one-election-out selection across 2015/2017/2019; national GB target restored by raking",
+            "grid":{"alpha":list(SCOT_RIDGE_ALPHA_GRID),"multiplier":list(SCOT_RIDGE_MULTIPLIER_GRID),"cap":list(SCOT_RIDGE_CAP_GRID),"min_local_confidence":SCOT_LOCAL_MIN_CONFIDENCE},
+            "candidate_count":len(candidates),"admissible_count":len(admissible),"baseline_historical":baselines,"baseline_scotland_historical":baseline_scot,
+            "selected_historical":{**{k:selected[k] for k in ("id","alpha","multiplier","cap","winner_gain_sum","scotland_gain_sum","seat_error_improvement_sum")},
+                "validation":selected["validation"],"scotland_validation":selected["scotland_validation"],"benchmark_2024":m24,"scotland_2024":s24,"meta_2024":meta24,
+                "research_gate":bool(m24["correct_winners"]>=506 and m24["seat_abs_error_sum"]<=166)},
+            "historical_ranking":admissible[:30],"benchmark_2024_diagnostic":{"ranking":bench,"best_expost":bench[0],
+                "passing_research_gate":[x["id"] for x in bench if x["research_gate"]],"passing_and_historically_admissible":[x["id"] for x in bench if x["research_gate"] and x["historically_admissible"]],
+                "warning":"2024 scores never select alpha/multiplier/cap; every configuration is trained only on 2015/2017/2019."},
+            "baseline_2024":base24,"baseline_scotland_2024":base_scot24,
+            "error_family_diagnostics":{"baseline_2024_snp_to_lab":_pair_direction_count(reference24,e24,e19n,"snp","lab","Scotland"),
+                                        "selected_2024_snp_to_lab":_pair_direction_count(selected24,e24,e19n,"snp","lab","Scotland")},
+            "coverage":{"2015":{k:v for k,v in prof15.items() if k!="seats"},"2017":{k:v for k,v in prof17.items() if k!="seats"},"2019":{k:v for k,v in prof19.items() if k!="seats"},"2024":{k:v for k,v in prof24.items() if k!="seats"}},
+            "sources":{"scot_elex":src,"ons_2019":ons19,"ons_2024":ons24},
+            "research_gate_definition":"historically selected Scotland candidate must reach >=506/632 correct in 2024 AND seat_abs_error_sum <=166",
+            "promotion_policy":"always shadow in v0.9.21 because the Scotland hypothesis was nominated from the 2024 audit","parameter_updates":{}}
 
 def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[str,Any],hold_base:dict[str,Any])->tuple[bool,list[str]]:
     reasons=[]
@@ -4089,8 +4429,8 @@ def approval_gate(validation:dict[str,Any],holdout:dict[str,Any],val_base:dict[s
 
 def write_failure(exc:Exception):
     payload={
-        "version":"uk-v0920-scotland-conlab-sweep",
-        "model_type":"constituency-residual-scotland-conlab-v14",
+        "version":"uk-v0921-scotland-local-residual",
+        "model_type":"constituency-residual-scotland-local-v15",
         "status":"error",
         "approved":False,
         "publication_ready":False,
@@ -4106,28 +4446,28 @@ def write_failure(exc:Exception):
     }
     MODEL_OUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
     LIVE_OUT.write_text(json.dumps({
-        "version":"uk-v0920-scotland-conlab-sweep-live","approved":False,"status":"error",
+        "version":"uk-v0921-scotland-local-residual-live","approved":False,"status":"error",
         "diagnostic_only":True,"changes_production_model":False,"changes_candidate_model":False,"shadow_only":True,
         "generated_at":utcnow().isoformat(),"seats":[]
     },ensure_ascii=False,indent=2),encoding="utf-8")
     BACKTEST_OUT.write_text(json.dumps({
-        "version":"uk-v0920-scotland-conlab-sweep-backtest","status":"error","error":str(exc)
+        "version":"uk-v0921-scotland-local-residual-backtest","status":"error","error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     DIAGNOSTIC_OUT.write_text(json.dumps({
-        "version":"uk-v0920-scotland-conlab-sweep","status":"error",
+        "version":"uk-v0921-scotland-local-residual","status":"error",
         "diagnostic_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"parameter_updates":{},
-        "source_model":"uk-v0920-scotland-conlab-sweep",
+        "source_model":"uk-v0921-scotland-local-residual",
         "error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     SWEEP_OUT.write_text(json.dumps({
-        "version":"uk-v0920-scotland-conlab-sweep","status":"error",
+        "version":"uk-v0921-scotland-local-residual","status":"error",
         "diagnostic_only":True,"used_for_parameter_selection":False,
         "changes_production_model":False,"error":str(exc)
     },ensure_ascii=False,indent=2),encoding="utf-8")
     if not INTEGRITY_OUT.exists():
         INTEGRITY_OUT.write_text(json.dumps({
-            "version":"uk-v0920-bes-integrity","status":"failed",
+            "version":"uk-v0921-bes-integrity","status":"failed",
             "generated_at":utcnow().isoformat(),"errors":[str(exc)],"checks":[]
         },ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -4242,10 +4582,10 @@ def main()->int:
             validation,holdout,validation_base,holdout_base
         )
         reference,v0915_val_rows,v0915_hold_rows,local19,local24=evaluate_v0915_reference(val_rows,hold_rows,e17,e19,e19n,e24)
-        pair_sweep=evaluate_scotland_conlab_sweep(v0915_val_rows,v0915_hold_rows,e15,e17,e19,e19n,e24,local19,local24)
-        pair_research_gate_passed=bool(pair_sweep["combined"]["selected_historical"]["research_gate"])
-        # v0.9.20 remains shadow-only. Scotland and ConLab settings are selected on
-        # 2017+2019 only; 2024 is score-only and cannot promote audit-inspired hypotheses.
+        scotland_sweep=evaluate_scotland_local_residual(v0915_hold_rows,e10,e15,e17,e19,e19n,e24,val_rows)
+        scotland_research_gate_passed=bool(scotland_sweep["selected_historical"]["research_gate"])
+        # v0.9.21 remains shadow-only. Scotland parameters are selected by leave-one-election-out
+        # validation across 2015/2017/2019; 2024 is score-only.
         approved=False
         publication_ready=False
 
@@ -4281,8 +4621,8 @@ def main()->int:
         )
 
         model_payload={
-            "version":"uk-v0920-scotland-conlab-sweep",
-            "model_type":"constituency-residual-scotland-conlab-v14",
+            "version":"uk-v0921-scotland-local-residual",
+            "model_type":"constituency-residual-scotland-local-v15",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -4292,23 +4632,21 @@ def main()->int:
             "changes_candidate_model":False,
             "shadow_only":True,
             "candidate_gate_passed":candidate_gate_passed,
-            "pairwise_research_gate_passed":pair_research_gate_passed,
-            "promotion_blocked_reason":"v0.9.20 is shadow-only; Scotland and ConLab parameters are selected on 2017+2019 and 2024 remains a non-pristine audit-inspired benchmark",
+            "scotland_research_gate_passed":scotland_research_gate_passed,
+            "promotion_blocked_reason":"v0.9.21 is shadow-only; Scotland residual parameters are selected on 2015/2017/2019 only and 2024 remains a non-pristine audit-inspired benchmark",
             "canonical_candidate":"frozen_v0910_equivalent",
             "best_shadow_reference":{
                 "version":"v0.9.15",
-                "output":"data/v0915-reference-v0920.json",
+                "output":"data/v0915-reference-v0921.json",
                 "parameters":reference["reference_parameters"],
                 "validation_2019":reference["validation_2019"],
                 "benchmark_2024":reference["benchmark_2024"],
                 "uses_2024_for_parameter_selection":False,
             },
-            "pairwise_structural_sweep":{
-                "output":"data/scotland-conlab-sweep-v0920.json",
-                "scotland_selected":pair_sweep["scotland_snp_lab"]["selected_historical"],
-                "conlab_selected":pair_sweep["conservative_labour"]["selected_historical"],
-                "combined_selected":pair_sweep["combined"]["selected_historical"],
-                "research_gate_passed":pair_research_gate_passed,
+            "scotland_local_residual":{
+                "output":"data/scotland-local-residual-v0921.json",
+                "selected":scotland_sweep["selected_historical"],
+                "research_gate_passed":scotland_research_gate_passed,
                 "uses_2024_for_parameter_selection":False,
                 "applied_to_live":False,
             },
@@ -4392,7 +4730,7 @@ def main()->int:
             "features":{
                 "historical_demographics":[c.replace("demo_","") for c in e19["demo_columns"]],
                 "current_demographics":[c.replace("demo_","") for c in e24["demo_columns"]],
-                "notes":"v0.9.20 keeps the canonical candidate frozen and validates symmetric SNP/Labour and Conservative/Labour pairwise local-strength rules. Candidate settings are selected on 2017+2019 only; realised 2024 outcomes are excluded.",
+                "notes":"v0.9.21 keeps the canonical candidate frozen and validates a Scotland-only SNP/Lab residual model using Scottish STV first-preference geography. Hyperparameters are selected by leave-one-election-out validation across 2015/2017/2019; realised 2024 outcomes are excluded.",
             },
             "integrity":{
                 "version":integrity.get("version"),
@@ -4404,15 +4742,15 @@ def main()->int:
                 "current_bes":curr_meta,
             },
             "note":(
-                "v0.9.20 keeps the canonical candidate frozen and reproduces the v0.9.15 local-strength reference exactly. "
-                "Scotland SNP/Labour and England/Wales Conservative/Labour pairwise settings are selected on 2017+2019 only; the 2024 benchmark is diagnostic."
+                "v0.9.21 keeps the canonical candidate frozen and reproduces the v0.9.15 local-strength reference exactly. "
+                "The Scotland SNP/Lab residual model is selected by leave-one-election-out validation on 2015/2017/2019 only; the 2024 benchmark is diagnostic."
             )
         }
         MODEL_OUT.write_text(json.dumps(model_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         live_payload={
-            "version":"uk-v0920-scotland-conlab-sweep-live",
-            "model_type":"constituency-residual-scotland-conlab-v14",
+            "version":"uk-v0921-scotland-local-residual-live",
+            "model_type":"constituency-residual-scotland-local-v15",
             "status":"ok",
             "approved":approved,
             "publication_ready":publication_ready,
@@ -4424,17 +4762,15 @@ def main()->int:
             "candidate_gate_passed":candidate_gate_passed,
             "best_shadow_reference":{
                 "version":"v0.9.15",
-                "output":"data/v0915-reference-v0920.json",
+                "output":"data/v0915-reference-v0921.json",
                 "parameters":reference["reference_parameters"],
                 "benchmark_2024":reference["benchmark_2024"],
                 "uses_2024_for_parameter_selection":False,
             },
-            "pairwise_structural_sweep":{
-                "output":"data/scotland-conlab-sweep-v0920.json",
-                "scotland_selected":pair_sweep["scotland_snp_lab"]["selected_historical"],
-                "conlab_selected":pair_sweep["conservative_labour"]["selected_historical"],
-                "combined_selected":pair_sweep["combined"]["selected_historical"],
-                "research_gate_passed":pair_research_gate_passed,
+            "scotland_local_residual":{
+                "output":"data/scotland-local-residual-v0921.json",
+                "selected":scotland_sweep["selected_historical"],
+                "research_gate_passed":scotland_research_gate_passed,
                 "uses_2024_for_parameter_selection":False,
                 "applied_to_live":False,
             },
@@ -4462,7 +4798,7 @@ def main()->int:
         LIVE_OUT.write_text(json.dumps(live_payload,ensure_ascii=False,indent=2),encoding="utf-8")
 
         backtest_payload={
-            "version":"uk-v0920-scotland-conlab-sweep-backtest",
+            "version":"uk-v0921-scotland-local-residual-backtest",
             "status":"ok",
             "diagnostic_only":True,
             "used_for_parameter_selection":False,
@@ -4471,18 +4807,16 @@ def main()->int:
             "changes_candidate_model":False,
             "best_shadow_reference":{
                 "version":"v0.9.15",
-                "output":"data/v0915-reference-v0920.json",
+                "output":"data/v0915-reference-v0921.json",
                 "parameters":reference["reference_parameters"],
                 "validation_2019":reference["validation_2019"],
                 "benchmark_2024":reference["benchmark_2024"],
                 "uses_2024_for_parameter_selection":False,
             },
-            "pairwise_structural_sweep":{
-                "output":"data/scotland-conlab-sweep-v0920.json",
-                "scotland_selected":pair_sweep["scotland_snp_lab"]["selected_historical"],
-                "conlab_selected":pair_sweep["conservative_labour"]["selected_historical"],
-                "combined_selected":pair_sweep["combined"]["selected_historical"],
-                "research_gate_passed":pair_research_gate_passed,
+            "scotland_local_residual":{
+                "output":"data/scotland-local-residual-v0921.json",
+                "selected":scotland_sweep["selected_historical"],
+                "research_gate_passed":scotland_research_gate_passed,
                 "uses_2024_for_parameter_selection":False,
                 "applied_to_live":False,
             },
@@ -4501,7 +4835,7 @@ def main()->int:
         }
         BACKTEST_OUT.write_text(json.dumps(backtest_payload,ensure_ascii=False,indent=2),encoding="utf-8")
         DIAGNOSTIC_OUT.write_text(
-            json.dumps(pair_sweep,ensure_ascii=False,indent=2),
+            json.dumps(scotland_sweep,ensure_ascii=False,indent=2),
             encoding="utf-8"
         )
         SWEEP_OUT.write_text(
@@ -4509,15 +4843,13 @@ def main()->int:
             encoding="utf-8"
         )
 
-        print("v0.9.20 selected share spec:",selected_spec)
+        print("v0.9.21 selected share spec:",selected_spec)
         print("v0.9.15 reference 2019 regression:",reference["validation_2019"])
         print("v0.9.15 reference 2024 benchmark:",reference["benchmark_2024"])
-        print("v0.9.20 Scotland selected on 2017+2019:",pair_sweep["scotland_snp_lab"]["selected_historical"])
-        print("v0.9.20 ConLab selected on 2017+2019:",pair_sweep["conservative_labour"]["selected_historical"])
-        print("v0.9.20 combined selected on 2017+2019:",pair_sweep["combined"]["selected_historical"])
-        print("v0.9.20 combined passing research gate:",pair_sweep["combined"]["benchmark_2024_diagnostic"]["passing_research_gate"])
-        print("v0.9.20 selected party strengths:",selected_party_strengths)
-        print("v0.9.20 incumbent routing:",selected_routing)
+        print("v0.9.21 Scotland selected on 2015+2017+2019 LOEO:",scotland_sweep["selected_historical"])
+        print("v0.9.21 Scotland passing research gate:",scotland_sweep["benchmark_2024_diagnostic"]["passing_research_gate"])
+        print("v0.9.21 selected party strengths:",selected_party_strengths)
+        print("v0.9.21 incumbent routing:",selected_routing)
         print("2017 routing audit:",routing_tuning["selected_audit"])
         print("2017 scenario:",national_scenario_metrics(e15,t15_17["target"]))
         print("2019 scenario:",national_scenario_metrics(e17,t17_19["target"]))
@@ -4546,7 +4878,7 @@ if __name__=="__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"build_mrp_lite.py v0.9.20 Scotland+ConLab sweep build failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_lite.py v0.9.21 Scotland local-residual build failed: {exc}",file=sys.stderr)
         write_failure(exc)
         # A broken research build must not be deployed. The previously deployed
         # production/fallback remains untouched because this workflow stops before
