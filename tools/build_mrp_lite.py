@@ -21,6 +21,7 @@ from __future__ import annotations
 import io
 import csv
 import json
+import hashlib
 import math
 import re
 import sys
@@ -47,6 +48,7 @@ ROOT=Path(__file__).resolve().parents[1]
 # verifier never mistakes a patched v0.9.22 builder for a mixed-version upload.
 V0922_HOTFIX="explicit-noop-candidate-fallback-and-traceback"
 V0922_HOTFIX_REGION_KEY="idempotent-region-key"
+V0922_HOTFIX_DC_IO="retry-memory-disk-cache"
 DATA=ROOT/"data"
 DATA.mkdir(exist_ok=True)
 
@@ -3398,17 +3400,75 @@ def _place_key(v:Any)->str:
     return k.replace("the","") if k.startswith("the") else k
 
 
-def _dc_csv(params:list[tuple[str,str]],label:str)->pd.DataFrame:
-    headers={"User-Agent":"modello-uk/0.9.19 research; public election data"}
-    r=requests.get(DC_EXPORT_URL,params=params,headers=headers,timeout=120)
-    r.raise_for_status()
-    text=r.text
+_DC_MEMORY_CACHE:dict[tuple[tuple[str,str],...],pd.DataFrame]={}
+DC_CACHE_DIR=ROOT/".cache"/"democracy-club"
+
+def _parse_dc_csv(text:str,label:str)->pd.DataFrame:
     if len(text)<100 or "votes_cast" not in text:
         raise RuntimeError(f"Democracy Club {label}: unexpected/empty CSV response ({len(text)} bytes)")
     df=pd.read_csv(io.StringIO(text),low_memory=False)
     if "votes_cast" not in df.columns or "party_name" not in df.columns:
         raise RuntimeError(f"Democracy Club {label}: required result columns missing: {list(df.columns)}")
     return df
+
+def _dc_cache_path(params:list[tuple[str,str]])->Path:
+    # Stable cache key: the same export is reused across the several v0.9.22
+    # validation lanes instead of hitting Democracy Club repeatedly.
+    raw=json.dumps(list(params),ensure_ascii=True,separators=(",",":"))
+    digest=hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
+    return DC_CACHE_DIR/f"{digest}.csv"
+
+def _dc_csv(params:list[tuple[str,str]],label:str)->pd.DataFrame:
+    key=tuple((str(k),str(v)) for k,v in params)
+    cached_mem=_DC_MEMORY_CACHE.get(key)
+    if cached_mem is not None:
+        return cached_mem.copy()
+
+    cache_path=_dc_cache_path(params)
+    if cache_path.exists():
+        try:
+            df=_parse_dc_csv(cache_path.read_text(encoding="utf-8"),label)
+            _DC_MEMORY_CACHE[key]=df
+            print(f"Democracy Club {label}: using cached CSV ({len(df)} rows)")
+            return df.copy()
+        except Exception as exc:
+            print(f"Democracy Club {label}: ignoring invalid cache {cache_path}: {exc}")
+            try:cache_path.unlink()
+            except OSError:pass
+
+    headers={
+        "User-Agent":"modello-uk/0.9.22 research; public election data",
+        "Accept":"text/csv,text/plain;q=0.9,*/*;q=0.5",
+        "Connection":"close",
+    }
+    failures=[]
+    # The export endpoint occasionally resets long-lived connections.  A single
+    # transport failure must not invalidate an eight-minute deterministic build.
+    # Six independent attempts, with bounded exponential backoff, cover transient
+    # 429/5xx responses and connection resets without changing any model input.
+    for attempt in range(1,7):
+        try:
+            r=requests.get(DC_EXPORT_URL,params=params,headers=headers,timeout=(20,180))
+            r.raise_for_status()
+            df=_parse_dc_csv(r.text,label)
+            DC_CACHE_DIR.mkdir(parents=True,exist_ok=True)
+            tmp=cache_path.with_suffix(".tmp")
+            tmp.write_text(r.text,encoding="utf-8")
+            tmp.replace(cache_path)
+            _DC_MEMORY_CACHE[key]=df
+            if attempt>1:
+                print(f"Democracy Club {label}: recovered on attempt {attempt}/6")
+            return df.copy()
+        except Exception as exc:
+            failures.append(f"attempt {attempt}: {type(exc).__name__}: {exc}")
+            if attempt>=6:break
+            delay=min(30,2**attempt)
+            print(f"Democracy Club {label}: download attempt {attempt}/6 failed; retrying in {delay}s: {exc}")
+            time.sleep(delay)
+    raise RuntimeError(
+        f"Democracy Club {label}: export unavailable after 6 attempts; "
+        + " | ".join(failures)
+    )
 
 
 def fetch_dc_local_results(dates:tuple[str,...])->tuple[pd.DataFrame,dict[str,Any]]:
