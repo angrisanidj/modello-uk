@@ -1,7 +1,7 @@
 {
   "version": "uk-v0920-scotland-conlab-sweep",
   "status": "ok",
-  "generated_at": "2026-08-26T23:45:56.305505+00:00",
+  "generated_at": "2026-08-26T23:59:29.080516+00:00",
   "diagnostic_only": true,
   "shadow_only": true,
   "uses_2024_for_parameter_selection": false,
@@ -47,7 +47,7 @@
       "other": -1
     },
     "seat_abs_error_sum": 42,
-    "share_mae": 2.7168953973035195,
+    "share_mae": 2.7168953972049072,
     "winner_source": "official_BES_WinnerXX",
     "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
     "regional_accuracy": {
@@ -143,7 +143,7 @@
       "other": -1
     },
     "seat_abs_error_sum": 166,
-    "share_mae": 5.55680761701318,
+    "share_mae": 5.556807618048258,
     "winner_source": "official_BES_WinnerXX",
     "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
     "regional_accuracy": {
@@ -615,7 +615,7 @@
       "source": "ONS Open Geography Portal public Hub CSV",
       "year": "2019",
       "url": "https://open-geography-portalx-ons.hub.arcgis.com/api/download/v1/items/552d79e95b30497bb073a9ac79c6a641/csv?layers=0",
-      "resolved_url": "https://stg-arcgisazurecdataprod1.az.arcgis.com/exportfiles-1559-7194/WD19_PCON19_LAD19_UK_LU_2b79d5f36feb42938063932a4d4a3533_-4112990169553552279.csv?sv=2025-05-05&st=2026-08-26T23%3A40%3A34Z&se=2026-08-27T00%3A45%3A34Z&sr=b&sp=r&sig=3o0fVT7IsIC7uVVJYdMZnNLS8NufshPzfL6ncpb83Ag%3D",
+      "resolved_url": "https://stg-arcgisazurecdataprod1.az.arcgis.com/exportfiles-1559-7194/WD19_PCON19_LAD19_UK_LU_2b79d5f36feb42938063932a4d4a3533_-4112990169553552279.csv?sv=2025-05-05&st=2026-08-26T23%3A54%3A14Z&se=2026-08-27T00%3A59%3A14Z&sr=b&sp=r&sig=52vZJIxCdHPl7BlpFaEVTLcJtZRLejgwY0M%2FszpaIZ0%3D",
       "rows": 9511,
       "fallbacks_tried": 0,
       "transport": "hub_csv"

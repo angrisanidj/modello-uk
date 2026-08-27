@@ -49,7 +49,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.7168953973035195,
+      "share_mae": 2.7168953972049072,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -145,7 +145,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 166,
-      "share_mae": 5.55680761701318,
+      "share_mae": 5.556807618048258,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -350,7 +350,7 @@
           "other": -1
         },
         "seat_abs_error_sum": 42,
-        "share_mae": 2.7168953973035195,
+        "share_mae": 2.7168953972049072,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -446,7 +446,7 @@
           "other": -1
         },
         "seat_abs_error_sum": 166,
-        "share_mae": 5.55680761701318,
+        "share_mae": 5.556807618048258,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -658,7 +658,7 @@
           "other": -1
         },
         "seat_abs_error_sum": 42,
-        "share_mae": 2.7168953973035195,
+        "share_mae": 2.7168953972049072,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -754,7 +754,7 @@
           "other": -1
         },
         "seat_abs_error_sum": 166,
-        "share_mae": 5.55680761701318,
+        "share_mae": 5.556807618048258,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -971,7 +971,7 @@
           "other": -1
         },
         "seat_abs_error_sum": 42,
-        "share_mae": 2.7168953973035195,
+        "share_mae": 2.7168953972049072,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -1072,7 +1072,7 @@
           "other": -1
         },
         "seat_abs_error_sum": 166,
-        "share_mae": 5.55680761701318,
+        "share_mae": 5.556807618048258,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -1225,7 +1225,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.958957852288145,
+      "share_mae": 2.9589578523955873,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -2671,7 +2671,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.620772793463433,
+      "share_mae": 2.620772793346298,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -2767,7 +2767,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.620772793463433,
+      "share_mae": 2.620772793346298,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -3449,7 +3449,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 176,
-      "share_mae": 5.6491790539373365,
+      "share_mae": 5.649179055034874,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -3545,7 +3545,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 176,
-      "share_mae": 5.6491790539373365,
+      "share_mae": 5.649179055034874,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -4201,7 +4201,7 @@
         "winner_accuracy": 0.8686708860759493,
         "correct_winners": 549,
         "seat_abs_error_sum": 98,
-        "share_mae": 3.05336134071576
+        "share_mae": 3.053361340715711
       },
       {
         "spec": {
@@ -4217,7 +4217,7 @@
         "winner_accuracy": 0.865506329113924,
         "correct_winners": 547,
         "seat_abs_error_sum": 108,
-        "share_mae": 3.1462460924942883
+        "share_mae": 3.146246092494248
       },
       {
         "spec": {
@@ -4233,7 +4233,7 @@
         "winner_accuracy": 0.8639240506329114,
         "correct_winners": 546,
         "seat_abs_error_sum": 106,
-        "share_mae": 3.2158979434403556
+        "share_mae": 3.2158979434403334
       },
       {
         "spec": {
@@ -4245,7 +4245,7 @@
         "winner_accuracy": 0.8575949367088608,
         "correct_winners": 542,
         "seat_abs_error_sum": 120,
-        "share_mae": 3.323308148637162
+        "share_mae": 3.3233081486371443
       },
       {
         "spec": {
@@ -4257,7 +4257,7 @@
         "winner_accuracy": 0.8560126582278481,
         "correct_winners": 541,
         "seat_abs_error_sum": 118,
-        "share_mae": 3.2031419738092843
+        "share_mae": 3.2031419738098257
       },
       {
         "spec": {
@@ -4269,7 +4269,7 @@
         "winner_accuracy": 0.8528481012658228,
         "correct_winners": 539,
         "seat_abs_error_sum": 122,
-        "share_mae": 3.2589407997938085
+        "share_mae": 3.258940799793759
       },
       {
         "spec": {
@@ -4281,7 +4281,7 @@
         "winner_accuracy": 0.8386075949367089,
         "correct_winners": 530,
         "seat_abs_error_sum": 144,
-        "share_mae": 3.8024517743159674
+        "share_mae": 3.8024517743158213
       },
       {
         "spec": {
@@ -4293,7 +4293,7 @@
         "winner_accuracy": 0.8354430379746836,
         "correct_winners": 528,
         "seat_abs_error_sum": 152,
-        "share_mae": 3.8292111497279393
+        "share_mae": 3.829211149727902
       }
     ]
   },
