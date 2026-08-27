@@ -11,7 +11,7 @@
 <meta property="og:url" content="https://angrisanidj.github.io/modello-uk/" />
 <meta property="og:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta property="og:description" content="Nowcast probabilistico della House of Commons: sondaggi, proiezione dei seggi, Monte Carlo e probabilità collegio per collegio." />
-<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.37" />
+<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.38" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="Nowcast delle elezioni nel Regno Unito — proiezione della House of Commons" />
@@ -19,14 +19,28 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta name="twitter:description" content="Nowcast probabilistico della House of Commons: sondaggi, seggi, collegi e probabilità." />
-<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.37" />
-<link rel="stylesheet" href="styles.css?v=0.9.37" />
-<link rel="stylesheet" href="styles-v0935.css?v=0.9.37" />
-<link rel="stylesheet" href="styles-v0936.css?v=0.9.37" />
-<link rel="stylesheet" href="styles-v0937.css?v=0.9.37" />
-<link rel="stylesheet" href="map-performance.css?v=0.9.37" />
+<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.38" />
+<link rel="stylesheet" href="styles.css?v=0.9.38" />
+<link rel="stylesheet" href="styles-v0935.css?v=0.9.38" />
+<link rel="stylesheet" href="styles-v0936.css?v=0.9.38" />
+<link rel="stylesheet" href="styles-v0937.css?v=0.9.38" />
+<link rel="stylesheet" href="styles-v0938.css?v=0.9.38" />
+<link rel="stylesheet" href="map-performance.css?v=0.9.38" />
 </head>
 <body>
+<div id="mobileNowcastSticky" class="mobile-nowcast-sticky" aria-label="Riepilogo rapido del nowcast">
+  <div class="mobile-nowcast-shell">
+    <div class="mobile-nowcast-flag" aria-hidden="true"></div>
+    <div class="mobile-nowcast-inner">
+      <div class="mobile-nowcast-brand"><span class="mobile-nowcast-badge" aria-hidden="true">UK</span><span class="mobile-nowcast-label">Elezioni UK · Nowcast</span></div>
+      <div class="mobile-nowcast-stats">
+        <span class="mobile-nowcast-party"><i id="mobileParty1Dot" class="mobile-nowcast-dot"></i><span id="mobileParty1Name">—</span><strong id="mobileParty1Seats">—</strong></span>
+        <span class="mobile-nowcast-party"><i id="mobileParty2Dot" class="mobile-nowcast-dot"></i><span id="mobileParty2Name">—</span><strong id="mobileParty2Seats">—</strong></span>
+        <span class="mobile-nowcast-hung"><span>Hung</span><strong id="mobileHungProb">—</strong></span>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="flag-ribbon" aria-hidden="true"></div>
 <main class="shell">
   <section class="hero">
@@ -45,7 +59,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Sondaggi: —</span>
-      <span class="badge badge-strong">UI 0.9.37 · motore statistico 0.9.29 congelato</span>
+      <span class="badge badge-strong">UI 0.9.38 · motore statistico 0.9.29 congelato</span>
     </div>
   </section>
   <nav class="share-rail" aria-label="Condividi il nowcast">
@@ -87,7 +101,7 @@
   </section>
   <section class="card export-card" aria-label="Esporta il nowcast">
     <div class="export-copy"><div class="export-kicker">Export</div><strong>Trasforma il nowcast in una card pronta da condividere</strong><p>PNG 16:9 per web e social, formato 4:5 per Instagram. Le card sono generate nel browser dai dati live, senza inviare dati a servizi esterni.</p></div>
-    <div class="export-actions"><button id="downloadSocialCardBtn" class="small-action" type="button">Scarica PNG 16:9</button><button id="downloadInstagramCardBtn" class="small-action" type="button">Scarica 4:5</button><button id="shareSocialCardBtn" class="primary compact-primary" type="button">Condividi card</button></div>
+    <div class="export-actions"><button id="downloadSocialCardBtn" class="small-action" type="button">Scarica PNG 16:9</button><button id="downloadInstagramCardBtn" class="small-action" type="button">Scarica 4:5</button><button id="downloadSnapshotJsonBtn" class="small-action" type="button">Snapshot JSON</button><button id="shareSocialCardBtn" class="primary compact-primary" type="button">Condividi card</button></div>
   </section>
   <div class="section-title"><div><div class="section-kicker">Voto nazionale</div><h2>Media dei sondaggi</h2><p>Il topline è del modello Focus America; i provider MRP forniscono geografia relativa, non il voto nazionale.</p></div></div>
   <section class="grid two">
@@ -110,6 +124,12 @@
   <section class="poll-trend-layout">
     <article class="card poll-trend-card">
       <div class="cardhead poll-trend-head"><div><h3>Media storica del modello</h3><p id="pollTrendMeta">In attesa dei sondaggi…</p></div><div class="controls poll-trend-controls" aria-label="Intervallo serie storica"><button type="button" data-poll-trend-range="90">90 giorni</button><button type="button" class="active" data-poll-trend-range="180">6 mesi</button><button type="button" data-poll-trend-range="365">1 anno</button><button type="button" data-poll-trend-range="all">Tutto</button></div></div>
+      <div class="graphic-export-inline" data-graphic-panel="trend">
+        <span class="graphic-export-label">Andamento sondaggi</span>
+        <select data-export-ratio aria-label="Formato immagine andamento sondaggi"><option value="16:9">16:9</option><option value="5:2">5:2</option></select>
+        <button type="button" data-export-graphic="trend">PNG</button>
+        <button type="button" data-share-graphic="trend">Condividi</button>
+      </div>
       <div class="poll-trend-chart-wrap"><svg id="pollTrendSvg" viewBox="0 0 860 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Andamento storico della media dei sondaggi"></svg><div id="pollTrendEmpty" class="poll-trend-empty">Serie storica non disponibile.</div></div>
       <div id="pollTrendLegend" class="poll-trend-legend"></div>
       <div class="poll-trend-note">La linea non è un forecast: per ogni giorno ricalcola retrospettivamente la media nazionale usando half-life di 7 giorni e lookback di 100 giorni, come il topline live. I provider MRP non entrano in questa serie.</div>
@@ -131,6 +151,12 @@
   <section class="projection-layout">
     <article class="card parliament-card">
       <div class="projection-head"><div><h2 id="projectionTitle">In attesa dei dati territoriali</h2><p id="projectionSubtitle">La simulazione parte quando sono disponibili i risultati dei collegi.</p></div><span id="mcBadge" class="proj-badge">50.000 simulazioni</span></div>
+      <div class="graphic-export-inline" data-graphic-panel="projection">
+        <span class="graphic-export-label">Proiezione seggi</span>
+        <select data-export-ratio aria-label="Formato immagine proiezione seggi"><option value="16:9">16:9</option><option value="5:2">5:2</option></select>
+        <button type="button" data-export-graphic="projection">PNG</button>
+        <button type="button" data-share-graphic="projection">Condividi</button>
+      </div>
       <div class="hemicycle-wrap"><svg id="hemicycle" viewBox="0 0 620 330" role="img" aria-label="Proiezione della House of Commons"></svg><div class="majority-marker">326</div></div>
       <div id="seatStrip" class="seat-strip"></div>
       <div id="seatTable" class="seat-table"></div>
@@ -187,6 +213,12 @@
       <div class="map-head">
         <div><h3>Westminster constituencies</h3><p id="mapMeta">Caricamento geometrie ONS…</p></div>
         <div class="controls map-mode" id="mapModeControls"><button id="mapCentralBtn" class="active">Proiezione</button><button id="mapMarginBtn">Margine</button><button id="mapProbBtn" disabled aria-disabled="true" title="Disponibile al termine delle 50.000 simulazioni">Probabilità</button><button id="mapUserBtn" disabled aria-disabled="true" title="Crea prima uno scenario nazionale">Scenario utente</button></div>
+      </div>
+      <div class="graphic-export-inline" data-graphic-panel="map">
+        <span class="graphic-export-label">Mappa collegi</span>
+        <select data-export-ratio aria-label="Formato immagine mappa collegi"><option value="16:9">16:9</option><option value="5:2">5:2</option></select>
+        <button type="button" data-export-graphic="map">PNG</button>
+        <button type="button" data-share-graphic="map">Condividi</button>
       </div>
       <div id="mapSummary" class="map-summary"><span class="map-summary-chip"><strong>Caricamento della base territoriale…</strong></span></div>
       <div id="mapWrap" class="map-wrap">
@@ -277,7 +309,7 @@
   <section class="card poll-table-card"><div class="table-scroll"><table><thead><tr><th>Data</th><th>Istituto</th><th>Area</th><th>n</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>Green</th><th>SNP</th><th>PC</th><th>RB</th></tr></thead><tbody id="pollTableBody"></tbody></table></div></section>
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La UI cambia; il motore statistico di produzione resta congelato sulla v0.9.29.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.37 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.38 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
     <article class="card"><div class="cardhead"><div><h3>Pipeline di produzione</h3><p>Il live viene promosso solo dopo l’audit.</p></div></div><div class="pipeline"><span>Sondaggi</span><b>→</b><span>target nazionale</span><b>→</b><span>MRP geography stack</span><b>→</b><span>632 GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>La GitHub Action ricostruisce il candidato statistico congelato, verifica backtest, copertura provider, assenza dei topline esterni e stabilità fra scenari. Il watcher MRP segnala eventuali nuove pubblicazioni ma non le adotta automaticamente.</p></div></article>
   </section>
   <div class="section-title ai-section-break"><div><div class="section-kicker">Lettura assistita</div><h2>Verifica e interpreta le stime con un’IA</h2><p>Genera un prompt dai valori già visibili nella dashboard e chiedi una lettura indipendente del nowcast.</p></div><span class="ai-lab-badge">VERIFICA STIME</span></div>
@@ -304,8 +336,8 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.37"></script>
-<script src="scripts/map-performance.js?v=0.9.37"></script>
-<script src="scripts/interpretation.js?v=0.9.37"></script>
+<script src="scripts/app.js?v=0.9.38"></script>
+<script src="scripts/map-performance.js?v=0.9.38"></script>
+<script src="scripts/interpretation.js?v=0.9.38"></script>
 </body>
 </html>

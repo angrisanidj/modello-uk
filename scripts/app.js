@@ -978,6 +978,7 @@ function renderCentral(){
   renderMapSummary();
   renderMinimalCoalitions();
   renderUncertaintyDashboard();
+  updateMobileNowcastSticky();
 }
 function renderMc(){
   const m=state.mc;if(!m)return;
@@ -1000,6 +1001,7 @@ function renderMc(){
   updateCoalition();
   renderMinimalCoalitions();
   renderUncertaintyDashboard();
+  updateMobileNowcastSticky();
 }
 function renderSeats(totals,intervals){
   const sum=SEAT_ORDER.reduce((s,p)=>s+(totals[p]||0),0)||650; $('#seatStrip').innerHTML=SEAT_ORDER.filter(p=>(totals[p]||0)>0).map(p=>`<span style="width:${(totals[p]/sum)*100}%;background:${PARTY[p].color}" title="${PARTY[p].name}: ${fmt0(totals[p])}"></span>`).join('');
@@ -1521,8 +1523,121 @@ function seatShareText(id=state.selectedSeat){const d=seatExportData(id);if(!d)r
 async function downloadSeatCard(){if(!state.selectedSeat)return;const c=await buildSeatCardCanvas(),b=await canvasBlob(c);downloadBlob(b,`uk_collegio_${state.selectedSeat}_${exportDateStamp()}.png`);}
 async function shareSeatCard(btn=null){if(!state.selectedSeat)return;const c=await buildSeatCardCanvas(),b=await canvasBlob(c),file=new File([b],`uk_collegio_${state.selectedSeat}_${exportDateStamp()}.png`,{type:'image/png'}),text=seatShareText(),url=selectedSeatUrl();if(navigator.share&&navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:`${state.byId.get(state.selectedSeat)?.name||'Collegio'} — Nowcast UK`,text:`${text}\n\n${url}`});return;}downloadBlob(b,file.name);const copy=`${text}\n\n${url}`;if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(copy).catch(()=>fallbackCopy(copy));else fallbackCopy(copy);flashButton(btn,'PNG + testo copiato');}
 
+
+// v0.9.38 — Germany-parity editorial utilities. Frontend only: no statistical inputs or simulations change.
+function updateMobileNowcastSticky(){
+  const root=$('#mobileNowcastSticky');if(!root)return;
+  const totals=state.mc?.medians||state.central?.totals||{};
+  const leaders=Object.entries(totals).filter(([p,n])=>PARTY[p]&&p!=='other'&&p!=='ni_other'&&Number(n)>0).sort((a,b)=>Number(b[1])-Number(a[1])).slice(0,2);
+  [[1,leaders[0]],[2,leaders[1]]].forEach(([slot,row])=>{
+    const p=row?.[0],n=row?.[1],dot=$(`#mobileParty${slot}Dot`),name=$(`#mobileParty${slot}Name`),seats=$(`#mobileParty${slot}Seats`);
+    if(dot)dot.style.background=p&&PARTY[p]?PARTY[p].color:'#657286';
+    if(name)name.textContent=p&&PARTY[p]?PARTY[p].short:'—';
+    if(seats)seats.textContent=Number.isFinite(Number(n))?fmt0(Number(n)):'—';
+  });
+  const hung=$('#mobileHungProb');if(hung)hung.textContent=state.mc?pctFmt((state.mc.hung||0)*100):'…';
+  syncMobileNowcastVisibility();
+}
+function syncMobileNowcastVisibility(){
+  const root=$('#mobileNowcastSticky'),hero=document.querySelector('.hero');if(!root||!hero)return;
+  const mobile=window.matchMedia('(max-width: 820px)').matches;
+  const threshold=hero.offsetTop+Math.max(90,hero.offsetHeight*.72);
+  root.classList.toggle('is-visible',mobile&&window.scrollY>threshold);
+}
+function graphicDimensions(ratio){return ratio==='5:2'?{w:1500,h:600}:{w:1600,h:900};}
+function graphicFilename(kind,ratio='16:9'){const names={projection:'proiezione_seggi',map:'mappa_collegi',trend:'andamento_sondaggi'};return `uk_${names[kind]||kind}_${ratio.replace(':','x')}_${exportDateStamp()}.png`;}
+function inlineSvgClone(svg){
+  const clone=svg.cloneNode(true);clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  const src=[svg,...svg.querySelectorAll('*')],dst=[clone,...clone.querySelectorAll('*')];
+  const props=['fill','stroke','stroke-width','stroke-linecap','stroke-linejoin','opacity','font-size','font-family','font-weight','text-anchor','dominant-baseline','display','visibility'];
+  src.forEach((node,i)=>{const copy=dst[i];if(!copy)return;let cs;try{cs=getComputedStyle(node);}catch(_){cs=null;}if(!cs)return;for(const p of props){const v=cs.getPropertyValue(p);if(v)copy.style.setProperty(p,v);}});
+  return clone;
+}
+function svgImageForExport(svg){
+  if(!svg)throw new Error('Grafica non disponibile');
+  const clone=inlineSvgClone(svg),xml=new XMLSerializer().serializeToString(clone),blob=new Blob([xml],{type:'image/svg+xml;charset=utf-8'}),url=URL.createObjectURL(blob);
+  return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{URL.revokeObjectURL(url);resolve(img)};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Impossibile preparare la grafica SVG'))};img.src=url;});
+}
+function drawContainedImage(ctx,img,x,y,w,h){
+  const iw=img.naturalWidth||img.width||1,ih=img.naturalHeight||img.height||1,s=Math.min(w/iw,h/ih),dw=iw*s,dh=ih*s;
+  ctx.drawImage(img,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
+}
+function moduleGraphicSubtitle(kind){
+  if(kind==='projection')return state.mc?'Mediane e intervallo centrale 80% · 50.000 simulazioni':'Scenario centrale · Monte Carlo in preparazione';
+  if(kind==='map'){const lab={central:'Proiezione centrale',representative:'Scenario rappresentativo',margin:'Margine centrale',prob:'Probabilità di vittoria',custom:'Scenario utente'};return `${lab[state.mapMode]||'Mappa dei collegi'} · 650 constituencies`;}
+  if(kind==='trend'){const r=state.pollTrendRange==='all'?'tutto l’archivio':`${state.pollTrendRange||180} giorni`;return `Media storica del modello · ${r} · half-life 7 giorni`;}
+  return 'Nowcast UK';
+}
+async function buildModuleGraphicCanvas(kind,ratio='16:9'){
+  const {w:W,h:H}=graphicDimensions(ratio),c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d');
+  ctx.fillStyle='#080d14';ctx.fillRect(0,0,W,H);const grad=ctx.createLinearGradient(0,0,W,H);grad.addColorStop(0,'rgba(25,58,96,.72)');grad.addColorStop(1,'rgba(98,22,47,.24)');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+  const pad=ratio==='5:2'?34:44;roundRect(ctx,pad,pad,W-pad*2,H-pad*2,26,'rgba(16,23,34,.97)','#354357',1.4);drawUkFlagMark(ctx,pad+28,pad+24,48,31);
+  const title={projection:'Proiezione della House of Commons',map:'Mappa dei 650 collegi',trend:'Andamento dei sondaggi'}[kind]||'Nowcast UK';
+  cardText(ctx,'FOCUS AMERICA · ELECTION MODEL',pad+94,pad+48,'800 16px system-ui','#8fa2b9');
+  cardText(ctx,title,pad+28,pad+104,ratio==='5:2'?'900 31px system-ui':'900 38px system-ui','#f5f8fc');
+  cardText(ctx,moduleGraphicSubtitle(kind),pad+28,pad+134,'600 15px system-ui','#93a3b7');
+  const contentY=pad+158,contentH=H-contentY-pad-48,contentX=pad+28,contentW=W-pad*2-56;
+  roundRect(ctx,contentX,contentY,contentW,contentH,20,'#0d151f','#2e3d50',1);
+  if(kind==='projection'){
+    const totals=projectedTotalsForCard();if(!totals)throw new Error('Proiezione non ancora disponibile');
+    const rows=cardPartyRows().slice(0,6),sideW=Math.min(430,contentW*.32),hemiW=contentW-sideW-28;
+    drawCardHemicycle(ctx,totals,{x:contentX+25,y:contentY+25,w:hemiW-50,h:contentH-50});
+    const rx=contentX+hemiW+12,rowH=Math.max(48,(contentH-38)/Math.max(1,rows.length));
+    rows.forEach((r,i)=>{const y=contentY+20+i*rowH;ctx.fillStyle=PARTY[r.p].color;ctx.beginPath();ctx.arc(rx+13,y+18,8,0,Math.PI*2);ctx.fill();cardText(ctx,PARTY[r.p].short,rx+32,y+23,'800 15px system-ui',PARTY[r.p].color);cardText(ctx,fmt0(r.seats),contentX+contentW-24,y+25,'900 24px system-ui','#f5f8fc','right');if(state.mc?.intervals?.[r.p])cardText(ctx,`${fmt0(state.mc.intervals[r.p][0])}–${fmt0(state.mc.intervals[r.p][1])}`,contentX+contentW-24,y+43,'650 11px system-ui','#8191a6','right');});
+  }else{
+    const svg=kind==='map'?$('#ukMap'):$('#pollTrendSvg');if(!svg||!svg.childNodes.length)throw new Error('Grafica non ancora disponibile');
+    const img=await svgImageForExport(svg);drawContainedImage(ctx,img,contentX+24,contentY+20,contentW-48,contentH-40);
+  }
+  cardText(ctx,`Aggiornato ${formatDate(state.polls?.[0]?.date||exportDateStamp())}`,pad+28,H-pad-16,'600 12px system-ui','#7e8da1');
+  cardText(ctx,'angrisanidj.github.io/modello-uk/',W-pad-28,H-pad-16,'600 12px system-ui','#7e8da1','right');
+  return c;
+}
+async function exportModuleGraphic(kind,ratio='16:9'){const c=await buildModuleGraphicCanvas(kind,ratio),b=await canvasBlob(c);downloadBlob(b,graphicFilename(kind,ratio));return b;}
+async function shareModuleGraphic(kind,ratio='16:9',btn=null){
+  const c=await buildModuleGraphicCanvas(kind,ratio),b=await canvasBlob(c),file=new File([b],graphicFilename(kind,ratio),{type:'image/png'}),url=currentSiteUrl(),text=`Nowcast UK · ${moduleGraphicSubtitle(kind)}.`;
+  if(navigator.share&&navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:'Elezioni nel Regno Unito — Nowcast',text:`${text}\n\n${url}`});return true;}
+  downloadBlob(b,file.name);try{await navigator.clipboard?.writeText(`${text}\n\n${url}`);}catch(_){}
+  if(btn)flashButton(btn,'PNG + link ✓');return false;
+}
+function graphicRatioForButton(btn){return btn.closest('[data-graphic-panel]')?.querySelector('[data-export-ratio]')?.value||'16:9';}
+function initModuleGraphicExports(){
+  $$('[data-export-graphic]').forEach(btn=>btn.addEventListener('click',async()=>{const old=btn.textContent,ratio=graphicRatioForButton(btn);btn.disabled=true;btn.textContent='Esporto…';try{await exportModuleGraphic(btn.dataset.exportGraphic,ratio)}catch(err){console.error(err);alert(err.message||'Esportazione non riuscita')}finally{btn.disabled=false;btn.textContent=old;}}));
+  $$('[data-share-graphic]').forEach(btn=>btn.addEventListener('click',async()=>{const old=btn.textContent,ratio=graphicRatioForButton(btn);btn.disabled=true;btn.textContent='Condivido…';try{await shareModuleGraphic(btn.dataset.shareGraphic,ratio,btn)}catch(err){if(err?.name!=='AbortError'){console.error(err);alert(err.message||'Condivisione non riuscita')}}finally{btn.disabled=false;btn.textContent=old;}}));
+}
+function buildCurrentSnapshot(){
+  const m=state.mc||{},totals=m.medians||state.central?.totals||{};
+  return {
+    schema:'modello-uk-snapshot-v1',
+    generated_at:new Date().toISOString(),
+    ui_version:'0.9.38',
+    statistical_engine:'v0.9.29',
+    latest_poll_date:state.polls?.[0]?.date||null,
+    poll_source:state.pollSource||null,
+    poll_average:Object.fromEntries(PARTY_ORDER.filter(p=>Number.isFinite(state.average?.values?.[p])).map(p=>[p,Number(state.average.values[p].toFixed(4))])),
+    projection:{
+      seats:Object.fromEntries(SEAT_ORDER.filter(p=>Number.isFinite(Number(totals[p]))).map(p=>[p,Number(totals[p])])),
+      interval_80:m.intervals||null,
+      largest_party_probability:m.largest||null,
+      majority_probability:{lab:m.labMaj??null,con:m.conMaj??null,ref:m.refMaj??null},
+      hung_parliament_probability:m.hung??null,
+      working_majority_threshold:m.workingThreshold||state.central?.ni?.workingThreshold||CONFIG.majority,
+      simulations:m.sims||0
+    },
+    representative_assignment:state.representative?.assignment||null,
+    model_label:productionModelLabel()
+  };
+}
+function downloadSnapshotJson(){
+  const blob=new Blob([JSON.stringify(buildCurrentSnapshot(),null,2)],{type:'application/json;charset=utf-8'});
+  downloadBlob(blob,`uk_snapshot_${exportDateStamp()}.json`);
+}
+
 function bindUi(){
   $('#refreshBtn').addEventListener('click',()=>init(true));
+  $('#downloadSnapshotJsonBtn')?.addEventListener('click',downloadSnapshotJson);
+  initModuleGraphicExports();
+  window.addEventListener('scroll',syncMobileNowcastVisibility,{passive:true});
+  window.addEventListener('resize',syncMobileNowcastVisibility);
   initMapNavigation();
   $('#detailZoomBtn')?.addEventListener('click',fitSelectedSeat);
   $('#detailCopyBtn')?.addEventListener('click',copySeatDeepLink);
@@ -1566,6 +1681,7 @@ async function init(force=false){
   state.mapMode='central';
   updateMapModeButtons();
   setMonteCarloPending(true);
+  updateMobileNowcastSticky();
   setStatus('Caricamento dati…','loading');
   $('#refreshBtn').disabled=true;
   try{

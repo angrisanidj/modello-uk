@@ -53,7 +53,7 @@
 Sto consultando un nowcast sulle elezioni generali britanniche. Voglio una lettura pensata per un normale lettore interessato alle elezioni, non un audit del codice o dello sviluppo del modello.
 
 Dashboard: ${dashboardUrl()}
-Versione interfaccia: 0.9.36. Motore statistico di produzione: v0.9.29 congelato.
+Versione interfaccia: 0.9.38. Motore statistico di produzione: v0.9.29 congelato.
 
 INDICATORI PRINCIPALI
 ${kpis.map((row) => `- ${row}`).join("\n")}
