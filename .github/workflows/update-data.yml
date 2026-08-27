@@ -43,8 +43,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/democracy-club
-          key: dc-v0927-${{ runner.os }}-${{ hashFiles('tools/build_mrp_lite.py') }}
+          key: dc-v0928-${{ runner.os }}-${{ hashFiles('tools/build_mrp_lite.py') }}
           restore-keys: |
+            dc-v0928-${{ runner.os }}-
             dc-v0927-${{ runner.os }}-
             dc-v0926-${{ runner.os }}-
             dc-v0925-${{ runner.os }}-
@@ -56,8 +57,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/mrp-bridge
-          key: mrp-bridge-v0927-${{ runner.os }}-${{ hashFiles('tools/build_mrp_geography_bridge.py') }}
+          key: mrp-bridge-v0928-${{ runner.os }}-${{ hashFiles('tools/build_mrp_geography_bridge.py') }}
           restore-keys: |
+            mrp-bridge-v0928-${{ runner.os }}-
             mrp-bridge-v0927-${{ runner.os }}-
             mrp-bridge-v0926-${{ runner.os }}-
             mrp-bridge-v0925-${{ runner.os }}-
@@ -86,7 +88,7 @@ jobs:
       - name: Calibrate legacy partial-raking benchmark
         run: python tools/build_backtest.py
 
-      - name: Verify v0.9.27 source bundle
+      - name: Verify v0.9.28 source bundle
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -103,28 +105,24 @@ jobs:
               'V0922_HOTFIX_DC_IO="retry-memory-disk-cache"',
           ]
           required_bridge=[
-              'V0927_BRIDGE="logspace-internal-to-external-geography-replacement"',
-              'V0927_SELECTION="yougov-2019-only-blend-selection"',
-              'V0927_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-shrunk-relative-shift"',
-              'V0927_TEMPORAL_TRANSFER="lambda-selected-on-2024-mrp-wave-movement-not-election-result"',
-              'V0927_TEMPORAL_VALIDATION="train-2024-06-03-to-06-19-validate-06-19-to-07-03"',
-              'V0927_PARSER_HOTFIX="mic26-leading-article-aliases-complete-header-selection"',
-              'YOUGOV_2024_EARLY_URL=',
-              'YOUGOV_2024_MID_URL=',
-              'MIC_2024_EARLY_URL=',
-              'MIC_2024_MID_URL=',
+              'V0928_BRIDGE="logspace-internal-to-external-geography-replacement"',
+              'V0928_SELECTION="yougov-2019-only-blend-selection"',
+              'V0928_PROVIDER_STACK="party-precision-weighted-yougov24-plus-direct-mic26"',
+              'V0928_STACK_SKILL="2024-relative-geography-error-variance-with-leave-region-out-validation"',
+              'V0928_FRESHNESS="2019-to-2024-observed-geographic-drift-age-inflation"',
+              'V0928_PARSER_HOTFIX="mic26-leading-article-aliases-complete-header-selection"',
+              'def precision_stack_factors(',
+              'def leave_region_out_stack(',
               'MIC_2026_URL=',
-              'TEMPORAL_LAMBDA_GRID=',
-              'uses_2024_for_parameter_selection":False',
+              'uses_2024_for_live_provider_reliability":True',
           ]
           for needle in required_core:
               if needle not in core:
-                  raise SystemExit(f"ERROR: v0.9.27 requires HOTFIX3 core; missing {needle!r}")
+                  raise SystemExit(f"ERROR: v0.9.28 requires HOTFIX3 core; missing {needle!r}")
           for needle in required_bridge:
               if needle not in bridge:
-                  raise SystemExit(f"ERROR: mixed/incomplete v0.9.27 bridge; missing {needle!r}")
+                  raise SystemExit(f"ERROR: mixed/incomplete v0.9.28 bridge; missing {needle!r}")
 
-          # The watcher itself is unchanged from the v0.9.26 shadow feature.
           required_watcher=[
               'V0926_MRP_WATCHER = "shadow-official-provider-discovery-one-shot-email"',
               'V0926_MRP_WATCHER_PROVIDERS = "more-in-common-yougov-focaldata"',
@@ -140,21 +138,21 @@ jobs:
               '"baseline_date": "2025-02-03"',
           ):
               if needle not in watch_state:
-                  raise SystemExit(f"ERROR: MRP watcher state is missing baseline marker {needle!r}")
-          if "Build v0.9.27 calibrated temporal MRP geography" not in workflow:
-              raise SystemExit("ERROR: workflow is not the v0.9.27 temporal-calibration workflow")
+                  raise SystemExit(f"ERROR: MRP watcher state missing baseline marker {needle!r}")
+          if "Build v0.9.28 precision-weighted contemporary MRP stack" not in workflow:
+              raise SystemExit("ERROR: workflow is not v0.9.28")
           if "Shadow-check for newer Westminster MRP" not in workflow:
-              raise SystemExit("ERROR: shadow MRP watcher step missing from workflow")
-          print("v0.9.27 source bundle + temporal calibration + shadow MRP watcher preflight: PASSED")
+              raise SystemExit("ERROR: shadow MRP watcher step missing")
+          print("v0.9.28 source bundle + precision stack + shadow MRP watcher preflight: PASSED")
           PY
 
-      - name: Self-test v0.9.27 calibrated temporal geography
+      - name: Self-test v0.9.28 precision stack
         run: python tools/build_mrp_geography_bridge.py --self-test
 
-      - name: Build v0.9.27 calibrated temporal MRP geography
+      - name: Build v0.9.28 precision-weighted contemporary MRP stack
         run: python tools/build_mrp_geography_bridge.py
 
-      - name: Validate v0.9.27 backtest and temporal-live safeguards
+      - name: Validate v0.9.28 historical model and live-stack safeguards
         run: |
           python - <<'PY'
           import json
@@ -163,36 +161,34 @@ jobs:
           def load(path):
               return json.loads(Path(path).read_text(encoding="utf-8"))
 
-          backtest=load("data/backtest-v0927-geography-bridge.json")
-          diagnostic=load("data/mrp-geography-bridge-v0927.json")
-          live=load("data/mrp-lite-live-v0927-candidate.json")
-          integrity=load("data/bes-integrity-v0927.json")
+          backtest=load("data/backtest-v0928-geography-stack.json")
+          diagnostic=load("data/mrp-geography-stack-v0928.json")
+          live=load("data/mrp-lite-live-v0928-candidate.json")
+          integrity=load("data/bes-integrity-v0928.json")
 
-          if backtest.get("version")!="uk-v0927-mrp-geography-bridge" or backtest.get("status")!="ok":
-              raise SystemExit(f"ERROR: invalid v0.9.27 backtest {backtest.get('version')} {backtest.get('error')}")
-          if diagnostic.get("version")!="uk-v0927-mrp-geography-bridge" or diagnostic.get("status")!="ok":
-              raise SystemExit(f"ERROR: invalid v0.9.27 diagnostic {diagnostic.get('version')} {diagnostic.get('error')}")
-          if live.get("version")!="uk-v0927-mrp-geography-bridge-live-candidate" or live.get("status")!="ok":
-              raise SystemExit(f"ERROR: invalid v0.9.27 live candidate {live.get('version')} {live.get('error')}")
-          if integrity.get("version")!="uk-v0927-bes-integrity-wrapper" or integrity.get("status")!="passed":
-              raise SystemExit(f"ERROR: BES integrity failed: {integrity.get('errors')}")
+          if backtest.get("version")!="uk-v0928-mrp-geography-stack" or backtest.get("status")!="ok":
+              raise SystemExit(f"ERROR: invalid v0.9.28 backtest {backtest.get('version')} {backtest.get('error')}")
+          if diagnostic.get("version")!="uk-v0928-mrp-geography-stack" or diagnostic.get("status")!="ok":
+              raise SystemExit(f"ERROR: invalid v0.9.28 diagnostic {diagnostic.get('version')} {diagnostic.get('error')}")
+          if live.get("version")!="uk-v0928-mrp-geography-stack-live-candidate" or live.get("status")!="ok":
+              raise SystemExit(f"ERROR: invalid v0.9.28 live candidate {live.get('version')} {live.get('error')}")
+          if integrity.get("version")!="uk-v0928-bes-integrity-wrapper" or integrity.get("status")!="passed":
+              raise SystemExit(f"ERROR: BES integrity failed {integrity.get('errors')}")
 
           for check in integrity.get("checks",[]):
               if check.get("gb_rows")!=632:
                   raise SystemExit(f"ERROR: {check.get('label')} has {check.get('gb_rows')} GB rows")
               if check.get("ni_filtered_before_party_parsing") is not True:
-                  raise SystemExit(f"ERROR: {check.get('label')} parsed party columns before NI filtering")
+                  raise SystemExit(f"ERROR: {check.get('label')} parsed parties before NI filtering")
 
-          # Frozen MRP-geography backtest must not regress while changing only
-          # the live temporal updater.
+          # Never allow the breakthrough historical model to regress while
+          # experimenting with the separate 2026 provider stack.
           ref=backtest.get("reference_v0915",{})
           if ref.get("validation_2019",{}).get("correct_winners")!=585 or ref.get("validation_2019",{}).get("seat_abs_error_sum")!=42:
               raise SystemExit(f"ERROR: frozen v0.9.15 2019 reference changed {ref.get('validation_2019')}")
           if ref.get("benchmark_2024",{}).get("correct_winners")!=501 or ref.get("benchmark_2024",{}).get("seat_abs_error_sum")!=166:
               raise SystemExit(f"ERROR: frozen v0.9.15 2024 reference changed {ref.get('benchmark_2024')}")
-
-          selection=backtest.get("strength_selection_2019",{})
-          val=selection.get("selected",{})
+          val=backtest.get("strength_selection_2019",{}).get("selected",{})
           primary=backtest.get("benchmark_2024",{}).get("primary_yougov_anchor",{})
           if val.get("correct_winners")!=609 or val.get("seat_abs_error_sum")!=14:
               raise SystemExit(f"ERROR: validated 2019 Geography Blend regressed {val}")
@@ -202,42 +198,34 @@ jobs:
               raise SystemExit(f"ERROR: historical geography strength changed {backtest.get('selected_strength')}")
 
           for payload in (backtest,diagnostic,live):
-              if payload.get("uses_2024_for_parameter_selection") is not False:
-                  raise SystemExit("ERROR: 2024 election result leaked into geography-strength selection")
+              if payload.get("uses_2024_for_geography_strength_selection") is not False:
+                  raise SystemExit("ERROR: 2024 leaked into historical geography-strength selection")
+              if payload.get("uses_2024_for_live_provider_reliability") is not True:
+                  raise SystemExit("ERROR: v0.9.28 must disclose 2024 historical training of live provider reliability")
               if payload.get("parameter_selection_election")!="2019":
-                  raise SystemExit("ERROR: geography strength was not selected on 2019")
+                  raise SystemExit("ERROR: historical geography strength not selected on 2019")
               if payload.get("provider_topline_used") is not False:
-                  raise SystemExit("ERROR: external provider topline entered the model")
+                  raise SystemExit("ERROR: external provider topline entered model")
               if payload.get("approved_for_live") is not False or payload.get("publication_ready") is not False:
-                  raise SystemExit("ERROR: v0.9.27 must remain unapproved pending temporal audit")
-              if payload.get("temporal_lambda_selection_uses_election_result") is not False:
-                  raise SystemExit("ERROR: realised election result entered temporal-lambda selection")
+                  raise SystemExit("ERROR: v0.9.28 must remain unapproved")
 
-          temporal=backtest.get("temporal_transfer_calibration",{})
-          if temporal.get("training_interval")!="2024-06-03/2024-06-19":
-              raise SystemExit(f"ERROR: unexpected temporal training interval {temporal.get('training_interval')}")
-          if temporal.get("validation_interval")!="2024-06-19/2024-07-03":
-              raise SystemExit(f"ERROR: unexpected temporal validation interval {temporal.get('validation_interval')}")
-          if temporal.get("uses_realised_2024_result_for_selection") is not False:
-              raise SystemExit("ERROR: election outcome leaked into temporal transfer selection")
-          candidates=temporal.get("training_candidates",[])
-          expected=[0.0,0.125,0.25,0.375,0.5,0.625,0.75,0.875,1.0]
-          got=sorted(round(float(x.get("lambda")) ,3) for x in candidates)
-          if got!=expected:
-              raise SystemExit(f"ERROR: temporal lambda grid changed {got}")
-          temporal_lambda=round(float(temporal.get("selected_lambda",-1)),3)
-          if temporal_lambda not in expected:
-              raise SystemExit(f"ERROR: selected temporal lambda outside grid {temporal_lambda}")
-          for key in ("validation_selected","validation_static_lambda_0","validation_raw_lambda_1"):
-              m=temporal.get(key,{})
-              if int(m.get("pairs",0))<1000 or not isinstance(m.get("mean_abs_log_error"),float):
-                  raise SystemExit(f"ERROR: incomplete temporal movement validation {key}: {m}")
-          replay=temporal.get("election_replay_2024",{})
-          if replay.get("selection_role")!="validation_only_lambda_already_frozen" or replay.get("uses_result_for_lambda_selection") is not False:
-              raise SystemExit(f"ERROR: invalid temporal election replay safeguards {replay}")
-          for key in ("static_yougov_0619","calibrated_transfer","raw_full_transfer_lambda_1","final_yougov_0703","final_mic_0703"):
-              if replay.get(key,{}).get("gb_seats")!=632:
-                  raise SystemExit(f"ERROR: incomplete replay scenario {key}: {replay.get(key)}")
+          stack=backtest.get("live_provider_stack_training_2024",{})
+          cv=stack.get("leave_one_region_out",{})
+          cvm=cv.get("metrics",{})
+          if cvm.get("gb_seats")!=632:
+              raise SystemExit(f"ERROR: incomplete leave-region-out stack metrics {cvm}")
+          if cv.get("uses_held_out_region_outcome_for_its_weights") is not False:
+              raise SystemExit("ERROR: held-out region outcome leaked into its own provider weights")
+          folds=cv.get("folds",[])
+          if len(folds)<10 or sum(int(x.get("test_seats",0)) for x in folds)!=632:
+              raise SystemExit(f"ERROR: invalid regional cross-validation folds {folds}")
+          for provider_key in ("yougov2024","more_in_common2024"):
+              err=stack.get("global_provider_measurement_error",{}).get(provider_key,{})
+              if int(err.get("pairs",0))<1000 or set(err.get("variance",{}))!={"lab","con","ref","ld","green","snp","pc","other"}:
+                  raise SystemExit(f"ERROR: incomplete provider error model {provider_key}: {err}")
+          drift=stack.get("observed_geographic_drift_2019_to_2024",{})
+          if int(drift.get("pairs",0))<1000 or set(drift.get("annual_variance",{}))!={"lab","con","ref","ld","green","snp","pc","other"}:
+              raise SystemExit(f"ERROR: incomplete geographic drift model {drift}")
 
           coverage=backtest.get("coverage",{})
           for key,minimum in (
@@ -246,55 +234,45 @@ jobs:
           ):
               if int(coverage.get(key,{}).get("matched_seats",0))<minimum:
                   raise SystemExit(f"ERROR: {key} coverage too low {coverage.get(key)}")
-
-          source_meta=backtest.get("external_source_meta",{}).get("mic2026",{})
-          mapped=source_meta.get("mapped_columns",{})
+          micmeta=backtest.get("external_source_meta",{}).get("mic2026",{})
           required={"con","lab","ld","ref","green","snp","pc","other"}
-          if set(mapped)!=required or float(source_meta.get("relative_national_share",{}).get("green",0))<=0.1:
-              raise SystemExit(f"ERROR: MiC 2026 party geography incomplete {mapped}")
+          if set(micmeta.get("mapped_columns",{}))!=required or float(micmeta.get("relative_national_share",{}).get("green",0))<=0.1:
+              raise SystemExit(f"ERROR: MiC 2026 party geography incomplete {micmeta.get('mapped_columns')}")
 
           live_geo=live.get("live_geography",{})
-          if live_geo.get("status")!="yougov24_plus_calibrated_mic26_evolution":
-              raise SystemExit(f"ERROR: calibrated 2026 geography not applied {live_geo}")
-          if round(float(live_geo.get("temporal_lambda",-1)),3)!=temporal_lambda:
-              raise SystemExit(f"ERROR: live temporal lambda differs from frozen calibration {live_geo}")
+          if live_geo.get("status")!="precision_weighted_yougov24_plus_direct_mic26":
+              raise SystemExit(f"ERROR: precision live geography not applied {live_geo}")
+          weights=live_geo.get("current_provider_weights_by_party",{})
+          if set(weights)!=required or any(not (0.0<=float(v)<=1.0) for v in weights.values()):
+              raise SystemExit(f"ERROR: invalid live MiC precision weights {weights}")
+          if live_geo.get("provider_toplines_used") is not False:
+              raise SystemExit("ERROR: provider topline entered precision stack")
           if live.get("applied_to_production") is not False or live.get("approved_for_live") is not False:
-              raise SystemExit("ERROR: v0.9.27 live candidate was promoted automatically")
+              raise SystemExit("ERROR: v0.9.28 live candidate auto-promoted")
           if len(live.get("seats",[]))!=632:
               raise SystemExit(f"ERROR: live candidate has {len(live.get('seats',[]))} seats")
 
           sensitivity=live.get("live_2026_sensitivity",{})
-          if sensitivity.get("selection_role")!="diagnostic_only_no_2026_ground_truth":
-              raise SystemExit(f"ERROR: live sensitivity role invalid {sensitivity}")
-          for key in ("calibrated_primary_totals","full_evolution_lambda_1_totals","direct_mic26_totals","static_yougov24_totals"):
+          expected_totals=(
+              "precision_freshness_primary_totals","skill_only_stack_totals","equal_provider_stack_totals",
+              "direct_mic26_totals","static_yougov24_totals","legacy_full_temporal_transfer_totals",
+          )
+          for key in expected_totals:
               totals=sensitivity.get(key,{})
               if sum(int(v) for v in totals.values())!=632:
-                  raise SystemExit(f"ERROR: {key} does not sum to 632: {totals}")
+                  raise SystemExit(f"ERROR: {key} does not sum to 632 {totals}")
           stability=sensitivity.get("stability_audit",{})
-          if set(stability.get("scenario_names",[]))!={"calibrated_primary","full_evolution_lambda_1","direct_mic26","static_yougov24"}:
-              raise SystemExit(f"ERROR: stability scenarios incomplete {stability.get('scenario_names')}")
-          if int(stability.get("all_scenarios_agree",0))+int(stability.get("majority_consensus_available",0))<632:
-              # majority_consensus includes all-agree seats, so this is deliberately
-              # only a weak structural check; exact decomposition is printed below.
-              pass
+          if len(stability.get("scenario_names",[]))!=6:
+              raise SystemExit(f"ERROR: incomplete live sensitivity scenarios {stability.get('scenario_names')}")
 
-          print("v0.9.27 technical validation PASSED")
+          print("v0.9.28 technical validation PASSED")
           print("Historical Geography Blend: 2019",val.get("correct_winners"),"/632 seat error",val.get("seat_abs_error_sum"),
                 "| 2024",primary.get("correct_winners"),"/632 seat error",primary.get("seat_abs_error_sum"))
-          print("Temporal lambda selected from MRP waves:",temporal_lambda)
-          print("Temporal wave validation passed vs static:",temporal.get("validation_passed_vs_static"))
-          print("Temporal validation mean log errors -> selected/static/raw:",
-                temporal.get("validation_selected",{}).get("mean_abs_log_error"),
-                temporal.get("validation_static_lambda_0",{}).get("mean_abs_log_error"),
-                temporal.get("validation_raw_lambda_1",{}).get("mean_abs_log_error"))
-          print("2024 frozen-lambda election replay -> static/calibrated/raw correct winners:",
-                replay.get("static_yougov_0619",{}).get("correct_winners"),
-                replay.get("calibrated_transfer",{}).get("correct_winners"),
-                replay.get("raw_full_transfer_lambda_1",{}).get("correct_winners"),
-                "passed:",replay.get("passed_vs_static"))
-          print("2026 totals:",sensitivity.get("calibrated_primary_totals"))
-          print("2026 changed winners vs calibrated primary:",sensitivity.get("changed_winners_vs_primary"))
-          print("2026 pairwise stability:",stability.get("pairwise"))
+          print("2024 leave-region-out provider stack:",cvm.get("correct_winners"),"/632 seat error",cvm.get("seat_abs_error_sum"),
+                "passed no-regression gate:",cv.get("passes_no_regression_vs_yougov_anchor"))
+          print("2026 MiC precision weights by party:",weights)
+          print("2026 precision-stack totals:",sensitivity.get("precision_freshness_primary_totals"))
+          print("2026 changed winners vs primary:",sensitivity.get("changed_winners_vs_primary"))
           print("No live promotion performed.")
           PY
 
@@ -306,7 +284,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data and v0.9.27 calibrated temporal MRP geography"
+            git commit -m "chore: update UK data and v0.9.28 precision-weighted MRP stack"
             git push
           fi
 
