@@ -7,7 +7,6 @@
   if(!map||!wrap)return;
 
   let hoverPath=null,tooltip=null,lastTarget=null;
-
   function ensureUi(){
     if(!hoverPath){
       hoverPath=document.createElementNS(SVG_NS,'path');
@@ -16,7 +15,6 @@
       hoverPath.style.display='none';
     }
     if(hoverPath.parentNode!==map)map.appendChild(hoverPath);
-
     if(!tooltip){
       tooltip=document.createElement('div');
       tooltip.className='map-fast-tooltip';
@@ -32,7 +30,6 @@
     const y=event.clientY-rect.top+12;
     tooltip.style.transform=`translate3d(${Math.max(8,x)}px,${Math.max(8,y)}px,0)`;
   }
-
   function enter(target,event){
     if(!target||target===lastTarget)return;
     ensureUi();
@@ -43,22 +40,17 @@
     tooltip.hidden=!tooltip.textContent;
     if(!tooltip.hidden)positionTooltip(event);
   }
-
   function clear(){
     lastTarget=null;
     if(hoverPath){hoverPath.style.display='none';hoverPath.removeAttribute('d');}
     if(tooltip)tooltip.hidden=true;
   }
-
-  // pointerover fires only when the pointer enters another constituency;
-  // unlike pointermove, it does not execute on every mouse pixel.
   map.addEventListener('pointerover',event=>{
     const target=event.target instanceof Element?event.target.closest('path.constituency'):null;
     if(target&&map.contains(target))enter(target,event);
   },{passive:true});
 
   map.addEventListener('pointerleave',clear,{passive:true});
-
   map.addEventListener('maprendered',()=>{
     lastTarget=null;
     ensureUi();

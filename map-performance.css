@@ -19,6 +19,10 @@
   stroke:#fff!important;
   stroke-width:1.55!important;
 }
+#ukMap .constituency.filtered-out{
+  opacity:.075!important;
+  pointer-events:none!important;
+}
 #ukMap .map-hover-overlay{
   fill:none;
   stroke:#fff;

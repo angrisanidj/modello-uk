@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark" />
 <title>Elezioni nel Regno Unito — Sondaggi, seggi e probabilità</title>
 <meta name="description" content="Nowcast delle prossime elezioni britanniche: media dei sondaggi, proiezione probabilistica dei 650 seggi, Monte Carlo, collegi chiave e scenari di maggioranza." />
-<link rel="stylesheet" href="styles.css?v=0.9.30" />
+<link rel="stylesheet" href="styles.css?v=0.9.31" />
 <link rel="stylesheet" href="map-performance.css" />
 </head>
 <body>
@@ -28,7 +28,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Sondaggi: —</span>
-      <span class="badge badge-strong">UI 0.9.30 · motore statistico 0.9.29 congelato</span>
+      <span class="badge badge-strong">UI 0.9.31 · motore statistico 0.9.29 congelato</span>
     </div>
   </section>
 
@@ -109,7 +109,7 @@
     <article class="card map-card">
       <div class="map-head">
         <div><h3>Westminster constituencies</h3><p id="mapMeta">Caricamento geometrie ONS…</p></div>
-        <div class="controls map-mode" id="mapModeControls"><button id="mapCentralBtn" class="active">Proiezione</button><button id="mapMarginBtn">Margine</button><button id="mapProbBtn" disabled aria-disabled="true" title="Disponibile al termine delle 50.000 simulazioni">Probabilità</button></div>
+        <div class="controls map-mode" id="mapModeControls"><button id="mapCentralBtn" class="active">Proiezione</button><button id="mapMarginBtn">Margine</button><button id="mapProbBtn" disabled aria-disabled="true" title="Disponibile al termine delle 50.000 simulazioni">Probabilità</button><button id="mapUserBtn" disabled aria-disabled="true" title="Crea prima uno scenario nazionale">Scenario utente</button></div>
       </div>
       <div id="mapSummary" class="map-summary"><span class="map-summary-chip"><strong>Caricamento della base territoriale…</strong></span></div>
       <div id="mapWrap" class="map-wrap"><svg id="ukMap" viewBox="0 0 640 760" role="img" aria-label="Mappa dei collegi parlamentari britannici"></svg><div id="mapEmpty" class="empty-state">Le geometrie saranno caricate dalla build automatica.</div></div>
@@ -128,10 +128,41 @@
     </aside>
   </section>
 
-  <div class="section-title"><div><div class="section-kicker">Battlegrounds</div><h2>Collegi chiave</h2><p id="marginalMeta">I collegi più competitivi verranno ordinati automaticamente.</p></div></div>
-  <section class="card marginal-card">
-    <div class="table-scroll"><table class="marginal-table"><thead><tr><th>Collegio</th><th>2024</th><th>Scenario</th><th>Margine centrale</th><th>P vittoria</th></tr></thead><tbody id="marginalTableBody"></tbody></table></div>
-    <div class="table-note">La probabilità è quella del favorito nello scenario Monte Carlo. Prima del completamento viene mostrato soltanto il margine centrale.</div>
+  <div class="section-title" id="collegi"><div><div class="section-kicker">Constituency explorer</div><h2>Esplora tutti i 650 collegi</h2><p id="marginalMeta">Cerca, filtra e ordina ogni collegio. I filtri possono essere applicati anche alla mappa.</p></div></div>
+  <section class="card marginal-card explorer-card">
+    <div class="explorer-toolbar">
+      <label class="filter-field search-field"><span>Cerca collegio</span><input id="seatSearch" type="search" placeholder="Es. Birmingham, Glasgow, Ynys Môn…" autocomplete="off"></label>
+      <label class="filter-field"><span>Paese</span><select id="seatCountry"><option value="">Tutti</option></select></label>
+      <label class="filter-field"><span>Regione</span><select id="seatRegion"><option value="">Tutte</option></select></label>
+      <label class="filter-field"><span>Vincitore scenario</span><select id="seatWinner"><option value="">Tutti</option></select></label>
+      <label class="filter-field"><span>Vincitore 2024</span><select id="seatWinner2024"><option value="">Tutti</option></select></label>
+      <label class="filter-field"><span>Tipo di collegio</span><select id="seatStatus"><option value="">Tutti</option><option value="changed">Cambio rispetto al 2024</option><option value="held">Confermato</option><option value="margin25">Margine &lt; 2,5 p.p.</option><option value="margin5">Margine &lt; 5 p.p.</option><option value="tossup55">P favorito live &lt; 55%</option><option value="uncertain65">P favorito live &lt; 65%</option><option value="safe80">P favorito live ≥ 80%</option></select></label>
+      <label class="filter-field"><span>Ordina per</span><select id="seatSort"><option value="uncertainty">Più incerti</option><option value="margin">Margine più stretto</option><option value="change">Cambi di partito</option><option value="name">Nome A–Z</option><option value="winner">Partito previsto</option></select></label>
+      <label class="filter-field"><span>Scenario tabella</span><select id="seatSource"><option value="live">Nowcast live</option><option value="custom" disabled>Scenario utente</option></select></label>
+      <div class="explorer-actions"><label class="filter-toggle"><input id="seatFilterMap" type="checkbox" checked><span>Evidenzia filtrati sulla mappa</span></label><button id="seatResetFilters" class="small-action">Azzera filtri</button></div>
+    </div>
+    <div class="explorer-presets"><button data-seat-preset="uncertain">Più incerti</button><button data-seat-preset="changed">Cambi di partito</button><button data-seat-preset="marginal">Marginali &lt;5 p.p.</button><button data-seat-preset="all">Tutti i collegi</button></div>
+    <div class="explorer-meta"><strong id="seatExplorerCount">—</strong><span id="seatExplorerNote">La graduatoria usa l'incertezza Monte Carlo quando disponibile.</span></div>
+    <div class="table-scroll"><table class="marginal-table explorer-table"><thead><tr><th>Collegio</th><th>Area</th><th>2024</th><th>Scenario</th><th>Margine</th><th>P favorito live</th></tr></thead><tbody id="marginalTableBody"></tbody></table></div>
+    <div class="explorer-footer"><span class="table-note" id="seatExplorerFooter">Clicca una riga per aprire il dettaglio sulla mappa.</span><button id="seatShowMore" class="small-action" hidden>Mostra altri 50</button></div>
+  </section>
+
+  <div class="section-title"><div><div class="section-kicker">What-if</div><h2>Costruisci il tuo scenario nazionale</h2><p>Modifica il voto GB e osserva come cambiano i vincitori mantenendo congelata la geografia relativa del modello live.</p></div></div>
+  <section class="card scenario-builder-card">
+    <div class="scenario-builder-grid">
+      <div>
+        <div class="scenario-intro"><strong>Scenario deterministico, separato dal nowcast</strong><p>Non modifica il modello di produzione e non ricalcola le probabilità Monte Carlo. Le quote locali relative della v0.9.29 restano congelate; cambia soltanto il target nazionale inserito qui sotto.</p></div>
+        <div id="scenarioInputs" class="scenario-inputs"></div>
+        <div class="scenario-total"><span>Totale</span><strong id="scenarioTotal">100,0%</strong><button id="scenarioNormalizeBtn" class="small-action">Normalizza a 100</button></div>
+        <div class="scenario-actions"><button id="scenarioRunBtn" class="primary">Calcola scenario</button><button id="scenarioResetBtn" class="small-action">Ripristina nowcast</button><button id="scenarioMapBtn" class="small-action" disabled>Mostra sulla mappa</button></div>
+        <div id="scenarioMessage" class="small-note">Restore Britain non entra nella conversione per collegio finché non esiste una baseline geografica difendibile; lo scenario lavora sui partiti attualmente modellati nei seggi.</div>
+      </div>
+      <div class="scenario-results">
+        <div class="scenario-results-head"><span>Risultato scenario</span><strong id="scenarioChanges">—</strong></div>
+        <div id="scenarioSeatStrip" class="seat-strip scenario-strip"></div>
+        <div id="scenarioSeatTable" class="seat-table scenario-seat-table"><div class="empty-small">Calcola uno scenario per vedere la distribuzione dei seggi.</div></div>
+      </div>
+    </div>
   </section>
 
   <div class="section-title"><div><div class="section-kicker">Scenari</div><h2>Costruisci una maggioranza</h2><p>Somma i seggi mediani e misura la probabilità che la combinazione superi la soglia operativa.</p></div></div>
@@ -149,7 +180,7 @@
 
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La UI cambia; il motore statistico di produzione resta congelato sulla v0.9.29.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.30 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.31 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
     <article class="card"><div class="cardhead"><div><h3>Pipeline di produzione</h3><p>Il live viene promosso solo dopo l’audit.</p></div></div><div class="pipeline"><span>Sondaggi</span><b>→</b><span>target nazionale</span><b>→</b><span>MRP geography stack</span><b>→</b><span>632 GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>La GitHub Action ricostruisce il candidato statistico congelato, verifica backtest, copertura provider, assenza dei topline esterni e stabilità fra scenari. Il watcher MRP segnala eventuali nuove pubblicazioni ma non le adotta automaticamente.</p></div></article>
   </section>
 
@@ -158,7 +189,7 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.30"></script>
+<script src="scripts/app.js?v=0.9.31"></script>
 <script src="scripts/map-performance.js"></script>
 </body>
 </html>
