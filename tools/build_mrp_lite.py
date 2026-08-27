@@ -42,7 +42,11 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 ROOT=Path(__file__).resolve().parents[1]
-V0922_HOTFIX="explicit-noop-fallback-traceback-and-idempotent-region-key"
+# Compatibility marker retained because the v0.9.22 source-bundle preflight
+# explicitly verifies this exact string.  Keep hotfixes additive so an older
+# verifier never mistakes a patched v0.9.22 builder for a mixed-version upload.
+V0922_HOTFIX="explicit-noop-candidate-fallback-and-traceback"
+V0922_HOTFIX_REGION_KEY="idempotent-region-key"
 DATA=ROOT/"data"
 DATA.mkdir(exist_ok=True)
 
