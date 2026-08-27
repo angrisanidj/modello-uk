@@ -1,0 +1,62 @@
+name: Update UK social cards
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "35 5,17 * * *"
+  workflow_run:
+    workflows: ["Update and deploy UK model"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: uk-model-social-cards
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && !contains(github.event.workflow_run.head_commit.message, '[social-card]')) }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Serve model locally
+        run: |
+          python3 -m http.server 8000 >/tmp/model-http.log 2>&1 &
+          echo $! > /tmp/model-http.pid
+          sleep 2
+      - name: Generate cards from current model output
+        run: node scripts/generate-social-cards.mjs
+      - name: Commit refreshed social cards
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html social-card-uk-v2.png social-card-uk-instagram-v2.png share-*.html
+          if git diff --cached --quiet; then
+            echo "Social cards already current"
+            exit 0
+          fi
+          git commit -m "chore: refresh model-generated UK social cards [social-card]"
+          git push
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload site artifact with refreshed cards
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: "."
+      - name: Deploy refreshed social cards
+        uses: actions/deploy-pages@v4
