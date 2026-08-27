@@ -1,6 +1,6 @@
 {
-  "version": "uk-v0921-scotland-local-residual",
-  "model_type": "constituency-residual-scotland-local-v15",
+  "version": "uk-v0922-solution-search",
+  "model_type": "constituency-residual-solution-search-v16",
   "status": "ok",
   "approved": false,
   "publication_ready": false,
@@ -10,12 +10,12 @@
   "changes_candidate_model": false,
   "shadow_only": true,
   "candidate_gate_passed": false,
-  "scotland_research_gate_passed": false,
-  "promotion_blocked_reason": "v0.9.21 is shadow-only; Scotland residual parameters are selected on 2015/2017/2019 only and 2024 remains a non-pristine audit-inspired benchmark",
+  "solution_research_gate_passed": false,
+  "promotion_blocked_reason": "v0.9.22 is shadow-only; Scotland polling/Holyrood, public target-seat and winner-meta components are selected on pre-2024 elections only; 2024 remains a non-pristine score-only benchmark",
   "canonical_candidate": "frozen_v0910_equivalent",
   "best_shadow_reference": {
     "version": "v0.9.15",
-    "output": "data/v0915-reference-v0921.json",
+    "output": "data/v0915-reference-v0922.json",
     "parameters": {
       "local_strength": 0.25,
       "confidence_floor": 0.0,
@@ -152,7 +152,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 166,
-      "share_mae": 5.55680761701318,
+      "share_mae": 5.556807618048258,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -215,125 +215,29 @@
     },
     "uses_2024_for_parameter_selection": false
   },
-  "scotland_local_residual": {
-    "output": "data/scotland-local-residual-v0921.json",
-    "selected": {
-      "id": "ridge_a0.5_m0.00_c3",
-      "alpha": 0.5,
-      "multiplier": 0.0,
-      "cap": 3.0,
-      "winner_gain_sum": 0,
-      "scotland_gain_sum": 0,
-      "seat_error_improvement_sum": 0,
-      "validation": {
-        "2015": {
-          "winner_accuracy": 0.8939873417721519,
-          "correct_winners": 565,
-          "gb_seats": 632,
-          "predicted_seats": {
-            "lab": 267,
-            "con": 333,
-            "ref": 1,
-            "ld": 1,
-            "green": 2,
-            "snp": 24,
-            "pc": 4,
-            "other": 0
-          },
-          "actual_seats": {
-            "lab": 232,
-            "con": 330,
-            "ref": 1,
-            "ld": 8,
-            "green": 1,
-            "snp": 56,
-            "pc": 3,
-            "other": 1
-          },
-          "seat_error": {
-            "lab": 35,
-            "con": 3,
-            "ref": 0,
-            "ld": -7,
-            "green": 1,
-            "snp": -32,
-            "pc": 1,
-            "other": -1
-          },
-          "seat_abs_error_sum": 80,
-          "share_mae": 3.6759926073770917,
-          "winner_source": "official_BES_WinnerXX",
-          "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
-          "regional_accuracy": {
-            "east_england": {
-              "correct": 53,
-              "n": 58,
-              "accuracy": 0.9137931034482759
-            },
-            "east_midlands": {
-              "correct": 43,
-              "n": 46,
-              "accuracy": 0.9347826086956522
-            },
-            "london": {
-              "correct": 67,
-              "n": 73,
-              "accuracy": 0.9178082191780822
-            },
-            "north_east": {
-              "correct": 28,
-              "n": 29,
-              "accuracy": 0.9655172413793104
-            },
-            "north_west": {
-              "correct": 70,
-              "n": 75,
-              "accuracy": 0.9333333333333333
-            },
-            "scotland": {
-              "correct": 27,
-              "n": 59,
-              "accuracy": 0.4576271186440678
-            },
-            "south_east": {
-              "correct": 81,
-              "n": 84,
-              "accuracy": 0.9642857142857143
-            },
-            "south_west": {
-              "correct": 54,
-              "n": 55,
-              "accuracy": 0.9818181818181818
-            },
-            "wales": {
-              "correct": 36,
-              "n": 40,
-              "accuracy": 0.9
-            },
-            "west_midlands": {
-              "correct": 56,
-              "n": 59,
-              "accuracy": 0.9491525423728814
-            },
-            "yorkshire": {
-              "correct": 50,
-              "n": 54,
-              "accuracy": 0.9259259259259259
-            }
-          }
-        },
+  "solution_search": {
+    "output": "data/solution-search-v0922.json",
+    "selected_pre2024": {
+      "enabled": {
+        "scotland_signal": true,
+        "country_split": false,
+        "brexit_geography": false,
+        "public_target_lists": false,
+        "winner_meta": false
+      },
+      "historical": {
         "2017": {
-          "winner_accuracy": 0.9003164556962026,
-          "correct_winners": 569,
+          "winner_accuracy": 0.9098101265822784,
+          "correct_winners": 575,
           "gb_seats": 632,
           "predicted_seats": {
-            "lab": 277,
-            "con": 322,
+            "lab": 270,
+            "con": 316,
             "ref": 0,
-            "ld": 9,
+            "ld": 4,
             "green": 0,
-            "snp": 21,
-            "pc": 3,
+            "snp": 41,
+            "pc": 1,
             "other": 0
           },
           "actual_seats": {
@@ -347,34 +251,34 @@
             "other": 1
           },
           "seat_error": {
-            "lab": 15,
-            "con": 5,
+            "lab": 8,
+            "con": -1,
             "ref": 0,
-            "ld": -3,
+            "ld": -8,
             "green": -1,
-            "snp": -14,
-            "pc": -1,
+            "snp": 6,
+            "pc": -3,
             "other": -1
           },
-          "seat_abs_error_sum": 40,
-          "share_mae": 2.508127924075581,
+          "seat_abs_error_sum": 28,
+          "share_mae": 2.33011509278029,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
             "east_england": {
-              "correct": 55,
+              "correct": 56,
               "n": 58,
-              "accuracy": 0.9482758620689655
+              "accuracy": 0.9655172413793104
             },
             "east_midlands": {
-              "correct": 42,
+              "correct": 40,
               "n": 46,
-              "accuracy": 0.9130434782608695
+              "accuracy": 0.8695652173913043
             },
             "london": {
-              "correct": 67,
+              "correct": 66,
               "n": 73,
-              "accuracy": 0.9178082191780822
+              "accuracy": 0.9041095890410958
             },
             "north_east": {
               "correct": 27,
@@ -382,53 +286,53 @@
               "accuracy": 0.9310344827586207
             },
             "north_west": {
-              "correct": 71,
+              "correct": 72,
               "n": 75,
-              "accuracy": 0.9466666666666667
+              "accuracy": 0.96
             },
             "scotland": {
-              "correct": 34,
+              "correct": 44,
               "n": 59,
-              "accuracy": 0.576271186440678
+              "accuracy": 0.7457627118644068
             },
             "south_east": {
-              "correct": 77,
+              "correct": 76,
               "n": 84,
-              "accuracy": 0.9166666666666666
+              "accuracy": 0.9047619047619048
             },
             "south_west": {
-              "correct": 51,
+              "correct": 52,
               "n": 55,
-              "accuracy": 0.9272727272727272
+              "accuracy": 0.9454545454545454
             },
             "wales": {
-              "correct": 39,
+              "correct": 37,
               "n": 40,
-              "accuracy": 0.975
+              "accuracy": 0.925
             },
             "west_midlands": {
-              "correct": 55,
+              "correct": 53,
               "n": 59,
-              "accuracy": 0.9322033898305084
+              "accuracy": 0.8983050847457628
             },
             "yorkshire": {
-              "correct": 51,
+              "correct": 52,
               "n": 54,
-              "accuracy": 0.9444444444444444
+              "accuracy": 0.9629629629629629
             }
           }
         },
         "2019": {
-          "winner_accuracy": 0.9224683544303798,
-          "correct_winners": 583,
+          "winner_accuracy": 0.9240506329113924,
+          "correct_winners": 584,
           "gb_seats": 632,
           "predicted_seats": {
-            "lab": 199,
-            "con": 349,
+            "lab": 196,
+            "con": 351,
             "ref": 0,
             "ld": 30,
             "green": 1,
-            "snp": 50,
+            "snp": 51,
             "pc": 3,
             "other": 0
           },
@@ -443,17 +347,17 @@
             "other": 1
           },
           "seat_error": {
-            "lab": -3,
-            "con": -16,
+            "lab": -6,
+            "con": -14,
             "ref": 0,
             "ld": 19,
             "green": 0,
-            "snp": 2,
+            "snp": 3,
             "pc": -1,
             "other": -1
           },
-          "seat_abs_error_sum": 42,
-          "share_mae": 2.620772793463433,
+          "seat_abs_error_sum": 44,
+          "share_mae": 2.5485703625217244,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -478,14 +382,14 @@
               "accuracy": 0.8620689655172413
             },
             "north_west": {
-              "correct": 65,
+              "correct": 64,
               "n": 75,
-              "accuracy": 0.8666666666666667
+              "accuracy": 0.8533333333333334
             },
             "scotland": {
-              "correct": 55,
+              "correct": 54,
               "n": 59,
-              "accuracy": 0.9322033898305084
+              "accuracy": 0.9152542372881356
             },
             "south_east": {
               "correct": 78,
@@ -503,9 +407,9 @@
               "accuracy": 0.875
             },
             "west_midlands": {
-              "correct": 54,
+              "correct": 57,
               "n": 59,
-              "accuracy": 0.9152542372881356
+              "accuracy": 0.9661016949152542
             },
             "yorkshire": {
               "correct": 52,
@@ -515,70 +419,103 @@
           }
         }
       },
-      "scotland_validation": {
-        "2015": {
-          "country": "Scotland",
-          "n": 59,
-          "correct": 27,
-          "accuracy": 0.4576271186440678,
-          "predicted_seats": {
-            "snp": 24,
-            "lab": 32,
-            "con": 2,
-            "ld": 1
-          },
-          "actual_seats": {
-            "snp": 56,
-            "con": 1,
-            "lab": 1,
-            "ld": 1
-          }
-        },
+      "meta_historical": {
         "2017": {
-          "country": "Scotland",
-          "n": 59,
-          "correct": 34,
-          "accuracy": 0.576271186440678,
-          "predicted_seats": {
-            "snp": 21,
-            "lab": 26,
-            "con": 6,
-            "ld": 6
-          },
-          "actual_seats": {
-            "snp": 35,
-            "con": 13,
-            "ld": 4,
-            "lab": 7
+          "components": [
+            "scotland_poll_holyrood"
+          ],
+          "scotland_signal": {
+            "applied": true,
+            "year": 2017,
+            "poll_blend": 0.8,
+            "holyrood_weight": 0.15,
+            "feasible_before_clipping": false,
+            "scotland_before": {
+              "lab": 33.333666265052564,
+              "con": 18.458547221211038,
+              "ref": 0.38500293890533016,
+              "ld": 8.161843237262465,
+              "green": 0.7954893743624853,
+              "snp": 38.511793831799736,
+              "pc": 0.0,
+              "other": 0.3536571314063737
+            },
+            "scotland_target": {
+              "lab": 26.78586047155372,
+              "con": 26.051031090738487,
+              "ref": 1.0182216345410597,
+              "ld": 6.538641832153809,
+              "green": 0.9597745088380158,
+              "snp": 38.511755320044415,
+              "pc": 9.99999000001e-05,
+              "other": 0.1346151422304964
+            },
+            "scotland_after": {
+              "lab": 26.789638001798572,
+              "con": 26.045490382831293,
+              "ref": 1.0181823183154355,
+              "ld": 6.538168047594478,
+              "green": 0.9597612729615193,
+              "snp": 38.51411500069881,
+              "pc": 0.0,
+              "other": 0.13464497579989065
+            },
+            "national_max_abs_error": 0.6249577186819728
           }
         },
         "2019": {
-          "country": "Scotland",
-          "n": 59,
-          "correct": 55,
-          "accuracy": 0.9322033898305084,
-          "predicted_seats": {
-            "snp": 50,
-            "con": 4,
-            "ld": 5
-          },
-          "actual_seats": {
-            "snp": 48,
-            "con": 6,
-            "ld": 4,
-            "lab": 1
+          "components": [
+            "scotland_poll_holyrood"
+          ],
+          "scotland_signal": {
+            "applied": true,
+            "year": 2019,
+            "poll_blend": 0.8,
+            "holyrood_weight": 0.15,
+            "feasible_before_clipping": true,
+            "scotland_before": {
+              "lab": 12.28284920256358,
+              "con": 29.019726769274335,
+              "ref": 0.4181803494927528,
+              "ld": 9.336119449990484,
+              "green": 1.2525387488021535,
+              "snp": 47.239850677618456,
+              "pc": 0.0,
+              "other": 0.4507348022582375
+            },
+            "scotland_target": {
+              "lab": 16.65600514692715,
+              "con": 25.945273229270647,
+              "ref": 0.2713910616870063,
+              "ld": 8.799433925211844,
+              "green": 0.9426242478763647,
+              "snp": 47.23980343781503,
+              "pc": 9.99999000001e-05,
+              "other": 0.145368951311966
+            },
+            "scotland_after": {
+              "lab": 16.6536547626932,
+              "con": 25.94413667023364,
+              "ref": 0.2713661063403033,
+              "ld": 8.805622312100713,
+              "green": 0.9425771007794592,
+              "snp": 47.237269374577785,
+              "pc": 0.0,
+              "other": 0.14537367327488818
+            },
+            "national_max_abs_error": 0.008402901453564482
           }
         }
       },
       "benchmark_2024": {
-        "winner_accuracy": 0.7927215189873418,
-        "correct_winners": 501,
+        "winner_accuracy": 0.7816455696202531,
+        "correct_winners": 494,
         "gb_seats": 632,
         "predicted_seats": {
-          "lab": 346,
-          "con": 152,
-          "ref": 39,
-          "ld": 55,
+          "lab": 341,
+          "con": 153,
+          "ref": 42,
+          "ld": 56,
           "green": 9,
           "snp": 22,
           "pc": 4,
@@ -595,29 +532,29 @@
           "other": 6
         },
         "seat_error": {
-          "lab": -65,
-          "con": 31,
-          "ref": 34,
-          "ld": -17,
+          "lab": -70,
+          "con": 32,
+          "ref": 37,
+          "ld": -16,
           "green": 5,
           "snp": 13,
           "pc": 0,
           "other": -1
         },
-        "seat_abs_error_sum": 166,
-        "share_mae": 5.55680761701318,
+        "seat_abs_error_sum": 174,
+        "share_mae": 5.479757010567163,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
           "east_england": {
-            "correct": 50,
+            "correct": 47,
             "n": 61,
-            "accuracy": 0.819672131147541
+            "accuracy": 0.7704918032786885
           },
           "east_midlands": {
-            "correct": 36,
+            "correct": 34,
             "n": 47,
-            "accuracy": 0.7659574468085106
+            "accuracy": 0.723404255319149
           },
           "london": {
             "correct": 68,
@@ -625,9 +562,9 @@
             "accuracy": 0.9066666666666666
           },
           "north_east": {
-            "correct": 15,
+            "correct": 13,
             "n": 27,
-            "accuracy": 0.5555555555555556
+            "accuracy": 0.48148148148148145
           },
           "north_west": {
             "correct": 68,
@@ -640,19 +577,19 @@
             "accuracy": 0.7368421052631579
           },
           "south_east": {
-            "correct": 71,
+            "correct": 70,
             "n": 91,
-            "accuracy": 0.7802197802197802
+            "accuracy": 0.7692307692307693
           },
           "south_west": {
-            "correct": 42,
+            "correct": 44,
             "n": 58,
-            "accuracy": 0.7241379310344828
+            "accuracy": 0.7586206896551724
           },
           "wales": {
-            "correct": 23,
+            "correct": 22,
             "n": 32,
-            "accuracy": 0.71875
+            "accuracy": 0.6875
           },
           "west_midlands": {
             "correct": 49,
@@ -673,8 +610,7 @@
         "accuracy": 0.7368421052631579,
         "predicted_seats": {
           "snp": 22,
-          "con": 5,
-          "lab": 25,
+          "lab": 30,
           "ld": 5
         },
         "actual_seats": {
@@ -685,11 +621,47 @@
         }
       },
       "meta_2024": {
-        "adjusted_seats": 0,
-        "eligible_seats": 53,
-        "multiplier": 0.0,
-        "cap": 3.0,
-        "national_target_preserved": true
+        "components": [
+          "scotland_poll_holyrood"
+        ],
+        "scotland_signal": {
+          "applied": true,
+          "year": 2024,
+          "poll_blend": 0.8,
+          "holyrood_weight": 0.15,
+          "feasible_before_clipping": true,
+          "scotland_before": {
+            "lab": 21.690514697450045,
+            "con": 20.502570919384237,
+            "ref": 9.881280957104597,
+            "ld": 12.214176146025451,
+            "green": 4.3700184770362345,
+            "snp": 29.256188018375607,
+            "pc": 0.0,
+            "other": 2.0852507846238306
+          },
+          "scotland_target": {
+            "lab": 32.633439753678104,
+            "con": 17.045499339965932,
+            "ref": 7.105970237595279,
+            "ld": 9.417522302581911,
+            "green": 3.020724316504787,
+            "snp": 29.256158762216845,
+            "pc": 9.99999000001e-05,
+            "other": 1.5205852875571397
+          },
+          "scotland_after": {
+            "lab": 32.626880251600895,
+            "con": 17.047557536935855,
+            "ref": 7.106436420005635,
+            "ld": 9.419401437520987,
+            "green": 3.0210183687627263,
+            "snp": 29.258068391508854,
+            "pc": 0.0,
+            "other": 1.5206375936650616
+          },
+          "national_max_abs_error": 0.0030163820055477686
+        }
       },
       "research_gate": false
     },
@@ -697,7 +669,7 @@
     "uses_2024_for_parameter_selection": false,
     "applied_to_live": false
   },
-  "generated_at": "2026-08-27T00:23:18.564033+00:00",
+  "generated_at": "2026-08-27T09:10:03.747820+00:00",
   "selected_spec": {
     "name": "hgb_d2_g100",
     "kind": "hgb",
@@ -1374,29 +1346,29 @@
         "other": 3.568672291692681
       },
       "target_national": {
-        "lab": 25.8608561021328,
+        "lab": 25.860856102132807,
         "con": 20.33488727453426,
-        "ref": 24.62350989669176,
-        "ld": 10.66493306629199,
-        "green": 10.922586780316301,
-        "snp": 2.917465662303746,
-        "pc": 1.108463383179906,
-        "other": 3.567297834549235
+        "ref": 24.623509896691747,
+        "ld": 10.664933066291994,
+        "green": 10.922586780316305,
+        "snp": 2.9174656623037447,
+        "pc": 1.1084633831799056,
+        "other": 3.5672978345492345
       },
       "deltas": {
-        "lab": -8.776636539548285,
+        "lab": -8.776636539548278,
         "con": -4.026489132465507,
-        "ref": 9.933237148337351,
-        "ld": -1.8902070539384805,
-        "green": 4.016259517967705,
-        "snp": 0.33176845043767633,
-        "pc": 0.4134420663529915,
-        "other": -0.001374457143445973
+        "ref": 9.933237148337337,
+        "ld": -1.890207053938477,
+        "green": 4.0162595179677085,
+        "snp": 0.331768450437675,
+        "pc": 0.4134420663529911,
+        "other": -0.001374457143446417
       },
-      "turnover": 14.694707183095721,
-      "system_activation": 0.7245589319246434,
+      "turnover": 14.69470718309571,
+      "system_activation": 0.7245589319246425,
       "con_drop": 4.026489132465507,
-      "ref_rise": 9.933237148337351
+      "ref_rise": 9.933237148337337
     }
   },
   "evaluation_status": {
@@ -1451,7 +1423,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.958957852288145,
+      "share_mae": 2.9589578523955873,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -2897,7 +2869,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.620772793463433,
+      "share_mae": 2.620772793346298,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -2993,7 +2965,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.620772793463433,
+      "share_mae": 2.620772793346298,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -3675,7 +3647,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 176,
-      "share_mae": 5.6491790539373365,
+      "share_mae": 5.649179055034874,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -3771,7 +3743,7 @@
         "other": -1
       },
       "seat_abs_error_sum": 176,
-      "share_mae": 5.6491790539373365,
+      "share_mae": 5.649179055034874,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -4429,7 +4401,7 @@
         "winner_accuracy": 0.8686708860759493,
         "correct_winners": 549,
         "seat_abs_error_sum": 98,
-        "share_mae": 3.05336134071576
+        "share_mae": 3.053361340715711
       },
       {
         "spec": {
@@ -4445,7 +4417,7 @@
         "winner_accuracy": 0.865506329113924,
         "correct_winners": 547,
         "seat_abs_error_sum": 108,
-        "share_mae": 3.1462460924942883
+        "share_mae": 3.146246092494248
       },
       {
         "spec": {
@@ -4461,7 +4433,7 @@
         "winner_accuracy": 0.8639240506329114,
         "correct_winners": 546,
         "seat_abs_error_sum": 106,
-        "share_mae": 3.2158979434403556
+        "share_mae": 3.2158979434403334
       },
       {
         "spec": {
@@ -4473,7 +4445,7 @@
         "winner_accuracy": 0.8575949367088608,
         "correct_winners": 542,
         "seat_abs_error_sum": 120,
-        "share_mae": 3.323308148637162
+        "share_mae": 3.3233081486371443
       },
       {
         "spec": {
@@ -4485,7 +4457,7 @@
         "winner_accuracy": 0.8560126582278481,
         "correct_winners": 541,
         "seat_abs_error_sum": 118,
-        "share_mae": 3.2031419738092843
+        "share_mae": 3.2031419738098257
       },
       {
         "spec": {
@@ -4497,7 +4469,7 @@
         "winner_accuracy": 0.8528481012658228,
         "correct_winners": 539,
         "seat_abs_error_sum": 122,
-        "share_mae": 3.2589407997938085
+        "share_mae": 3.258940799793759
       },
       {
         "spec": {
@@ -4509,7 +4481,7 @@
         "winner_accuracy": 0.8386075949367089,
         "correct_winners": 530,
         "seat_abs_error_sum": 144,
-        "share_mae": 3.8024517743159674
+        "share_mae": 3.8024517743158213
       },
       {
         "spec": {
@@ -4521,7 +4493,7 @@
         "winner_accuracy": 0.8354430379746836,
         "correct_winners": 528,
         "seat_abs_error_sum": 152,
-        "share_mae": 3.8292111497279393
+        "share_mae": 3.829211149727902
       }
     ]
   },
@@ -5189,10 +5161,10 @@
       "routine",
       "leave"
     ],
-    "notes": "v0.9.21 keeps the canonical candidate frozen and validates a Scotland-only SNP/Lab residual model using Scottish STV first-preference geography. Hyperparameters are selected by leave-one-election-out validation across 2015/2017/2019; realised 2024 outcomes are excluded."
+    "notes": "v0.9.22 keeps the canonical candidate frozen and evaluates five pre-2024 information lanes: Scotland-specific polling/Holyrood, England-Scotland-Wales country targets, reconstructed Brexit/Farage geography, public campaign target lists, and a generic top-two upset calibrator. Realised 2024 outcomes are excluded from parameter selection."
   },
   "integrity": {
-    "version": "uk-v0921-bes-integrity",
+    "version": "uk-v0922-bes-integrity",
     "status": "passed",
     "checks": [
       {
@@ -5559,5 +5531,5 @@
       "file_size": 1407419
     }
   },
-  "note": "v0.9.21 keeps the canonical candidate frozen and reproduces the v0.9.15 local-strength reference exactly. The Scotland SNP/Lab residual model is selected by leave-one-election-out validation on 2015/2017/2019 only; the 2024 benchmark is diagnostic."
+  "note": "v0.9.22 keeps the canonical candidate frozen and reproduces the v0.9.15 local-strength reference exactly. Country polling, Scotland/Holyrood, Brexit/Farage geography, public target-seat and winner-meta components are calibrated or selected using pre-2024 information only; the 2024 benchmark is diagnostic."
 }
