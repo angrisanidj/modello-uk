@@ -6,8 +6,8 @@
 <meta name="color-scheme" content="dark" />
 <title>Elezioni nel Regno Unito — Sondaggi, seggi e probabilità</title>
 <meta name="description" content="Nowcast delle prossime elezioni britanniche: media dei sondaggi, proiezione probabilistica dei 650 seggi, Monte Carlo, collegi chiave e scenari di maggioranza." />
-<link rel="stylesheet" href="styles.css?v=0.9.31.1" />
-<link rel="stylesheet" href="map-performance.css?v=0.9.31.1" />
+<link rel="stylesheet" href="styles.css?v=0.9.32" />
+<link rel="stylesheet" href="map-performance.css?v=0.9.32" />
 </head>
 <body>
 <div class="flag-ribbon" aria-hidden="true"></div>
@@ -28,7 +28,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Sondaggi: —</span>
-      <span class="badge badge-strong">UI 0.9.31.1 · motore statistico 0.9.29 congelato</span>
+      <span class="badge badge-strong">UI 0.9.32 · motore statistico 0.9.29 congelato</span>
     </div>
   </section>
 
@@ -112,12 +112,22 @@
         <div class="controls map-mode" id="mapModeControls"><button id="mapCentralBtn" class="active">Proiezione</button><button id="mapMarginBtn">Margine</button><button id="mapProbBtn" disabled aria-disabled="true" title="Disponibile al termine delle 50.000 simulazioni">Probabilità</button><button id="mapUserBtn" disabled aria-disabled="true" title="Crea prima uno scenario nazionale">Scenario utente</button></div>
       </div>
       <div id="mapSummary" class="map-summary"><span class="map-summary-chip"><strong>Caricamento della base territoriale…</strong></span></div>
-      <div id="mapWrap" class="map-wrap"><svg id="ukMap" viewBox="0 0 640 760" role="img" aria-label="Mappa dei collegi parlamentari britannici"></svg><div id="mapEmpty" class="empty-state">Le geometrie saranno caricate dalla build automatica.</div></div>
+      <div id="mapWrap" class="map-wrap">
+        <div class="map-zoom-controls" id="mapZoomControls" aria-label="Controlli zoom mappa">
+          <button type="button" data-mapzoom="out" aria-label="Riduci lo zoom" title="Riduci lo zoom">−</button>
+          <span class="map-zoom-level" id="mapZoomLevel" aria-live="polite">100%</span>
+          <button type="button" data-mapzoom="in" aria-label="Aumenta lo zoom" title="Aumenta lo zoom">+</button>
+          <button type="button" class="map-reset" data-mapzoom="reset" title="Torna alla vista completa">Reset</button>
+          <button type="button" class="map-fit" data-mapzoom="filtered" title="Inquadra i collegi corrispondenti ai filtri">Filtrati</button>
+        </div>
+        <svg id="ukMap" viewBox="0 0 640 760" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mappa dei collegi parlamentari britannici"></svg>
+        <div id="mapEmpty" class="empty-state">Le geometrie saranno caricate dalla build automatica.</div>
+      </div>
     </article>
     <aside class="map-side">
       <article class="card seat-detail">
-        <div class="cardhead"><div><div class="detail-kicker">Dettaglio del collegio</div><h3 id="detailName">Seleziona un collegio</h3><p id="detailRegion">—</p></div></div>
-        <div id="detailBody" class="detail-body"><p>Clicca un collegio sulla mappa o nella tabella dei marginali per vedere risultato 2024, proiezione centrale e probabilità di vittoria.</p></div>
+        <div class="cardhead detail-head"><div><div class="detail-kicker">Dettaglio del collegio</div><h3 id="detailName">Seleziona un collegio</h3><p id="detailRegion">—</p></div><div class="detail-actions"><button id="detailZoomBtn" class="small-action" type="button" disabled>Zoom collegio</button><button id="detailCopyBtn" class="small-action" type="button" disabled>Copia link</button></div></div>
+        <div id="detailBody" class="detail-body"><p>Clicca un collegio sulla mappa o nella tabella dei marginali per vedere risultato 2024, margine centrale, scenario rappresentativo e probabilità di vittoria.</p></div>
       </article>
       <article class="card map-method-card">
         <h3>Tre letture diverse</h3>
@@ -180,7 +190,7 @@
 
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La UI cambia; il motore statistico di produzione resta congelato sulla v0.9.29.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.31.1 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.32 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
     <article class="card"><div class="cardhead"><div><h3>Pipeline di produzione</h3><p>Il live viene promosso solo dopo l’audit.</p></div></div><div class="pipeline"><span>Sondaggi</span><b>→</b><span>target nazionale</span><b>→</b><span>MRP geography stack</span><b>→</b><span>632 GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>La GitHub Action ricostruisce il candidato statistico congelato, verifica backtest, copertura provider, assenza dei topline esterni e stabilità fra scenari. Il watcher MRP segnala eventuali nuove pubblicazioni ma non le adotta automaticamente.</p></div></article>
   </section>
 
@@ -189,7 +199,7 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.31.1"></script>
-<script src="scripts/map-performance.js?v=0.9.31.1"></script>
+<script src="scripts/app.js?v=0.9.32"></script>
+<script src="scripts/map-performance.js?v=0.9.32"></script>
 </body>
 </html>
