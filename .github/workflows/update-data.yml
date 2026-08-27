@@ -155,6 +155,14 @@ jobs:
           for year in ("2015","2017","2019","2024"):
               if int(cov.get(year,{}).get("matched_seats") or 0)<45:
                   raise SystemExit(f"ERROR: Scotland {year} coverage too low {cov.get(year)}")
+          crosswalk=sweep.get("sources",{}).get("constituency_council_crosswalk",{})
+          if crosswalk.get("external_runtime_dependency") is not False:
+              raise SystemExit(f"ERROR: Scotland crosswalk unexpectedly depends on external runtime lookup {crosswalk}")
+          if reference.get("meta_2019",{}).get("recomputed") is not False:
+              raise SystemExit(f"ERROR: v0.9.21 unexpectedly recomputed 2019 local reference {reference.get('meta_2019')}")
+          if "ons_2019" in reference.get("sources",{}):
+              raise SystemExit("ERROR: ONS 2019 runtime source unexpectedly present in v0.9.21 reference")
+
           src=sweep.get("sources",{}).get("scot_elex",{})
           usable=src.get("usable_wards",{})
           for y in ("2012","2017","2022"):
