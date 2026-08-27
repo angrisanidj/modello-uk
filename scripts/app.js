@@ -869,6 +869,7 @@ function renderCentral(){
   $('#kpiLargestMeta').textContent='scenario centrale provvisorio';
   renderOutcomeDashboard();
   renderMarginals();
+  renderRegionalDashboard();
   renderMapSummary();
   renderMinimalCoalitions();
 }
@@ -888,6 +889,7 @@ function renderMc(){
   applyMapColors();
   renderOutcomeDashboard();
   renderMarginals();
+  renderRegionalDashboard();
   renderMapSummary();
   updateCoalition();
   renderMinimalCoalitions();
@@ -1185,12 +1187,14 @@ function renderCustomScenario(){
 }
 function runCustomScenario(){
   const originalTotal=updateScenarioTotal(),raw=scenarioInputValues();state.customScenario=buildCustomScenario(raw);renderCustomScenario();
+  renderRegionalDashboard();
   const msg=$('#scenarioMessage');if(msg)msg.textContent=`Scenario calcolato su ${fmt0(Object.values(state.customScenario?.totals||{}).reduce((a,b)=>a+b,0))} seggi. ${Math.abs(originalTotal-100)>.051?`Gli input (${pctFmt(originalTotal)}) sono stati normalizzati automaticamente a 100%. `:''}Le probabilità Monte Carlo restano quelle del nowcast live e non vengono riutilizzate come probabilità dello scenario utente.`;
   state.explorerVisible=50;renderMarginals();
 }
 function resetCustomScenario(){
   state.customScenario=null;renderScenarioInputs(true);renderCustomScenario();const src=$('#seatSource');if(src){src.value='live';const o=src.querySelector('option[value="custom"]');if(o)o.disabled=true;}
   const mb=$('#mapUserBtn');if(mb){mb.disabled=true;mb.setAttribute('aria-disabled','true');}if(state.mapMode==='custom')state.mapMode=state.mc?.seatProb?'representative':'central';applyMapColors();state.explorerVisible=50;renderMarginals();
+  const reg=$('#regionalSource');if(reg)reg.value='live';renderRegionalDashboard();
   const msg=$('#scenarioMessage');if(msg)msg.textContent='Scenario ripristinato. Il nowcast di produzione e il Monte Carlo non sono stati modificati.';
 }
 function populateSeatExplorerFilters(){
@@ -1243,6 +1247,78 @@ function renderMarginals(){
   const more=$('#seatShowMore');if(more){more.hidden=visible.length>=filtered.length;more.textContent=`Mostra altri ${Math.min(50,Math.max(0,filtered.length-visible.length))}`;}
   const note=$('#seatExplorerNote');if(note)note.textContent=state.mc?.seatProb?`${f.source==='custom'?'Scenario utente · ':''}P favorito = Monte Carlo live. Clic su una riga → dettaglio mappa.`:'Il Monte Carlo è ancora in corso: i filtri probabilistici saranno disponibili al termine.';
   const footer=$('#seatExplorerFooter');if(footer)footer.textContent=filtered.length>visible.length?`Mostrati ${fmt0(visible.length)} collegi su ${fmt0(filtered.length)} filtrati.`:`Mostrati tutti i ${fmt0(filtered.length)} collegi filtrati.`;
+}
+
+
+function regionalSource(){const el=$('#regionalSource');return el?.value==='custom'&&state.customScenario?'custom':'live';}
+function regionalWinner(seat,source=regionalSource()){
+  if(source==='custom'&&state.customScenario?.assignment?.[seat.id])return state.customScenario.assignment[seat.id];
+  return liveScenarioWinner(seat);
+}
+function regionLabelForSeat(seat){
+  const c=(seat.country||'').trim();
+  if(/scotland/i.test(c))return 'Scotland';
+  if(/wales/i.test(c))return 'Wales';
+  if(/northern ireland/i.test(c))return 'Northern Ireland';
+  return (seat.region||'England').trim()||'England';
+}
+function regionalPartySet(){return ['lab','con','ref','ld','green','snp','pc','sf','dup','alliance','other'];}
+function bestLiveProbability(seat){
+  const prob=state.mc?.seatProb?.[seat.id];if(!prob)return null;
+  const best=Object.entries(prob).filter(([p])=>PARTY[p]).sort((a,b)=>b[1]-a[1])[0];return best?best[1]:null;
+}
+function buildRegionalSnapshot(source=regionalSource()){
+  if(!state.central?.seats?.length)return {areas:[],countries:[],net:[],flows:[]};
+  const groups=new Map(),countries=new Map(),prevTotals={},curTotals={},flowMap=new Map();
+  const add=(map,key,seat,winner,prev)=>{if(!map.has(key))map.set(key,{name:key,total:0,current:{},previous:{},changes:0,uncertain:0});const g=map.get(key);g.total++;g.current[winner]=(g.current[winner]||0)+1;g.previous[prev]=(g.previous[prev]||0)+1;if(winner!==prev)g.changes++;const pr=bestLiveProbability(seat);if(pr!=null&&pr<.65)g.uncertain++;};
+  for(const seat of state.central.seats){
+    const winner=regionalWinner(seat,source),prev=seat.winner2024||'other',area=regionLabelForSeat(seat),country=(seat.country||'').trim()||'United Kingdom';
+    add(groups,area,seat,winner,prev);add(countries,country,seat,winner,prev);prevTotals[prev]=(prevTotals[prev]||0)+1;curTotals[winner]=(curTotals[winner]||0)+1;
+    if(winner!==prev){const k=`${prev}>${winner}`;flowMap.set(k,(flowMap.get(k)||0)+1);}
+  }
+  const areaOrder=['North East','North West','Yorkshire and The Humber','East Midlands','West Midlands','East of England','London','South East','South West','Scotland','Wales','Northern Ireland'];
+  const decorate=g=>{const rank=Object.entries(g.current).sort((a,b)=>b[1]-a[1]);return {...g,leader:rank[0]?.[0]||'other',leaderSeats:rank[0]?.[1]||0};};
+  const areas=[...groups.values()].map(decorate).sort((a,b)=>{const ai=areaOrder.indexOf(a.name),bi=areaOrder.indexOf(b.name);if(ai>=0||bi>=0)return (ai<0?999:ai)-(bi<0?999:bi);return a.name.localeCompare(b.name,'en-GB');});
+  const countryOrder=['England','Scotland','Wales','Northern Ireland'];
+  const countryRows=[...countries.values()].map(decorate).sort((a,b)=>(countryOrder.indexOf(a.name)<0?999:countryOrder.indexOf(a.name))-(countryOrder.indexOf(b.name)<0?999:countryOrder.indexOf(b.name)));
+  const parties=[...new Set([...Object.keys(prevTotals),...Object.keys(curTotals)])].filter(p=>PARTY[p]);
+  const net=parties.map(p=>({p,previous:prevTotals[p]||0,current:curTotals[p]||0,delta:(curTotals[p]||0)-(prevTotals[p]||0)})).filter(x=>x.previous||x.current).sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta)||b.current-a.current);
+  const flows=[...flowMap.entries()].map(([k,count])=>{const [from,to]=k.split('>');return {from,to,count};}).sort((a,b)=>b.count-a.count||a.from.localeCompare(b.from));
+  return {areas,countries:countryRows,net,flows};
+}
+function setExplorerArea(area){
+  resetSeatFilters();const c=$('#seatCountry'),r=$('#seatRegion');
+  if(area==='Scotland'||area==='Wales'||area==='Northern Ireland'){if(c)c.value=area;}else{if(c)c.value='England';if(r)r.value=area;}
+  state.explorerVisible=50;renderMarginals();document.querySelector('#collegi')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function setExplorerFlow(from,to){
+  resetSeatFilters();const a=$('#seatWinner2024'),b=$('#seatWinner');if(a)a.value=from;if(b)b.value=to;const s=$('#seatStatus');if(s)s.value='changed';state.explorerVisible=50;renderMarginals();document.querySelector('#collegi')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderRegionalDashboard(){
+  const table=$('#regionalTableBody'),summary=$('#countrySummary'),netEl=$('#partyNetGrid'),flowEl=$('#seatFlowList');if(!table||!summary||!netEl||!flowEl||!state.central?.seats?.length)return;
+  const source=regionalSource(),snap=buildRegionalSnapshot(source),mainCols=['lab','con','ref','ld','snp','pc'];
+  const customOpt=$('#regionalSource option[value="custom"]');if(customOpt)customOpt.disabled=!state.customScenario;
+  summary.innerHTML=snap.countries.map(g=>`<button class="country-card" type="button" data-region-shortcut="${escapeHtml(g.name)}"><span class="country-name">${escapeHtml(g.name)}</span><strong><i style="background:${PARTY[g.leader]?.color||PARTY.other.color}"></i>${PARTY[g.leader]?.short||g.leader}</strong><small>${fmt0(g.leaderSeats)} / ${fmt0(g.total)} seggi · ${fmt0(g.changes)} cambi${state.mc?.seatProb?` · ${fmt0(g.uncertain)} incerti`:''}</small></button>`).join('');
+  table.innerHTML=snap.areas.map(g=>`<tr data-region-shortcut="${escapeHtml(g.name)}"><td><strong>${escapeHtml(g.name)}</strong></td><td>${fmt0(g.total)}</td><td><span class="party-pill"><i style="background:${PARTY[g.leader]?.color||PARTY.other.color}"></i>${PARTY[g.leader]?.short||g.leader} ${fmt0(g.leaderSeats)}</span></td>${mainCols.map(p=>`<td>${fmt0(g.current[p]||0)}</td>`).join('')}<td>${fmt0(g.changes)}</td><td>${state.mc?.seatProb?fmt0(g.uncertain):'—'}</td></tr>`).join('');
+  netEl.innerHTML=snap.net.slice(0,10).map(x=>`<div class="party-net-row"><span><i style="background:${PARTY[x.p]?.color||PARTY.other.color}"></i>${PARTY[x.p]?.short||x.p}</span><b>${fmt0(x.current)}</b><strong class="${x.delta>0?'net-up':x.delta<0?'net-down':'net-flat'}">${x.delta>0?'+':''}${fmt0(x.delta)}</strong><small>da ${fmt0(x.previous)}</small></div>`).join('');
+  flowEl.innerHTML=snap.flows.length?snap.flows.slice(0,12).map(x=>`<button type="button" class="seat-flow-row" data-flow-from="${escapeHtml(x.from)}" data-flow-to="${escapeHtml(x.to)}"><span><i style="background:${PARTY[x.from]?.color||PARTY.other.color}"></i>${PARTY[x.from]?.short||x.from}<b>→</b><i style="background:${PARTY[x.to]?.color||PARTY.other.color}"></i>${PARTY[x.to]?.short||x.to}</span><strong>${fmt0(x.count)}</strong></button>`).join(''):'<div class="empty-small">Nessun cambio di vincitore nello scenario selezionato.</div>';
+  const meta=$('#regionalMeta');if(meta)meta.textContent=source==='custom'?'Scenario utente deterministico; le colonne “incerti” restano riferite al Monte Carlo live.':state.representative?'Scenario territoriale rappresentativo coerente con le mediane Monte Carlo.':'Proiezione centrale provvisoria; passerà allo scenario rappresentativo al termine delle simulazioni.';
+  summary.querySelectorAll('[data-region-shortcut]').forEach(el=>el.addEventListener('click',()=>setExplorerArea(el.dataset.regionShortcut)));
+  table.querySelectorAll('[data-region-shortcut]').forEach(el=>el.addEventListener('click',()=>setExplorerArea(el.dataset.regionShortcut)));
+  flowEl.querySelectorAll('[data-flow-from]').forEach(el=>el.addEventListener('click',()=>setExplorerFlow(el.dataset.flowFrom,el.dataset.flowTo)));
+}
+function csvEscape(v){const s=String(v??'');return /[",\r\n]/.test(s)?`"${s.replaceAll('"','""')}"`:s;}
+function explorerItemsForExport(filtered=true){
+  const source=explorerSource(),all=state.central?.seats?.map(seat=>seatExplorerItem(seat,source))||[];if(!filtered)return all;const f=explorerFilterValues();return sortExplorerItems(all.filter(x=>itemPassesExplorer(x,f)),f);
+}
+function seatCsvRows(filtered=true){
+  const source=explorerSource(),items=explorerItemsForExport(filtered),shareParties=['lab','con','ref','ld','green','snp','pc','other'];
+  const header=['ons_id','collegio','paese','regione','vincitore_2024','vincitore_scenario','cambio','margine_centrale_pp','favorito_mc','prob_favorito_mc',...shareParties.map(p=>`quota_${p}`),...shareParties.map(p=>`prob_${p}`)];
+  const rows=[header];for(const x of items){const seat=x.seat,shares=scenarioSharesForSeat(seat,source),prob=state.mc?.seatProb?.[seat.id]||{},best=Object.entries(prob).filter(([p])=>PARTY[p]).sort((a,b)=>b[1]-a[1])[0];rows.push([seat.id,seat.name,seat.country,seat.region,seat.winner2024||'other',x.projected,x.changed?'1':'0',Number(x.cm.margin).toFixed(3),best?.[0]||'',best?Number(best[1]).toFixed(6):'',...shareParties.map(p=>Number(shares[p]||0).toFixed(4)),...shareParties.map(p=>prob[p]==null?'':Number(prob[p]).toFixed(6))]);}
+  return rows;
+}
+function downloadSeatCsv(filtered=true){
+  if(!state.central?.seats?.length)return;const rows=seatCsvRows(filtered),csv='\ufeff'+rows.map(r=>r.map(csvEscape).join(',')).join('\r\n');downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),`uk_collegi_${filtered?'filtrati':'650'}_${exportDateStamp()}.csv`);
 }
 
 function renderOutcomeDashboard(){
@@ -1345,6 +1421,9 @@ function bindUi(){
   $('#seatFilterMap')?.addEventListener('change',()=>{applyExplorerMapFilter();renderMapSummary();});
   $('#seatResetFilters')?.addEventListener('click',resetSeatFilters);
   $('#seatShowMore')?.addEventListener('click',()=>{state.explorerVisible+=50;renderMarginals();});
+  $('#seatExportFiltered')?.addEventListener('click',()=>downloadSeatCsv(true));
+  $('#seatExportAll')?.addEventListener('click',()=>downloadSeatCsv(false));
+  $('#regionalSource')?.addEventListener('change',renderRegionalDashboard);
   $$('[data-seat-preset]').forEach(b=>b.addEventListener('click',()=>applySeatPreset(b.dataset.seatPreset)));
   $('#scenarioNormalizeBtn')?.addEventListener('click',normalizeScenarioInputs);
   $('#scenarioRunBtn')?.addEventListener('click',runCustomScenario);
