@@ -84,3 +84,12 @@ Questa build include nello stesso run anche i due test emersi dalla revisione me
 Fonti principali: House of Commons FOI F23-289 (European Parliament 2019 LAD results); YouGov/ITV Cymru Wales/Cardiff University final Welsh Barometer polls 2015/2017/2019; Barn Cymru/YouGov 2024; Electoral Calculus final-campaign Scottish polling tables. Il fallback GitHub del dataset europeo è solo un backstop di rete e viene registrato nel report se utilizzato.
 
 Il report `data/solution-search-v0922.json` contiene ora i rami `scotland_signal`, `country_split`, `brexit_geography`, `public_target_lists`, `winner_meta` e `combined_selected_pre2024`.
+
+## Hotfix 27/08/2026 — unified solution search
+
+Correzione del crash `IndexError: list index out of range` nel blocco di selezione delle lane sperimentali.
+La ricerca mantiene la v0.9.22 e i medesimi gate: se una lane non produce alcun candidato storicamente ammissibile, viene selezionato un **no-op esplicito** per quella lane invece di indicizzare una lista vuota. Nessun parametro viene selezionato sui risultati 2024.
+
+Inoltre il builder ora stampa il traceback completo su stderr in caso di errore, così un eventuale problema successivo espone immediatamente funzione e riga precise nella GitHub Action.
+
+Marker sorgente: `V0922_HOTFIX="explicit-noop-candidate-fallback-and-traceback"`.

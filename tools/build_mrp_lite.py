@@ -42,6 +42,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 ROOT=Path(__file__).resolve().parents[1]
+V0922_HOTFIX="explicit-noop-candidate-fallback-and-traceback"
 DATA=ROOT/"data"
 DATA.mkdir(exist_ok=True)
 
@@ -4693,6 +4694,8 @@ def apply_public_target_lists(rows:pd.DataFrame,base:dict[str,Any],national_targ
 def _top_two(rows:pd.DataFrame,brow:pd.Series,i:Any)->tuple[str,str,float,float]:
     eligible=[p for p in PARTIES if allowed(p,str(brow["country"]))]
     ordered=sorted(eligible,key=lambda p:float(rows.at[i,p]),reverse=True)
+    if len(ordered)<2:
+        raise RuntimeError(f"winner-meta requires at least two eligible parties for seat {brow.get('name',i)!r}; country={brow.get('country')!r}; eligible={ordered}")
     a,b=ordered[0],ordered[1]
     return a,b,float(rows.at[i,a]),float(rows.at[i,b])
 
@@ -4700,6 +4703,8 @@ def _top_two(rows:pd.DataFrame,brow:pd.Series,i:Any)->tuple[str,str,float,float]
 def _winner_meta_record(rows:pd.DataFrame,base:dict[str,Any],i:Any)->dict[str,float]:
     brow=base["frame"].loc[i];a,b,sa,sb=_top_two(rows,brow,i)
     ordered_base=sorted([p for p in PARTIES if allowed(p,str(brow["country"]))],key=lambda p:float(brow[p]),reverse=True)
+    if len(ordered_base)<2:
+        raise RuntimeError(f"winner-meta baseline requires at least two eligible parties for seat {brow.get('name',i)!r}; country={brow.get('country')!r}; eligible={ordered_base}")
     bw=str(brow.get("actual_winner") or ordered_base[0]);bs=str(brow.get("actual_second") or ordered_base[1])
     rec={"pred_margin":sa-sb,"pred_top":sa,"pred_second":sb,"base_margin":float(brow[ordered_base[0]])-float(brow[ordered_base[1]]),
          "base_winner_is_top":1.0 if bw==a else 0.0,"base_second_is_second":1.0 if bs==b else 0.0,
@@ -4944,6 +4949,8 @@ def fit_brexit_geography(e19n:dict[str,Any],profile:dict[str,Any])->dict[str,Any
             if best_pack is None or (mae,float(alpha),float(shrink))<(best_pack[0],best_pack[1],best_pack[2]):
                 best_pack=(mae,float(alpha),float(shrink),cand)
     candidates.sort(key=lambda z:(z["cv_mae_pp"],z["alpha"],z["shrink"]))
+    if not candidates:
+        raise RuntimeError("Brexit geography calibration produced no candidates; check BREXIT_GEO_ALPHA_GRID/BREXIT_GEO_SHRINK_GRID")
     selected=candidates[0]
     full_model=Pipeline([("scale",StandardScaler()),("ridge",Ridge(alpha=float(selected["alpha"])))])
     full_model.fit(x,y)
@@ -5026,7 +5033,21 @@ def evaluate_solution_search(reference24:pd.DataFrame,e10:dict[str,Any],e15:dict
             sc.append({"id":f"sc_pb{pb:.2f}_h{hw:.2f}","poll_blend":pb,"holyrood_weight":hw,"validation":mets,"scotland_validation":scmets,
                        "winner_gain_sum":int(gain),"seat_error_improvement_sum":int(se),"admissible":_hist_ok(mets,baselines),"meta":meta})
     sca=[x for x in sc if x["admissible"]];sca.sort(key=lambda x:(x["winner_gain_sum"],x["seat_error_improvement_sum"],-x["poll_blend"],-x["holyrood_weight"]),reverse=True)
-    selected_sc=sca[0]
+    if sca:
+        selected_sc=sca[0]
+    else:
+        # A research lane that cannot clear its historical admissibility gate is
+        # rejected, not allowed to crash the unified search.  This explicit literal
+        # no-op is preferable to assuming that a grid value of zero is numerically
+        # identical after subset raking.
+        selected_sc={
+            "id":"sc_off_no_admissible","poll_blend":0.0,"holyrood_weight":0.0,
+            "validation":dict(baselines),
+            "scotland_validation":{y:country_accuracy(rr,aa,bb,"Scotland") for y,(rr,bb,aa,_) in refs.items()},
+            "winner_gain_sum":0,"seat_error_improvement_sum":0,"admissible":True,
+            "fallback_reason":"no_scotland_candidate_passed_historical_admissibility",
+            "meta":{y:{"applied":False,"reason":"explicit_noop_fallback"} for y in refs},
+        }
 
     # B) England/Scotland/Wales country split. Scotland and Wales use dedicated
     # final pre-election polls; England is inferred as the exact GB complement.
@@ -5044,7 +5065,16 @@ def evaluate_solution_search(reference24:pd.DataFrame,e10:dict[str,Any],e15:dict
                             "winner_gain_sum":int(gain),"seat_error_improvement_sum":int(se),"feasible":bool(feasible),
                             "admissible":bool(feasible and _hist_ok(mets,baselines)),"meta":meta})
     cta=[x for x in country if x["admissible"]];cta.sort(key=lambda x:(x["winner_gain_sum"],x["seat_error_improvement_sum"],-x["poll_blend"],-x["holyrood_weight"]),reverse=True)
-    selected_country=cta[0]
+    if cta:
+        selected_country=cta[0]
+    else:
+        selected_country={
+            "id":"ct_off_no_admissible","poll_blend":0.0,"holyrood_weight":0.0,
+            "validation":dict(baselines),"winner_gain_sum":0,"seat_error_improvement_sum":0,
+            "feasible":True,"admissible":True,
+            "fallback_reason":"no_country_split_candidate_passed_historical_admissibility",
+            "meta":{y:{"applied":False,"reason":"explicit_noop_fallback","feasible":True} for y in refs},
+        }
 
     # C) Public campaign target lists: LD nationally and Labour targets in Scotland.
     tg=[]
@@ -5058,7 +5088,16 @@ def evaluate_solution_search(reference24:pd.DataFrame,e10:dict[str,Any],e15:dict
             tg.append({"id":f"tg_ld{ls:.2f}_lab{labs:.2f}","ld_strength":ls,"lab_scotland_strength":labs,"validation":mets,
                        "winner_gain_sum":int(gain),"seat_error_improvement_sum":int(se),"admissible":_hist_ok(mets,bsub),"meta":meta})
     tga=[x for x in tg if x["admissible"]];tga.sort(key=lambda x:(x["winner_gain_sum"],x["seat_error_improvement_sum"],-(x["ld_strength"]+x["lab_scotland_strength"])),reverse=True)
-    selected_tg=tga[0]
+    if tga:
+        selected_tg=tga[0]
+    else:
+        bsub={y:baselines[y] for y in ("2017","2019")}
+        selected_tg={
+            "id":"tg_off_no_admissible","ld_strength":0.0,"lab_scotland_strength":0.0,
+            "validation":bsub,"winner_gain_sum":0,"seat_error_improvement_sum":0,"admissible":True,
+            "fallback_reason":"no_public_target_candidate_passed_historical_admissibility",
+            "meta":{y:{"applied":False,"reason":"explicit_noop_fallback"} for y in bsub},
+        }
 
     # D) Generic top-two calibrator. Train only 2015+2017; threshold/C selected on 2019.
     train_blocks=[]
@@ -5075,7 +5114,13 @@ def evaluate_solution_search(reference24:pd.DataFrame,e10:dict[str,Any],e15:dict
                 meta_candidates.append({"id":f"meta_c{cval:g}_t{th:.2f}","c":cval,"threshold":th,"validation_2019":ev,"meta_2019":mm,
                                         "admissible":bool(ev["correct_winners"]>=baselines["2019"]["correct_winners"]-1 and ev["seat_abs_error_sum"]<=baselines["2019"]["seat_abs_error_sum"]+6)})
     meta_candidates.append({"id":"meta_off","c":None,"threshold":None,"validation_2019":baselines["2019"],"meta_2019":{"changed_seats":0,"training_classes":sorted(meta_classes)},"admissible":True})
-    ma=[x for x in meta_candidates if x["admissible"]];ma.sort(key=lambda x:(score_tuple(x["validation_2019"]),0 if x["id"]=="meta_off" else -1),reverse=True);selected_meta=ma[0]
+    ma=[x for x in meta_candidates if x["admissible"]];ma.sort(key=lambda x:(score_tuple(x["validation_2019"]),0 if x["id"]=="meta_off" else -1),reverse=True)
+    if not ma:
+        # Defensive invariant: meta_off is appended above and must always survive.
+        # Keep a descriptive failure instead of a bare list-index exception if that
+        # invariant is ever broken by a future refactor.
+        raise RuntimeError("winner-meta candidate set unexpectedly has no admissible meta_off fallback")
+    selected_meta=ma[0]
 
     # E) Brexit/Farage full-contestation geography. Calibration uses May-2019
     # European election geography and Dec-2019 Brexit Party shares only where the
@@ -5618,6 +5663,7 @@ if __name__=="__main__":
         raise SystemExit(main())
     except Exception as exc:
         print(f"build_mrp_lite.py v0.9.22 solution-search build failed: {exc}",file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         write_failure(exc)
         # A broken research build must not be deployed. The previously deployed
         # production/fallback remains untouched because this workflow stops before
