@@ -1311,10 +1311,27 @@ function csvEscape(v){const s=String(v??'');return /[",\r\n]/.test(s)?`"${s.repl
 function explorerItemsForExport(filtered=true){
   const source=explorerSource(),all=state.central?.seats?.map(seat=>seatExplorerItem(seat,source))||[];if(!filtered)return all;const f=explorerFilterValues();return sortExplorerItems(all.filter(x=>itemPassesExplorer(x,f)),f);
 }
+// v0.9.34.1 — complete 650-seat CSV export, including Northern Ireland party columns.
 function seatCsvRows(filtered=true){
-  const source=explorerSource(),items=explorerItemsForExport(filtered),shareParties=['lab','con','ref','ld','green','snp','pc','other'];
-  const header=['ons_id','collegio','paese','regione','vincitore_2024','vincitore_scenario','cambio','margine_centrale_pp','favorito_mc','prob_favorito_mc',...shareParties.map(p=>`quota_${p}`),...shareParties.map(p=>`prob_${p}`)];
-  const rows=[header];for(const x of items){const seat=x.seat,shares=scenarioSharesForSeat(seat,source),prob=state.mc?.seatProb?.[seat.id]||{},best=Object.entries(prob).filter(([p])=>PARTY[p]).sort((a,b)=>b[1]-a[1])[0];rows.push([seat.id,seat.name,seat.country,seat.region,seat.winner2024||'other',x.projected,x.changed?'1':'0',Number(x.cm.margin).toFixed(3),best?.[0]||'',best?Number(best[1]).toFixed(6):'',...shareParties.map(p=>Number(shares[p]||0).toFixed(4)),...shareParties.map(p=>prob[p]==null?'':Number(prob[p]).toFixed(6))]);}
+  const source=explorerSource(),items=explorerItemsForExport(filtered),shareParties=[...scenarioModelParties(),...NI_ORDER];
+  const marginHeader=source==='custom'?'margine_scenario_utente_pp':'margine_centrale_pp';
+  const header=['ons_id','collegio','paese','regione','vincitore_2024','vincitore_scenario','cambio',marginHeader,'favorito_mc','prob_favorito_mc',...shareParties.map(p=>`quota_${p}`),...shareParties.map(p=>`prob_${p}`)];
+  const rows=[header];
+  for(const x of items){
+    const seat=x.seat,shares=scenarioSharesForSeat(seat,source),prob=state.mc?.seatProb?.[seat.id]||{},best=Object.entries(prob).filter(([p])=>PARTY[p]).sort((a,b)=>b[1]-a[1])[0];
+    const isNI=!!seat.isNorthernIreland||/northern ireland/i.test(`${seat.country||''} ${seat.modelZone||''}`);
+    const shareCell=p=>{
+      const niParty=NI_ORDER.includes(p);
+      if(isNI!==niParty)return '';
+      return Number(shares[p]||0).toFixed(4);
+    };
+    const probCell=p=>{
+      const niParty=NI_ORDER.includes(p);
+      if(isNI!==niParty||prob[p]==null)return '';
+      return Number(prob[p]).toFixed(6);
+    };
+    rows.push([seat.id,seat.name,seat.country,seat.region,seat.winner2024||(isNI?'ni_other':'other'),x.projected,x.changed?'1':'0',Number(x.cm.margin).toFixed(3),best?.[0]||'',best?Number(best[1]).toFixed(6):'',...shareParties.map(shareCell),...shareParties.map(probCell)]);
+  }
   return rows;
 }
 function downloadSeatCsv(filtered=true){

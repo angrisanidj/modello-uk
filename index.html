@@ -11,7 +11,7 @@
 <meta property="og:url" content="https://angrisanidj.github.io/modello-uk/" />
 <meta property="og:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta property="og:description" content="Nowcast probabilistico della House of Commons: sondaggi, proiezione dei seggi, Monte Carlo e probabilità collegio per collegio." />
-<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.34" />
+<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.34.1" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="Nowcast delle elezioni nel Regno Unito — proiezione della House of Commons" />
@@ -19,9 +19,9 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta name="twitter:description" content="Nowcast probabilistico della House of Commons: sondaggi, seggi, collegi e probabilità." />
-<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.34" />
-<link rel="stylesheet" href="styles.css?v=0.9.34" />
-<link rel="stylesheet" href="map-performance.css?v=0.9.34" />
+<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.34.1" />
+<link rel="stylesheet" href="styles.css?v=0.9.34.1" />
+<link rel="stylesheet" href="map-performance.css?v=0.9.34.1" />
 </head>
 <body>
 <div class="flag-ribbon" aria-hidden="true"></div>
@@ -42,7 +42,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Sondaggi: —</span>
-      <span class="badge badge-strong">UI 0.9.34 · motore statistico 0.9.29 congelato</span>
+      <span class="badge badge-strong">UI 0.9.34.1 · motore statistico 0.9.29 congelato</span>
     </div>
   </section>
 
@@ -237,7 +237,7 @@
 
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La UI cambia; il motore statistico di produzione resta congelato sulla v0.9.29.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.34 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.34.1 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
     <article class="card"><div class="cardhead"><div><h3>Pipeline di produzione</h3><p>Il live viene promosso solo dopo l’audit.</p></div></div><div class="pipeline"><span>Sondaggi</span><b>→</b><span>target nazionale</span><b>→</b><span>MRP geography stack</span><b>→</b><span>632 GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>La GitHub Action ricostruisce il candidato statistico congelato, verifica backtest, copertura provider, assenza dei topline esterni e stabilità fra scenari. Il watcher MRP segnala eventuali nuove pubblicazioni ma non le adotta automaticamente.</p></div></article>
   </section>
 
@@ -246,7 +246,7 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.34"></script>
-<script src="scripts/map-performance.js?v=0.9.34"></script>
+<script src="scripts/app.js?v=0.9.34.1"></script>
+<script src="scripts/map-performance.js?v=0.9.34.1"></script>
 </body>
 </html>
