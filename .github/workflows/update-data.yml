@@ -1,4 +1,4 @@
-# UI release v0.9.42: editorial finishing pass plus model-generated dynamic social cards; statistical production engine remains frozen on v0.9.29.
+# UI release v0.9.43: editorial finishing pass plus model-generated dynamic social cards; statistical production engine remains frozen on v0.9.29.
 name: Update and deploy UK model
 
 on:
