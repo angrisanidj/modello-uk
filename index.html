@@ -4,9 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="color-scheme" content="dark" />
-<title>Elezioni nel Regno Unito — Sondaggi e proiezione della House of Commons</title>
-<meta name="description" content="Media dei sondaggi, proiezione probabilistica dei 650 seggi, simulazione dei collegi e probabilità di maggioranza per le prossime elezioni britanniche." />
-<link rel="stylesheet" href="styles.css" />
+<title>Elezioni nel Regno Unito — Sondaggi, seggi e probabilità</title>
+<meta name="description" content="Nowcast delle prossime elezioni britanniche: media dei sondaggi, proiezione probabilistica dei 650 seggi, Monte Carlo, collegi chiave e scenari di maggioranza." />
+<link rel="stylesheet" href="styles.css?v=0.9.30" />
 <link rel="stylesheet" href="map-performance.css" />
 </head>
 <body>
@@ -15,92 +15,150 @@
   <section class="hero">
     <div class="hero-grid">
       <div>
-        <div class="eyebrow"><span class="flag-dot">UK</span> Focus America · modello elettorale</div>
+        <div class="eyebrow"><span class="flag-dot">UK</span> Focus America · election model</div>
         <h1>Elezioni nel Regno Unito</h1>
-        <p class="subtitle">Sondaggi, proiezione dei <strong>650 seggi</strong> della House of Commons, simulazione probabilistica dei collegi e scenari di maggioranza. <strong>Nowcast: “se si votasse oggi”.</strong></p>
+        <p class="subtitle">Un nowcast dei <strong>650 seggi</strong> della House of Commons: polling nazionale, geography stack MRP, simulazioni Monte Carlo e probabilità di vittoria collegio per collegio. <strong>La domanda è: cosa accadrebbe se si votasse oggi?</strong></p>
       </div>
       <div class="actions">
         <button id="refreshBtn" class="primary">Aggiorna dati</button>
+        <a class="buttonlike" href="#territorio">Mappa</a>
         <a class="buttonlike" href="#metodo">Metodologia</a>
       </div>
     </div>
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
-      <span class="badge" id="dataBadge">Fonte sondaggi: —</span>
-      <span class="badge">Versione 0.9.29 · precision-weighted MRP stack (live)</span>
+      <span class="badge" id="dataBadge">Sondaggi: —</span>
+      <span class="badge badge-strong">UI 0.9.30 · motore statistico 0.9.29 congelato</span>
     </div>
   </section>
+
   <div id="errorBox" class="errorbox"></div>
-  <section class="grid kpis">
+
+  <section class="grid kpis" aria-label="Indicatori principali">
     <article class="card kpi"><div class="label">Ultimo sondaggio</div><div id="kpiLastPoll" class="value">—</div><div id="kpiLastPollMeta" class="meta">—</div></article>
-    <article class="card kpi"><div class="label">Media nazionale</div><div id="kpiLeader" class="value">—</div><div id="kpiLeaderMeta" class="meta">—</div></article>
-    <article class="card kpi"><div class="label">Partito più grande</div><div id="kpiLargest" class="value">—</div><div id="kpiLargestMeta" class="meta">Monte Carlo</div></article>
-    <article class="card kpi"><div class="label">Maggioranza assoluta</div><div id="kpiMajority" class="value">—</div><div id="kpiMajorityMeta" class="meta">326 seggi</div></article>
+    <article class="card kpi"><div class="label">Leader nel voto</div><div id="kpiLeader" class="value">—</div><div id="kpiLeaderMeta" class="meta">—</div></article>
+    <article class="card kpi"><div class="label">Primo partito</div><div id="kpiLargest" class="value">—</div><div id="kpiLargestMeta" class="meta">Monte Carlo</div></article>
+    <article class="card kpi"><div class="label">Chance di maggioranza</div><div id="kpiMajority" class="value">—</div><div id="kpiMajorityMeta" class="meta">326 seggi</div></article>
   </section>
-  <div class="section-title"><div><div class="section-kicker">Voto nazionale</div><h2>Media dei sondaggi</h2><p>Media esponenziale con half-life di 7 giorni, ponderazione del campione e lieve correzione GB/UK.</p></div></div>
+
+  <div class="section-title"><div><div class="section-kicker">Nowcast</div><h2>Il quadro in una frase</h2><p>Dallo scenario centrale alla distribuzione probabilistica completa.</p></div></div>
+  <section class="card outcome-card">
+    <div class="outcome-main">
+      <div class="outcome-label">Esito più probabile</div>
+      <h2 id="outcomeHeadline">In attesa del modello</h2>
+      <p id="outcomeSub">Il Monte Carlo parte automaticamente quando sono disponibili tutti i collegi.</p>
+    </div>
+    <div id="largestPartyGrid" class="largest-party-grid"></div>
+  </section>
+
+  <div class="section-title"><div><div class="section-kicker">Voto nazionale</div><h2>Media dei sondaggi</h2><p>Il topline è del modello Focus America; i provider MRP forniscono geografia relativa, non il voto nazionale.</p></div></div>
   <section class="grid two">
     <article class="card feature">
       <div class="cardhead"><div><h3>Intenzione di voto</h3><p id="pollAverageMeta">—</p></div><div class="controls"><button class="active" data-window="all">Media</button><button data-window="latest">Ultimi poll</button></div></div>
       <div id="voteBars" class="vote-bars"></div>
     </article>
-    <article class="card">
-      <div class="cardhead"><div><h3>Come leggere il dato</h3><p>Il voto nazionale non viene convertito direttamente in seggi.</p></div></div>
-      <div class="explain compact">
-        <p><strong>632 collegi GB</strong> sono modellati singolarmente con un geography stack MRP: anchor YouGov 2024 e MRP More in Common 2026, combinati per partito in base a precisione storica e freschezza. Il topline nazionale resta quello del modello Focus America.</p>
-        <p><strong>18 collegi dell’Irlanda del Nord</strong> sono simulati separatamente con partiti, candidati e risultati Westminster 2024 reali. In assenza di polling Westminster recente, il tracker Assembly di LucidTalk entra soltanto come segnale debole.</p>
-        <p class="warning"><strong>Modello live v0.9.29:</strong> la strength geografica 0,875 è stata selezionata sul 2019. L’affidabilità relativa YouGov/MiC del layer 2026 è stimata sul 2024 con validazione leave-one-region-out. I topline dei provider MRP sono esclusi e ogni proiezione viene ricalibrata al target nazionale interno.</p>
+    <article class="card methodbox">
+      <div class="cardhead"><div><h3>Dal voto ai collegi</h3><p>Il FPTP britannico rende decisiva la distribuzione geografica.</p></div></div>
+      <div class="method-list">
+        <div class="method-row"><span class="method-num">1</span><div><strong>Target nazionale interno</strong><span>Media dei sondaggi aggiornata; nessun topline YouGov/MiC viene importato.</span></div></div>
+        <div class="method-row"><span class="method-num">2</span><div><strong>632 collegi GB</strong><span>Geography stack MRP: YouGov 2024 + More in Common 2026, pesati per precisione e freschezza.</span></div></div>
+        <div class="method-row"><span class="method-num">3</span><div><strong>18 collegi NI</strong><span>Modulo separato con base Westminster 2024 e segnale Assembly solo debole.</span></div></div>
+        <div class="method-row"><span class="method-num">4</span><div><strong>50.000 simulazioni</strong><span>Incertezza nazionale, regionale e locale propagata fino ai vincitori di collegio.</span></div></div>
       </div>
+      <div class="audit-chip"><strong>Motore live validato:</strong> 609/632 nel 2019 · 578/632 benchmark YouGov 2024 · 584/632 provider-stack CV regionale 2024.</div>
     </article>
   </section>
-  <div class="section-title"><div><div class="section-kicker">House of Commons</div><h2>Proiezione dei seggi</h2><p>Mediane e intervalli dalla simulazione Monte Carlo. La linea di maggioranza è a 326.</p></div></div>
+
+  <div class="section-title"><div><div class="section-kicker">House of Commons</div><h2>Proiezione dei seggi</h2><p>Mediane e intervallo centrale 80%. La maggioranza assoluta è a quota 326.</p></div></div>
   <section class="projection-layout">
     <article class="card parliament-card">
-      <div class="projection-head"><div><h2 id="projectionTitle">In attesa dei dati territoriali</h2><p id="projectionSubtitle">La simulazione parte quando sono disponibili i risultati 2024 dei collegi.</p></div><span id="mcBadge" class="proj-badge">50.000 simulazioni</span></div>
+      <div class="projection-head"><div><h2 id="projectionTitle">In attesa dei dati territoriali</h2><p id="projectionSubtitle">La simulazione parte quando sono disponibili i risultati dei collegi.</p></div><span id="mcBadge" class="proj-badge">50.000 simulazioni</span></div>
       <div class="hemicycle-wrap"><svg id="hemicycle" viewBox="0 0 620 330" role="img" aria-label="Proiezione della House of Commons"></svg><div class="majority-marker">326</div></div>
       <div id="seatStrip" class="seat-strip"></div>
       <div id="seatTable" class="seat-table"></div>
     </article>
-    <article class="card probability-card">
-      <div class="cardhead"><div><h3>Esiti complessivi</h3><p>Frequenze nelle simulazioni.</p></div></div>
-      <div class="prob-list">
-        <div><span>Labour majority</span><strong id="probLabMaj">—</strong></div>
-        <div><span>Conservative majority</span><strong id="probConMaj">—</strong></div>
-        <div><span>Reform majority</span><strong id="probRefMaj">—</strong></div>
-        <div><span>Hung Parliament</span><strong id="probHung">—</strong></div><div><span>Labour working majority</span><strong id="probLabWorkMaj">—</strong></div><div><span>Conservative working majority</span><strong id="probConWorkMaj">—</strong></div><div><span>Reform working majority</span><strong id="probRefWorkMaj">—</strong></div>
-      </div>
-      <div class="mc-progress"><div><span id="mcStatus">Monte Carlo non avviato</span><span id="mcCount">0 / 50.000</span></div><progress id="mcProgress" value="0" max="50000"></progress></div>
-      <div class="small-note">Seed deterministico. La maggioranza assoluta resta 326; la soglia operativa indicativa esclude i seggi Sinn Féin astensionisti ed è circa <strong id="workingThreshold">—</strong>. Speaker e Deputy Speakers non sono ancora corretti separatamente.</div>
-    </article>
+    <aside class="projection-side">
+      <article class="card probability-card">
+        <div class="cardhead"><div><h3>Probabilità di governo</h3><p>Frequenze nelle 50.000 simulazioni.</p></div></div>
+        <div class="prob-section-label">Maggioranza assoluta</div>
+        <div class="prob-list compact-probs">
+          <div><span><i class="party-dot" style="background:var(--lab)"></i>Labour</span><strong id="probLabMaj">—</strong></div>
+          <div><span><i class="party-dot" style="background:var(--con)"></i>Conservative</span><strong id="probConMaj">—</strong></div>
+          <div><span><i class="party-dot" style="background:var(--ref)"></i>Reform UK</span><strong id="probRefMaj">—</strong></div>
+          <div class="prob-highlight"><span>Hung Parliament</span><strong id="probHung">—</strong></div>
+        </div>
+        <div class="prob-section-label">Maggioranza operativa</div>
+        <div class="prob-list compact-probs">
+          <div><span>Labour</span><strong id="probLabWorkMaj">—</strong></div>
+          <div><span>Conservative</span><strong id="probConWorkMaj">—</strong></div>
+          <div><span>Reform UK</span><strong id="probRefWorkMaj">—</strong></div>
+        </div>
+        <div class="mc-progress"><div><span id="mcStatus">Monte Carlo non avviato</span><span id="mcCount">0 / 50.000</span></div><progress id="mcProgress" value="0" max="50000"></progress></div>
+        <div class="small-note">Seed deterministico. La soglia operativa indicativa esclude i seggi Sinn Féin astensionisti ed è circa <strong id="workingThreshold">—</strong>.</div>
+      </article>
+      <article class="card side-note">
+        <div class="side-note-kicker">Come leggere la mappa</div>
+        <strong>La mappa non mostra una simulazione casuale.</strong>
+        <p>Dopo il Monte Carlo passa automaticamente a uno <em>scenario territoriale rappresentativo</em>, ricomposto per aderire alle mediane dei seggi usando le probabilità di vittoria dei singoli collegi.</p>
+      </article>
+    </aside>
   </section>
-  <div class="section-title"><div><div class="section-kicker">Territorio</div><h2>Mappa dei collegi</h2><p>Il colore indica il vincitore centrale; dopo il Monte Carlo il pannello mostra anche la probabilità di vittoria.</p></div></div>
-  <section class="grid map-layout">
+
+  <div class="section-title" id="territorio"><div><div class="section-kicker">Territorio</div><h2>Mappa dei 650 collegi</h2><p>Scenario rappresentativo, margine centrale e probabilità di vittoria nello stesso pannello.</p></div></div>
+  <section class="map-stage">
     <article class="card map-card">
-      <div class="cardhead"><div><h3>650 Westminster constituencies</h3><p id="mapMeta">Caricamento geometrie ONS…</p></div><div class="controls"><button id="mapCentralBtn" class="active">Proiezione</button><button id="mapProbBtn" disabled aria-disabled="true" title="Disponibile al termine delle 50.000 simulazioni">Probabilità</button></div></div>
+      <div class="map-head">
+        <div><h3>Westminster constituencies</h3><p id="mapMeta">Caricamento geometrie ONS…</p></div>
+        <div class="controls map-mode" id="mapModeControls"><button id="mapCentralBtn" class="active">Proiezione</button><button id="mapMarginBtn">Margine</button><button id="mapProbBtn" disabled aria-disabled="true" title="Disponibile al termine delle 50.000 simulazioni">Probabilità</button></div>
+      </div>
+      <div id="mapSummary" class="map-summary"><span class="map-summary-chip"><strong>Caricamento della base territoriale…</strong></span></div>
       <div id="mapWrap" class="map-wrap"><svg id="ukMap" viewBox="0 0 640 760" role="img" aria-label="Mappa dei collegi parlamentari britannici"></svg><div id="mapEmpty" class="empty-state">Le geometrie saranno caricate dalla build automatica.</div></div>
     </article>
-    <article class="card seat-detail">
-      <div class="cardhead"><div><h3 id="detailName">Seleziona un collegio</h3><p id="detailRegion">—</p></div></div>
-      <div id="detailBody" class="detail-body"><p>Clicca un collegio sulla mappa per vedere risultato 2024, proiezione centrale e probabilità di vittoria.</p></div>
-    </article>
+    <aside class="map-side">
+      <article class="card seat-detail">
+        <div class="cardhead"><div><div class="detail-kicker">Dettaglio del collegio</div><h3 id="detailName">Seleziona un collegio</h3><p id="detailRegion">—</p></div></div>
+        <div id="detailBody" class="detail-body"><p>Clicca un collegio sulla mappa o nella tabella dei marginali per vedere risultato 2024, proiezione centrale e probabilità di vittoria.</p></div>
+      </article>
+      <article class="card map-method-card">
+        <h3>Tre letture diverse</h3>
+        <div class="map-read"><b>Scenario</b><span>Il vincitore di uno scenario coerente con le mediane nazionali.</span></div>
+        <div class="map-read"><b>Margine</b><span>Più il colore è scuro, più ampio è il vantaggio centrale.</span></div>
+        <div class="map-read"><b>Probabilità</b><span>Più il colore è intenso, più alta è la probabilità simulata del favorito.</span></div>
+      </article>
+    </aside>
   </section>
-  <div class="section-title"><div><div class="section-kicker">Scenari</div><h2>Costruisci una maggioranza</h2><p>Somma le mediane dei partiti e, quando il Monte Carlo è disponibile, misura quante simulazioni raggiungono 326 seggi.</p></div></div>
+
+  <div class="section-title"><div><div class="section-kicker">Battlegrounds</div><h2>Collegi chiave</h2><p id="marginalMeta">I collegi più competitivi verranno ordinati automaticamente.</p></div></div>
+  <section class="card marginal-card">
+    <div class="table-scroll"><table class="marginal-table"><thead><tr><th>Collegio</th><th>2024</th><th>Scenario</th><th>Margine centrale</th><th>P vittoria</th></tr></thead><tbody id="marginalTableBody"></tbody></table></div>
+    <div class="table-note">La probabilità è quella del favorito nello scenario Monte Carlo. Prima del completamento viene mostrato soltanto il margine centrale.</div>
+  </section>
+
+  <div class="section-title"><div><div class="section-kicker">Scenari</div><h2>Costruisci una maggioranza</h2><p>Somma i seggi mediani e misura la probabilità che la combinazione superi la soglia operativa.</p></div></div>
   <section class="card coalition-card">
-    <div id="coalitionButtons" class="coalition-buttons"></div>
-    <div class="coalition-result"><div><span>Seggi mediani</span><strong id="coalSeats">0</strong></div><div><span>Probabilità ≥326</span><strong id="coalProb">—</strong></div><div><span>Distanza</span><strong id="coalDistance">−326</strong></div></div>
+    <div class="coalition-dashboard">
+      <div class="coalition-select"><div class="coalition-label">Seleziona i partiti</div><div id="coalitionButtons" class="coalition-buttons"></div></div>
+      <div class="coalition-result"><div><span>Seggi mediani</span><strong id="coalSeats">0</strong></div><div><span>Probabilità ≥ soglia</span><strong id="coalProb">—</strong></div><div><span>Distanza</span><strong id="coalDistance">−326</strong></div></div>
+    </div>
+    <div class="winning-head"><h4>Coalizioni minime vincenti</h4><p>Combinazioni aritmetiche fra i principali partiti: nessuna valutazione di compatibilità politica è implicita.</p></div>
+    <div id="coalitionOptions" class="coalition-options"></div>
   </section>
+
   <div class="section-title"><div><div class="section-kicker">Sondaggi</div><h2>Rilevazioni recenti</h2><p>I record vengono acquisiti automaticamente e conservati in uno snapshot locale.</p></div></div>
   <section class="card poll-table-card"><div class="table-scroll"><table><thead><tr><th>Data</th><th>Istituto</th><th>Area</th><th>n</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>Green</th><th>SNP</th><th>PC</th><th>RB</th></tr></thead><tbody id="pollTableBody"></tbody></table></div></section>
-  <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La calibrazione territoriale viene stimata su elezioni precedenti e verificata su elezioni non usate nel fit.</p></div></div>
+
+  <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La UI cambia; il motore statistico di produzione resta congelato sulla v0.9.29.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>v0.9.29 · geography stack promosso</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il nuovo provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota metodologica:</strong> il 92,41% è una validazione spaziale cross-validata del layer di affidabilità provider sul 2024, non un holdout incontaminato. Il risultato 2024 non seleziona la strength geografica storica; i topline esterni non vengono mai importati.</p></div></article>
-    <article class="card"><div class="cardhead"><div><h3>Pipeline e backstop</h3><p>Il sito non dipende da una singola richiesta live.</p></div></div><div class="pipeline"><span>Sondaggi aggiornati</span><b>→</b><span>target nazionale</span><b>→</b><span>MRP geography stack</span><b>→</b><span>632 collegi GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>La GitHub Action ricostruisce ogni giorno il candidato v0.9.28, verifica invarianti storiche, copertura dei provider, assenza dei topline esterni e stabilità fra scenari contemporanei. Solo dopo l’audit v0.9.29 il file viene promosso a <code>mrp-lite-live.json</code>. Il watcher MRP resta separato: segnala nuove pubblicazioni ma non le adotta automaticamente.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.30 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Pipeline di produzione</h3><p>Il live viene promosso solo dopo l’audit.</p></div></div><div class="pipeline"><span>Sondaggi</span><b>→</b><span>target nazionale</span><b>→</b><span>MRP geography stack</span><b>→</b><span>632 GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>La GitHub Action ricostruisce il candidato statistico congelato, verifica backtest, copertura provider, assenza dei topline esterni e stabilità fra scenari. Il watcher MRP segnala eventuali nuove pubblicazioni ma non le adotta automaticamente.</p></div></article>
   </section>
+
   <footer>
     <p><strong>Fonti:</strong> Wikipedia/MediaWiki per i sondaggi; House of Commons Library e UK Parliament per le generali; Democracy Club per elezioni locali e by-election; ONS per confini e lookup geografici. Modello indipendente a fini informativi.</p>
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.29"></script>
+<script src="scripts/app.js?v=0.9.30"></script>
 <script src="scripts/map-performance.js"></script>
 </body>
 </html>
