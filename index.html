@@ -6,8 +6,22 @@
 <meta name="color-scheme" content="dark" />
 <title>Elezioni nel Regno Unito — Sondaggi, seggi e probabilità</title>
 <meta name="description" content="Nowcast delle prossime elezioni britanniche: media dei sondaggi, proiezione probabilistica dei 650 seggi, Monte Carlo, collegi chiave e scenari di maggioranza." />
-<link rel="stylesheet" href="styles.css?v=0.9.32" />
-<link rel="stylesheet" href="map-performance.css?v=0.9.32" />
+<link rel="canonical" href="https://angrisanidj.github.io/modello-uk/" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://angrisanidj.github.io/modello-uk/" />
+<meta property="og:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
+<meta property="og:description" content="Nowcast probabilistico della House of Commons: sondaggi, proiezione dei seggi, Monte Carlo e probabilità collegio per collegio." />
+<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.33" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Nowcast delle elezioni nel Regno Unito — proiezione della House of Commons" />
+<meta property="og:site_name" content="Focus America election model" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
+<meta name="twitter:description" content="Nowcast probabilistico della House of Commons: sondaggi, seggi, collegi e probabilità." />
+<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.33" />
+<link rel="stylesheet" href="styles.css?v=0.9.33" />
+<link rel="stylesheet" href="map-performance.css?v=0.9.33" />
 </head>
 <body>
 <div class="flag-ribbon" aria-hidden="true"></div>
@@ -28,9 +42,22 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Sondaggi: —</span>
-      <span class="badge badge-strong">UI 0.9.32 · motore statistico 0.9.29 congelato</span>
+      <span class="badge badge-strong">UI 0.9.33 · motore statistico 0.9.29 congelato</span>
     </div>
   </section>
+
+  <nav class="share-rail" aria-label="Condividi il nowcast">
+    <span class="share-label">Condividi</span>
+    <button class="share-btn" type="button" data-share="x" title="Condividi su X" aria-label="Condividi su X">X</button>
+    <button class="share-btn" type="button" data-share="threads" title="Condividi su Threads" aria-label="Condividi su Threads">@</button>
+    <button class="share-btn" type="button" data-share="facebook" title="Condividi su Facebook" aria-label="Condividi su Facebook">f</button>
+    <button class="share-btn" type="button" data-share="linkedin" title="Condividi su LinkedIn" aria-label="Condividi su LinkedIn">in</button>
+    <button class="share-btn" type="button" data-share="telegram" title="Condividi su Telegram" aria-label="Condividi su Telegram">TG</button>
+    <button class="share-btn" type="button" data-share="whatsapp" title="Condividi su WhatsApp" aria-label="Condividi su WhatsApp">WA</button>
+    <button class="share-btn" type="button" data-share="instagram" title="Genera e condividi la card Instagram" aria-label="Condividi la card su Instagram">IG</button>
+    <button class="share-btn" type="button" data-share="native" title="Apri il menu di condivisione del dispositivo" aria-label="Condividi">↗</button>
+    <button class="share-btn" type="button" data-share="copy" title="Copia il link" aria-label="Copia il link">⧉</button>
+  </nav>
 
   <div id="errorBox" class="errorbox"></div>
 
@@ -49,6 +76,11 @@
       <p id="outcomeSub">Il Monte Carlo parte automaticamente quando sono disponibili tutti i collegi.</p>
     </div>
     <div id="largestPartyGrid" class="largest-party-grid"></div>
+  </section>
+
+  <section class="card export-card" aria-label="Esporta il nowcast">
+    <div class="export-copy"><div class="export-kicker">Export</div><strong>Trasforma il nowcast in una card pronta da condividere</strong><p>PNG 16:9 per web e social, formato 4:5 per Instagram. Le card sono generate nel browser dai dati live, senza inviare dati a servizi esterni.</p></div>
+    <div class="export-actions"><button id="downloadSocialCardBtn" class="small-action" type="button">Scarica PNG 16:9</button><button id="downloadInstagramCardBtn" class="small-action" type="button">Scarica 4:5</button><button id="shareSocialCardBtn" class="primary compact-primary" type="button">Condividi card</button></div>
   </section>
 
   <div class="section-title"><div><div class="section-kicker">Voto nazionale</div><h2>Media dei sondaggi</h2><p>Il topline è del modello Focus America; i provider MRP forniscono geografia relativa, non il voto nazionale.</p></div></div>
@@ -126,7 +158,7 @@
     </article>
     <aside class="map-side">
       <article class="card seat-detail">
-        <div class="cardhead detail-head"><div><div class="detail-kicker">Dettaglio del collegio</div><h3 id="detailName">Seleziona un collegio</h3><p id="detailRegion">—</p></div><div class="detail-actions"><button id="detailZoomBtn" class="small-action" type="button" disabled>Zoom collegio</button><button id="detailCopyBtn" class="small-action" type="button" disabled>Copia link</button></div></div>
+        <div class="cardhead detail-head"><div><div class="detail-kicker">Dettaglio del collegio</div><h3 id="detailName">Seleziona un collegio</h3><p id="detailRegion">—</p></div><div class="detail-actions"><button id="detailZoomBtn" class="small-action" type="button" disabled>Zoom collegio</button><button id="detailPngBtn" class="small-action" type="button" disabled>PNG collegio</button><button id="detailShareBtn" class="small-action" type="button" disabled>Condividi</button><button id="detailCopyBtn" class="small-action" type="button" disabled>Copia link</button></div></div>
         <div id="detailBody" class="detail-body"><p>Clicca un collegio sulla mappa o nella tabella dei marginali per vedere risultato 2024, margine centrale, scenario rappresentativo e probabilità di vittoria.</p></div>
       </article>
       <article class="card map-method-card">
@@ -190,7 +222,7 @@
 
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La UI cambia; il motore statistico di produzione resta congelato sulla v0.9.29.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.32 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.33 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
     <article class="card"><div class="cardhead"><div><h3>Pipeline di produzione</h3><p>Il live viene promosso solo dopo l’audit.</p></div></div><div class="pipeline"><span>Sondaggi</span><b>→</b><span>target nazionale</span><b>→</b><span>MRP geography stack</span><b>→</b><span>632 GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>La GitHub Action ricostruisce il candidato statistico congelato, verifica backtest, copertura provider, assenza dei topline esterni e stabilità fra scenari. Il watcher MRP segnala eventuali nuove pubblicazioni ma non le adotta automaticamente.</p></div></article>
   </section>
 
@@ -199,7 +231,7 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.32"></script>
-<script src="scripts/map-performance.js?v=0.9.32"></script>
+<script src="scripts/app.js?v=0.9.33"></script>
+<script src="scripts/map-performance.js?v=0.9.33"></script>
 </body>
 </html>
