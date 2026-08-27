@@ -43,8 +43,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/democracy-club
-          key: dc-v0928-${{ runner.os }}-${{ hashFiles('tools/build_mrp_lite.py') }}
+          key: dc-v0929-${{ runner.os }}-${{ hashFiles('tools/build_mrp_lite.py') }}
           restore-keys: |
+            dc-v0929-${{ runner.os }}-
             dc-v0928-${{ runner.os }}-
             dc-v0927-${{ runner.os }}-
             dc-v0926-${{ runner.os }}-
@@ -57,8 +58,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/mrp-bridge
-          key: mrp-bridge-v0928-${{ runner.os }}-${{ hashFiles('tools/build_mrp_geography_bridge.py') }}
+          key: mrp-bridge-v0929-${{ runner.os }}-${{ hashFiles('tools/build_mrp_geography_bridge.py') }}
           restore-keys: |
+            mrp-bridge-v0929-${{ runner.os }}-
             mrp-bridge-v0928-${{ runner.os }}-
             mrp-bridge-v0927-${{ runner.os }}-
             mrp-bridge-v0926-${{ runner.os }}-
@@ -88,7 +90,7 @@ jobs:
       - name: Calibrate legacy partial-raking benchmark
         run: python tools/build_backtest.py
 
-      - name: Verify v0.9.28 source bundle
+      - name: Verify v0.9.29 promotion source bundle
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -97,6 +99,8 @@ jobs:
           bridge=Path("tools/build_mrp_geography_bridge.py").read_text(encoding="utf-8")
           watcher=Path("tools/check_mrp_updates.py").read_text(encoding="utf-8")
           watch_state=Path("data/mrp-update-watch.json").read_text(encoding="utf-8")
+          promotion=Path("tools/promote_mrp_stack.py").read_text(encoding="utf-8")
+          app=Path("scripts/app.js").read_text(encoding="utf-8")
           workflow=Path(".github/workflows/update-data.yml").read_text(encoding="utf-8")
 
           required_core=[
@@ -121,7 +125,26 @@ jobs:
                   raise SystemExit(f"ERROR: v0.9.28 requires HOTFIX3 core; missing {needle!r}")
           for needle in required_bridge:
               if needle not in bridge:
-                  raise SystemExit(f"ERROR: mixed/incomplete v0.9.28 bridge; missing {needle!r}")
+                  raise SystemExit(f"ERROR: mixed/incomplete frozen v0.9.28 bridge; missing {needle!r}")
+
+          required_promotion=[
+              'V0929_PROMOTION = "audited-v0928-precision-stack-to-production"',
+              'V0929_MODEL_FREEZE = "no-statistical-retuning-during-promotion"',
+              'V0929_PRODUCTION_SCHEMA = "precision-weighted-contemporary-mrp-geography-v1"',
+              'MAX_CORE_CHANGED_WINNERS = 75',
+              'def validate_candidate(',
+              'def build_production(',
+          ]
+          for needle in required_promotion:
+              if needle not in promotion:
+                  raise SystemExit(f"ERROR: incomplete v0.9.29 promotion layer; missing {needle!r}")
+          for needle in (
+              "uk-v0929-precision-weighted-mrp-live",
+              "precision-weighted-contemporary-mrp-geography-v1",
+              "provider_stack_cv_2024_correct_winners",
+          ):
+              if needle not in app:
+                  raise SystemExit(f"ERROR: app is not wired to v0.9.29 production model; missing {needle!r}")
 
           required_watcher=[
               'V0926_MRP_WATCHER = "shadow-official-provider-discovery-one-shot-email"',
@@ -139,20 +162,25 @@ jobs:
           ):
               if needle not in watch_state:
                   raise SystemExit(f"ERROR: MRP watcher state missing baseline marker {needle!r}")
-          if "Build v0.9.28 precision-weighted contemporary MRP stack" not in workflow:
-              raise SystemExit("ERROR: workflow is not v0.9.28")
+          if "Build frozen v0.9.28 precision-weighted contemporary MRP candidate" not in workflow:
+              raise SystemExit("ERROR: frozen v0.9.28 candidate build step missing")
+          if "Promote audited stack to v0.9.29 production live" not in workflow:
+              raise SystemExit("ERROR: v0.9.29 promotion step missing")
           if "Shadow-check for newer Westminster MRP" not in workflow:
               raise SystemExit("ERROR: shadow MRP watcher step missing")
-          print("v0.9.28 source bundle + precision stack + shadow MRP watcher preflight: PASSED")
+          print("v0.9.29 promotion bundle + frozen v0.9.28 statistical engine + watcher preflight: PASSED")
           PY
 
-      - name: Self-test v0.9.28 precision stack
+      - name: Self-test frozen v0.9.28 precision stack
         run: python tools/build_mrp_geography_bridge.py --self-test
 
-      - name: Build v0.9.28 precision-weighted contemporary MRP stack
+      - name: Self-test v0.9.29 production promotion
+        run: python tools/promote_mrp_stack.py --self-test
+
+      - name: Build frozen v0.9.28 precision-weighted contemporary MRP candidate
         run: python tools/build_mrp_geography_bridge.py
 
-      - name: Validate v0.9.28 historical model and live-stack safeguards
+      - name: Validate frozen v0.9.28 historical model and candidate safeguards
         run: |
           python - <<'PY'
           import json
@@ -273,7 +301,52 @@ jobs:
           print("2026 MiC precision weights by party:",weights)
           print("2026 precision-stack totals:",sensitivity.get("precision_freshness_primary_totals"))
           print("2026 changed winners vs primary:",sensitivity.get("changed_winners_vs_primary"))
-          print("No live promotion performed.")
+          print("Shadow candidate validation complete; promotion gate runs next.")
+          PY
+
+      - name: Promote audited stack to v0.9.29 production live
+        run: python tools/promote_mrp_stack.py
+
+      - name: Validate v0.9.29 production live
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          live=json.loads(Path("data/mrp-lite-live.json").read_text(encoding="utf-8"))
+          candidate=json.loads(Path("data/mrp-lite-live-v0928-candidate.json").read_text(encoding="utf-8"))
+          audit=json.loads(Path("data/promotion-audit-v0929.json").read_text(encoding="utf-8"))
+
+          if audit.get("version")!="uk-v0929-production-promotion-audit" or audit.get("status")!="passed":
+              raise SystemExit(f"ERROR: v0.9.29 promotion audit failed {audit}")
+          if live.get("version")!="uk-v0929-precision-weighted-mrp-live":
+              raise SystemExit(f"ERROR: wrong production version {live.get('version')}")
+          if live.get("model_type")!="precision-weighted-contemporary-mrp-geography-v1":
+              raise SystemExit(f"ERROR: wrong production schema {live.get('model_type')}")
+          for key in ("approved","approved_for_live","publication_ready","applied_to_production"):
+              if live.get(key) is not True:
+                  raise SystemExit(f"ERROR: production approval flag {key} is not true")
+          if live.get("shadow_only") is not False or live.get("live_candidate") is not False:
+              raise SystemExit("ERROR: production file still marked shadow/candidate")
+          if live.get("provider_topline_used") is not False:
+              raise SystemExit("ERROR: provider topline entered production")
+          if live.get("validation_2019_correct_winners")!=609 or live.get("validation_2019_seat_abs_error")!=14:
+              raise SystemExit("ERROR: production 2019 validation metadata regressed")
+          if live.get("provider_stack_cv_2024_correct_winners")!=584 or live.get("provider_stack_cv_2024_seat_abs_error")!=44:
+              raise SystemExit("ERROR: production provider-stack CV metadata regressed")
+          if len(live.get("seats",[]))!=632:
+              raise SystemExit("ERROR: production live does not contain 632 GB seats")
+          if live.get("seats")!=candidate.get("seats"):
+              raise SystemExit("ERROR: promotion layer mutated constituency projections")
+          if live.get("target_gb")!=candidate.get("target_gb"):
+              raise SystemExit("ERROR: promotion layer mutated internal national target")
+          gates=audit.get("gates",{})
+          if gates.get("core_2026_stability_passed") is not True:
+              raise SystemExit(f"ERROR: production stability gate failed {gates}")
+          print("v0.9.29 PRODUCTION LIVE validation PASSED")
+          print("2019 609/632 · 2024 YouGov benchmark 578/632 · 2024 provider-stack LORO 584/632")
+          print("2026 central GB totals:",live.get("totals"))
+          print("Core 2026 changed winners:",gates.get("core_2026_changed_winners_vs_primary"))
           PY
 
       - name: Commit refreshed data
@@ -284,7 +357,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data and v0.9.28 precision-weighted MRP stack"
+            git commit -m "chore: update UK data and v0.9.29 production MRP stack"
             git push
           fi
 
