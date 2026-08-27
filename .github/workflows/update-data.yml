@@ -108,6 +108,7 @@ jobs:
               'V0926_DIAGNOSTICS="full-zero-to-pure-external-blend-sweep-2024"',
               'V0926_LIVE_CANDIDATE="latest-mic26-required-green-complete-plus-dynamic-internal-topline"',
               'V0926_MRP_SOURCE="more-in-common-2026-07-19-fieldwork-2026-06-05-to-2026-06-28"',
+              'V0926_PARSER_HOTFIX="mic26-leading-article-aliases-complete-header-selection"',
               'YOUGOV_2019_URL=',
               'YOUGOV_2024_URL=',
               'MIC_2024_URL=',
