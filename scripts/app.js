@@ -24,7 +24,7 @@ const CONFIG = {
   majority: 326,
   gbSeats: 632,
   niSeats: 18,
-  cacheVersion: 'uk-v0922-20260827-unified-solution-search',
+  cacheVersion: 'uk-v0929-20260827-production-mrp-stack',
   swingLambda: 0.82,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
@@ -375,20 +375,31 @@ function buildGeographicTargets(gbTarget){
 
 function mrpLiteActive(){
   const m=state.mrpLite;
-  return m?.version==='uk-v0910-incumbent-routing-live'
+  const productionV0929=m?.version==='uk-v0929-precision-weighted-mrp-live'
+    && m?.model_type==='precision-weighted-contemporary-mrp-geography-v1'
+    && m?.approved_for_live===true
+    && m?.applied_to_production===true
+    && m?.provider_topline_used===false
+    && Number(m?.validation_2019_correct_winners)>=609
+    && Number(m?.provider_stack_cv_2024_correct_winners)>=584;
+  const legacyV0910=m?.version==='uk-v0910-incumbent-routing-live'
     && m?.model_type==='constituency-residual-incumbent-routing-v5'
-    && m?.status==='ok'
+    && Number(m?.holdout_accuracy)>=.80;
+  return m?.status==='ok'
     && m?.approved===true
-    && Number(m?.holdout_accuracy)>=.80
+    && (productionV0929||legacyV0910)
     && Array.isArray(m?.seats)
     && m.seats.length===632;
 }
 function shadowDiagnosticsReady(){
   const m=state.mrpLite;
-  return m?.version==='uk-v0922-solution-search-live'
-    && m?.status==='ok'
-    && m?.shadow_only===true
-    && m?.approved===false;
+  return m?.status==='ok' && m?.shadow_only===true && m?.approved===false;
+}
+function precisionMrpProductionActive(){
+  const m=state.mrpLite;
+  return mrpLiteActive()
+    && m?.version==='uk-v0929-precision-weighted-mrp-live'
+    && m?.model_type==='precision-weighted-contemporary-mrp-geography-v1';
 }
 function buildMrpLiteCentral(target,geo){
   const lookup=new Map(state.mrpLite.seats.map(s=>[String(s.id),s]));
@@ -413,6 +424,8 @@ function buildMrpLiteCentral(target,geo){
   const central={target,geographic:geo,seats,totals,ni:niCentral.meta,mrpLite:{
     holdoutAccuracy:Number(state.mrpLite.holdout_accuracy)||0,
     holdoutSeatError:Number(state.mrpLite.holdout_seat_abs_error)||0,
+    validation2019Accuracy:Number(state.mrpLite.validation_2019_accuracy)||0,
+    providerStackCv2024Accuracy:Number(state.mrpLite.provider_stack_cv_2024_accuracy)||0,
     selectedSpec:state.mrpLite.selected_spec?.name||state.mrpLite.selected_spec||'ML'
   }};
   state.geographicTargets=geo;
@@ -480,7 +493,12 @@ function transferModelActive(){
     && state.modelParams?.transfer_coefficients;
 }
 function productionModelLabel(){
-  const diagnostic=shadowDiagnosticsReady()?' · v0.9.22 solution search unificata in shadow':'';
+  const diagnostic=shadowDiagnosticsReady()?' · ricerca shadow attiva':'';
+  if(precisionMrpProductionActive()){
+    const cv=Number(state.mrpLite.provider_stack_cv_2024_accuracy);
+    const hist=Number(state.mrpLite.validation_2019_accuracy);
+    return `MRP stack 2026 · CV regionale 2024 ${(cv*100).toFixed(1)}% · validazione 2019 ${(hist*100).toFixed(1)}%`;
+  }
   if(mrpLiteActive())return `MRP-lite + incumbent routing · benchmark 2024 ${(Number(state.mrpLite.holdout_accuracy)*100).toFixed(1)}%${diagnostic}`;
   if(partialRakeModelActive())return `Raking parziale validato (α=${partialRakeStrength().toFixed(2)}) 2024 → oggi${diagnostic}`;
   if(transferModelActive())return `Modello trasferimenti 2024 → oggi${diagnostic}`;
