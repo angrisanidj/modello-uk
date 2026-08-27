@@ -1,4 +1,4 @@
-# UI release v0.9.36: Monte Carlo uncertainty dashboard and constituency battlefield; statistical production engine remains frozen on v0.9.29.
+
 name: Update and deploy UK model
 
 on:
