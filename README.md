@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.36 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.37 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,7 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.36.
+- **Interfaccia:** v0.9.37.
 - **Motore statistico di produzione:** **v0.9.29**, congelato durante le modifiche esclusivamente frontend.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche con cache legata al fingerprint degli input.
@@ -21,6 +21,8 @@ Il progetto resta nella serie **0.x**: il passaggio a v1.0 richiede una qualità
 - aggiorna automaticamente il polling average nazionale;
 - usa snapshot prodotti dalla GitHub Action con fallback fail-soft;
 - mostra ultimo sondaggio, partito in testa e quadro nazionale corrente;
+- ricostruisce una **serie storica della media del modello** con la stessa half-life/lookback del topline live, con intervalli 90 giorni / 6 mesi / 1 anno / tutto;
+- mostra variazioni a 7 e 30 giorni, volume delle rilevazioni, numero di istituti attivi, campione cumulato e istituti più presenti negli ultimi 30 giorni;
 - mantiene separati il dato nazionale e la traduzione in seggi.
 
 ### Proiezione territoriale
@@ -53,7 +55,8 @@ Il progetto resta nella serie **0.x**: il passaggio a v1.0 richiede una qualità
 - coalition builder e combinazioni minime di maggioranza;
 - export grafici e strumenti di condivisione social;
 - guida **“Come leggere il modello”**;
-- pannello **“Verifica e interpreta le stime con un'IA”**, che costruisce un prompt dai dati già visibili nella dashboard senza modificare il modello o i suoi risultati.
+- pannello **“Verifica e interpreta le stime con un'IA”**, che costruisce un prompt dai dati già visibili nella dashboard senza modificare il modello o i suoi risultati;
+- sezione **“Come si sta muovendo il voto”** con serie storica del topline, movimento recente e attività demoscopica.
 
 ## Motore statistico e validazione
 
@@ -116,6 +119,7 @@ modello-uk/
 ├── styles.css
 ├── styles-v0935.css
 ├── styles-v0936.css
+├── styles-v0937.css
 ├── map-performance.css
 ├── scripts/
 │   ├── app.js
@@ -145,7 +149,7 @@ modello-uk/
 
 La GitHub Action `Update and deploy UK model` può essere avviata manualmente, parte anche su push a `main` ed è programmata quotidianamente. La pipeline aggiorna e committa automaticamente soltanto i file sotto `data/` quando esistono modifiche effettive, quindi esegue il deploy su GitHub Pages.
 
-Per una modifica frontend come la v0.9.36 è sufficiente pubblicare i file dell'interfaccia; **non è necessario ritoccare il motore statistico**.
+Per una modifica frontend come la v0.9.37 è sufficiente pubblicare i file dell'interfaccia; **non è necessario ritoccare il motore statistico**.
 
 ## Nota sulla lettura dei risultati
 

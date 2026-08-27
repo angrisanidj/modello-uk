@@ -68,7 +68,7 @@ const MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:
 const OFFLINE = new URLSearchParams(location.search).get('offline') === '1';
 
 const state = {
-  polls:[], pollSource:'', average:null, latestAverage:null,
+  polls:[], pollSource:'', average:null, latestAverage:null, pollTrendRange:180,
   constituencies:[], constituencyIndex:new Map(), byId:new Map(), geometry:null, ni:null,
   modelParams:null, mrpLite:null, subnational:[], territorialBaseline:null, geographicTargets:null,
   mapPaths:new Map(), selectedPath:null,
@@ -276,6 +276,52 @@ function calculateAverage(polls){
 }
 function latestPollAverage(polls,n=6){
   const slice=polls.slice(0,n), out={}; for(const p of PARTY_ORDER){const vals=slice.map(x=>x[p]).filter(Number.isFinite);out[p]=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;}return out;
+}
+function historicalAverageAt(polls,asOf){
+  const now=asOf instanceof Date?asOf:new Date(asOf);const sums=Object.fromEntries(PARTY_ORDER.map(p=>[p,0])),den=Object.fromEntries(PARTY_ORDER.map(p=>[p,0]));let effective=0;
+  for(const poll of polls){
+    const d=new Date(`${poll.date}T12:00:00Z`),age=(now-d)/86400000;if(!Number.isFinite(age)||age<0||age>CONFIG.modelLookbackDays)continue;
+    const temporal=Math.pow(0.5,age/CONFIG.halfLifeDays),sample=clamp(Math.sqrt(Math.max(500,poll.sample||2000)/2000),.75,1.25),area=poll.area==='UK'?.97:1,w=temporal*sample*area;
+    if(w>.04)effective++;
+    for(const p of PARTY_ORDER){const v=poll[p];if(Number.isFinite(v)){sums[p]+=w*v;den[p]+=w;}}
+  }
+  const values={};for(const p of PARTY_ORDER)values[p]=den[p]?sums[p]/den[p]:0;
+  return {values,effective};
+}
+function dateIsoUTC(d){return new Date(d).toISOString().slice(0,10);}
+function addDaysUTC(d,days){const x=new Date(d);x.setUTCDate(x.getUTCDate()+days);return x;}
+function pollTrendSeries(days=180){
+  if(!state.polls.length)return [];
+  const latestDate=new Date(`${state.polls[0].date}T12:00:00Z`);const oldestDate=new Date(`${state.polls[state.polls.length-1].date}T12:00:00Z`);
+  const requested=days==='all'?Math.ceil((latestDate-oldestDate)/86400000):Number(days)||180;
+  const start=new Date(Math.max(oldestDate.getTime(),addDaysUTC(latestDate,-requested).getTime()));
+  const span=Math.max(1,Math.ceil((latestDate-start)/86400000)),step=span>540?4:span>260?2:1,out=[];
+  for(let d=new Date(start);d<=latestDate;d=addDaysUTC(d,step)){const avg=historicalAverageAt(state.polls,d);if(avg.effective>0)out.push({date:dateIsoUTC(d),...avg});}
+  if(!out.length||out[out.length-1].date!==dateIsoUTC(latestDate)){const avg=historicalAverageAt(state.polls,latestDate);if(avg.effective>0)out.push({date:dateIsoUTC(latestDate),...avg});}
+  return out;
+}
+function historicalDelta(days,p){
+  if(!state.polls.length)return null;const latest=new Date(`${state.polls[0].date}T12:00:00Z`),past=addDaysUTC(latest,-days),old=historicalAverageAt(state.polls,past).values[p],now=state.average?.values?.[p];
+  return Number.isFinite(now)&&Number.isFinite(old)&&old>0?now-old:null;
+}
+function signedPp(v){if(!Number.isFinite(v))return '—';const sign=v>0?'+':'';return `${sign}${fmt1(v)} p.p.`;}
+function renderPollTrend(){
+  const svg=$('#pollTrendSvg'),empty=$('#pollTrendEmpty'),legend=$('#pollTrendLegend'),move=$('#pollMoveGrid'),stats=$('#pollActivityStats'),pollsters=$('#pollsterActivity');if(!svg||!legend||!move||!stats||!pollsters)return;
+  const series=pollTrendSeries(state.pollTrendRange),parties=['lab','con','ref','ld','green'];
+  if(series.length<2){svg.innerHTML='';empty.style.display='grid';legend.innerHTML='';return;}empty.style.display='none';
+  const W=860,H=360,pad={l:46,r:18,t:18,b:42};const vals=series.flatMap(x=>parties.map(p=>x.values[p]).filter(Number.isFinite));let lo=Math.floor((Math.min(...vals)-2)/5)*5,hi=Math.ceil((Math.max(...vals)+2)/5)*5;lo=Math.max(0,lo);if(hi-lo<20)hi=lo+20;
+  const x=i=>pad.l+(W-pad.l-pad.r)*(i/(series.length-1)),y=v=>pad.t+(H-pad.t-pad.b)*(1-(v-lo)/(hi-lo));const grid=[];
+  for(let v=lo;v<=hi+.001;v+=5){const yy=y(v);grid.push(`<line x1="${pad.l}" x2="${W-pad.r}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" class="poll-trend-gridline"/><text x="${pad.l-9}" y="${(yy+4).toFixed(1)}" class="poll-trend-axis" text-anchor="end">${fmt0(v)}%</text>`);}
+  const tickCount=4;for(let i=0;i<=tickCount;i++){const idx=Math.round((series.length-1)*i/tickCount),xx=x(idx);grid.push(`<text x="${xx.toFixed(1)}" y="${H-13}" class="poll-trend-axis poll-trend-date" text-anchor="middle">${formatDate(series[idx].date).slice(0,5)}</text>`);}
+  const lines=parties.map(p=>{const pts=series.map((d,i)=>`${x(i).toFixed(1)},${y(d.values[p]).toFixed(1)}`).join(' '),last=series[series.length-1];return `<polyline points="${pts}" fill="none" stroke="${PARTY[p].color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="poll-trend-line"><title>${PARTY[p].name}</title></polyline><circle cx="${x(series.length-1).toFixed(1)}" cy="${y(last.values[p]).toFixed(1)}" r="4.2" fill="${PARTY[p].color}"><title>${PARTY[p].name}: ${pctFmt(last.values[p])}</title></circle>`;}).join('');
+  svg.innerHTML=`<g>${grid.join('')}</g><line x1="${pad.l}" x2="${W-pad.r}" y1="${H-pad.b}" y2="${H-pad.b}" class="poll-trend-baseline"/>${lines}`;
+  legend.innerHTML=parties.map(p=>`<span><i style="background:${PARTY[p].color}"></i><strong>${PARTY[p].short}</strong><b>${pctFmt(state.average.values[p])}</b></span>`).join('');
+  const first=series[0],last=series[series.length-1];$('#pollTrendMeta').textContent=`${formatDate(first.date)} → ${formatDate(last.date)} · ${series.length} punti · stessa ponderazione del topline live`;
+  move.innerHTML=parties.map(p=>{const d7=historicalDelta(7,p),d30=historicalDelta(30,p),cls=v=>!Number.isFinite(v)?'flat':v>.05?'up':v<-.05?'down':'flat';return `<div class="poll-move-row"><span><i class="party-dot" style="background:${PARTY[p].color}"></i><strong>${PARTY[p].short}</strong></span><b>${pctFmt(state.average.values[p])}</b><em class="${cls(d7)}">7g ${signedPp(d7)}</em><em class="${cls(d30)}">30g ${signedPp(d30)}</em></div>`;}).join('');
+  const latest=new Date(`${state.polls[0].date}T12:00:00Z`),cut7=addDaysUTC(latest,-7),cut30=addDaysUTC(latest,-30),recent7=state.polls.filter(p=>new Date(`${p.date}T12:00:00Z`)>=cut7),recent30=state.polls.filter(p=>new Date(`${p.date}T12:00:00Z`)>=cut30),uniq=new Set(recent30.map(p=>p.pollster).filter(Boolean)),sample30=recent30.reduce((n,p)=>n+(Number(p.sample)||0),0);
+  stats.innerHTML=`<div class="poll-activity-stat"><span>Poll · 7 giorni</span><strong>${fmt0(recent7.length)}</strong></div><div class="poll-activity-stat"><span>Poll · 30 giorni</span><strong>${fmt0(recent30.length)}</strong></div><div class="poll-activity-stat"><span>Istituti · 30 giorni</span><strong>${fmt0(uniq.size)}</strong></div><div class="poll-activity-stat"><span>Campione cumulato</span><strong>${fmt0(sample30)}</strong></div>`;
+  const counts=new Map();for(const p of recent30){const name=p.pollster||'Non indicato';counts.set(name,(counts.get(name)||0)+1);}const ranking=[...counts.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'en-GB')).slice(0,6),max=Math.max(1,...ranking.map(x=>x[1]));
+  pollsters.innerHTML=ranking.length?ranking.map(([name,n])=>`<div class="pollster-row"><span title="${escapeHtml(name)}">${escapeHtml(name)}</span><div><i style="width:${(n/max*100).toFixed(1)}%"></i></div><strong>${n}</strong></div>`).join(''):'<div class="empty-small">Nessuna rilevazione negli ultimi 30 giorni.</div>';$('#pollsterActivityMeta').textContent=`${recent30.length} rilevazioni`;
 }
 function normalizeForZone(values,zone){
   const out={};let total=0;
@@ -1508,6 +1554,7 @@ function bindUi(){
   $('#scenarioResetBtn')?.addEventListener('click',resetCustomScenario);
   $('#scenarioMapBtn')?.addEventListener('click',()=>{if(!state.customScenario)return;state.mapMode='custom';applyMapColors();document.querySelector('#territorio')?.scrollIntoView({behavior:'smooth',block:'start'});});
   $$('[data-window]').forEach(btn=>btn.addEventListener('click',()=>{ $$('[data-window]').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const use=btn.dataset.window==='latest'?state.latestAverage:state.average.values;const old=state.average.values;state.average.values=use;renderPolls();state.average.values=old;}));
+  $$('[data-poll-trend-range]').forEach(btn=>btn.addEventListener('click',()=>{const raw=btn.dataset.pollTrendRange;state.pollTrendRange=raw==='all'?'all':Number(raw)||180;$$('[data-poll-trend-range]').forEach(x=>x.classList.toggle('active',x===btn));renderPollTrend();}));
 }
 
 async function init(force=false){
@@ -1530,7 +1577,7 @@ async function init(force=false){
     state.polls=polls;state.average=calculateAverage(polls);state.latestAverage=latestPollAverage(polls);
     state.constituencies=constituencies;state.constituencyIndex=new Map(constituencies.map(c=>[c.id,c]));
     state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;state.mrpLite=mrpLite;state.subnational=subnational;state.territorialBaseline=territorialBaseline;
-    renderPolls();renderCoalitionButtons();
+    renderPolls();renderPollTrend();renderCoalitionButtons();
     if(constituencies.length===650){buildCentral();renderScenarioInputs(true);renderCustomScenario();renderCentral();renderMap();restoreSeatDeepLink();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Baseline: 650 collegi · sondaggi: ${state.pollSource} · seat model: ${productionModelLabel()} · poll subnazionali: ${state.subnational.length} · NI: ${niModuleReady()?'18 collegi simulati':'fallback fisso'}`;await runMonteCarlo(force);}else{
       setStatus('Sondaggi caricati · manca la baseline territoriale','error');showError('La dashboard nazionale è attiva, ma i 650 risultati di collegio non sono ancora nello snapshot locale e il browser non è riuscito a recuperarli direttamente. Esegui la GitHub Action “Update UK election data”: genererà automaticamente baseline e geometrie.');renderMap();
     }
