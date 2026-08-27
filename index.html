@@ -7,11 +7,12 @@
 <title>Elezioni nel Regno Unito — Sondaggi, seggi e probabilità</title>
 <meta name="description" content="Nowcast delle prossime elezioni britanniche: media dei sondaggi, proiezione probabilistica dei 650 seggi, Monte Carlo, collegi chiave e scenari di maggioranza." />
 <link rel="canonical" href="https://angrisanidj.github.io/modello-uk/" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 36'%3E%3Crect width='60' height='36' fill='%23012169'/%3E%3Cpath d='M0 0 60 36M60 0 0 36' stroke='%23fff' stroke-width='8'/%3E%3Cpath d='M0 0 60 36M60 0 0 36' stroke='%23C8102E' stroke-width='4'/%3E%3Cpath d='M30 0v36M0 18h60' stroke='%23fff' stroke-width='12'/%3E%3Cpath d='M30 0v36M0 18h60' stroke='%23C8102E' stroke-width='7'/%3E%3C/svg%3E" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://angrisanidj.github.io/modello-uk/" />
 <meta property="og:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta property="og:description" content="Nowcast probabilistico della House of Commons: sondaggi, proiezione dei seggi, Monte Carlo e probabilità collegio per collegio." />
-<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.38" />
+<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.39" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="Nowcast delle elezioni nel Regno Unito — proiezione della House of Commons" />
@@ -19,24 +20,27 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta name="twitter:description" content="Nowcast probabilistico della House of Commons: sondaggi, seggi, collegi e probabilità." />
-<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.38" />
-<link rel="stylesheet" href="styles.css?v=0.9.38" />
-<link rel="stylesheet" href="styles-v0935.css?v=0.9.38" />
-<link rel="stylesheet" href="styles-v0936.css?v=0.9.38" />
-<link rel="stylesheet" href="styles-v0937.css?v=0.9.38" />
-<link rel="stylesheet" href="styles-v0938.css?v=0.9.38" />
-<link rel="stylesheet" href="map-performance.css?v=0.9.38" />
+<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk.png?v=0.9.39" />
+<link rel="stylesheet" href="styles.css?v=0.9.39" />
+<link rel="stylesheet" href="styles-v0935.css?v=0.9.39" />
+<link rel="stylesheet" href="styles-v0936.css?v=0.9.39" />
+<link rel="stylesheet" href="styles-v0937.css?v=0.9.39" />
+<link rel="stylesheet" href="styles-v0938.css?v=0.9.39" />
+<link rel="stylesheet" href="styles-v0939.css?v=0.9.39" />
+<link rel="stylesheet" href="map-performance.css?v=0.9.39" />
 </head>
 <body>
 <div id="mobileNowcastSticky" class="mobile-nowcast-sticky" aria-label="Riepilogo rapido del nowcast">
   <div class="mobile-nowcast-shell">
     <div class="mobile-nowcast-flag" aria-hidden="true"></div>
     <div class="mobile-nowcast-inner">
-      <div class="mobile-nowcast-brand"><span class="mobile-nowcast-badge" aria-hidden="true">UK</span><span class="mobile-nowcast-label">Elezioni UK · Nowcast</span></div>
+      <div class="mobile-nowcast-brand"><span class="mobile-nowcast-badge" aria-hidden="true"></span><span class="mobile-nowcast-label">UK General Election · Focus America</span></div>
       <div class="mobile-nowcast-stats">
+        <span class="mobile-nowcast-now">Nowcast</span>
         <span class="mobile-nowcast-party"><i id="mobileParty1Dot" class="mobile-nowcast-dot"></i><span id="mobileParty1Name">—</span><strong id="mobileParty1Seats">—</strong></span>
         <span class="mobile-nowcast-party"><i id="mobileParty2Dot" class="mobile-nowcast-dot"></i><span id="mobileParty2Name">—</span><strong id="mobileParty2Seats">—</strong></span>
         <span class="mobile-nowcast-hung"><span>Hung</span><strong id="mobileHungProb">—</strong></span>
+        <span class="mobile-nowcast-majority"><strong>326</strong><span>maggioranza</span></span>
       </div>
     </div>
   </div>
@@ -46,7 +50,7 @@
   <section class="hero">
     <div class="hero-grid">
       <div>
-        <div class="eyebrow"><span class="flag-dot">UK</span> Focus America · election model</div>
+        <div class="eyebrow"><span class="flag-dot" aria-hidden="true"></span> Focus America · election model</div>
         <h1>Elezioni nel Regno Unito</h1>
         <p class="subtitle">Un nowcast dei <strong>650 seggi</strong> della House of Commons: polling nazionale, geography stack MRP, simulazioni Monte Carlo e probabilità di vittoria collegio per collegio. <strong>La domanda è: cosa accadrebbe se si votasse oggi?</strong></p>
       </div>
@@ -59,20 +63,28 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Sondaggi: —</span>
-      <span class="badge badge-strong">UI 0.9.38 · motore statistico 0.9.29 congelato</span>
+      <span class="badge badge-strong">UI 0.9.39 · motore statistico 0.9.29 congelato</span>
+    </div>
+  </section>
+  <section class="editorial-meta" aria-label="Stato del modello">
+    <div class="editorial-meta-main">
+      <div><span class="meta-kicker">Ultimo sondaggio</span><strong id="metaLatestPoll">—</strong></div>
+      <div><span class="meta-kicker">Modello aggiornato</span><strong id="metaModelUpdated">—</strong></div>
+      <div><span class="meta-kicker">Monte Carlo</span><strong>50.000 simulazioni</strong></div>
+      <div><span class="meta-kicker">House of Commons</span><strong>650 seggi · maggioranza 326</strong></div>
     </div>
   </section>
   <nav class="share-rail" aria-label="Condividi il nowcast">
     <span class="share-label">Condividi</span>
-    <button class="share-btn" type="button" data-share="x" title="Condividi su X" aria-label="Condividi su X">X</button>
-    <button class="share-btn" type="button" data-share="threads" title="Condividi su Threads" aria-label="Condividi su Threads">@</button>
-    <button class="share-btn" type="button" data-share="facebook" title="Condividi su Facebook" aria-label="Condividi su Facebook">f</button>
-    <button class="share-btn" type="button" data-share="linkedin" title="Condividi su LinkedIn" aria-label="Condividi su LinkedIn">in</button>
-    <button class="share-btn" type="button" data-share="telegram" title="Condividi su Telegram" aria-label="Condividi su Telegram">TG</button>
-    <button class="share-btn" type="button" data-share="whatsapp" title="Condividi su WhatsApp" aria-label="Condividi su WhatsApp">WA</button>
-    <button class="share-btn" type="button" data-share="instagram" title="Genera e condividi la card Instagram" aria-label="Condividi la card su Instagram">IG</button>
-    <button class="share-btn" type="button" data-share="native" title="Apri il menu di condivisione del dispositivo" aria-label="Condividi">↗</button>
-    <button class="share-btn" type="button" data-share="copy" title="Copia il link" aria-label="Copia il link">⧉</button>
+    <button class="share-btn" type="button" data-share="x" title="Condividi su X" aria-label="Condividi su X"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 3H22l-6.8 7.7L23 21h-6.2l-4.9-6.4L6.3 21H3.2l7.3-8.3L1 3h6.4l4.4 5.9L18.9 3Zm-1.1 16h1.7L6.5 4.9H4.7L17.8 19Z"/></svg></button>
+    <button class="share-btn" type="button" data-share="threads" title="Condividi su Threads" aria-label="Condividi su Threads"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16.5 8.2c-1-1.5-2.6-2.4-4.7-2.4-3.4 0-5.8 2.4-5.8 6.1s2.4 6.3 5.9 6.3c3.2 0 5.5-1.8 5.5-4.2 0-2-1.5-3.2-3.8-3.2-2.6 0-4.3 1.2-4.3 3 0 1.4 1.1 2.4 2.7 2.4 2.8 0 4.7-2.6 4.7-6.3 0-3.5-1.7-5.7-4.7-5.7"/></svg></button>
+    <button class="share-btn" type="button" data-share="facebook" title="Condividi su Facebook" aria-label="Condividi su Facebook"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7h2.4l.4-3h-2.8V9.2c0-.9.3-1.5 1.6-1.5H16V5c-.4-.1-1.4-.1-2.3-.1-2.3 0-3.8 1.4-3.8 4V11H7.5v3h2.4v7h3.6z"/></svg></button>
+    <button class="share-btn" type="button" data-share="linkedin" title="Condividi su LinkedIn" aria-label="Condividi su LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.2 8.4A1.9 1.9 0 1 1 6.2 4.6a1.9 1.9 0 0 1 0 3.8zM4.8 9.8h2.9v9.4H4.8V9.8zm4.8 0h2.8v1.3h.1c.4-.7 1.4-1.6 2.9-1.6 3.1 0 3.7 2 3.7 4.7v5h-2.9v-4.4c0-1 0-2.3-1.4-2.3s-1.6 1.1-1.6 2.2v4.5H9.6V9.8z"/></svg></button>
+    <button class="share-btn" type="button" data-share="telegram" title="Condividi su Telegram" aria-label="Condividi su Telegram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.4 4.6 3.7 11c-1.1.4-1.1 1 .2 1.4l4.2 1.3 1.6 5.1c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l2.9-13.5c.3-1.2-.4-1.8-1.4-1.5Z"/></svg></button>
+    <button class="share-btn" type="button" data-share="whatsapp" title="Condividi su WhatsApp" aria-label="Condividi su WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 12A8.5 8.5 0 0 1 7.7 19.4L3 20.8l1.5-4.5A8.5 8.5 0 1 1 20.5 12Zm-4.8 2.3c-.3-.1-1.6-.8-1.9-.9-.3-.1-.5-.1-.7.1l-.5.7c-.2.2-.4.2-.7.1-1.8-.9-3-2.6-3.2-2.9-.2-.3 0-.5.1-.7l.3-.4.2-.4c.1-.2 0-.5 0-.7l-.8-1.8c-.2-.5-.4-.4-.7-.4h-.6c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.7s1.1 3.2 1.3 3.4c.2.2 2.2 3.4 5.3 4.6.7.3 1.3.5 1.8.6.8.2 1.5.2 2 .1.6-.1 1.6-.7 1.8-1.4.2-.7.2-1.3.2-1.4 0-.1-.1-.2-.4-.3Z"/></svg></button>
+    <button class="share-btn" type="button" data-share="instagram" title="Genera e condividi la card Instagram" aria-label="Condividi la card su Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></svg></button>
+    <button class="share-btn" type="button" data-share="native" title="Apri il menu di condivisione del dispositivo" aria-label="Condividi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V3"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7h14v-7"/></svg></button>
+    <button class="share-btn" type="button" data-share="copy" title="Copia il link" aria-label="Copia il link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 1 0-7l1.5-1.5a5 5 0 0 1 7 7L17 13"/><path d="M14 11a5 5 0 0 1 0 7L12.5 19.5a5 5 0 0 1-7-7L7 11"/></svg></button>
   </nav>
   <details class="read-guide">
     <summary>Come leggere il modello</summary>
@@ -309,7 +321,7 @@
   <section class="card poll-table-card"><div class="table-scroll"><table><thead><tr><th>Data</th><th>Istituto</th><th>Area</th><th>n</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>Green</th><th>SNP</th><th>PC</th><th>RB</th></tr></thead><tbody id="pollTableBody"></tbody></table></div></section>
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La UI cambia; il motore statistico di produzione resta congelato sulla v0.9.29.</p></div></div>
   <section class="grid two">
-    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.38 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
+    <article class="card"><div class="cardhead"><div><h3>Backtest</h3><p>Production MRP stack · invarianti congelate</p></div></div><div class="explain"><p><strong>Validazione 2019:</strong> 609/632 collegi corretti (96,36%) e errore seggi complessivo 14. La strength geografica 0,875 è scelta esclusivamente su questa elezione.</p><p><strong>Benchmark 2024:</strong> con geografia YouGov pre-elettorale e topline interno il modello ottiene 578/632 (91,46%), errore seggi 56. Il provider stack YouGov+MiC raggiunge 584/632 (92,41%), errore 44, in validazione leave-one-region-out.</p><p class="warning"><strong>Nota:</strong> il 92,41% è validazione spaziale cross-validata del layer provider sul 2024, non un holdout incontaminato. La release UI 0.9.39 non modifica parametri, strength, sorgenti o gate statistici.</p></div></article>
     <article class="card"><div class="cardhead"><div><h3>Pipeline di produzione</h3><p>Il live viene promosso solo dopo l’audit.</p></div></div><div class="pipeline"><span>Sondaggi</span><b>→</b><span>target nazionale</span><b>→</b><span>MRP geography stack</span><b>→</b><span>632 GB</span><b>→</b><span>Monte Carlo</span><b>→</b><span>+18 NI</span></div><div class="explain compact"><p>La GitHub Action ricostruisce il candidato statistico congelato, verifica backtest, copertura provider, assenza dei topline esterni e stabilità fra scenari. Il watcher MRP segnala eventuali nuove pubblicazioni ma non le adotta automaticamente.</p></div></article>
   </section>
   <div class="section-title ai-section-break"><div><div class="section-kicker">Lettura assistita</div><h2>Verifica e interpreta le stime con un’IA</h2><p>Genera un prompt dai valori già visibili nella dashboard e chiedi una lettura indipendente del nowcast.</p></div><span class="ai-lab-badge">VERIFICA STIME</span></div>
@@ -336,8 +348,8 @@
     <p id="footerBuild">Build dati: —</p>
   </footer>
 </main>
-<script src="scripts/app.js?v=0.9.38"></script>
-<script src="scripts/map-performance.js?v=0.9.38"></script>
-<script src="scripts/interpretation.js?v=0.9.38"></script>
+<script src="scripts/app.js?v=0.9.39"></script>
+<script src="scripts/map-performance.js?v=0.9.39"></script>
+<script src="scripts/interpretation.js?v=0.9.39"></script>
 </body>
 </html>

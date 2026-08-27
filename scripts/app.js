@@ -688,6 +688,7 @@ function renderPolls(){
   $('#pollAverageMeta').textContent=`${state.average.effective} rilevazioni con peso significativo · half-life ${CONFIG.halfLifeDays} giorni`;
   const latest=state.polls[0]; if(latest){$('#kpiLastPoll').textContent=formatDate(latest.date);$('#kpiLastPollMeta').textContent=`${latest.pollster} · ${latest.area} · n=${fmt0(latest.sample)}`;}
   $('#dataBadge').textContent=`Sondaggi: ${state.pollSource}`;
+  updateEditorialMeta();
   const rows=state.polls.slice(0,24).map(p=>`<tr><td>${escapeHtml(p.fieldwork||formatDate(p.date))}</td><td>${escapeHtml(p.pollster)}</td><td>${escapeHtml(p.area)}</td><td>${fmt0(p.sample)}</td>${['lab','con','ref','ld','green','snp','pc','rb'].map(k=>`<td>${Number.isFinite(p[k])?fmt1(p[k]):'—'}</td>`).join('')}</tr>`).join('');
   $('#pollTableBody').innerHTML=rows;
 }
@@ -1524,6 +1525,17 @@ async function downloadSeatCard(){if(!state.selectedSeat)return;const c=await bu
 async function shareSeatCard(btn=null){if(!state.selectedSeat)return;const c=await buildSeatCardCanvas(),b=await canvasBlob(c),file=new File([b],`uk_collegio_${state.selectedSeat}_${exportDateStamp()}.png`,{type:'image/png'}),text=seatShareText(),url=selectedSeatUrl();if(navigator.share&&navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:`${state.byId.get(state.selectedSeat)?.name||'Collegio'} — Nowcast UK`,text:`${text}\n\n${url}`});return;}downloadBlob(b,file.name);const copy=`${text}\n\n${url}`;if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(copy).catch(()=>fallbackCopy(copy));else fallbackCopy(copy);flashButton(btn,'PNG + testo copiato');}
 
 
+// v0.9.39 — professional editorial masthead metadata. UI only.
+function formatModelTimestamp(raw){
+  if(!raw)return '—';
+  const d=new Date(raw);if(Number.isNaN(d.getTime()))return String(raw);
+  return d.toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function updateEditorialMeta(){
+  const latest=$('#metaLatestPoll');if(latest)latest.textContent=state.polls?.[0]?.date?formatDate(state.polls[0].date):'—';
+  const updated=$('#metaModelUpdated');if(updated){const raw=state.mrpLite?.generated_at||state.ni?.meta?.generated_at||state.territorialBaseline?.generated_at;updated.textContent=raw?formatModelTimestamp(raw):'snapshot corrente';}
+}
+
 // v0.9.38 — Germany-parity editorial utilities. Frontend only: no statistical inputs or simulations change.
 function updateMobileNowcastSticky(){
   const root=$('#mobileNowcastSticky');if(!root)return;
@@ -1536,13 +1548,13 @@ function updateMobileNowcastSticky(){
     if(seats)seats.textContent=Number.isFinite(Number(n))?fmt0(Number(n)):'—';
   });
   const hung=$('#mobileHungProb');if(hung)hung.textContent=state.mc?pctFmt((state.mc.hung||0)*100):'…';
+  updateEditorialMeta();
   syncMobileNowcastVisibility();
 }
 function syncMobileNowcastVisibility(){
   const root=$('#mobileNowcastSticky'),hero=document.querySelector('.hero');if(!root||!hero)return;
-  const mobile=window.matchMedia('(max-width: 820px)').matches;
-  const threshold=hero.offsetTop+Math.max(90,hero.offsetHeight*.72);
-  root.classList.toggle('is-visible',mobile&&window.scrollY>threshold);
+  const threshold=hero.offsetTop+Math.max(96,hero.offsetHeight*.72);
+  root.classList.toggle('is-visible',window.scrollY>threshold);
 }
 function graphicDimensions(ratio){return ratio==='5:2'?{w:1500,h:600}:{w:1600,h:900};}
 function graphicFilename(kind,ratio='16:9'){const names={projection:'proiezione_seggi',map:'mappa_collegi',trend:'andamento_sondaggi'};return `uk_${names[kind]||kind}_${ratio.replace(':','x')}_${exportDateStamp()}.png`;}

@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.38 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.39 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,7 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.38.
+- **Interfaccia:** v0.9.39.
 - **Motore statistico di produzione:** **v0.9.29**, congelato durante le modifiche esclusivamente frontend.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche con cache legata al fingerprint degli input.
@@ -54,7 +54,9 @@ Il progetto resta nella serie **0.x**: il passaggio a v1.0 richiede una qualità
 - scenario builder nazionale deterministico, separato dal Monte Carlo di produzione;
 - coalition builder e combinazioni minime di maggioranza;
 - export grafici e strumenti di condivisione social;
-- **sticky mobile del nowcast**, visibile dopo l’hero con i due primi partiti per seggi e la probabilità di Hung Parliament;
+- **masthead editoriale professionale** con Union Jack, metadati principali del modello, gerarchia tipografica e spaziatura ripensate sul linguaggio visivo del modello Germania;
+- **condivisioni ridisegnate** con icone vettoriali, rail verticale su desktop ampio e barra orizzontale compatta sui dispositivi più piccoli;
+- **barra sticky del nowcast**, visibile durante lo scorrimento su desktop e mobile, con bandiera UK, i due primi partiti per seggi, probabilità di Hung Parliament e soglia di maggioranza;
 - **export grafici modulari** 16:9 / 5:2 per proiezione dei seggi, mappa e andamento dei sondaggi, con condivisione nativa quando disponibile;
 - **snapshot JSON** dello stato corrente (media, seggi, intervalli, probabilità e scenario rappresentativo) per uso editoriale/archivio;
 - guida **“Come leggere il modello”**;
@@ -123,6 +125,8 @@ modello-uk/
 ├── styles-v0935.css
 ├── styles-v0936.css
 ├── styles-v0937.css
+├── styles-v0938.css
+├── styles-v0939.css
 ├── map-performance.css
 ├── scripts/
 │   ├── app.js
@@ -152,7 +156,7 @@ modello-uk/
 
 La GitHub Action `Update and deploy UK model` può essere avviata manualmente, parte anche su push a `main` ed è programmata quotidianamente. La pipeline aggiorna e committa automaticamente soltanto i file sotto `data/` quando esistono modifiche effettive, quindi esegue il deploy su GitHub Pages.
 
-Per una modifica frontend come la v0.9.38 è sufficiente pubblicare i file dell'interfaccia; **non è necessario ritoccare il motore statistico**.
+Per una modifica frontend come la v0.9.39 è sufficiente pubblicare i file dell'interfaccia; **non è necessario ritoccare il motore statistico**.
 
 ## Nota sulla lettura dei risultati
 
