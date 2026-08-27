@@ -1,4 +1,4 @@
-# UI release v0.9.34.1: CSV completeness hotfix for Northern Ireland and scenario-aware margin header; statistical production engine remains frozen on v0.9.29.
+# UI release v0.9.35: reader guide, AI-assisted interpretation, and README refresh; statistical production engine remains frozen on v0.9.29.
 name: Update and deploy UK model
 
 on:
@@ -17,7 +17,6 @@ permissions:
 concurrency:
   group: uk-model-pages
   cancel-in-progress: true
-
 jobs:
   update-and-deploy:
     runs-on: ubuntu-latest
@@ -39,7 +38,6 @@ jobs:
 
       - name: Self-test shadow MRP update watcher
         run: python tools/check_mrp_updates.py --self-test
-
       - name: Restore Democracy Club source cache
         uses: actions/cache@v4
         with:
@@ -54,7 +52,6 @@ jobs:
             dc-v0924-${{ runner.os }}-
             dc-v0923-${{ runner.os }}-
             dc-v0922-${{ runner.os }}-
-
       - name: Restore external MRP source cache
         uses: actions/cache@v4
         with:
@@ -68,10 +65,8 @@ jobs:
             mrp-bridge-v0925-${{ runner.os }}-
             mrp-bridge-v0924-${{ runner.os }}-
             mrp-bridge-v0923-${{ runner.os }}-
-
       - name: Update election data and territorial inputs
         run: python tools/build_data.py
-
       - name: Shadow-check for newer Westminster MRP
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
@@ -84,7 +79,6 @@ jobs:
           MRP_ALERT_FROM: ${{ secrets.MRP_ALERT_FROM }}
           MRP_ALERT_SUBJECT_PREFIX: "[modello-UK]"
         run: python tools/check_mrp_updates.py --state data/mrp-update-watch.json
-
       - name: Build Northern Ireland module
         run: python tools/build_ni.py
 
@@ -95,7 +89,6 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-
           core=Path("tools/build_mrp_lite.py").read_text(encoding="utf-8")
           bridge=Path("tools/build_mrp_geography_bridge.py").read_text(encoding="utf-8")
           watcher=Path("tools/check_mrp_updates.py").read_text(encoding="utf-8")
@@ -103,7 +96,6 @@ jobs:
           promotion=Path("tools/promote_mrp_stack.py").read_text(encoding="utf-8")
           app=Path("scripts/app.js").read_text(encoding="utf-8")
           workflow=Path(".github/workflows/update-data.yml").read_text(encoding="utf-8")
-
           required_core=[
               'V0922_HOTFIX="explicit-noop-candidate-fallback-and-traceback"',
               'V0922_HOTFIX_REGION_KEY="idempotent-region-key"',
@@ -127,7 +119,6 @@ jobs:
           for needle in required_bridge:
               if needle not in bridge:
                   raise SystemExit(f"ERROR: mixed/incomplete frozen v0.9.28 bridge; missing {needle!r}")
-
           required_promotion=[
               'V0929_PROMOTION = "audited-v0928-precision-stack-to-production"',
               'V0929_MODEL_FREEZE = "no-statistical-retuning-during-promotion"',
@@ -146,7 +137,6 @@ jobs:
           ):
               if needle not in app:
                   raise SystemExit(f"ERROR: app is not wired to v0.9.29 production model; missing {needle!r}")
-
           required_watcher=[
               'V0926_MRP_WATCHER = "shadow-official-provider-discovery-one-shot-email"',
               'V0926_MRP_WATCHER_PROVIDERS = "more-in-common-yougov-focaldata"',
@@ -171,7 +161,6 @@ jobs:
               raise SystemExit("ERROR: shadow MRP watcher step missing")
           print("v0.9.29 promotion bundle + frozen v0.9.28 statistical engine + watcher preflight: PASSED")
           PY
-
       - name: Self-test frozen v0.9.28 precision stack
         run: python tools/build_mrp_geography_bridge.py --self-test
 
@@ -180,7 +169,6 @@ jobs:
 
       - name: Build frozen v0.9.28 precision-weighted contemporary MRP candidate
         run: python tools/build_mrp_geography_bridge.py
-
       - name: Validate frozen v0.9.28 historical model and candidate safeguards
         run: |
           python - <<'PY'
@@ -189,12 +177,10 @@ jobs:
 
           def load(path):
               return json.loads(Path(path).read_text(encoding="utf-8"))
-
           backtest=load("data/backtest-v0928-geography-stack.json")
           diagnostic=load("data/mrp-geography-stack-v0928.json")
           live=load("data/mrp-lite-live-v0928-candidate.json")
           integrity=load("data/bes-integrity-v0928.json")
-
           if backtest.get("version")!="uk-v0928-mrp-geography-stack" or backtest.get("status")!="ok":
               raise SystemExit(f"ERROR: invalid v0.9.28 backtest {backtest.get('version')} {backtest.get('error')}")
           if diagnostic.get("version")!="uk-v0928-mrp-geography-stack" or diagnostic.get("status")!="ok":
@@ -203,13 +189,11 @@ jobs:
               raise SystemExit(f"ERROR: invalid v0.9.28 live candidate {live.get('version')} {live.get('error')}")
           if integrity.get("version")!="uk-v0928-bes-integrity-wrapper" or integrity.get("status")!="passed":
               raise SystemExit(f"ERROR: BES integrity failed {integrity.get('errors')}")
-
           for check in integrity.get("checks",[]):
               if check.get("gb_rows")!=632:
                   raise SystemExit(f"ERROR: {check.get('label')} has {check.get('gb_rows')} GB rows")
               if check.get("ni_filtered_before_party_parsing") is not True:
                   raise SystemExit(f"ERROR: {check.get('label')} parsed parties before NI filtering")
-
           # Never allow the breakthrough historical model to regress while
           # experimenting with the separate 2026 provider stack.
           ref=backtest.get("reference_v0915",{})
@@ -225,7 +209,6 @@ jobs:
               raise SystemExit(f"ERROR: validated 2024 Geography Blend regressed {primary}")
           if round(float(backtest.get("selected_strength",-1)),3)!=0.875:
               raise SystemExit(f"ERROR: historical geography strength changed {backtest.get('selected_strength')}")
-
           for payload in (backtest,diagnostic,live):
               if payload.get("uses_2024_for_geography_strength_selection") is not False:
                   raise SystemExit("ERROR: 2024 leaked into historical geography-strength selection")
@@ -237,7 +220,6 @@ jobs:
                   raise SystemExit("ERROR: external provider topline entered model")
               if payload.get("approved_for_live") is not False or payload.get("publication_ready") is not False:
                   raise SystemExit("ERROR: v0.9.28 must remain unapproved")
-
           stack=backtest.get("live_provider_stack_training_2024",{})
           cv=stack.get("leave_one_region_out",{})
           cvm=cv.get("metrics",{})
@@ -255,7 +237,6 @@ jobs:
           drift=stack.get("observed_geographic_drift_2019_to_2024",{})
           if int(drift.get("pairs",0))<1000 or set(drift.get("annual_variance",{}))!={"lab","con","ref","ld","green","snp","pc","other"}:
               raise SystemExit(f"ERROR: incomplete geographic drift model {drift}")
-
           coverage=backtest.get("coverage",{})
           for key,minimum in (
               ("yougov2019",630),("yougov2024_early",620),("yougov2024_mid",620),("yougov2024",620),
@@ -267,7 +248,6 @@ jobs:
           required={"con","lab","ld","ref","green","snp","pc","other"}
           if set(micmeta.get("mapped_columns",{}))!=required or float(micmeta.get("relative_national_share",{}).get("green",0))<=0.1:
               raise SystemExit(f"ERROR: MiC 2026 party geography incomplete {micmeta.get('mapped_columns')}")
-
           live_geo=live.get("live_geography",{})
           if live_geo.get("status")!="precision_weighted_yougov24_plus_direct_mic26":
               raise SystemExit(f"ERROR: precision live geography not applied {live_geo}")
@@ -280,7 +260,6 @@ jobs:
               raise SystemExit("ERROR: v0.9.28 live candidate auto-promoted")
           if len(live.get("seats",[]))!=632:
               raise SystemExit(f"ERROR: live candidate has {len(live.get('seats',[]))} seats")
-
           sensitivity=live.get("live_2026_sensitivity",{})
           expected_totals=(
               "precision_freshness_primary_totals","skill_only_stack_totals","equal_provider_stack_totals",
@@ -293,7 +272,6 @@ jobs:
           stability=sensitivity.get("stability_audit",{})
           if len(stability.get("scenario_names",[]))!=6:
               raise SystemExit(f"ERROR: incomplete live sensitivity scenarios {stability.get('scenario_names')}")
-
           print("v0.9.28 technical validation PASSED")
           print("Historical Geography Blend: 2019",val.get("correct_winners"),"/632 seat error",val.get("seat_abs_error_sum"),
                 "| 2024",primary.get("correct_winners"),"/632 seat error",primary.get("seat_abs_error_sum"))
@@ -304,7 +282,6 @@ jobs:
           print("2026 changed winners vs primary:",sensitivity.get("changed_winners_vs_primary"))
           print("Shadow candidate validation complete; promotion gate runs next.")
           PY
-
       - name: Promote audited stack to v0.9.29 production live
         run: python tools/promote_mrp_stack.py
 
@@ -313,11 +290,9 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-
           live=json.loads(Path("data/mrp-lite-live.json").read_text(encoding="utf-8"))
           candidate=json.loads(Path("data/mrp-lite-live-v0928-candidate.json").read_text(encoding="utf-8"))
           audit=json.loads(Path("data/promotion-audit-v0929.json").read_text(encoding="utf-8"))
-
           if audit.get("version")!="uk-v0929-production-promotion-audit" or audit.get("status")!="passed":
               raise SystemExit(f"ERROR: v0.9.29 promotion audit failed {audit}")
           if live.get("version")!="uk-v0929-precision-weighted-mrp-live":
@@ -349,7 +324,6 @@ jobs:
           print("2026 central GB totals:",live.get("totals"))
           print("Core 2026 changed winners:",gates.get("core_2026_changed_winners_vs_primary"))
           PY
-
       - name: Commit refreshed data
         run: |
           if [ -z "$(git status --porcelain -- data/)" ]; then
@@ -361,7 +335,6 @@ jobs:
             git commit -m "chore: update UK data and v0.9.29 production MRP stack"
             git push
           fi
-
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
