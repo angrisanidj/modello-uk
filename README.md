@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.39 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.40 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,7 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.39.
+- **Interfaccia:** v0.9.40.
 - **Motore statistico di produzione:** **v0.9.29**, congelato durante le modifiche esclusivamente frontend.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche con cache legata al fingerprint degli input.
@@ -127,6 +127,7 @@ modello-uk/
 ├── styles-v0937.css
 ├── styles-v0938.css
 ├── styles-v0939.css
+├── styles-v0940.css
 ├── map-performance.css
 ├── scripts/
 │   ├── app.js
@@ -156,8 +157,13 @@ modello-uk/
 
 La GitHub Action `Update and deploy UK model` può essere avviata manualmente, parte anche su push a `main` ed è programmata quotidianamente. La pipeline aggiorna e committa automaticamente soltanto i file sotto `data/` quando esistono modifiche effettive, quindi esegue il deploy su GitHub Pages.
 
-Per una modifica frontend come la v0.9.39 è sufficiente pubblicare i file dell'interfaccia; **non è necessario ritoccare il motore statistico**.
+Per una modifica frontend come la v0.9.40 è sufficiente pubblicare i file dell'interfaccia; **non è necessario ritoccare il motore statistico**.
 
 ## Nota sulla lettura dei risultati
 
 La dashboard è un **nowcast**, non una previsione certa del risultato finale delle prossime elezioni. Il numero centrale dei seggi va letto insieme agli intervalli di probabilità, alla distribuzione Monte Carlo e alla geografia dei collegi. Lo scenario personalizzato dell'utente è uno strumento esplorativo deterministico e non modifica il modello di produzione.
+
+
+## UI v0.9.40
+
+La v0.9.40 è una release esclusivamente frontend/UX. Introduce: bandiera UK corretta nelle fasce e nei badge, emiciclo denso senza rimozione casuale di punti, distribuzione dei seggi cliccabile, layout più compatto per trend/mappa/regioni, paginazione dinamica da 25 collegi, browser dei sondaggi dal 4 luglio 2024 con filtri e paginazione, pannello di validazione più leggibile e brand card IA con le stesse icone incorporate del modello Germania. Il motore statistico resta v0.9.29.
