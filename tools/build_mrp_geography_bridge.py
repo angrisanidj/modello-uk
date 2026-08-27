@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-modello-uk v0.9.23 — external MRP geography bridge (shadow research)
+modello-uk v0.9.24 — external MRP geography bridge (shadow research)
 
 Core idea
 ---------
@@ -51,19 +51,21 @@ import requests
 # Import the proven v0.9.22 engine as a library; importing it does not run main().
 import build_mrp_lite as core
 
-V0923_BRIDGE="external-mrp-relative-geography-plus-national-rake"
-V0923_SELECTION="yougov-2019-only-strength-selection"
-V0923_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-relative-shift"
+V0924_BRIDGE="external-mrp-relative-geography-plus-national-rake"
+V0924_SELECTION="yougov-2019-only-strength-selection"
+V0924_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-relative-shift"
+V0924_BASELINE="reconstruct-v0915-local-strength-both-elections"
+V0924_DIAGNOSTICS="all-strengths-scored-2024-no-selection"
 
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"data"
 CACHE=ROOT/".cache"/"mrp-bridge"
 CACHE.mkdir(parents=True,exist_ok=True)
 
-BACKTEST_OUT=DATA/"backtest-v0923-geography-bridge.json"
-DIAGNOSTIC_OUT=DATA/"mrp-geography-bridge-v0923.json"
-LIVE_OUT=DATA/"mrp-lite-live-v0923-shadow.json"
-INTEGRITY_OUT=DATA/"bes-integrity-v0923.json"
+BACKTEST_OUT=DATA/"backtest-v0924-geography-bridge.json"
+DIAGNOSTIC_OUT=DATA/"mrp-geography-bridge-v0924.json"
+LIVE_OUT=DATA/"mrp-lite-live-v0924-shadow.json"
+INTEGRITY_OUT=DATA/"bes-integrity-v0924.json"
 
 PARTIES=core.PARTIES
 EPS=0.35
@@ -93,7 +95,7 @@ MIC_2026_URL=(
     "jul26-mrp-datatables-final-3.xlsx"
 )
 
-UA="FocusAmerica-UK-election-model/0.9.23 geography-bridge (+https://angrisanidj.github.io/modello-uk/)"
+UA="FocusAmerica-UK-election-model/0.9.24 geography-bridge (+https://angrisanidj.github.io/modello-uk/)"
 
 
 def _json_safe(obj:Any)->Any:
@@ -460,7 +462,7 @@ def build_core_state()->dict[str,Any]:
         e19n=core.merge_demo(core.extract_election(curr_df,"19"),curr_demo)
         e24=core.merge_demo(core.extract_election(curr_df,"24"),curr_demo)
 
-        # Redirect the parser audit to a v0.9.23 research artefact while keeping
+        # Redirect the parser audit to a v0.9.24 research artefact while keeping
         # the already-validated v0.9.22 parser implementation unchanged.
         old_integrity=core.INTEGRITY_OUT
         core.INTEGRITY_OUT=INTEGRITY_OUT
@@ -475,7 +477,7 @@ def build_core_state()->dict[str,Any]:
             ])
         finally:
             core.INTEGRITY_OUT=old_integrity
-        integrity["version"]="uk-v0923-bes-integrity-wrapper"
+        integrity["version"]="uk-v0924-bes-integrity-wrapper"
         integrity["engine_parser_version"]="uk-v0922-bes-integrity"
         _write_json(INTEGRITY_OUT,integrity)
         print("BES integrity gate: PASSED")
@@ -503,6 +505,35 @@ def build_core_state()->dict[str,Any]:
 
         reference,_,v0915_hold_rows,_,local24=core.evaluate_v0915_reference(val_rows,hold_rows,e17,e19,e19n,e24)
 
+        # v0.9.24 methodological correction: reconstruct the ACTUAL constituency-level
+        # v0.9.15 validation rows for 2019.  v0.9.23 verified only the frozen 585/632
+        # aggregate but accidentally passed the older 583/632 canonical rows into the
+        # geography bridge.  The zero-strength bridge must be exactly the v0.9.15
+        # baseline in both elections.
+        raw19,src_local19=core.fetch_dc_local_results(core.LOCAL_DATES_2019)
+        ons19,ons19_meta=core.fetch_ons_ward_lookup("2019")
+        local19=core.build_local_advantage_profile(e17,raw19,ons19,"2019-12-12")
+        if local19["matched_seats"]<300:
+            raise RuntimeError(f"v0.9.15 2019 local-strength coverage too low: {local19['matched_seats']}")
+        v0915_val_rows,v0915_meta19=core.apply_local_election_strength_refined(
+            val_rows,e17,core.nat_shares(e19),local19,0.25,0.0,None
+        )
+        v0915_m19=core.evaluate_rows(v0915_val_rows,e19,e17)
+        if v0915_m19["correct_winners"]!=585 or v0915_m19["seat_abs_error_sum"]!=42:
+            raise RuntimeError(f"Reconstructed v0.9.15 2019 rows do not match frozen reference: {v0915_m19}")
+        v0915_m24=core.evaluate_rows(v0915_hold_rows,e24,e19n)
+        if v0915_m24["correct_winners"]!=501 or v0915_m24["seat_abs_error_sum"]!=166:
+            raise RuntimeError(f"Reconstructed v0.9.15 2024 rows do not match frozen reference: {v0915_m24}")
+        baseline_reconstruction={
+            "status":"passed",
+            "parameters":{"local_strength":0.25,"confidence_floor":0.0,"margin_cap":None},
+            "validation_2019":v0915_m19,"benchmark_2024":v0915_m24,
+            "meta_2019":v0915_meta19,
+            "coverage_2019":{k:v for k,v in local19.items() if k!="seats"},
+            "sources_2019":{"local_results":src_local19,"ons_lookup":ons19_meta},
+            "invariant":"strength=0 must reproduce v0.9.15 constituency rows and metrics in both 2019 and 2024",
+        }
+
         # Live canonical rows, still using our own polling target.
         target_now,poll_meta=core.calculate_poll_target(DATA/"polls.json")
         models_live,names_live=core.train_models([t10_15,t15_17,t17_19,t19n_24],selected_spec)
@@ -519,8 +550,8 @@ def build_core_state()->dict[str,Any]:
             "selected_spec":selected_spec,"tuning":tuning,
             "selected_party_strengths":selected_party_strengths,"party_strength_tuning":party_strength_tuning,
             "selected_routing":selected_routing,"routing_tuning":routing_tuning,
-            "val_rows":val_rows,"v0915_hold_rows":v0915_hold_rows,"hold_rows":hold_rows,
-            "reference":reference,"local24":local24,
+            "val_rows":val_rows,"v0915_val_rows":v0915_val_rows,"v0915_hold_rows":v0915_hold_rows,"hold_rows":hold_rows,
+            "reference":reference,"local19":local19,"local24":local24,"baseline_reconstruction":baseline_reconstruction,
             "target_now":target_now,"poll_meta":poll_meta,"live_rows":live_rows,
             "live_contest_scores":live_contest_scores,"live_dispersion":live_dispersion,"live_routing":live_routing,
         }
@@ -574,7 +605,7 @@ def _self_test()->int:
     with pd.ExcelWriter(buf,engine="openpyxl") as writer:synth.to_excel(writer,index=False,header=False,sheet_name="Constituencies")
     xdf,xmeta=parse_mic_2026_xlsx(buf.getvalue())
     if len(xdf)!=620 or xmeta["sheet"]!="Constituencies":raise RuntimeError("self-test XLSX parser failed")
-    print("v0.9.23 geography bridge self-test: PASSED")
+    print("v0.9.24 geography bridge self-test: PASSED")
     return 0
 
 
@@ -594,7 +625,7 @@ def main()->int:
     # Select geography blend strength on 2019 only.
     calibration=[];cal_rows={}
     for strength in STRENGTH_GRID:
-        rows=apply_factors(state["val_rows"],e17,target19,y19_factors,strength)
+        rows=apply_factors(state["v0915_val_rows"],e17,target19,y19_factors,strength)
         metrics=core.evaluate_rows(rows,e19,e17)
         calibration.append({"strength":strength,"metrics":metrics})
         cal_rows[strength]=rows
@@ -602,24 +633,47 @@ def main()->int:
     selected=float(calibration[0]["strength"])
     val_bridge=cal_rows[selected]
     val_metrics=core.evaluate_rows(val_bridge,e19,e17)
-    val_base=core.evaluate_rows(state["val_rows"],e19,e17)
+    val_base=core.evaluate_rows(state["v0915_val_rows"],e19,e17)
 
-    # PRECOMMITTED PRIMARY 2024 BENCHMARK: YouGov anchor only.
-    primary_rows=apply_factors(state["v0915_hold_rows"],e19n,target24,y24_factors,selected)
-    primary_metrics=core.evaluate_rows(primary_rows,e24,e19n)
-
-    # Diagnostics only; never used to select strength/provider in this version.
-    mic_rows=apply_factors(state["v0915_hold_rows"],e19n,target24,m24_factors,selected)
-    mic_metrics=core.evaluate_rows(mic_rows,e24,e19n)
+    # Score the ENTIRE predeclared strength grid on 2024 for diagnostics only.
+    # This does not participate in parameter selection; `selected` above is already
+    # frozen from 2019.  The sweep tells us whether the bridge has latent 2024 value
+    # even when historical validation rejects a particular strength.
     ensemble=ensemble_factors(y24_factors,m24_factors)
-    ens_rows=apply_factors(state["v0915_hold_rows"],e19n,target24,ensemble,selected)
+    sweep_2024=[]
+    sweep_rows={}
+    providers=(("yougov",y24_factors),("more_in_common",m24_factors),("equal_provider_ensemble",ensemble))
+    for provider,factors in providers:
+        for strength in STRENGTH_GRID:
+            rows=apply_factors(state["v0915_hold_rows"],e19n,target24,factors,strength)
+            metrics=core.evaluate_rows(rows,e24,e19n)
+            sweep_2024.append({"provider":provider,"strength":float(strength),"metrics":metrics,"selection_role":"diagnostic_only"})
+            sweep_rows[(provider,float(strength))]=rows
+
+    primary_rows=sweep_rows[("yougov",selected)]
+    primary_metrics=core.evaluate_rows(primary_rows,e24,e19n)
+    mic_rows=sweep_rows[("more_in_common",selected)]
+    mic_metrics=core.evaluate_rows(mic_rows,e24,e19n)
+    ens_rows=sweep_rows[("equal_provider_ensemble",selected)]
     ens_metrics=core.evaluate_rows(ens_rows,e24,e19n)
+
+    best_expost_by_provider={}
+    for provider,_ in providers:
+        candidates=[x for x in sweep_2024 if x["provider"]==provider]
+        best_expost_by_provider[provider]=max(candidates,key=lambda x:core.score_tuple(x["metrics"]))
 
     reference=state["reference"]
     if reference["benchmark_2024"]["correct_winners"]!=501 or reference["benchmark_2024"]["seat_abs_error_sum"]!=166:
         raise RuntimeError(f"Frozen v0.9.15 benchmark changed: {reference['benchmark_2024']}")
     if reference["validation_2019"]["correct_winners"]!=585 or reference["validation_2019"]["seat_abs_error_sum"]!=42:
         raise RuntimeError(f"Frozen v0.9.15 validation changed: {reference['validation_2019']}")
+
+    zero19=next(x["metrics"] for x in calibration if abs(float(x["strength"]))<1e-12)
+    zero24=next(x["metrics"] for x in sweep_2024 if x["provider"]=="yougov" and abs(float(x["strength"]))<1e-12)
+    if zero19["correct_winners"]!=585 or zero19["seat_abs_error_sum"]!=42:
+        raise RuntimeError(f"Corrected-baseline invariant failed in 2019 at strength=0: {zero19}")
+    if zero24["correct_winners"]!=501 or zero24["seat_abs_error_sum"]!=166:
+        raise RuntimeError(f"Corrected-baseline invariant failed in 2024 at strength=0: {zero24}")
 
     validation_gate=(val_metrics["correct_winners"]>=585 and val_metrics["seat_abs_error_sum"]<=42)
     gate_85=(primary_metrics["correct_winners"]>=538 and primary_metrics["seat_abs_error_sum"]<=166 and validation_gate)
@@ -646,7 +700,7 @@ def main()->int:
     live_projection=core.live_projection(
         e24,state["target_now"],live_bridge_rows,state["live_contest_scores"],
         {
-            "kind":"v0923_external_mrp_geography_bridge_shadow",
+            "kind":"v0924_external_mrp_geography_bridge_shadow",
             "national_target_source":"internal_polling_model",
             "geography_strength":selected,
             "live_geography":live_source["status"],
@@ -656,7 +710,7 @@ def main()->int:
 
     generated=core.utcnow().isoformat()
     common={
-        "version":"uk-v0923-mrp-geography-bridge","status":"ok","generated_at":generated,
+        "version":"uk-v0924-mrp-geography-bridge","status":"ok","generated_at":generated,
         "diagnostic_only":True,"shadow_only":True,"approved_for_live":False,"publication_ready":False,
         "uses_2024_for_parameter_selection":False,"parameter_selection_election":"2019",
         "parameter_selection_source":"YouGov pre-election MRP 2019-11-27",
@@ -664,6 +718,8 @@ def main()->int:
         "provider_topline_used":False,
         "national_target_after_bridge":"internal model target via final rake",
         "selected_strength":selected,"strength_grid":list(STRENGTH_GRID),
+        "corrected_v0915_baseline":True,
+        "zero_strength_invariant_passed":True,
         "research_gate_85_passed":gate_85,"breakthrough_87_passed":breakthrough_87,"stretch_90_passed":stretch_90,
         "validation_gate_passed":validation_gate,
         "thresholds":{
@@ -681,8 +737,9 @@ def main()->int:
     backtest={
         **common,
         "reference_v0915":{"validation_2019":reference["validation_2019"],"benchmark_2024":reference["benchmark_2024"]},
+        "v0915_constituency_baseline_reconstruction":state["baseline_reconstruction"],
         "strength_selection_2019":{
-            "baseline_current_engine":val_base,"selected":val_metrics,
+            "baseline_v0915_reconstructed":val_base,"selected":val_metrics,
             "candidates":calibration,
             "note":"Only this block selects a parameter. 2024 results are not consulted.",
         },
@@ -696,6 +753,9 @@ def main()->int:
             "primary_accuracy_gain_pp":(primary_metrics["winner_accuracy"]-reference["benchmark_2024"]["winner_accuracy"])*100.0,
             "primary_seat_error_improvement":reference["benchmark_2024"]["seat_abs_error_sum"]-primary_metrics["seat_abs_error_sum"],
             "provider_or_strength_selected_on_2024":False,
+            "all_strengths_diagnostic":sweep_2024,
+            "best_expost_by_provider":best_expost_by_provider,
+            "warning":"The full 2024 sweep is diagnostic only. It cannot select provider or strength in v0.9.24.",
         },
         "coverage":{"yougov2019":y19_cov,"yougov2024":y24_cov,"mic2024":m24_cov,"mic2026":mic26_cov},
         "external_source_meta":{**sources["source_meta"],"mic2026":mic26_meta},
@@ -703,7 +763,7 @@ def main()->int:
         "changed_or_wrong_seats_2024":_seat_records(state["v0915_hold_rows"],primary_rows,e24,e19n),
         "method_note":(
             "External MRP toplines are discarded. Constituency vote shares are converted into relative geographic factors; "
-            "those factors are blended with the internal rows at a strength selected on 2019, then raked to the internal national target."
+            "those factors are blended with the fully reconstructed v0.9.15 constituency rows at a strength selected on 2019, then raked to the internal national target."
         ),
     }
     _write_json(BACKTEST_OUT,backtest)
@@ -719,7 +779,8 @@ def main()->int:
         },
         "selection_result_2019":val_metrics,
         "primary_result_2024":primary_metrics,
-        "diagnostics_2024":{"more_in_common":mic_metrics,"equal_provider_ensemble":ens_metrics},
+        "diagnostics_2024":{"more_in_common":mic_metrics,"equal_provider_ensemble":ens_metrics,
+                            "all_strengths":sweep_2024,"best_expost_by_provider":best_expost_by_provider},
         "live_geography_status":live_source,
         "promotion_policy":"Never auto-promote. Passing the research gate only nominates the method for review and a fresh external validation.",
     }
@@ -727,7 +788,7 @@ def main()->int:
 
     live_payload={
         **common,
-        "version":"uk-v0923-mrp-geography-bridge-live-shadow",
+        "version":"uk-v0924-mrp-geography-bridge-live-shadow",
         "model_type":"external-mrp-relative-geography-bridge-shadow",
         "applied_to_production":False,
         "live_geography":live_source,
@@ -738,11 +799,15 @@ def main()->int:
     }
     _write_json(LIVE_OUT,live_payload)
 
-    print("v0.9.23 MRP geography bridge: COMPLETE")
+    print("v0.9.24 MRP geography bridge: COMPLETE")
     print(f"2019 selected strength={selected:.2f}: {val_metrics['correct_winners']}/632, seat error {val_metrics['seat_abs_error_sum']}")
     print(f"2024 PRIMARY YouGov bridge: {primary_metrics['correct_winners']}/632 = {primary_metrics['winner_accuracy']*100:.2f}%, seat error {primary_metrics['seat_abs_error_sum']}")
     print(f"2024 diagnostic MiC: {mic_metrics['correct_winners']}/632 = {mic_metrics['winner_accuracy']*100:.2f}%")
     print(f"2024 diagnostic ensemble: {ens_metrics['correct_winners']}/632 = {ens_metrics['winner_accuracy']*100:.2f}%")
+    for provider in ("yougov","more_in_common","equal_provider_ensemble"):
+        best=best_expost_by_provider[provider]
+        bm=best["metrics"]
+        print(f"2024 EX-POST diagnostic best {provider}: strength={best['strength']:.2f}, {bm['correct_winners']}/632 = {bm['winner_accuracy']*100:.2f}%, seat error {bm['seat_abs_error_sum']} [NOT SELECTED]")
     print(f"Gate 85={gate_85}; breakthrough 87={breakthrough_87}; stretch 90={stretch_90}; validation={validation_gate}")
     print(f"Live geography={live_source['status']}")
     return 0
@@ -757,12 +822,12 @@ if __name__=="__main__":
     except SystemExit:
         raise
     except Exception as exc:
-        print(f"build_mrp_geography_bridge.py v0.9.23 failed: {exc}",file=sys.stderr)
+        print(f"build_mrp_geography_bridge.py v0.9.24 failed: {exc}",file=sys.stderr)
         traceback.print_exc()
         # Leave an explicit failure artefact when DATA exists, but never disguise
         # a technical failure as a scientific gate failure.
         try:
-            _write_json(DIAGNOSTIC_OUT,{"version":"uk-v0923-mrp-geography-bridge","status":"failed","generated_at":core.utcnow().isoformat(),"error":f"{type(exc).__name__}: {exc}"})
+            _write_json(DIAGNOSTIC_OUT,{"version":"uk-v0924-mrp-geography-bridge","status":"failed","generated_at":core.utcnow().isoformat(),"error":f"{type(exc).__name__}: {exc}"})
         except Exception:
             pass
         raise SystemExit(1)
