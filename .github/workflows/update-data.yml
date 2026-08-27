@@ -1,4 +1,4 @@
-# UI release v0.9.33: social export/share features; statistical production engine remains frozen on v0.9.29.
+# UI release v0.9.34: regional dashboard, seat-flow analysis and constituency CSV export; statistical production engine remains frozen on v0.9.29.
 name: Update and deploy UK model
 
 on:
