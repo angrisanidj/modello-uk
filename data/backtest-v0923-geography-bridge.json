@@ -1,0 +1,4968 @@
+{
+  "version": "uk-v0923-mrp-geography-bridge",
+  "status": "ok",
+  "generated_at": "2026-08-27T10:14:17.188810+00:00",
+  "diagnostic_only": true,
+  "shadow_only": true,
+  "approved_for_live": false,
+  "publication_ready": false,
+  "uses_2024_for_parameter_selection": false,
+  "parameter_selection_election": "2019",
+  "parameter_selection_source": "YouGov pre-election MRP 2019-11-27",
+  "primary_2024_provider_precommitted": "YouGov 2024-07-03",
+  "provider_topline_used": false,
+  "national_target_after_bridge": "internal model target via final rake",
+  "selected_strength": 0.0,
+  "strength_grid": [
+    0.0,
+    0.25,
+    0.5,
+    0.75,
+    1.0,
+    1.25
+  ],
+  "research_gate_85_passed": false,
+  "breakthrough_87_passed": false,
+  "stretch_90_passed": false,
+  "validation_gate_passed": false,
+  "thresholds": {
+    "validation_2019": {
+      "min_correct_winners": 585,
+      "max_seat_abs_error_sum": 42
+    },
+    "research_85": {
+      "min_correct_winners_2024": 538,
+      "max_seat_abs_error_sum_2024": 166
+    },
+    "breakthrough_87": {
+      "min_correct_winners_2024": 550,
+      "max_seat_abs_error_sum_2024": 150
+    },
+    "stretch_90": {
+      "min_correct_winners_2024": 569,
+      "max_seat_abs_error_sum_2024": 130
+    }
+  },
+  "source_urls": {
+    "yougov_2019": "https://raw.githubusercontent.com/calbal91/project-understanding-elections/refs/heads/master/CSVs/YouGov.csv",
+    "yougov_2024": "https://raw.githubusercontent.com/inglesp/apogee/refs/heads/main/data/processed/yougov/2024-07-03/data.csv",
+    "mic_2024": "https://raw.githubusercontent.com/inglesp/apogee/refs/heads/main/data/processed/moreincommon/2024-07-03/data.csv",
+    "mic_2026": "https://www.moreincommon.org.uk/wp-content/uploads/2026/07/jul26-mrp-datatables-final-3.xlsx"
+  },
+  "reference_v0915": {
+    "validation_2019": {
+      "winner_accuracy": 0.9256329113924051,
+      "correct_winners": 585,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 198,
+        "con": 350,
+        "ref": 0,
+        "ld": 31,
+        "green": 1,
+        "snp": 49,
+        "pc": 3,
+        "other": 0
+      },
+      "actual_seats": {
+        "lab": 202,
+        "con": 365,
+        "ref": 0,
+        "ld": 11,
+        "green": 1,
+        "snp": 48,
+        "pc": 4,
+        "other": 1
+      },
+      "seat_error": {
+        "lab": -4,
+        "con": -15,
+        "ref": 0,
+        "ld": 20,
+        "green": 0,
+        "snp": 1,
+        "pc": -1,
+        "other": -1
+      },
+      "seat_abs_error_sum": 42,
+      "share_mae": 2.7168953973035195,
+      "winner_source": "official_BES_WinnerXX",
+      "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+      "regional_accuracy": {
+        "east_england": {
+          "correct": 55,
+          "n": 58,
+          "accuracy": 0.9482758620689655
+        },
+        "east_midlands": {
+          "correct": 46,
+          "n": 46,
+          "accuracy": 1.0
+        },
+        "london": {
+          "correct": 69,
+          "n": 73,
+          "accuracy": 0.9452054794520548
+        },
+        "north_east": {
+          "correct": 25,
+          "n": 29,
+          "accuracy": 0.8620689655172413
+        },
+        "north_west": {
+          "correct": 65,
+          "n": 75,
+          "accuracy": 0.8666666666666667
+        },
+        "scotland": {
+          "correct": 56,
+          "n": 59,
+          "accuracy": 0.9491525423728814
+        },
+        "south_east": {
+          "correct": 77,
+          "n": 84,
+          "accuracy": 0.9166666666666666
+        },
+        "south_west": {
+          "correct": 49,
+          "n": 55,
+          "accuracy": 0.8909090909090909
+        },
+        "wales": {
+          "correct": 36,
+          "n": 40,
+          "accuracy": 0.9
+        },
+        "west_midlands": {
+          "correct": 55,
+          "n": 59,
+          "accuracy": 0.9322033898305084
+        },
+        "yorkshire": {
+          "correct": 52,
+          "n": 54,
+          "accuracy": 0.9629629629629629
+        }
+      }
+    },
+    "benchmark_2024": {
+      "winner_accuracy": 0.7927215189873418,
+      "correct_winners": 501,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 346,
+        "con": 152,
+        "ref": 39,
+        "ld": 55,
+        "green": 9,
+        "snp": 22,
+        "pc": 4,
+        "other": 5
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -65,
+        "con": 31,
+        "ref": 34,
+        "ld": -17,
+        "green": 5,
+        "snp": 13,
+        "pc": 0,
+        "other": -1
+      },
+      "seat_abs_error_sum": 166,
+      "share_mae": 5.55680761701318,
+      "winner_source": "official_BES_WinnerXX",
+      "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+      "regional_accuracy": {
+        "east_england": {
+          "correct": 50,
+          "n": 61,
+          "accuracy": 0.819672131147541
+        },
+        "east_midlands": {
+          "correct": 36,
+          "n": 47,
+          "accuracy": 0.7659574468085106
+        },
+        "london": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "north_east": {
+          "correct": 15,
+          "n": 27,
+          "accuracy": 0.5555555555555556
+        },
+        "north_west": {
+          "correct": 68,
+          "n": 73,
+          "accuracy": 0.9315068493150684
+        },
+        "scotland": {
+          "correct": 42,
+          "n": 57,
+          "accuracy": 0.7368421052631579
+        },
+        "south_east": {
+          "correct": 71,
+          "n": 91,
+          "accuracy": 0.7802197802197802
+        },
+        "south_west": {
+          "correct": 42,
+          "n": 58,
+          "accuracy": 0.7241379310344828
+        },
+        "wales": {
+          "correct": 23,
+          "n": 32,
+          "accuracy": 0.71875
+        },
+        "west_midlands": {
+          "correct": 49,
+          "n": 57,
+          "accuracy": 0.8596491228070176
+        },
+        "yorkshire": {
+          "correct": 37,
+          "n": 54,
+          "accuracy": 0.6851851851851852
+        }
+      }
+    }
+  },
+  "strength_selection_2019": {
+    "baseline_current_engine": {
+      "winner_accuracy": 0.9224683544303798,
+      "correct_winners": 583,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 199,
+        "con": 349,
+        "ref": 0,
+        "ld": 30,
+        "green": 1,
+        "snp": 50,
+        "pc": 3,
+        "other": 0
+      },
+      "actual_seats": {
+        "lab": 202,
+        "con": 365,
+        "ref": 0,
+        "ld": 11,
+        "green": 1,
+        "snp": 48,
+        "pc": 4,
+        "other": 1
+      },
+      "seat_error": {
+        "lab": -3,
+        "con": -16,
+        "ref": 0,
+        "ld": 19,
+        "green": 0,
+        "snp": 2,
+        "pc": -1,
+        "other": -1
+      },
+      "seat_abs_error_sum": 42,
+      "share_mae": 2.620772793463433,
+      "winner_source": "official_BES_WinnerXX",
+      "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+      "regional_accuracy": {
+        "east_england": {
+          "correct": 55,
+          "n": 58,
+          "accuracy": 0.9482758620689655
+        },
+        "east_midlands": {
+          "correct": 46,
+          "n": 46,
+          "accuracy": 1.0
+        },
+        "london": {
+          "correct": 69,
+          "n": 73,
+          "accuracy": 0.9452054794520548
+        },
+        "north_east": {
+          "correct": 25,
+          "n": 29,
+          "accuracy": 0.8620689655172413
+        },
+        "north_west": {
+          "correct": 65,
+          "n": 75,
+          "accuracy": 0.8666666666666667
+        },
+        "scotland": {
+          "correct": 55,
+          "n": 59,
+          "accuracy": 0.9322033898305084
+        },
+        "south_east": {
+          "correct": 78,
+          "n": 84,
+          "accuracy": 0.9285714285714286
+        },
+        "south_west": {
+          "correct": 49,
+          "n": 55,
+          "accuracy": 0.8909090909090909
+        },
+        "wales": {
+          "correct": 35,
+          "n": 40,
+          "accuracy": 0.875
+        },
+        "west_midlands": {
+          "correct": 54,
+          "n": 59,
+          "accuracy": 0.9152542372881356
+        },
+        "yorkshire": {
+          "correct": 52,
+          "n": 54,
+          "accuracy": 0.9629629629629629
+        }
+      }
+    },
+    "selected": {
+      "winner_accuracy": 0.9224683544303798,
+      "correct_winners": 583,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 199,
+        "con": 349,
+        "ref": 0,
+        "ld": 30,
+        "green": 1,
+        "snp": 50,
+        "pc": 3,
+        "other": 0
+      },
+      "actual_seats": {
+        "lab": 202,
+        "con": 365,
+        "ref": 0,
+        "ld": 11,
+        "green": 1,
+        "snp": 48,
+        "pc": 4,
+        "other": 1
+      },
+      "seat_error": {
+        "lab": -3,
+        "con": -16,
+        "ref": 0,
+        "ld": 19,
+        "green": 0,
+        "snp": 2,
+        "pc": -1,
+        "other": -1
+      },
+      "seat_abs_error_sum": 42,
+      "share_mae": 2.6207727934634315,
+      "winner_source": "official_BES_WinnerXX",
+      "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+      "regional_accuracy": {
+        "east_england": {
+          "correct": 55,
+          "n": 58,
+          "accuracy": 0.9482758620689655
+        },
+        "east_midlands": {
+          "correct": 46,
+          "n": 46,
+          "accuracy": 1.0
+        },
+        "london": {
+          "correct": 69,
+          "n": 73,
+          "accuracy": 0.9452054794520548
+        },
+        "north_east": {
+          "correct": 25,
+          "n": 29,
+          "accuracy": 0.8620689655172413
+        },
+        "north_west": {
+          "correct": 65,
+          "n": 75,
+          "accuracy": 0.8666666666666667
+        },
+        "scotland": {
+          "correct": 55,
+          "n": 59,
+          "accuracy": 0.9322033898305084
+        },
+        "south_east": {
+          "correct": 78,
+          "n": 84,
+          "accuracy": 0.9285714285714286
+        },
+        "south_west": {
+          "correct": 49,
+          "n": 55,
+          "accuracy": 0.8909090909090909
+        },
+        "wales": {
+          "correct": 35,
+          "n": 40,
+          "accuracy": 0.875
+        },
+        "west_midlands": {
+          "correct": 54,
+          "n": 59,
+          "accuracy": 0.9152542372881356
+        },
+        "yorkshire": {
+          "correct": 52,
+          "n": 54,
+          "accuracy": 0.9629629629629629
+        }
+      }
+    },
+    "candidates": [
+      {
+        "strength": 0.0,
+        "metrics": {
+          "winner_accuracy": 0.9224683544303798,
+          "correct_winners": 583,
+          "gb_seats": 632,
+          "predicted_seats": {
+            "lab": 199,
+            "con": 349,
+            "ref": 0,
+            "ld": 30,
+            "green": 1,
+            "snp": 50,
+            "pc": 3,
+            "other": 0
+          },
+          "actual_seats": {
+            "lab": 202,
+            "con": 365,
+            "ref": 0,
+            "ld": 11,
+            "green": 1,
+            "snp": 48,
+            "pc": 4,
+            "other": 1
+          },
+          "seat_error": {
+            "lab": -3,
+            "con": -16,
+            "ref": 0,
+            "ld": 19,
+            "green": 0,
+            "snp": 2,
+            "pc": -1,
+            "other": -1
+          },
+          "seat_abs_error_sum": 42,
+          "share_mae": 2.6207727934634315,
+          "winner_source": "official_BES_WinnerXX",
+          "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+          "regional_accuracy": {
+            "east_england": {
+              "correct": 55,
+              "n": 58,
+              "accuracy": 0.9482758620689655
+            },
+            "east_midlands": {
+              "correct": 46,
+              "n": 46,
+              "accuracy": 1.0
+            },
+            "london": {
+              "correct": 69,
+              "n": 73,
+              "accuracy": 0.9452054794520548
+            },
+            "north_east": {
+              "correct": 25,
+              "n": 29,
+              "accuracy": 0.8620689655172413
+            },
+            "north_west": {
+              "correct": 65,
+              "n": 75,
+              "accuracy": 0.8666666666666667
+            },
+            "scotland": {
+              "correct": 55,
+              "n": 59,
+              "accuracy": 0.9322033898305084
+            },
+            "south_east": {
+              "correct": 78,
+              "n": 84,
+              "accuracy": 0.9285714285714286
+            },
+            "south_west": {
+              "correct": 49,
+              "n": 55,
+              "accuracy": 0.8909090909090909
+            },
+            "wales": {
+              "correct": 35,
+              "n": 40,
+              "accuracy": 0.875
+            },
+            "west_midlands": {
+              "correct": 54,
+              "n": 59,
+              "accuracy": 0.9152542372881356
+            },
+            "yorkshire": {
+              "correct": 52,
+              "n": 54,
+              "accuracy": 0.9629629629629629
+            }
+          }
+        }
+      },
+      {
+        "strength": 0.25,
+        "metrics": {
+          "winner_accuracy": 0.9177215189873418,
+          "correct_winners": 580,
+          "gb_seats": 632,
+          "predicted_seats": {
+            "lab": 209,
+            "con": 337,
+            "ref": 0,
+            "ld": 36,
+            "green": 1,
+            "snp": 46,
+            "pc": 3,
+            "other": 0
+          },
+          "actual_seats": {
+            "lab": 202,
+            "con": 365,
+            "ref": 0,
+            "ld": 11,
+            "green": 1,
+            "snp": 48,
+            "pc": 4,
+            "other": 1
+          },
+          "seat_error": {
+            "lab": 7,
+            "con": -28,
+            "ref": 0,
+            "ld": 25,
+            "green": 0,
+            "snp": -2,
+            "pc": -1,
+            "other": -1
+          },
+          "seat_abs_error_sum": 64,
+          "share_mae": 2.9551568432394135,
+          "winner_source": "official_BES_WinnerXX",
+          "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+          "regional_accuracy": {
+            "east_england": {
+              "correct": 55,
+              "n": 58,
+              "accuracy": 0.9482758620689655
+            },
+            "east_midlands": {
+              "correct": 46,
+              "n": 46,
+              "accuracy": 1.0
+            },
+            "london": {
+              "correct": 69,
+              "n": 73,
+              "accuracy": 0.9452054794520548
+            },
+            "north_east": {
+              "correct": 25,
+              "n": 29,
+              "accuracy": 0.8620689655172413
+            },
+            "north_west": {
+              "correct": 64,
+              "n": 75,
+              "accuracy": 0.8533333333333334
+            },
+            "scotland": {
+              "correct": 57,
+              "n": 59,
+              "accuracy": 0.9661016949152542
+            },
+            "south_east": {
+              "correct": 78,
+              "n": 84,
+              "accuracy": 0.9285714285714286
+            },
+            "south_west": {
+              "correct": 47,
+              "n": 55,
+              "accuracy": 0.8545454545454545
+            },
+            "wales": {
+              "correct": 34,
+              "n": 40,
+              "accuracy": 0.85
+            },
+            "west_midlands": {
+              "correct": 53,
+              "n": 59,
+              "accuracy": 0.8983050847457628
+            },
+            "yorkshire": {
+              "correct": 52,
+              "n": 54,
+              "accuracy": 0.9629629629629629
+            }
+          }
+        }
+      },
+      {
+        "strength": 0.5,
+        "metrics": {
+          "winner_accuracy": 0.9018987341772152,
+          "correct_winners": 570,
+          "gb_seats": 632,
+          "predicted_seats": {
+            "lab": 215,
+            "con": 333,
+            "ref": 0,
+            "ld": 38,
+            "green": 1,
+            "snp": 42,
+            "pc": 3,
+            "other": 0
+          },
+          "actual_seats": {
+            "lab": 202,
+            "con": 365,
+            "ref": 0,
+            "ld": 11,
+            "green": 1,
+            "snp": 48,
+            "pc": 4,
+            "other": 1
+          },
+          "seat_error": {
+            "lab": 13,
+            "con": -32,
+            "ref": 0,
+            "ld": 27,
+            "green": 0,
+            "snp": -6,
+            "pc": -1,
+            "other": -1
+          },
+          "seat_abs_error_sum": 80,
+          "share_mae": 3.5541729027358944,
+          "winner_source": "official_BES_WinnerXX",
+          "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+          "regional_accuracy": {
+            "east_england": {
+              "correct": 54,
+              "n": 58,
+              "accuracy": 0.9310344827586207
+            },
+            "east_midlands": {
+              "correct": 44,
+              "n": 46,
+              "accuracy": 0.9565217391304348
+            },
+            "london": {
+              "correct": 69,
+              "n": 73,
+              "accuracy": 0.9452054794520548
+            },
+            "north_east": {
+              "correct": 25,
+              "n": 29,
+              "accuracy": 0.8620689655172413
+            },
+            "north_west": {
+              "correct": 62,
+              "n": 75,
+              "accuracy": 0.8266666666666667
+            },
+            "scotland": {
+              "correct": 53,
+              "n": 59,
+              "accuracy": 0.8983050847457628
+            },
+            "south_east": {
+              "correct": 78,
+              "n": 84,
+              "accuracy": 0.9285714285714286
+            },
+            "south_west": {
+              "correct": 47,
+              "n": 55,
+              "accuracy": 0.8545454545454545
+            },
+            "wales": {
+              "correct": 33,
+              "n": 40,
+              "accuracy": 0.825
+            },
+            "west_midlands": {
+              "correct": 53,
+              "n": 59,
+              "accuracy": 0.8983050847457628
+            },
+            "yorkshire": {
+              "correct": 52,
+              "n": 54,
+              "accuracy": 0.9629629629629629
+            }
+          }
+        }
+      },
+      {
+        "strength": 0.75,
+        "metrics": {
+          "winner_accuracy": 0.8908227848101266,
+          "correct_winners": 563,
+          "gb_seats": 632,
+          "predicted_seats": {
+            "lab": 221,
+            "con": 325,
+            "ref": 0,
+            "ld": 43,
+            "green": 1,
+            "snp": 39,
+            "pc": 3,
+            "other": 0
+          },
+          "actual_seats": {
+            "lab": 202,
+            "con": 365,
+            "ref": 0,
+            "ld": 11,
+            "green": 1,
+            "snp": 48,
+            "pc": 4,
+            "other": 1
+          },
+          "seat_error": {
+            "lab": 19,
+            "con": -40,
+            "ref": 0,
+            "ld": 32,
+            "green": 0,
+            "snp": -9,
+            "pc": -1,
+            "other": -1
+          },
+          "seat_abs_error_sum": 102,
+          "share_mae": 4.2003315673149055,
+          "winner_source": "official_BES_WinnerXX",
+          "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+          "regional_accuracy": {
+            "east_england": {
+              "correct": 54,
+              "n": 58,
+              "accuracy": 0.9310344827586207
+            },
+            "east_midlands": {
+              "correct": 43,
+              "n": 46,
+              "accuracy": 0.9347826086956522
+            },
+            "london": {
+              "correct": 69,
+              "n": 73,
+              "accuracy": 0.9452054794520548
+            },
+            "north_east": {
+              "correct": 24,
+              "n": 29,
+              "accuracy": 0.8275862068965517
+            },
+            "north_west": {
+              "correct": 63,
+              "n": 75,
+              "accuracy": 0.84
+            },
+            "scotland": {
+              "correct": 50,
+              "n": 59,
+              "accuracy": 0.847457627118644
+            },
+            "south_east": {
+              "correct": 79,
+              "n": 84,
+              "accuracy": 0.9404761904761905
+            },
+            "south_west": {
+              "correct": 45,
+              "n": 55,
+              "accuracy": 0.8181818181818182
+            },
+            "wales": {
+              "correct": 33,
+              "n": 40,
+              "accuracy": 0.825
+            },
+            "west_midlands": {
+              "correct": 53,
+              "n": 59,
+              "accuracy": 0.8983050847457628
+            },
+            "yorkshire": {
+              "correct": 50,
+              "n": 54,
+              "accuracy": 0.9259259259259259
+            }
+          }
+        }
+      },
+      {
+        "strength": 1.0,
+        "metrics": {
+          "winner_accuracy": 0.8765822784810127,
+          "correct_winners": 554,
+          "gb_seats": 632,
+          "predicted_seats": {
+            "lab": 224,
+            "con": 316,
+            "ref": 0,
+            "ld": 48,
+            "green": 2,
+            "snp": 39,
+            "pc": 3,
+            "other": 0
+          },
+          "actual_seats": {
+            "lab": 202,
+            "con": 365,
+            "ref": 0,
+            "ld": 11,
+            "green": 1,
+            "snp": 48,
+            "pc": 4,
+            "other": 1
+          },
+          "seat_error": {
+            "lab": 22,
+            "con": -49,
+            "ref": 0,
+            "ld": 37,
+            "green": 1,
+            "snp": -9,
+            "pc": -1,
+            "other": -1
+          },
+          "seat_abs_error_sum": 120,
+          "share_mae": 4.8391751934038405,
+          "winner_source": "official_BES_WinnerXX",
+          "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+          "regional_accuracy": {
+            "east_england": {
+              "correct": 54,
+              "n": 58,
+              "accuracy": 0.9310344827586207
+            },
+            "east_midlands": {
+              "correct": 42,
+              "n": 46,
+              "accuracy": 0.9130434782608695
+            },
+            "london": {
+              "correct": 68,
+              "n": 73,
+              "accuracy": 0.9315068493150684
+            },
+            "north_east": {
+              "correct": 24,
+              "n": 29,
+              "accuracy": 0.8275862068965517
+            },
+            "north_west": {
+              "correct": 63,
+              "n": 75,
+              "accuracy": 0.84
+            },
+            "scotland": {
+              "correct": 50,
+              "n": 59,
+              "accuracy": 0.847457627118644
+            },
+            "south_east": {
+              "correct": 75,
+              "n": 84,
+              "accuracy": 0.8928571428571429
+            },
+            "south_west": {
+              "correct": 44,
+              "n": 55,
+              "accuracy": 0.8
+            },
+            "wales": {
+              "correct": 32,
+              "n": 40,
+              "accuracy": 0.8
+            },
+            "west_midlands": {
+              "correct": 53,
+              "n": 59,
+              "accuracy": 0.8983050847457628
+            },
+            "yorkshire": {
+              "correct": 49,
+              "n": 54,
+              "accuracy": 0.9074074074074074
+            }
+          }
+        }
+      },
+      {
+        "strength": 1.25,
+        "metrics": {
+          "winner_accuracy": 0.8734177215189873,
+          "correct_winners": 552,
+          "gb_seats": 632,
+          "predicted_seats": {
+            "lab": 225,
+            "con": 313,
+            "ref": 0,
+            "ld": 51,
+            "green": 2,
+            "snp": 38,
+            "pc": 3,
+            "other": 0
+          },
+          "actual_seats": {
+            "lab": 202,
+            "con": 365,
+            "ref": 0,
+            "ld": 11,
+            "green": 1,
+            "snp": 48,
+            "pc": 4,
+            "other": 1
+          },
+          "seat_error": {
+            "lab": 23,
+            "con": -52,
+            "ref": 0,
+            "ld": 40,
+            "green": 1,
+            "snp": -10,
+            "pc": -1,
+            "other": -1
+          },
+          "seat_abs_error_sum": 128,
+          "share_mae": 5.4531300299754975,
+          "winner_source": "official_BES_WinnerXX",
+          "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+          "regional_accuracy": {
+            "east_england": {
+              "correct": 54,
+              "n": 58,
+              "accuracy": 0.9310344827586207
+            },
+            "east_midlands": {
+              "correct": 42,
+              "n": 46,
+              "accuracy": 0.9130434782608695
+            },
+            "london": {
+              "correct": 67,
+              "n": 73,
+              "accuracy": 0.9178082191780822
+            },
+            "north_east": {
+              "correct": 24,
+              "n": 29,
+              "accuracy": 0.8275862068965517
+            },
+            "north_west": {
+              "correct": 63,
+              "n": 75,
+              "accuracy": 0.84
+            },
+            "scotland": {
+              "correct": 49,
+              "n": 59,
+              "accuracy": 0.8305084745762712
+            },
+            "south_east": {
+              "correct": 75,
+              "n": 84,
+              "accuracy": 0.8928571428571429
+            },
+            "south_west": {
+              "correct": 44,
+              "n": 55,
+              "accuracy": 0.8
+            },
+            "wales": {
+              "correct": 32,
+              "n": 40,
+              "accuracy": 0.8
+            },
+            "west_midlands": {
+              "correct": 53,
+              "n": 59,
+              "accuracy": 0.8983050847457628
+            },
+            "yorkshire": {
+              "correct": 49,
+              "n": 54,
+              "accuracy": 0.9074074074074074
+            }
+          }
+        }
+      }
+    ],
+    "note": "Only this block selects a parameter. 2024 results are not consulted."
+  },
+  "benchmark_2024": {
+    "evaluation_label": "development_benchmark_not_pristine_holdout",
+    "reference_v0915": {
+      "winner_accuracy": 0.7927215189873418,
+      "correct_winners": 501,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 346,
+        "con": 152,
+        "ref": 39,
+        "ld": 55,
+        "green": 9,
+        "snp": 22,
+        "pc": 4,
+        "other": 5
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -65,
+        "con": 31,
+        "ref": 34,
+        "ld": -17,
+        "green": 5,
+        "snp": 13,
+        "pc": 0,
+        "other": -1
+      },
+      "seat_abs_error_sum": 166,
+      "share_mae": 5.55680761701318,
+      "winner_source": "official_BES_WinnerXX",
+      "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+      "regional_accuracy": {
+        "east_england": {
+          "correct": 50,
+          "n": 61,
+          "accuracy": 0.819672131147541
+        },
+        "east_midlands": {
+          "correct": 36,
+          "n": 47,
+          "accuracy": 0.7659574468085106
+        },
+        "london": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "north_east": {
+          "correct": 15,
+          "n": 27,
+          "accuracy": 0.5555555555555556
+        },
+        "north_west": {
+          "correct": 68,
+          "n": 73,
+          "accuracy": 0.9315068493150684
+        },
+        "scotland": {
+          "correct": 42,
+          "n": 57,
+          "accuracy": 0.7368421052631579
+        },
+        "south_east": {
+          "correct": 71,
+          "n": 91,
+          "accuracy": 0.7802197802197802
+        },
+        "south_west": {
+          "correct": 42,
+          "n": 58,
+          "accuracy": 0.7241379310344828
+        },
+        "wales": {
+          "correct": 23,
+          "n": 32,
+          "accuracy": 0.71875
+        },
+        "west_midlands": {
+          "correct": 49,
+          "n": 57,
+          "accuracy": 0.8596491228070176
+        },
+        "yorkshire": {
+          "correct": 37,
+          "n": 54,
+          "accuracy": 0.6851851851851852
+        }
+      }
+    },
+    "primary_yougov_anchor": {
+      "winner_accuracy": 0.7927215189873418,
+      "correct_winners": 501,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 346,
+        "con": 152,
+        "ref": 39,
+        "ld": 55,
+        "green": 9,
+        "snp": 22,
+        "pc": 4,
+        "other": 5
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -65,
+        "con": 31,
+        "ref": 34,
+        "ld": -17,
+        "green": 5,
+        "snp": 13,
+        "pc": 0,
+        "other": -1
+      },
+      "seat_abs_error_sum": 166,
+      "share_mae": 5.55680760834676,
+      "winner_source": "official_BES_WinnerXX",
+      "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+      "regional_accuracy": {
+        "east_england": {
+          "correct": 50,
+          "n": 61,
+          "accuracy": 0.819672131147541
+        },
+        "east_midlands": {
+          "correct": 36,
+          "n": 47,
+          "accuracy": 0.7659574468085106
+        },
+        "london": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "north_east": {
+          "correct": 15,
+          "n": 27,
+          "accuracy": 0.5555555555555556
+        },
+        "north_west": {
+          "correct": 68,
+          "n": 73,
+          "accuracy": 0.9315068493150684
+        },
+        "scotland": {
+          "correct": 42,
+          "n": 57,
+          "accuracy": 0.7368421052631579
+        },
+        "south_east": {
+          "correct": 71,
+          "n": 91,
+          "accuracy": 0.7802197802197802
+        },
+        "south_west": {
+          "correct": 42,
+          "n": 58,
+          "accuracy": 0.7241379310344828
+        },
+        "wales": {
+          "correct": 23,
+          "n": 32,
+          "accuracy": 0.71875
+        },
+        "west_midlands": {
+          "correct": 49,
+          "n": 57,
+          "accuracy": 0.8596491228070176
+        },
+        "yorkshire": {
+          "correct": 37,
+          "n": 54,
+          "accuracy": 0.6851851851851852
+        }
+      }
+    },
+    "diagnostic_mic_anchor": {
+      "winner_accuracy": 0.7927215189873418,
+      "correct_winners": 501,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 346,
+        "con": 152,
+        "ref": 39,
+        "ld": 55,
+        "green": 9,
+        "snp": 22,
+        "pc": 4,
+        "other": 5
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -65,
+        "con": 31,
+        "ref": 34,
+        "ld": -17,
+        "green": 5,
+        "snp": 13,
+        "pc": 0,
+        "other": -1
+      },
+      "seat_abs_error_sum": 166,
+      "share_mae": 5.55680760834676,
+      "winner_source": "official_BES_WinnerXX",
+      "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+      "regional_accuracy": {
+        "east_england": {
+          "correct": 50,
+          "n": 61,
+          "accuracy": 0.819672131147541
+        },
+        "east_midlands": {
+          "correct": 36,
+          "n": 47,
+          "accuracy": 0.7659574468085106
+        },
+        "london": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "north_east": {
+          "correct": 15,
+          "n": 27,
+          "accuracy": 0.5555555555555556
+        },
+        "north_west": {
+          "correct": 68,
+          "n": 73,
+          "accuracy": 0.9315068493150684
+        },
+        "scotland": {
+          "correct": 42,
+          "n": 57,
+          "accuracy": 0.7368421052631579
+        },
+        "south_east": {
+          "correct": 71,
+          "n": 91,
+          "accuracy": 0.7802197802197802
+        },
+        "south_west": {
+          "correct": 42,
+          "n": 58,
+          "accuracy": 0.7241379310344828
+        },
+        "wales": {
+          "correct": 23,
+          "n": 32,
+          "accuracy": 0.71875
+        },
+        "west_midlands": {
+          "correct": 49,
+          "n": 57,
+          "accuracy": 0.8596491228070176
+        },
+        "yorkshire": {
+          "correct": 37,
+          "n": 54,
+          "accuracy": 0.6851851851851852
+        }
+      }
+    },
+    "diagnostic_equal_provider_ensemble": {
+      "winner_accuracy": 0.7927215189873418,
+      "correct_winners": 501,
+      "gb_seats": 632,
+      "predicted_seats": {
+        "lab": 346,
+        "con": 152,
+        "ref": 39,
+        "ld": 55,
+        "green": 9,
+        "snp": 22,
+        "pc": 4,
+        "other": 5
+      },
+      "actual_seats": {
+        "lab": 411,
+        "con": 121,
+        "ref": 5,
+        "ld": 72,
+        "green": 4,
+        "snp": 9,
+        "pc": 4,
+        "other": 6
+      },
+      "seat_error": {
+        "lab": -65,
+        "con": 31,
+        "ref": 34,
+        "ld": -17,
+        "green": 5,
+        "snp": 13,
+        "pc": 0,
+        "other": -1
+      },
+      "seat_abs_error_sum": 166,
+      "share_mae": 5.55680760834676,
+      "winner_source": "official_BES_WinnerXX",
+      "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
+      "regional_accuracy": {
+        "east_england": {
+          "correct": 50,
+          "n": 61,
+          "accuracy": 0.819672131147541
+        },
+        "east_midlands": {
+          "correct": 36,
+          "n": 47,
+          "accuracy": 0.7659574468085106
+        },
+        "london": {
+          "correct": 68,
+          "n": 75,
+          "accuracy": 0.9066666666666666
+        },
+        "north_east": {
+          "correct": 15,
+          "n": 27,
+          "accuracy": 0.5555555555555556
+        },
+        "north_west": {
+          "correct": 68,
+          "n": 73,
+          "accuracy": 0.9315068493150684
+        },
+        "scotland": {
+          "correct": 42,
+          "n": 57,
+          "accuracy": 0.7368421052631579
+        },
+        "south_east": {
+          "correct": 71,
+          "n": 91,
+          "accuracy": 0.7802197802197802
+        },
+        "south_west": {
+          "correct": 42,
+          "n": 58,
+          "accuracy": 0.7241379310344828
+        },
+        "wales": {
+          "correct": 23,
+          "n": 32,
+          "accuracy": 0.71875
+        },
+        "west_midlands": {
+          "correct": 49,
+          "n": 57,
+          "accuracy": 0.8596491228070176
+        },
+        "yorkshire": {
+          "correct": 37,
+          "n": 54,
+          "accuracy": 0.6851851851851852
+        }
+      }
+    },
+    "primary_gain_correct_winners": 0,
+    "primary_accuracy_gain_pp": 0.0,
+    "primary_seat_error_improvement": 0,
+    "provider_or_strength_selected_on_2024": false
+  },
+  "coverage": {
+    "yougov2019": {
+      "label": "YouGov 2019",
+      "matched_seats": 632,
+      "total_seats": 632,
+      "coverage": 1.0,
+      "code_matches": 632,
+      "name_matches": 0,
+      "missing_seats": []
+    },
+    "yougov2024": {
+      "label": "YouGov 2024",
+      "matched_seats": 631,
+      "total_seats": 632,
+      "coverage": 0.9984177215189873,
+      "code_matches": 626,
+      "name_matches": 5,
+      "missing_seats": [
+        {
+          "id": "E14001170",
+          "name": "Chorley"
+        }
+      ]
+    },
+    "mic2024": {
+      "label": "More in Common 2024",
+      "matched_seats": 631,
+      "total_seats": 632,
+      "coverage": 0.9984177215189873,
+      "code_matches": 626,
+      "name_matches": 5,
+      "missing_seats": [
+        {
+          "id": "E14001170",
+          "name": "Chorley"
+        }
+      ]
+    },
+    "mic2026": {
+      "label": "More in Common 2026",
+      "matched_seats": 630,
+      "total_seats": 632,
+      "coverage": 0.9968354430379747,
+      "code_matches": 0,
+      "name_matches": 630,
+      "missing_seats": [
+        {
+          "id": "E14001170",
+          "name": "Chorley"
+        },
+        {
+          "id": "W07000112",
+          "name": "Ynys Mon"
+        }
+      ]
+    }
+  },
+  "external_source_meta": {
+    "yougov2019": {
+      "provider": "YouGov",
+      "date": "2019-11-27",
+      "rows": 632,
+      "mapped_columns": [
+        [
+          "Con",
+          "con"
+        ],
+        [
+          "Lab",
+          "lab"
+        ],
+        [
+          "LD",
+          "ld"
+        ],
+        [
+          "Brexit",
+          "ref"
+        ],
+        [
+          "Green",
+          "green"
+        ],
+        [
+          "SNP",
+          "snp"
+        ],
+        [
+          "PC",
+          "pc"
+        ],
+        [
+          "Other",
+          "other"
+        ]
+      ],
+      "url": "https://raw.githubusercontent.com/calbal91/project-understanding-elections/refs/heads/master/CSVs/YouGov.csv",
+      "cache": "miss",
+      "attempt": 1,
+      "bytes": 51929,
+      "sha256": "16acdb956b3be87aa0e8ee731c80795fb6c5831e4a768d6f009250040f5243ee",
+      "cache_path": ".cache/mrp-bridge/7efd1417db0d2af3ab907b20.csv"
+    },
+    "yougov2024": {
+      "provider": "YouGov",
+      "date": "2024-07-03",
+      "rows": 631,
+      "mapped_columns": [
+        [
+          "con",
+          "con"
+        ],
+        [
+          "grn",
+          "green"
+        ],
+        [
+          "lab",
+          "lab"
+        ],
+        [
+          "lib",
+          "ld"
+        ],
+        [
+          "oth",
+          "other"
+        ],
+        [
+          "pc",
+          "pc"
+        ],
+        [
+          "ref",
+          "ref"
+        ],
+        [
+          "snp",
+          "snp"
+        ]
+      ],
+      "url": "https://raw.githubusercontent.com/inglesp/apogee/refs/heads/main/data/processed/yougov/2024-07-03/data.csv",
+      "cache": "miss",
+      "attempt": 1,
+      "bytes": 30667,
+      "sha256": "a5a42e6093f635d4099e334fa7165fe04dd7f25e639295212cd76b3891d42dee",
+      "cache_path": ".cache/mrp-bridge/d89a15cb67a436dc94f4dfdc.csv"
+    },
+    "mic2024": {
+      "provider": "More in Common",
+      "date": "2024-07-03",
+      "rows": 631,
+      "mapped_columns": [
+        [
+          "con",
+          "con"
+        ],
+        [
+          "grn",
+          "green"
+        ],
+        [
+          "lab",
+          "lab"
+        ],
+        [
+          "lib",
+          "ld"
+        ],
+        [
+          "oth",
+          "other"
+        ],
+        [
+          "pc",
+          "pc"
+        ],
+        [
+          "ref",
+          "ref"
+        ],
+        [
+          "snp",
+          "snp"
+        ]
+      ],
+      "url": "https://raw.githubusercontent.com/inglesp/apogee/refs/heads/main/data/processed/moreincommon/2024-07-03/data.csv",
+      "cache": "miss",
+      "attempt": 1,
+      "bytes": 40732,
+      "sha256": "8ff5e00629818f52a028da3e3ea76cfe87c8ecf6cbbcdbc2c4d3d948cf26a187",
+      "cache_path": ".cache/mrp-bridge/775ada761be530bad04551f3.csv"
+    },
+    "mic2026": {
+      "provider": "More in Common",
+      "date": "2026-07-19",
+      "rows": 631,
+      "sheet": "Results",
+      "header_row_1based": 1,
+      "mapped_columns": {
+        "con": "Conservative",
+        "lab": "Labour",
+        "ld": "Liberal Democrat",
+        "ref": "Reform UK",
+        "snp": "Scottish National Party (SNP)",
+        "pc": "Plaid Cymru",
+        "other": "Other"
+      },
+      "workbook_sheets": [
+        "Cover page",
+        "Results"
+      ],
+      "url": "https://www.moreincommon.org.uk/wp-content/uploads/2026/07/jul26-mrp-datatables-final-3.xlsx",
+      "cache": "miss",
+      "attempt": 1,
+      "bytes": 92797,
+      "sha256": "372a552dafef3cf274e16a0b6b5eb5f5966b0392c09b1afe5bb52887f9e921fe",
+      "cache_path": ".cache/mrp-bridge/d1e208347d0c4f6aaf7265e4.xlsx",
+      "relative_national_share": {
+        "lab": 23.419694252475633,
+        "con": 24.224667896631896,
+        "ref": 30.23827925197978,
+        "ld": 14.272276406801119,
+        "green": 0.0,
+        "snp": 2.718842640341879,
+        "pc": 1.06045883085478,
+        "other": 4.06578072091491
+      }
+    }
+  },
+  "relative_prior_national_shares": {
+    "yougov2019": {
+      "lab": 32.086706435204654,
+      "con": 42.61946953411293,
+      "ref": 3.1453213969651403,
+      "ld": 13.596034170408647,
+      "green": 3.2133560615899768,
+      "snp": 3.4259794472266996,
+      "pc": 0.4773626084943271,
+      "other": 1.4357703459976212
+    },
+    "yougov2024": {
+      "lab": 37.70945868864397,
+      "con": 22.61652151701465,
+      "ref": 14.926206976987725,
+      "ld": 13.014624721783672,
+      "green": 6.406226307613243,
+      "snp": 2.906131652376709,
+      "pc": 0.7329076404410874,
+      "other": 1.68792249513895
+    },
+    "mic2024": {
+      "lab": 39.47985337517524,
+      "con": 24.15296085328199,
+      "ref": 13.453416941297434,
+      "ld": 11.200195710863502,
+      "green": 6.078123131654726,
+      "snp": 2.4299459221025157,
+      "pc": 0.5564616023649515,
+      "other": 2.6490424632596383
+    }
+  },
+  "changed_or_wrong_seats_2024": [
+    {
+      "id": "E14001063",
+      "name": "Aldershot",
+      "country": "England",
+      "region": "south_east",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          33.03
+        ],
+        [
+          "lab",
+          31.431
+        ],
+        [
+          "ld",
+          16.587
+        ]
+      ]
+    },
+    {
+      "id": "E14001066",
+      "name": "Amber Valley",
+      "country": "England",
+      "region": "east_midlands",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          38.113
+        ],
+        [
+          "lab",
+          31.048
+        ],
+        [
+          "ref",
+          9.931
+        ]
+      ]
+    },
+    {
+      "id": "E14001068",
+      "name": "Ashfield",
+      "country": "England",
+      "region": "east_midlands",
+      "actual": "ref",
+      "reference": "other",
+      "bridge": "other",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "other",
+          46.038
+        ],
+        [
+          "ref",
+          22.653
+        ],
+        [
+          "con",
+          16.197
+        ]
+      ]
+    },
+    {
+      "id": "E14001069",
+      "name": "Ashford",
+      "country": "England",
+      "region": "south_east",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          30.844
+        ],
+        [
+          "lab",
+          28.982
+        ],
+        [
+          "green",
+          15.455
+        ]
+      ]
+    },
+    {
+      "id": "E14001071",
+      "name": "Aylesbury",
+      "country": "England",
+      "region": "south_east",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          31.293
+        ],
+        [
+          "lab",
+          27.127
+        ],
+        [
+          "ld",
+          25.34
+        ]
+      ]
+    },
+    {
+      "id": "E14001074",
+      "name": "Barnsley North",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          65.794
+        ],
+        [
+          "lab",
+          15.52
+        ],
+        [
+          "con",
+          14.489
+        ]
+      ]
+    },
+    {
+      "id": "E14001075",
+      "name": "Barnsley South",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          64.001
+        ],
+        [
+          "lab",
+          17.21
+        ],
+        [
+          "con",
+          14.395
+        ]
+      ]
+    },
+    {
+      "id": "E14001079",
+      "name": "Bassetlaw",
+      "country": "England",
+      "region": "east_midlands",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          47.969
+        ],
+        [
+          "con",
+          24.329
+        ],
+        [
+          "lab",
+          17.057
+        ]
+      ]
+    },
+    {
+      "id": "E14001082",
+      "name": "Beaconsfield",
+      "country": "England",
+      "region": "south_east",
+      "actual": "con",
+      "reference": "other",
+      "bridge": "other",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "other",
+          60.698
+        ],
+        [
+          "con",
+          17.692
+        ],
+        [
+          "ref",
+          6.796
+        ]
+      ]
+    },
+    {
+      "id": "E14001090",
+      "name": "Bicester and Woodstock",
+      "country": "England",
+      "region": "south_east",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          35.102
+        ],
+        [
+          "ld",
+          34.208
+        ],
+        [
+          "lab",
+          20.313
+        ]
+      ]
+    },
+    {
+      "id": "E14001098",
+      "name": "Birmingham Perry Barr",
+      "country": "England",
+      "region": "west_midlands",
+      "actual": "other",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          62.284
+        ],
+        [
+          "ref",
+          16.003
+        ],
+        [
+          "con",
+          11.711
+        ]
+      ]
+    },
+    {
+      "id": "E14001102",
+      "name": "Blackburn",
+      "country": "England",
+      "region": "north_west",
+      "actual": "other",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          54.983
+        ],
+        [
+          "ref",
+          24.693
+        ],
+        [
+          "con",
+          17.766
+        ]
+      ]
+    },
+    {
+      "id": "W07000084",
+      "name": "Blaenau Gwent and Rhymney",
+      "country": "Wales",
+      "region": "wales",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          51.673
+        ],
+        [
+          "lab",
+          24.366
+        ],
+        [
+          "con",
+          11.652
+        ]
+      ]
+    },
+    {
+      "id": "E14001106",
+      "name": "Blaydon and Consett",
+      "country": "England",
+      "region": "north_east",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          40.735
+        ],
+        [
+          "lab",
+          37.339
+        ],
+        [
+          "con",
+          15.472
+        ]
+      ]
+    },
+    {
+      "id": "E14001109",
+      "name": "Bolsover",
+      "country": "England",
+      "region": "east_midlands",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          40.753
+        ],
+        [
+          "lab",
+          29.782
+        ],
+        [
+          "con",
+          22.428
+        ]
+      ]
+    },
+    {
+      "id": "E14001114",
+      "name": "Boston and Skegness",
+      "country": "England",
+      "region": "east_midlands",
+      "actual": "ref",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          46.918
+        ],
+        [
+          "lab",
+          18.517
+        ],
+        [
+          "ref",
+          12.792
+        ]
+      ]
+    },
+    {
+      "id": "E14001137",
+      "name": "Bromley and Biggin Hill",
+      "country": "England",
+      "region": "london",
+      "actual": "con",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          31.76
+        ],
+        [
+          "con",
+          28.34
+        ],
+        [
+          "ld",
+          18.492
+        ]
+      ]
+    },
+    {
+      "id": "E14001146",
+      "name": "Bury St Edmunds and Stowmarket",
+      "country": "England",
+      "region": "east_england",
+      "actual": "lab",
+      "reference": "green",
+      "bridge": "green",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "green",
+          43.74
+        ],
+        [
+          "con",
+          24.061
+        ],
+        [
+          "lab",
+          17.891
+        ]
+      ]
+    },
+    {
+      "id": "W07000088",
+      "name": "Caerphilly",
+      "country": "Wales",
+      "region": "wales",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          42.059
+        ],
+        [
+          "lab",
+          27.353
+        ],
+        [
+          "pc",
+          13.861
+        ]
+      ]
+    },
+    {
+      "id": "E14001150",
+      "name": "Cannock Chase",
+      "country": "England",
+      "region": "west_midlands",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          31.01
+        ],
+        [
+          "lab",
+          29.376
+        ],
+        [
+          "green",
+          24.964
+        ]
+      ]
+    },
+    {
+      "id": "E14001155",
+      "name": "Central Devon",
+      "country": "England",
+      "region": "south_west",
+      "actual": "con",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          28.065
+        ],
+        [
+          "con",
+          27.13
+        ],
+        [
+          "ld",
+          17.629
+        ]
+      ]
+    },
+    {
+      "id": "E14001157",
+      "name": "Chatham and Aylesford",
+      "country": "England",
+      "region": "south_east",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          38.37
+        ],
+        [
+          "lab",
+          31.889
+        ],
+        [
+          "ref",
+          11.155
+        ]
+      ]
+    },
+    {
+      "id": "E14001159",
+      "name": "Chelmsford",
+      "country": "England",
+      "region": "east_england",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          32.259
+        ],
+        [
+          "ld",
+          30.933
+        ],
+        [
+          "lab",
+          18.786
+        ]
+      ]
+    },
+    {
+      "id": "E14001162",
+      "name": "Chesham and Amersham",
+      "country": "England",
+      "region": "south_east",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          29.074
+        ],
+        [
+          "ld",
+          25.409
+        ],
+        [
+          "green",
+          16.187
+        ]
+      ]
+    },
+    {
+      "id": "E14001165",
+      "name": "Chesterfield",
+      "country": "England",
+      "region": "east_midlands",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          41.799
+        ],
+        [
+          "lab",
+          33.479
+        ],
+        [
+          "con",
+          15.488
+        ]
+      ]
+    },
+    {
+      "id": "E14001166",
+      "name": "Chichester",
+      "country": "England",
+      "region": "south_east",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          30.559
+        ],
+        [
+          "ld",
+          24.548
+        ],
+        [
+          "lab",
+          16.523
+        ]
+      ]
+    },
+    {
+      "id": "E14001167",
+      "name": "Chingford and Woodford Green",
+      "country": "England",
+      "region": "london",
+      "actual": "con",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          60.844
+        ],
+        [
+          "con",
+          23.389
+        ],
+        [
+          "ld",
+          5.667
+        ]
+      ]
+    },
+    {
+      "id": "E14001174",
+      "name": "Clacton",
+      "country": "England",
+      "region": "east_england",
+      "actual": "ref",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          40.806
+        ],
+        [
+          "lab",
+          19.927
+        ],
+        [
+          "ref",
+          12.584
+        ]
+      ]
+    },
+    {
+      "id": "E14001178",
+      "name": "Congleton",
+      "country": "England",
+      "region": "north_west",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          34.931
+        ],
+        [
+          "lab",
+          31.697
+        ],
+        [
+          "ld",
+          13.554
+        ]
+      ]
+    },
+    {
+      "id": "E14001187",
+      "name": "Croydon South",
+      "country": "England",
+      "region": "london",
+      "actual": "con",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          41.92
+        ],
+        [
+          "con",
+          29.611
+        ],
+        [
+          "ld",
+          15.721
+        ]
+      ]
+    },
+    {
+      "id": "E14001195",
+      "name": "Derbyshire Dales",
+      "country": "England",
+      "region": "east_midlands",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          31.047
+        ],
+        [
+          "lab",
+          28.096
+        ],
+        [
+          "ld",
+          14.928
+        ]
+      ]
+    },
+    {
+      "id": "E14001196",
+      "name": "Dewsbury and Batley",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "other",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          50.234
+        ],
+        [
+          "ref",
+          19.044
+        ],
+        [
+          "con",
+          17.801
+        ]
+      ]
+    },
+    {
+      "id": "E14001198",
+      "name": "Doncaster Central",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          54.39
+        ],
+        [
+          "lab",
+          24.474
+        ],
+        [
+          "con",
+          16.546
+        ]
+      ]
+    },
+    {
+      "id": "E14001199",
+      "name": "Doncaster East and the Isle of Axholme",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          50.631
+        ],
+        [
+          "con",
+          24.898
+        ],
+        [
+          "lab",
+          17.123
+        ]
+      ]
+    },
+    {
+      "id": "E14001200",
+      "name": "Doncaster North",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          63.305
+        ],
+        [
+          "lab",
+          16.979
+        ],
+        [
+          "con",
+          16.175
+        ]
+      ]
+    },
+    {
+      "id": "E14001211",
+      "name": "Easington",
+      "country": "England",
+      "region": "north_east",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          56.321
+        ],
+        [
+          "lab",
+          23.991
+        ],
+        [
+          "con",
+          13.822
+        ]
+      ]
+    },
+    {
+      "id": "E14001232",
+      "name": "Exmouth and Exeter East",
+      "country": "England",
+      "region": "south_west",
+      "actual": "con",
+      "reference": "other",
+      "bridge": "other",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "other",
+          63.787
+        ],
+        [
+          "con",
+          16.99
+        ],
+        [
+          "lab",
+          5.255
+        ]
+      ]
+    },
+    {
+      "id": "E14001234",
+      "name": "Farnham and Bordon",
+      "country": "England",
+      "region": "south_east",
+      "actual": "con",
+      "reference": "ld",
+      "bridge": "ld",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ld",
+          41.004
+        ],
+        [
+          "con",
+          34.595
+        ],
+        [
+          "ref",
+          9.176
+        ]
+      ]
+    },
+    {
+      "id": "E14001238",
+      "name": "Finchley and Golders Green",
+      "country": "England",
+      "region": "london",
+      "actual": "lab",
+      "reference": "ld",
+      "bridge": "ld",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ld",
+          34.895
+        ],
+        [
+          "lab",
+          27.991
+        ],
+        [
+          "con",
+          24.402
+        ]
+      ]
+    },
+    {
+      "id": "E14001240",
+      "name": "Forest of Dean",
+      "country": "England",
+      "region": "south_west",
+      "actual": "lab",
+      "reference": "green",
+      "bridge": "green",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "green",
+          35.199
+        ],
+        [
+          "lab",
+          25.859
+        ],
+        [
+          "con",
+          22.558
+        ]
+      ]
+    },
+    {
+      "id": "E14001241",
+      "name": "Frome and East Somerset",
+      "country": "England",
+      "region": "south_west",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          24.429
+        ],
+        [
+          "lab",
+          23.091
+        ],
+        [
+          "ld",
+          21.126
+        ]
+      ]
+    },
+    {
+      "id": "E14001249",
+      "name": "Godalming and Ash",
+      "country": "England",
+      "region": "south_east",
+      "actual": "con",
+      "reference": "ld",
+      "bridge": "ld",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ld",
+          42.892
+        ],
+        [
+          "con",
+          30.312
+        ],
+        [
+          "ref",
+          9.066
+        ]
+      ]
+    },
+    {
+      "id": "E14001256",
+      "name": "Great Yarmouth",
+      "country": "England",
+      "region": "east_england",
+      "actual": "ref",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          38.503
+        ],
+        [
+          "lab",
+          33.54
+        ],
+        [
+          "ref",
+          11.612
+        ]
+      ]
+    },
+    {
+      "id": "E14001270",
+      "name": "Harrow East",
+      "country": "England",
+      "region": "london",
+      "actual": "con",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          54.341
+        ],
+        [
+          "con",
+          27.488
+        ],
+        [
+          "ld",
+          7.309
+        ]
+      ]
+    },
+    {
+      "id": "E14001272",
+      "name": "Hartlepool",
+      "country": "England",
+      "region": "north_east",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          65.751
+        ],
+        [
+          "con",
+          17.874
+        ],
+        [
+          "lab",
+          15.226
+        ]
+      ]
+    },
+    {
+      "id": "E14001273",
+      "name": "Harwich and North Essex",
+      "country": "England",
+      "region": "east_england",
+      "actual": "con",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          33.453
+        ],
+        [
+          "con",
+          31.178
+        ],
+        [
+          "ld",
+          12.689
+        ]
+      ]
+    },
+    {
+      "id": "E14001291",
+      "name": "Honiton and Sidmouth",
+      "country": "England",
+      "region": "south_west",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "other",
+          31.977
+        ],
+        [
+          "con",
+          31.404
+        ],
+        [
+          "ld",
+          14.281
+        ]
+      ]
+    },
+    {
+      "id": "E14001294",
+      "name": "Horsham",
+      "country": "England",
+      "region": "south_east",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          32.446
+        ],
+        [
+          "ld",
+          30.961
+        ],
+        [
+          "lab",
+          15.376
+        ]
+      ]
+    },
+    {
+      "id": "E14001295",
+      "name": "Houghton and Sunderland South",
+      "country": "England",
+      "region": "north_east",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          55.259
+        ],
+        [
+          "lab",
+          22.193
+        ],
+        [
+          "con",
+          16.939
+        ]
+      ]
+    },
+    {
+      "id": "E14001303",
+      "name": "Isle of Wight East",
+      "country": "England",
+      "region": "south_east",
+      "actual": "con",
+      "reference": "green",
+      "bridge": "green",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "green",
+          47.469
+        ],
+        [
+          "con",
+          21.49
+        ],
+        [
+          "lab",
+          15.462
+        ]
+      ]
+    },
+    {
+      "id": "E14001304",
+      "name": "Isle of Wight West",
+      "country": "England",
+      "region": "south_east",
+      "actual": "lab",
+      "reference": "green",
+      "bridge": "green",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "green",
+          53.995
+        ],
+        [
+          "con",
+          20.145
+        ],
+        [
+          "lab",
+          13.131
+        ]
+      ]
+    },
+    {
+      "id": "E14001305",
+      "name": "Islington North",
+      "country": "England",
+      "region": "london",
+      "actual": "other",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          57.244
+        ],
+        [
+          "green",
+          19.295
+        ],
+        [
+          "ref",
+          8.653
+        ]
+      ]
+    },
+    {
+      "id": "E14001307",
+      "name": "Jarrow and Gateshead East",
+      "country": "England",
+      "region": "north_east",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          36.787
+        ],
+        [
+          "lab",
+          34.793
+        ],
+        [
+          "con",
+          13.062
+        ]
+      ]
+    },
+    {
+      "id": "E14001308",
+      "name": "Keighley and Ilkley",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "con",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          51.542
+        ],
+        [
+          "con",
+          22.333
+        ],
+        [
+          "ref",
+          13.318
+        ]
+      ]
+    },
+    {
+      "id": "E14001313",
+      "name": "Kingston upon Hull East",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          56.484
+        ],
+        [
+          "lab",
+          22.309
+        ],
+        [
+          "con",
+          16.758
+        ]
+      ]
+    },
+    {
+      "id": "E14001314",
+      "name": "Kingston upon Hull North and Cottingham",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          40.903
+        ],
+        [
+          "lab",
+          37.936
+        ],
+        [
+          "con",
+          15.447
+        ]
+      ]
+    },
+    {
+      "id": "E14001315",
+      "name": "Kingston upon Hull West and Haltemprice",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          53.641
+        ],
+        [
+          "con",
+          19.959
+        ],
+        [
+          "lab",
+          14.975
+        ]
+      ]
+    },
+    {
+      "id": "E14001326",
+      "name": "Leicester East",
+      "country": "England",
+      "region": "east_midlands",
+      "actual": "con",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          52.735
+        ],
+        [
+          "con",
+          19.486
+        ],
+        [
+          "ref",
+          16.763
+        ]
+      ]
+    },
+    {
+      "id": "E14001327",
+      "name": "Leicester South",
+      "country": "England",
+      "region": "east_midlands",
+      "actual": "other",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          62.05
+        ],
+        [
+          "con",
+          15.598
+        ],
+        [
+          "ref",
+          13.595
+        ]
+      ]
+    },
+    {
+      "id": "E14001335",
+      "name": "Lichfield",
+      "country": "England",
+      "region": "west_midlands",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          36.737
+        ],
+        [
+          "lab",
+          27.381
+        ],
+        [
+          "ld",
+          13.568
+        ]
+      ]
+    },
+    {
+      "id": "W07000098",
+      "name": "Llanelli",
+      "country": "Wales",
+      "region": "wales",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          33.094
+        ],
+        [
+          "pc",
+          26.761
+        ],
+        [
+          "lab",
+          24.255
+        ]
+      ]
+    },
+    {
+      "id": "E14001348",
+      "name": "Maidenhead",
+      "country": "England",
+      "region": "south_east",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          32.444
+        ],
+        [
+          "ld",
+          26.993
+        ],
+        [
+          "lab",
+          17.449
+        ]
+      ]
+    },
+    {
+      "id": "E14001350",
+      "name": "Makerfield",
+      "country": "England",
+      "region": "north_west",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          49.844
+        ],
+        [
+          "lab",
+          29.548
+        ],
+        [
+          "con",
+          17.166
+        ]
+      ]
+    },
+    {
+      "id": "E14001356",
+      "name": "Melksham and Devizes",
+      "country": "England",
+      "region": "south_west",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          34.676
+        ],
+        [
+          "ld",
+          32.855
+        ],
+        [
+          "lab",
+          12.019
+        ]
+      ]
+    },
+    {
+      "id": "W07000099",
+      "name": "Merthyr Tydfil and Aberdare",
+      "country": "Wales",
+      "region": "wales",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          39.979
+        ],
+        [
+          "lab",
+          33.694
+        ],
+        [
+          "con",
+          10.495
+        ]
+      ]
+    },
+    {
+      "id": "E14001363",
+      "name": "Mid Dorset and North Poole",
+      "country": "England",
+      "region": "south_west",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          38.159
+        ],
+        [
+          "ld",
+          36.928
+        ],
+        [
+          "ref",
+          9.256
+        ]
+      ]
+    },
+    {
+      "id": "W07000102",
+      "name": "Montgomeryshire and Glyndwr",
+      "country": "Wales",
+      "region": "wales",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          29.437
+        ],
+        [
+          "lab",
+          26.654
+        ],
+        [
+          "ld",
+          15.762
+        ]
+      ]
+    },
+    {
+      "id": "W07000105",
+      "name": "Newport West and Islwyn",
+      "country": "Wales",
+      "region": "wales",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          36.741
+        ],
+        [
+          "lab",
+          35.175
+        ],
+        [
+          "con",
+          16.664
+        ]
+      ]
+    },
+    {
+      "id": "E14001381",
+      "name": "Newton Abbot",
+      "country": "England",
+      "region": "south_west",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          32.139
+        ],
+        [
+          "ld",
+          26.18
+        ],
+        [
+          "lab",
+          19.232
+        ]
+      ]
+    },
+    {
+      "id": "E14001382",
+      "name": "Newton Aycliffe and Spennymoor",
+      "country": "England",
+      "region": "north_east",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          35.686
+        ],
+        [
+          "lab",
+          34.072
+        ],
+        [
+          "con",
+          20.921
+        ]
+      ]
+    },
+    {
+      "id": "E14001383",
+      "name": "Normanton and Hemsworth",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          50.951
+        ],
+        [
+          "lab",
+          24.681
+        ],
+        [
+          "con",
+          16.977
+        ]
+      ]
+    },
+    {
+      "id": "E14001385",
+      "name": "North Cornwall",
+      "country": "England",
+      "region": "south_west",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          35.116
+        ],
+        [
+          "ld",
+          33.962
+        ],
+        [
+          "ref",
+          9.341
+        ]
+      ]
+    },
+    {
+      "id": "E14001389",
+      "name": "North Durham",
+      "country": "England",
+      "region": "north_east",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          42.32
+        ],
+        [
+          "lab",
+          35.259
+        ],
+        [
+          "con",
+          15.584
+        ]
+      ]
+    },
+    {
+      "id": "E14001392",
+      "name": "North East Hampshire",
+      "country": "England",
+      "region": "south_east",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          35.737
+        ],
+        [
+          "ld",
+          30.936
+        ],
+        [
+          "lab",
+          10.965
+        ]
+      ]
+    },
+    {
+      "id": "E14001397",
+      "name": "North Northumberland",
+      "country": "England",
+      "region": "north_east",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          32.072
+        ],
+        [
+          "lab",
+          27.462
+        ],
+        [
+          "ld",
+          15.522
+        ]
+      ]
+    },
+    {
+      "id": "E14001398",
+      "name": "North Shropshire",
+      "country": "England",
+      "region": "west_midlands",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          35.281
+        ],
+        [
+          "lab",
+          24.843
+        ],
+        [
+          "ld",
+          13.829
+        ]
+      ]
+    },
+    {
+      "id": "E14001400",
+      "name": "North Warwickshire and Bedworth",
+      "country": "England",
+      "region": "west_midlands",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          40.333
+        ],
+        [
+          "lab",
+          36.076
+        ],
+        [
+          "ref",
+          10.382
+        ]
+      ]
+    },
+    {
+      "id": "E14001401",
+      "name": "North West Cambridgeshire",
+      "country": "England",
+      "region": "east_england",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          31.809
+        ],
+        [
+          "lab",
+          28.746
+        ],
+        [
+          "green",
+          17.857
+        ]
+      ]
+    },
+    {
+      "id": "E14001404",
+      "name": "North West Leicestershire",
+      "country": "England",
+      "region": "east_midlands",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          32.363
+        ],
+        [
+          "lab",
+          31.066
+        ],
+        [
+          "green",
+          14.941
+        ]
+      ]
+    },
+    {
+      "id": "E14001423",
+      "name": "Penistone and Stocksbridge",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          40.503
+        ],
+        [
+          "lab",
+          22.382
+        ],
+        [
+          "con",
+          19.45
+        ]
+      ]
+    },
+    {
+      "id": "E14001428",
+      "name": "Pontefract, Castleford and Knottingley",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          53.79
+        ],
+        [
+          "lab",
+          21.496
+        ],
+        [
+          "con",
+          17.52
+        ]
+      ]
+    },
+    {
+      "id": "W07000106",
+      "name": "Pontypridd",
+      "country": "Wales",
+      "region": "wales",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          35.903
+        ],
+        [
+          "lab",
+          35.528
+        ],
+        [
+          "con",
+          12.477
+        ]
+      ]
+    },
+    {
+      "id": "E14001429",
+      "name": "Poole",
+      "country": "England",
+      "region": "south_west",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          36.021
+        ],
+        [
+          "lab",
+          23.14
+        ],
+        [
+          "ld",
+          16.479
+        ]
+      ]
+    },
+    {
+      "id": "E14001436",
+      "name": "Rawmarsh and Conisbrough",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          54.123
+        ],
+        [
+          "lab",
+          19.397
+        ],
+        [
+          "con",
+          18.748
+        ]
+      ]
+    },
+    {
+      "id": "E14001439",
+      "name": "Reading West and Mid Berkshire",
+      "country": "England",
+      "region": "south_east",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          30.145
+        ],
+        [
+          "lab",
+          26.788
+        ],
+        [
+          "ld",
+          20.931
+        ]
+      ]
+    },
+    {
+      "id": "E14001441",
+      "name": "Redditch",
+      "country": "England",
+      "region": "west_midlands",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          37.48
+        ],
+        [
+          "lab",
+          31.681
+        ],
+        [
+          "ref",
+          10.107
+        ]
+      ]
+    },
+    {
+      "id": "W07000107",
+      "name": "Rhondda and Ogmore",
+      "country": "Wales",
+      "region": "wales",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          39.581
+        ],
+        [
+          "lab",
+          35.57
+        ],
+        [
+          "pc",
+          10.103
+        ]
+      ]
+    },
+    {
+      "id": "E14001449",
+      "name": "Romsey and Southampton North",
+      "country": "England",
+      "region": "south_east",
+      "actual": "con",
+      "reference": "ld",
+      "bridge": "ld",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ld",
+          34.407
+        ],
+        [
+          "con",
+          34.068
+        ],
+        [
+          "lab",
+          11.589
+        ]
+      ]
+    },
+    {
+      "id": "E14001451",
+      "name": "Rother Valley",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          52.819
+        ],
+        [
+          "con",
+          22.603
+        ],
+        [
+          "lab",
+          17.275
+        ]
+      ]
+    },
+    {
+      "id": "E14001452",
+      "name": "Rotherham",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          55.115
+        ],
+        [
+          "con",
+          19.248
+        ],
+        [
+          "lab",
+          18.669
+        ]
+      ]
+    },
+    {
+      "id": "E14001454",
+      "name": "Ruislip, Northwood and Pinner",
+      "country": "England",
+      "region": "london",
+      "actual": "con",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          36.508
+        ],
+        [
+          "con",
+          31.019
+        ],
+        [
+          "ld",
+          18.683
+        ]
+      ]
+    },
+    {
+      "id": "E14001470",
+      "name": "Sheffield South East",
+      "country": "England",
+      "region": "yorkshire",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          39.105
+        ],
+        [
+          "lab",
+          33.751
+        ],
+        [
+          "con",
+          13.644
+        ]
+      ]
+    },
+    {
+      "id": "E14001474",
+      "name": "Sittingbourne and Sheppey",
+      "country": "England",
+      "region": "south_east",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          38.558
+        ],
+        [
+          "lab",
+          26.073
+        ],
+        [
+          "ref",
+          13.169
+        ]
+      ]
+    },
+    {
+      "id": "E14001480",
+      "name": "South Basildon and East Thurrock",
+      "country": "England",
+      "region": "east_england",
+      "actual": "ref",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          34.857
+        ],
+        [
+          "lab",
+          29.084
+        ],
+        [
+          "other",
+          17.753
+        ]
+      ]
+    },
+    {
+      "id": "E14001482",
+      "name": "South Cotswolds",
+      "country": "England",
+      "region": "south_west",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          32.906
+        ],
+        [
+          "ld",
+          32.701
+        ],
+        [
+          "green",
+          13.203
+        ]
+      ]
+    },
+    {
+      "id": "E14001483",
+      "name": "South Derbyshire",
+      "country": "England",
+      "region": "east_midlands",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          36.69
+        ],
+        [
+          "lab",
+          33.489
+        ],
+        [
+          "ref",
+          9.385
+        ]
+      ]
+    },
+    {
+      "id": "E14001485",
+      "name": "South Dorset",
+      "country": "England",
+      "region": "south_west",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          31.639
+        ],
+        [
+          "lab",
+          25.997
+        ],
+        [
+          "ld",
+          17.066
+        ]
+      ]
+    },
+    {
+      "id": "E14001486",
+      "name": "South East Cornwall",
+      "country": "England",
+      "region": "south_west",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          35.706
+        ],
+        [
+          "lab",
+          22.592
+        ],
+        [
+          "ld",
+          19.41
+        ]
+      ]
+    },
+    {
+      "id": "E14001489",
+      "name": "South Norfolk",
+      "country": "England",
+      "region": "east_england",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          33.062
+        ],
+        [
+          "lab",
+          27.748
+        ],
+        [
+          "ld",
+          18.474
+        ]
+      ]
+    },
+    {
+      "id": "E14001492",
+      "name": "South Shields",
+      "country": "England",
+      "region": "north_east",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          50.099
+        ],
+        [
+          "lab",
+          25.046
+        ],
+        [
+          "con",
+          12.772
+        ]
+      ]
+    },
+    {
+      "id": "E14001496",
+      "name": "South West Hertfordshire",
+      "country": "England",
+      "region": "east_england",
+      "actual": "con",
+      "reference": "other",
+      "bridge": "other",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "other",
+          36.553
+        ],
+        [
+          "con",
+          23.421
+        ],
+        [
+          "ld",
+          17.336
+        ]
+      ]
+    },
+    {
+      "id": "E14001497",
+      "name": "South West Norfolk",
+      "country": "England",
+      "region": "east_england",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          41.826
+        ],
+        [
+          "lab",
+          20.271
+        ],
+        [
+          "ld",
+          11.813
+        ]
+      ]
+    },
+    {
+      "id": "E14001509",
+      "name": "St Helens North",
+      "country": "England",
+      "region": "north_west",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          41.206
+        ],
+        [
+          "lab",
+          37.422
+        ],
+        [
+          "con",
+          13.958
+        ]
+      ]
+    },
+    {
+      "id": "E14001519",
+      "name": "Stockton West",
+      "country": "England",
+      "region": "north_east",
+      "actual": "con",
+      "reference": "lab",
+      "bridge": "lab",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "lab",
+          34.68
+        ],
+        [
+          "con",
+          27.565
+        ],
+        [
+          "ref",
+          25.576
+        ]
+      ]
+    },
+    {
+      "id": "E14001526",
+      "name": "Stratford-on-Avon",
+      "country": "England",
+      "region": "west_midlands",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          32.775
+        ],
+        [
+          "ld",
+          30.484
+        ],
+        [
+          "green",
+          12.666
+        ]
+      ]
+    },
+    {
+      "id": "E14001530",
+      "name": "Suffolk Coastal",
+      "country": "England",
+      "region": "east_england",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          30.02
+        ],
+        [
+          "lab",
+          23.605
+        ],
+        [
+          "green",
+          15.324
+        ]
+      ]
+    },
+    {
+      "id": "E14001531",
+      "name": "Sunderland Central",
+      "country": "England",
+      "region": "north_east",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          45.108
+        ],
+        [
+          "lab",
+          32.705
+        ],
+        [
+          "con",
+          15.747
+        ]
+      ]
+    },
+    {
+      "id": "E14001538",
+      "name": "Tamworth",
+      "country": "England",
+      "region": "west_midlands",
+      "actual": "lab",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          40.022
+        ],
+        [
+          "lab",
+          31.333
+        ],
+        [
+          "ref",
+          11.687
+        ]
+      ]
+    },
+    {
+      "id": "E14001542",
+      "name": "Tewkesbury",
+      "country": "England",
+      "region": "south_west",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          31.184
+        ],
+        [
+          "ld",
+          26.279
+        ],
+        [
+          "lab",
+          15.834
+        ]
+      ]
+    },
+    {
+      "id": "E14001548",
+      "name": "Tiverton and Minehead",
+      "country": "England",
+      "region": "south_west",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          34.262
+        ],
+        [
+          "ld",
+          24.175
+        ],
+        [
+          "lab",
+          15.39
+        ]
+      ]
+    },
+    {
+      "id": "E14001549",
+      "name": "Tonbridge",
+      "country": "England",
+      "region": "south_east",
+      "actual": "con",
+      "reference": "green",
+      "bridge": "green",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "green",
+          30.403
+        ],
+        [
+          "con",
+          28.725
+        ],
+        [
+          "lab",
+          14.63
+        ]
+      ]
+    },
+    {
+      "id": "E14001551",
+      "name": "Torbay",
+      "country": "England",
+      "region": "south_west",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          36.565
+        ],
+        [
+          "ld",
+          29.159
+        ],
+        [
+          "lab",
+          13.2
+        ]
+      ]
+    },
+    {
+      "id": "W07000109",
+      "name": "Torfaen",
+      "country": "Wales",
+      "region": "wales",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          47.927
+        ],
+        [
+          "lab",
+          28.159
+        ],
+        [
+          "con",
+          15.008
+        ]
+      ]
+    },
+    {
+      "id": "E14001567",
+      "name": "Washington and Gateshead South",
+      "country": "England",
+      "region": "north_east",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          48.743
+        ],
+        [
+          "lab",
+          28.198
+        ],
+        [
+          "con",
+          15.736
+        ]
+      ]
+    },
+    {
+      "id": "E14001585",
+      "name": "Wigan",
+      "country": "England",
+      "region": "north_west",
+      "actual": "lab",
+      "reference": "ref",
+      "bridge": "ref",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "ref",
+          46.354
+        ],
+        [
+          "lab",
+          34.545
+        ],
+        [
+          "con",
+          15.935
+        ]
+      ]
+    },
+    {
+      "id": "E14001591",
+      "name": "Witney",
+      "country": "England",
+      "region": "south_east",
+      "actual": "ld",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          34.806
+        ],
+        [
+          "ld",
+          32.882
+        ],
+        [
+          "lab",
+          16.138
+        ]
+      ]
+    },
+    {
+      "id": "S14000062",
+      "name": "Aberdeenshire North and Moray East",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "snp",
+      "reference": "con",
+      "bridge": "con",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "con",
+          38.233
+        ],
+        [
+          "snp",
+          35.193
+        ],
+        [
+          "ref",
+          10.865
+        ]
+      ]
+    },
+    {
+      "id": "S14000064",
+      "name": "Alloa and Grangemouth",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "lab",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          35.706
+        ],
+        [
+          "con",
+          24.433
+        ],
+        [
+          "lab",
+          12.864
+        ]
+      ]
+    },
+    {
+      "id": "S14000107",
+      "name": "Ayr, Carrick and Cumnock",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "lab",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          33.042
+        ],
+        [
+          "con",
+          29.841
+        ],
+        [
+          "lab",
+          12.535
+        ]
+      ]
+    },
+    {
+      "id": "S14000068",
+      "name": "Bathgate and Linlithgow",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "lab",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          27.108
+        ],
+        [
+          "lab",
+          21.332
+        ],
+        [
+          "con",
+          18.662
+        ]
+      ]
+    },
+    {
+      "id": "S14000109",
+      "name": "Central Ayrshire",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "lab",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          34.542
+        ],
+        [
+          "con",
+          27.114
+        ],
+        [
+          "lab",
+          13.68
+        ]
+      ]
+    },
+    {
+      "id": "S14000077",
+      "name": "East Kilbride and Strathaven",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "lab",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          31.981
+        ],
+        [
+          "lab",
+          27.913
+        ],
+        [
+          "con",
+          17.062
+        ]
+      ]
+    },
+    {
+      "id": "S14000021",
+      "name": "East Renfrewshire",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "lab",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          33.846
+        ],
+        [
+          "con",
+          25.502
+        ],
+        [
+          "ld",
+          12.489
+        ]
+      ]
+    },
+    {
+      "id": "S14000081",
+      "name": "Edinburgh South West",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "lab",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          34.098
+        ],
+        [
+          "con",
+          18.912
+        ],
+        [
+          "lab",
+          15.293
+        ]
+      ]
+    },
+    {
+      "id": "S14000083",
+      "name": "Falkirk",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "lab",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          37.545
+        ],
+        [
+          "con",
+          24.38
+        ],
+        [
+          "lab",
+          10.509
+        ]
+      ]
+    },
+    {
+      "id": "S14000094",
+      "name": "Inverness, Skye and West Ross-shire",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "ld",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          28.864
+        ],
+        [
+          "con",
+          20.774
+        ],
+        [
+          "ref",
+          17.908
+        ]
+      ]
+    },
+    {
+      "id": "S14000110",
+      "name": "Kilmarnock and Loudoun",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "lab",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          33.156
+        ],
+        [
+          "con",
+          23.196
+        ],
+        [
+          "lab",
+          20.682
+        ]
+      ]
+    },
+    {
+      "id": "S14000095",
+      "name": "Livingston",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "lab",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          32.226
+        ],
+        [
+          "lab",
+          27.823
+        ],
+        [
+          "con",
+          17.303
+        ]
+      ]
+    },
+    {
+      "id": "S14000048",
+      "name": "North Ayrshire and Arran",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "lab",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          36.989
+        ],
+        [
+          "con",
+          28.305
+        ],
+        [
+          "lab",
+          13.324
+        ]
+      ]
+    },
+    {
+      "id": "S14000105",
+      "name": "Stirling and Strathallan",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "lab",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          36.769
+        ],
+        [
+          "con",
+          27.994
+        ],
+        [
+          "ld",
+          9.75
+        ]
+      ]
+    },
+    {
+      "id": "S14000111",
+      "name": "West Aberdeenshire and Kincardine",
+      "country": "Scotland",
+      "region": "scotland",
+      "actual": "con",
+      "reference": "snp",
+      "bridge": "snp",
+      "reference_correct": false,
+      "bridge_correct": false,
+      "bridge_top": [
+        [
+          "snp",
+          31.922
+        ],
+        [
+          "con",
+          31.758
+        ],
+        [
+          "ld",
+          17.877
+        ]
+      ]
+    }
+  ],
+  "method_note": "External MRP toplines are discarded. Constituency vote shares are converted into relative geographic factors; those factors are blended with the internal rows at a strength selected on 2019, then raked to the internal national target."
+}
