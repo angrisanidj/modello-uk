@@ -12,8 +12,8 @@
 <meta property="og:url" content="https://angrisanidj.github.io/modello-uk/" />
 <meta property="og:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta property="og:description" content="Nowcast probabilistico della House of Commons: sondaggi, proiezione dei seggi, Monte Carlo e probabilità collegio per collegio." />
-<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=20260826-8ffa0ba4" />
-<meta property="og:image:secure_url" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=20260826-8ffa0ba4" />
+<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=bootstrap" />
+<meta property="og:image:secure_url" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=bootstrap" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -22,19 +22,20 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta name="twitter:description" content="Nowcast probabilistico della House of Commons: sondaggi, seggi, collegi e probabilità." />
-<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=20260826-8ffa0ba4" />
+<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=bootstrap" />
 <meta name="twitter:image:alt" content="Nowcast delle elezioni nel Regno Unito — proiezione della House of Commons" />
 <meta name="twitter:url" content="https://angrisanidj.github.io/modello-uk/" />
-<link rel="stylesheet" href="styles.css?v=0.9.42" />
-<link rel="stylesheet" href="styles-v0935.css?v=0.9.42" />
-<link rel="stylesheet" href="styles-v0936.css?v=0.9.42" />
-<link rel="stylesheet" href="styles-v0937.css?v=0.9.42" />
-<link rel="stylesheet" href="styles-v0938.css?v=0.9.42" />
-<link rel="stylesheet" href="styles-v0939.css?v=0.9.42" />
-<link rel="stylesheet" href="styles-v0940.css?v=0.9.42" />
-<link rel="stylesheet" href="styles-v0941.css?v=0.9.42" />
-<link rel="stylesheet" href="styles-v0942.css?v=0.9.42" />
-<link rel="stylesheet" href="map-performance.css?v=0.9.42" />
+<link rel="stylesheet" href="styles.css?v=0.9.43" />
+<link rel="stylesheet" href="styles-v0935.css?v=0.9.43" />
+<link rel="stylesheet" href="styles-v0936.css?v=0.9.43" />
+<link rel="stylesheet" href="styles-v0937.css?v=0.9.43" />
+<link rel="stylesheet" href="styles-v0938.css?v=0.9.43" />
+<link rel="stylesheet" href="styles-v0939.css?v=0.9.43" />
+<link rel="stylesheet" href="styles-v0940.css?v=0.9.43" />
+<link rel="stylesheet" href="styles-v0941.css?v=0.9.43" />
+<link rel="stylesheet" href="styles-v0942.css?v=0.9.43" />
+<link rel="stylesheet" href="styles-v0943.css?v=0.9.43" />
+<link rel="stylesheet" href="map-performance.css?v=0.9.43" />
 </head>
 <body>
 <div id="mobileNowcastSticky" class="mobile-nowcast-sticky" aria-label="Riepilogo rapido del nowcast">
@@ -274,6 +275,7 @@
       <article class="card regional-table-card">
         <div class="cardhead"><div><h3>Bilancio per area</h3><p id="regionalMeta">Scenario rappresentativo quando il Monte Carlo è pronto.</p></div></div>
         <div class="table-scroll regional-scroll"><table class="regional-table"><thead><tr><th>Area</th><th>Seggi</th><th>Primo partito</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>SNP</th><th>PC</th><th>Cambi</th><th>Incerti</th></tr></thead><tbody id="regionalTableBody"></tbody></table></div>
+        <div id="regionalMobileList" class="regional-mobile-list" aria-label="Bilancio regionale"></div>
         <div class="regional-note">Clicca un’area per applicarla come filtro nell’Esploratore dei collegi.</div>
       </article>
       <aside class="regional-side">
@@ -284,7 +286,8 @@
   </section>
   <div class="section-title" id="collegi"><div><div class="section-kicker">Collegi</div><h2>Esplora tutti i 650 collegi</h2><p id="marginalMeta">Cerca, filtra e ordina ogni collegio. I filtri possono essere applicati anche alla mappa.</p></div></div>
   <section class="card marginal-card explorer-card">
-    <div class="explorer-toolbar">
+    <button class="mobile-panel-toggle" type="button" data-mobile-toggle="explorerFilters" aria-expanded="false"><span>Filtri dei collegi</span><strong>Mostra</strong></button>
+    <div id="explorerFilters" class="explorer-toolbar mobile-panel-content">
       <label class="filter-field search-field"><span>Cerca collegio</span><input id="seatSearch" type="search" placeholder="Es. Birmingham, Glasgow, Ynys Môn…" autocomplete="off"></label>
       <label class="filter-field"><span>Paese</span><select id="seatCountry"><option value="">Tutti</option></select></label>
       <label class="filter-field"><span>Regione</span><select id="seatRegion"><option value="">Tutte</option></select></label>
@@ -297,7 +300,8 @@
     </div>
     <div class="explorer-presets"><button data-seat-preset="uncertain">Più incerti</button><button data-seat-preset="changed">Cambi di partito</button><button data-seat-preset="marginal">Marginali &lt;5 p.p.</button><button data-seat-preset="all">Tutti i collegi</button></div>
     <div class="explorer-meta"><strong id="seatExplorerCount">—</strong><span id="seatExplorerNote">La graduatoria usa l’incertezza Monte Carlo quando disponibile.</span></div>
-    <div class="table-scroll"><table class="marginal-table explorer-table"><thead><tr><th>Collegio</th><th>Area</th><th>2024</th><th>Scenario</th><th>Margine</th><th>Probabilità del favorito</th></tr></thead><tbody id="marginalTableBody"></tbody></table></div>
+    <div class="table-scroll explorer-table-scroll"><table class="marginal-table explorer-table"><thead><tr><th>Collegio</th><th>Area</th><th>2024</th><th>Scenario</th><th>Margine</th><th>Probabilità del favorito</th></tr></thead><tbody id="marginalTableBody"></tbody></table></div>
+    <div id="seatMobileList" class="seat-mobile-list" aria-label="Collegi della pagina corrente"></div>
     <div class="explorer-footer explorer-footer-paged"><span class="table-note" id="seatExplorerFooter">Clicca una riga per aprire il dettaglio sulla mappa.</span><nav id="seatPagination" class="pagination" aria-label="Pagine collegi"></nav></div>
   </section>
   <div class="section-title"><div><div class="section-kicker">Maggioranze</div><h2>Costruisci una maggioranza</h2><p>Somma i seggi mediani e misura la probabilità che la combinazione superi la soglia operativa.</p></div></div>
@@ -328,13 +332,15 @@
   </section>
   <div class="section-title"><div><div class="section-kicker">Sondaggi</div><h2>Tutti i sondaggi dalle elezioni del 2024</h2><p>Dal 4 luglio 2024 a oggi, ordinati dal più recente. Puoi filtrare per istituto o area e sfogliare 25 rilevazioni alla volta.</p></div><span id="pollTableCount" class="badge">—</span></div>
   <section class="card poll-table-card poll-browser-card">
-    <div class="poll-filterbar">
+    <button class="mobile-panel-toggle" type="button" data-mobile-toggle="pollFilters" aria-expanded="false"><span>Filtri dei sondaggi</span><strong>Mostra</strong></button>
+    <div id="pollFilters" class="poll-filterbar mobile-panel-content">
       <label class="filter-field poll-search"><span>Cerca</span><input id="pollSearch" type="search" placeholder="Istituto o committente…" autocomplete="off"></label>
       <label class="filter-field"><span>Istituto</span><select id="pollPollster"><option value="">Tutti</option></select></label>
       <label class="filter-field"><span>Area</span><select id="pollArea"><option value="">Tutte</option></select></label>
       <button id="pollResetFilters" class="small-action" type="button">Azzera filtri</button>
     </div>
     <div class="table-scroll poll-table-scroll"><table><thead><tr><th>Data</th><th>Istituto</th><th>Committente</th><th>Area</th><th>n</th><th>Lab</th><th>Con</th><th>Ref</th><th>LD</th><th>Green</th><th>SNP</th><th>PC</th><th>RB</th></tr></thead><tbody id="pollTableBody"></tbody></table></div>
+    <div id="pollMobileList" class="poll-mobile-list" aria-label="Sondaggi della pagina corrente"></div>
     <div class="poll-browser-footer"><span id="pollTableMeta" class="table-note">25 rilevazioni per pagina.</span><nav id="pollPagination" class="pagination" aria-label="Pagine sondaggi"></nav></div>
   </section>
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La validazione è separata dall’interfaccia: il modello viene pubblicato soltanto se supera tutti i controlli automatici previsti.</p></div><span class="validation-badge">CONTROLLI SUPERATI</span></div>
@@ -381,8 +387,8 @@
   </footer>
   <div class="author-signature">Daniele Angrisani · Nowcast probabilistico delle elezioni nel Regno Unito · <a href="https://x.com/putino" target="_blank" rel="noopener">@putino</a></div>
 </main>
-<script src="scripts/app.js?v=0.9.42"></script>
-<script src="scripts/map-performance.js?v=0.9.42"></script>
-<script src="scripts/interpretation.js?v=0.9.42"></script>
+<script src="scripts/app.js?v=0.9.43"></script>
+<script src="scripts/map-performance.js?v=0.9.43"></script>
+<script src="scripts/interpretation.js?v=0.9.43"></script>
 </body>
 </html>

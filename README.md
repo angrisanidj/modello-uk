@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.42 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.43 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,7 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.42.
+- **Interfaccia:** v0.9.43.
 - **Motore statistico di produzione:** **v0.9.29**, congelato durante le modifiche esclusivamente frontend.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche con cache legata al fingerprint degli input.
@@ -130,6 +130,7 @@ modello-uk/
 ├── styles-v0940.css
 ├── styles-v0941.css
 ├── styles-v0942.css
+├── styles-v0943.css
 ├── map-performance.css
 ├── scripts/
 │   ├── app.js
@@ -164,16 +165,17 @@ modello-uk/
 
 La GitHub Action `Update and deploy UK model` può essere avviata manualmente, parte anche su push a `main` ed è programmata quotidianamente. La pipeline aggiorna e committa automaticamente soltanto i file sotto `data/` quando esistono modifiche effettive, quindi esegue il deploy su GitHub Pages.
 
-Per una modifica frontend come la v0.9.42 è sufficiente pubblicare i file dell'interfaccia; **non è necessario ritoccare il motore statistico**.
+Per una modifica frontend come la v0.9.43 è sufficiente pubblicare i file dell'interfaccia; **non è necessario ritoccare il motore statistico**.
 
 ## Nota sulla lettura dei risultati
 
 La dashboard è un **nowcast**, non una previsione certa del risultato finale delle prossime elezioni. Il numero centrale dei seggi va letto insieme agli intervalli di probabilità, alla distribuzione Monte Carlo e alla geografia dei collegi. Lo scenario personalizzato dell'utente è uno strumento esplorativo deterministico e non modifica il modello di produzione.
 
-## UI v0.9.42
+## UI v0.9.43
 
-La v0.9.42 è una release frontend/editoriale. Rifinisce la fascia nazionale superiore, aggiunge l’anno alle date dell’asse storico, riequilibra la sezione di validazione e lascia il prompt IA chiuso all’apertura. Introduce inoltre la stessa architettura di social card del modello Germania: il browser genera una card dai risultati correnti e un workflow dedicato la rigenera automaticamente in formato 1200×630 e 1080×1350 dopo gli aggiornamenti del modello, aggiornando anche le pagine di condivisione per X, Threads, Facebook, LinkedIn, Telegram e WhatsApp. Il motore statistico resta v0.9.29.
+La v0.9.43 è un consolidamento mobile dell’interfaccia. Non modifica il motore statistico. La fascia superiore non tenta più di stirare la Union Jack: usa una firma cromatica sottile, mentre la bandiera completa resta nei badge dove può mantenere le proporzioni corrette.
 
+Sul mobile vengono inoltre introdotti layout dedicati per l’archivio sondaggi, il bilancio regionale e l’esploratore dei collegi, evitando tabelle orizzontali da desktop. I filtri più ingombranti sono richiudibili, la paginazione mostra una finestra numerica compatta, il masthead e la barra sticky sono stati ridimensionati, e mappe, coalition builder, scenario builder, backtest e pannello IA ricevono regole responsive specifiche.
 
 ### Social card dinamiche
 
