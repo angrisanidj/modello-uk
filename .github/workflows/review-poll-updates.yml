@@ -1,0 +1,48 @@
+name: Review UK polling updates
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "5 */3 * * *"
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: uk-model-poll-review
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Review national and subnational polling feeds
+        id: review
+        run: python tools/review_poll_updates.py
+
+      - name: Trigger full production update when polling changed
+        if: steps.review.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run update-data.yml --ref main
+
+      - name: Review summary
+        run: |
+          echo "Polling changed: ${{ steps.review.outputs.changed }}"
+          echo "National changed: ${{ steps.review.outputs.national_changed }}"
+          echo "Subnational changed: ${{ steps.review.outputs.subnational_changed }}"
+          echo "Latest national poll: ${{ steps.review.outputs.latest_national }}"
+          echo "Latest subnational poll: ${{ steps.review.outputs.latest_subnational }}"
