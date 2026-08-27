@@ -42,7 +42,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 ROOT=Path(__file__).resolve().parents[1]
-V0922_HOTFIX="explicit-noop-candidate-fallback-and-traceback"
+V0922_HOTFIX="explicit-noop-fallback-traceback-and-idempotent-region-key"
 DATA=ROOT/"data"
 DATA.mkdir(exist_ok=True)
 
@@ -550,13 +550,18 @@ def region_key(v:Any,country:str)->str:
     if country=="Scotland":return "scotland"
     if country=="Wales":return "wales"
     if country=="Northern Ireland":return "northern_ireland"
+    # This helper is called both on raw source labels (e.g. "South East")
+    # and on the already-normalised keys stored in base["frame"]
+    # (e.g. "south_east").  Keep it idempotent so downstream research
+    # layers such as winner-meta can safely reuse the canonical region.
     s=str(v or "").strip().lower()
+    s=re.sub(r"[\s_-]+"," ",s).strip()
     if "north east" in s:return "north_east"
     if "north west" in s:return "north_west"
     if "york" in s or "humber" in s:return "yorkshire"
     if "east mid" in s:return "east_midlands"
     if "west mid" in s:return "west_midlands"
-    if "east of england" in s or s in {"east","eastern"}:return "east_england"
+    if "east of england" in s or s in {"east","eastern","east england"}:return "east_england"
     if "london" in s:return "london"
     if "south east" in s:return "south_east"
     if "south west" in s:return "south_west"
