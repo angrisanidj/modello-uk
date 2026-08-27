@@ -40,8 +40,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/democracy-club
-          key: dc-v0924-${{ runner.os }}-${{ hashFiles('tools/build_mrp_lite.py') }}
+          key: dc-v0925-${{ runner.os }}-${{ hashFiles('tools/build_mrp_lite.py') }}
           restore-keys: |
+            dc-v0925-${{ runner.os }}-
             dc-v0924-${{ runner.os }}-
             dc-v0923-${{ runner.os }}-
             dc-v0922-${{ runner.os }}-
@@ -50,8 +51,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/mrp-bridge
-          key: mrp-bridge-v0924-${{ runner.os }}-${{ hashFiles('tools/build_mrp_geography_bridge.py') }}
+          key: mrp-bridge-v0925-${{ runner.os }}-${{ hashFiles('tools/build_mrp_geography_bridge.py') }}
           restore-keys: |
+            mrp-bridge-v0925-${{ runner.os }}-
             mrp-bridge-v0924-${{ runner.os }}-
             mrp-bridge-v0923-${{ runner.os }}-
 
@@ -64,7 +66,7 @@ jobs:
       - name: Calibrate legacy partial-raking benchmark
         run: python tools/build_backtest.py
 
-      - name: Verify v0.9.24 source bundle
+      - name: Verify v0.9.25 source bundle
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -79,11 +81,11 @@ jobs:
               'V0922_HOTFIX_DC_IO="retry-memory-disk-cache"',
           ]
           required_bridge=[
-              'V0924_BRIDGE="external-mrp-relative-geography-plus-national-rake"',
-              'V0924_SELECTION="yougov-2019-only-strength-selection"',
-              'V0924_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-relative-shift"',
-              'V0924_BASELINE="reconstruct-v0915-local-strength-both-elections"',
-              'V0924_DIAGNOSTICS="all-strengths-scored-2024-no-selection"',
+              'V0925_BRIDGE="logspace-internal-to-external-geography-replacement"',
+              'V0925_SELECTION="yougov-2019-only-blend-selection"',
+              'V0925_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-relative-shift"',
+              'V0925_BASELINE="reconstruct-v0915-local-strength-both-elections"',
+              'V0925_DIAGNOSTICS="full-zero-to-pure-external-blend-sweep-2024"',
               'YOUGOV_2019_URL=',
               'YOUGOV_2024_URL=',
               'MIC_2024_URL=',
@@ -92,22 +94,22 @@ jobs:
           ]
           for needle in required_core:
               if needle not in core:
-                  raise SystemExit(f"ERROR: v0.9.24 requires HOTFIX3 core; missing {needle!r}")
+                  raise SystemExit(f"ERROR: v0.9.25 requires HOTFIX3 core; missing {needle!r}")
           for needle in required_bridge:
               if needle not in bridge:
-                  raise SystemExit(f"ERROR: mixed/incomplete v0.9.24 bridge; missing {needle!r}")
-          if "Build v0.9.24 MRP geography bridge" not in workflow:
-              raise SystemExit("ERROR: workflow is not the v0.9.24 geography-bridge workflow")
-          print("v0.9.24 source bundle preflight: PASSED")
+                  raise SystemExit(f"ERROR: mixed/incomplete v0.9.25 bridge; missing {needle!r}")
+          if "Build v0.9.25 MRP geography replacement/blend" not in workflow:
+              raise SystemExit("ERROR: workflow is not the v0.9.25 geography-replacement/blend workflow")
+          print("v0.9.25 source bundle preflight: PASSED")
           PY
 
-      - name: Self-test v0.9.24 geography bridge
+      - name: Self-test v0.9.25 geography replacement/blend
         run: python tools/build_mrp_geography_bridge.py --self-test
 
-      - name: Build v0.9.24 MRP geography bridge
+      - name: Build v0.9.25 MRP geography replacement/blend
         run: python tools/build_mrp_geography_bridge.py
 
-      - name: Validate v0.9.24 research safeguards
+      - name: Validate v0.9.25 research safeguards
         run: |
           python - <<'PY'
           import json
@@ -116,19 +118,19 @@ jobs:
           def load(path):
               return json.loads(Path(path).read_text(encoding="utf-8"))
 
-          backtest=load("data/backtest-v0924-geography-bridge.json")
-          diagnostic=load("data/mrp-geography-bridge-v0924.json")
-          live=load("data/mrp-lite-live-v0924-shadow.json")
-          integrity=load("data/bes-integrity-v0924.json")
+          backtest=load("data/backtest-v0925-geography-bridge.json")
+          diagnostic=load("data/mrp-geography-bridge-v0925.json")
+          live=load("data/mrp-lite-live-v0925-shadow.json")
+          integrity=load("data/bes-integrity-v0925.json")
 
-          if backtest.get("version")!="uk-v0924-mrp-geography-bridge" or backtest.get("status")!="ok":
-              raise SystemExit(f"ERROR: invalid v0.9.24 backtest {backtest.get('version')} {backtest.get('error')}")
-          if diagnostic.get("version")!="uk-v0924-mrp-geography-bridge" or diagnostic.get("status")!="ok":
-              raise SystemExit(f"ERROR: invalid v0.9.24 diagnostic {diagnostic.get('version')} {diagnostic.get('error')}")
-          if live.get("version")!="uk-v0924-mrp-geography-bridge-live-shadow" or live.get("status")!="ok":
-              raise SystemExit(f"ERROR: invalid v0.9.24 live shadow {live.get('version')} {live.get('error')}")
+          if backtest.get("version")!="uk-v0925-mrp-geography-bridge" or backtest.get("status")!="ok":
+              raise SystemExit(f"ERROR: invalid v0.9.25 backtest {backtest.get('version')} {backtest.get('error')}")
+          if diagnostic.get("version")!="uk-v0925-mrp-geography-bridge" or diagnostic.get("status")!="ok":
+              raise SystemExit(f"ERROR: invalid v0.9.25 diagnostic {diagnostic.get('version')} {diagnostic.get('error')}")
+          if live.get("version")!="uk-v0925-mrp-geography-bridge-live-shadow" or live.get("status")!="ok":
+              raise SystemExit(f"ERROR: invalid v0.9.25 live shadow {live.get('version')} {live.get('error')}")
 
-          if integrity.get("version")!="uk-v0924-bes-integrity-wrapper" or integrity.get("status")!="passed":
+          if integrity.get("version")!="uk-v0925-bes-integrity-wrapper" or integrity.get("status")!="passed":
               raise SystemExit(f"ERROR: BES integrity failed: {integrity.get('errors')}")
           for check in integrity.get("checks",[]):
               if check.get("gb_rows")!=632:
@@ -139,13 +141,13 @@ jobs:
           # Methodological anti-leakage safeguards.
           for payload in (backtest,diagnostic,live):
               if payload.get("uses_2024_for_parameter_selection") is not False:
-                  raise SystemExit("ERROR: 2024 leaked into v0.9.24 parameter selection")
+                  raise SystemExit("ERROR: 2024 leaked into v0.9.25 parameter selection")
               if payload.get("parameter_selection_election")!="2019":
-                  raise SystemExit("ERROR: v0.9.24 strength was not selected on 2019")
+                  raise SystemExit("ERROR: v0.9.25 strength was not selected on 2019")
               if payload.get("provider_topline_used") is not False:
                   raise SystemExit("ERROR: external provider topline entered the model")
               if payload.get("shadow_only") is not True or payload.get("publication_ready") is not False:
-                  raise SystemExit("ERROR: v0.9.24 auto-promotion safeguard missing")
+                  raise SystemExit("ERROR: v0.9.25 auto-promotion safeguard missing")
 
           ref=backtest.get("reference_v0915",{})
           rv=ref.get("validation_2019",{}); rh=ref.get("benchmark_2024",{})
@@ -167,12 +169,13 @@ jobs:
 
           selection=backtest.get("strength_selection_2019",{})
           candidates=selection.get("candidates",[])
-          if len(candidates)!=6:
-              raise SystemExit(f"ERROR: expected six predeclared strength candidates, got {len(candidates)}")
-          strengths=sorted(round(float(x.get("strength")) ,2) for x in candidates)
-          if strengths!=[0.0,0.25,0.5,0.75,1.0,1.25]:
-              raise SystemExit(f"ERROR: unexpected strength grid {strengths}")
-          if round(float(backtest.get("selected_strength")) ,2) not in strengths:
+          if len(candidates)!=9:
+              raise SystemExit(f"ERROR: expected nine predeclared blend candidates, got {len(candidates)}")
+          strengths=sorted(round(float(x.get("strength")) ,3) for x in candidates)
+          expected_strengths=[0.0,0.125,0.25,0.375,0.5,0.625,0.75,0.875,1.0]
+          if strengths!=expected_strengths:
+              raise SystemExit(f"ERROR: unexpected replacement/blend grid {strengths}")
+          if round(float(backtest.get("selected_strength")) ,3) not in strengths:
               raise SystemExit("ERROR: selected strength is outside the predeclared grid")
           zero19=next((x.get("metrics",{}) for x in candidates if abs(float(x.get("strength",-1)))<1e-12),None)
           if not zero19 or zero19.get("correct_winners")!=585 or zero19.get("seat_abs_error_sum")!=42:
@@ -185,18 +188,31 @@ jobs:
           if not isinstance(primary.get("correct_winners"),int) or primary.get("gb_seats")!=632:
               raise SystemExit(f"ERROR: incomplete primary 2024 score {primary}")
           full_sweep=bm.get("all_strengths_diagnostic",[])
-          if len(full_sweep)!=18:
-              raise SystemExit(f"ERROR: expected 18 diagnostic 2024 scores (3 providers x 6 strengths), got {len(full_sweep)}")
+          if len(full_sweep)!=27:
+              raise SystemExit(f"ERROR: expected 27 diagnostic 2024 scores (3 providers x 9 blend strengths), got {len(full_sweep)}")
           provider_counts={}
           for row in full_sweep:
               provider_counts[row.get("provider")]=provider_counts.get(row.get("provider"),0)+1
               if row.get("selection_role")!="diagnostic_only":
                   raise SystemExit(f"ERROR: 2024 sweep row is not diagnostic-only {row}")
-          if provider_counts!={"yougov":6,"more_in_common":6,"equal_provider_ensemble":6}:
+          if provider_counts!={"yougov":9,"more_in_common":9,"equal_provider_ensemble":9}:
               raise SystemExit(f"ERROR: unexpected 2024 diagnostic provider counts {provider_counts}")
           zero24=next((x.get("metrics",{}) for x in full_sweep if x.get("provider")=="yougov" and abs(float(x.get("strength",-1)))<1e-12),None)
           if not zero24 or zero24.get("correct_winners")!=501 or zero24.get("seat_abs_error_sum")!=166:
               raise SystemExit(f"ERROR: strength=0 does not reproduce v0.9.15 in 2024: {zero24}")
+          architecture=diagnostic.get("architecture",{})
+          formula=architecture.get("formula","")
+          if "R_internal^(1-s)*R_external^s" not in formula:
+              raise SystemExit(f"ERROR: v0.9.25 is not using true geography replacement/blend: {formula}")
+          endpoints=architecture.get("endpoint_semantics",{})
+          if "pure external" not in str(endpoints.get("strength_1","")).lower():
+              raise SystemExit(f"ERROR: strength=1 pure-external endpoint not documented {endpoints}")
+          pure=bm.get("pure_external_geography",{})
+          if set(pure)!={"yougov","more_in_common","equal_provider_ensemble"}:
+              raise SystemExit(f"ERROR: pure-external diagnostics incomplete {pure.keys()}")
+          for provider,metrics in pure.items():
+              if metrics.get("gb_seats")!=632 or not isinstance(metrics.get("correct_winners"),int):
+                  raise SystemExit(f"ERROR: invalid pure-external diagnostic for {provider}: {metrics}")
 
           coverage=backtest.get("coverage",{})
           if int(coverage.get("yougov2019",{}).get("matched_seats",0))<630:
@@ -223,7 +239,7 @@ jobs:
               raise SystemExit("ERROR: 90% stretch gate boolean inconsistent")
 
           if live.get("applied_to_production") is not False or live.get("approved_for_live") is not False:
-              raise SystemExit("ERROR: v0.9.24 live shadow was promoted automatically")
+              raise SystemExit("ERROR: v0.9.25 live shadow was promoted automatically")
           if len(live.get("seats",[]))!=632:
               raise SystemExit(f"ERROR: live shadow has {len(live.get('seats',[]))} GB seats")
 
@@ -232,14 +248,16 @@ jobs:
               raise SystemExit(f"ERROR: unknown live geography status {mic26}")
 
           print("v0.9.15 reference: 2019 585/632 seat error 42; 2024 501/632 seat error 166")
-          print("v0.9.24 selected strength:",backtest.get("selected_strength"))
-          print("v0.9.24 validation 2019:",val.get("correct_winners"),"/632; seat error",val.get("seat_abs_error_sum"))
-          print("v0.9.24 PRIMARY 2024:",primary.get("correct_winners"),"/632 =",round(100*primary.get("winner_accuracy",0),2),"%; seat error",primary.get("seat_abs_error_sum"))
+          print("v0.9.25 selected strength:",backtest.get("selected_strength"))
+          print("v0.9.25 validation 2019:",val.get("correct_winners"),"/632; seat error",val.get("seat_abs_error_sum"))
+          print("v0.9.25 PRIMARY 2024:",primary.get("correct_winners"),"/632 =",round(100*primary.get("winner_accuracy",0),2),"%; seat error",primary.get("seat_abs_error_sum"))
           print("Diagnostic MiC 2024:",bm.get("diagnostic_mic_anchor",{}).get("correct_winners"),"/632")
           print("Diagnostic ensemble 2024:",bm.get("diagnostic_equal_provider_ensemble",{}).get("correct_winners"),"/632")
           for provider,best in bm.get("best_expost_by_provider",{}).items():
               mm=best.get("metrics",{})
               print("EX-POST DIAGNOSTIC ONLY",provider,"strength",best.get("strength"),":",mm.get("correct_winners"),"/632; seat error",mm.get("seat_abs_error_sum"))
+          for provider,mm in bm.get("pure_external_geography",{}).items():
+              print("PURE EXTERNAL GEOGRAPHY",provider,":",mm.get("correct_winners"),"/632; seat error",mm.get("seat_abs_error_sum"),"[DIAGNOSTIC]")
           print("GATES -> validation:",expected_val,"85%:",expected_85,"87%:",expected_87,"90%:",expected_90)
           print("Live geography:",mic26)
           print("Technical validation PASSED. Scientific gate outcome is persisted even when negative.")
@@ -253,7 +271,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data and v0.9.24 MRP geography bridge"
+            git commit -m "chore: update UK data and v0.9.25 MRP geography replacement blend"
             git push
           fi
 
