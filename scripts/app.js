@@ -366,7 +366,8 @@ function renderPollTrend(){
   const svg=$('#pollTrendSvg'),empty=$('#pollTrendEmpty'),legend=$('#pollTrendLegend'),move=$('#pollMoveGrid'),stats=$('#pollActivityStats'),pollsters=$('#pollsterActivity'),tooltip=$('#pollTrendTooltip');if(!svg||!legend||!move||!stats||!pollsters)return;
   const series=pollTrendSeries(state.pollTrendRange),parties=['lab','con','ref','ld','green'],focus=state.pollTrendFocus&&parties.includes(state.pollTrendFocus)?state.pollTrendFocus:null;
   if(series.length<2){svg.innerHTML='';empty.style.display='grid';legend.innerHTML='';if(tooltip)tooltip.hidden=true;return;}empty.style.display='none';
-  const W=860,H=360,pad={l:46,r:18,t:18,b:42};const vals=series.flatMap(x=>parties.map(p=>x.values[p]).filter(Number.isFinite));let lo=Math.floor((Math.min(...vals)-2)/5)*5,hi=Math.ceil((Math.max(...vals)+2)/5)*5;lo=Math.max(0,lo);if(hi-lo<20)hi=lo+20;
+  const mobileTrend=window.matchMedia?.('(max-width:760px)')?.matches===true;
+  const W=860,H=mobileTrend?440:360,pad={l:46,r:18,t:18,b:mobileTrend?48:42};svg.setAttribute('viewBox',`0 0 ${W} ${H}`);const vals=series.flatMap(x=>parties.map(p=>x.values[p]).filter(Number.isFinite));let lo=Math.floor((Math.min(...vals)-2)/5)*5,hi=Math.ceil((Math.max(...vals)+2)/5)*5;lo=Math.max(0,lo);if(hi-lo<20)hi=lo+20;
   const x=i=>pad.l+(W-pad.l-pad.r)*(i/(series.length-1)),y=v=>pad.t+(H-pad.t-pad.b)*(1-(v-lo)/(hi-lo));const grid=[];
   for(let v=lo;v<=hi+.001;v+=5){const yy=y(v);grid.push(`<line x1="${pad.l}" x2="${W-pad.r}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" class="poll-trend-gridline"/><text x="${pad.l-9}" y="${(yy+4).toFixed(1)}" class="poll-trend-axis" text-anchor="end">${fmt0(v)}%</text>`);}
   const tickCount=4;for(let i=0;i<=tickCount;i++){const idx=Math.round((series.length-1)*i/tickCount),xx=x(idx);grid.push(`<text x="${xx.toFixed(1)}" y="${H-13}" class="poll-trend-axis poll-trend-date" text-anchor="middle">${new Date(`${series[idx].date}T12:00:00Z`).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit',timeZone:'UTC'})}</text>`);}
@@ -1245,7 +1246,7 @@ function fitFilteredSeats(){
 function fitSelectedSeat(){if(!state.selectedSeat)return;fitMapBBox(bboxForIds([state.selectedSeat]),.55,7);}
 function initMapNavigation(){
   const map=$('#ukMap'),wrap=$('#mapWrap');if(!map||!wrap||map.dataset.navReady==='1')return;map.dataset.navReady='1';
-  wrap.querySelectorAll('[data-mapzoom]').forEach(btn=>btn.addEventListener('click',()=>{const a=btn.dataset.mapzoom;if(a==='in')zoomMapAt(1.55);else if(a==='out')zoomMapAt(1/1.55);else if(a==='filtered')fitFilteredSeats();else resetMapZoom();}));
+  wrap.querySelectorAll('[data-mapzoom]').forEach(btn=>btn.addEventListener('click',()=>{const a=btn.dataset.mapzoom;if(a==='in')zoomMapAt(1.55);else if(a==='out')zoomMapAt(1/1.55);else if(a==='filtered')fitFilteredSeats();else if(a==='clearfilters'){resetSeatFilters();resetMapZoom();}else resetMapZoom();}));
   map.addEventListener('wheel',ev=>{if(!state.mapPaths?.size)return;ev.preventDefault();zoomMapAt(ev.deltaY<0?1.22:1/1.22,ev.clientX,ev.clientY);},{passive:false});
   map.addEventListener('pointerdown',ev=>{const z=mapZoomState.base.w/mapZoomState.view.w;if(z<=1.001)return;if(ev.pointerType==='mouse'&&ev.button!==0)return;mapZoomState.panning=true;mapZoomState.pointerId=ev.pointerId;mapZoomState.startX=ev.clientX;mapZoomState.startY=ev.clientY;mapZoomState.startView={...mapZoomState.view};mapZoomState.moved=false;map.setPointerCapture?.(ev.pointerId);applyMapView();});
   map.addEventListener('pointermove',ev=>{if(!mapZoomState.panning||ev.pointerId!==mapZoomState.pointerId)return;const r=map.getBoundingClientRect();if(!r.width||!r.height)return;const dx=(ev.clientX-mapZoomState.startX)/r.width*mapZoomState.startView.w,dy=(ev.clientY-mapZoomState.startY)/r.height*mapZoomState.startView.h;if(Math.hypot(ev.clientX-mapZoomState.startX,ev.clientY-mapZoomState.startY)>4)mapZoomState.moved=true;mapZoomState.view=mapViewClamp({...mapZoomState.startView,x:mapZoomState.startView.x-dx,y:mapZoomState.startView.y-dy});applyMapView();});
@@ -1491,10 +1492,14 @@ function sortExplorerItems(items,f){
     return uncertainty(a)-uncertainty(b)||a.cm.margin-b.cm.margin;
   });
 }
+function explorerFiltersActive(){
+  return ['seatSearch','seatCountry','seatRegion','seatWinner','seatWinner2024','seatStatus'].some(id=>String($(`#${id}`)?.value||'').trim()!=='');
+}
 function applyExplorerMapFilter(){
-  if(!state.mapPaths?.size)return;const enabled=$('#seatFilterMap')?.checked!==false,ids=state.explorerMatchingIds;
+  if(!state.mapPaths?.size)return;const enabled=$('#seatFilterMap')?.checked!==false,ids=state.explorerMatchingIds,active=enabled&&explorerFiltersActive()&&!!ids&&ids.size<state.mapPaths.size;
   for(const [id,el] of state.mapPaths){const match=!enabled||!ids||ids.has(id);el.classList.toggle('filtered-out',!match);}
-  const fit=$('[data-mapzoom="filtered"]');if(fit){const n=ids?.size||state.mapPaths.size;fit.disabled=n===0;fit.textContent=n<state.mapPaths.size?`Filtrati (${n})`:'Filtrati';}
+  const fit=$('[data-mapzoom="filtered"]');if(fit){const n=ids?.size||state.mapPaths.size;fit.disabled=!active;fit.classList.toggle('is-active',active);fit.textContent=active?`Filtrati (${n})`:'Filtrati';}
+  const clear=$('[data-mapzoom="clearfilters"]');if(clear){clear.hidden=!active;clear.disabled=!active;}
 }
 function resetSeatFilters(){
   for(const id of ['seatSearch','seatCountry','seatRegion','seatWinner','seatWinner2024','seatStatus']){const el=$(`#${id}`);if(el)el.value='';}const sort=$('#seatSort');if(sort)sort.value='uncertainty';const src=$('#seatSource');if(src)src.value='live';state.explorerPage=1;renderMarginals();
@@ -1718,6 +1723,7 @@ function updateEditorialMeta(){
 }
 
 // v0.9.38 — Germany-parity editorial utilities. Frontend only: no statistical inputs or simulations change.
+let mobileNowcastLastScrollY=window.scrollY,mobileNowcastHideTimer=null;
 function updateMobileNowcastSticky(){
   const root=$('#mobileNowcastSticky');if(!root)return;
   const totals=state.mc?.medians||state.central?.totals||{};
@@ -1730,14 +1736,17 @@ function updateMobileNowcastSticky(){
     if(name)name.textContent=p&&PARTY[p]?PARTY[p].short:'—';
     if(seats)seats.textContent=Number.isFinite(Number(n))?fmt0(Number(n)):'—';
   });
-  const hung=$('#mobileHungProb');if(hung)hung.textContent=state.mc?pctFmt((state.mc.hung||0)*100):'…';
   updateEditorialMeta();
   syncMobileNowcastVisibility();
 }
 function syncMobileNowcastVisibility(){
   const root=$('#mobileNowcastSticky'),hero=document.querySelector('.hero');if(!root||!hero)return;
-  const threshold=hero.offsetTop+Math.max(96,hero.offsetHeight*.72);
-  root.classList.toggle('is-visible',window.scrollY>threshold);
+  const y=Math.max(0,window.scrollY||0),threshold=hero.offsetTop+Math.max(96,hero.offsetHeight*.72),mobile=window.matchMedia?.('(max-width:760px)')?.matches!==false;
+  if(!mobile||y<=threshold){root.classList.remove('is-visible');if(mobileNowcastHideTimer){clearTimeout(mobileNowcastHideTimer);mobileNowcastHideTimer=null;}mobileNowcastLastScrollY=y;return;}
+  const delta=y-mobileNowcastLastScrollY;
+  if(delta<=-6){root.classList.add('is-visible');if(mobileNowcastHideTimer)clearTimeout(mobileNowcastHideTimer);mobileNowcastHideTimer=setTimeout(()=>{root.classList.remove('is-visible');mobileNowcastHideTimer=null;},1500);}
+  else if(delta>=6){root.classList.remove('is-visible');if(mobileNowcastHideTimer){clearTimeout(mobileNowcastHideTimer);mobileNowcastHideTimer=null;}}
+  mobileNowcastLastScrollY=y;
 }
 function graphicDimensions(ratio){return ratio==='5:2'?{w:1500,h:600}:{w:1600,h:900};}
 function graphicFilename(kind,ratio='16:9'){const names={projection:'proiezione_seggi',map:'mappa_collegi',trend:'andamento_sondaggi'};return `uk_${names[kind]||kind}_${ratio.replace(':','x')}_${exportDateStamp()}.png`;}
@@ -1842,7 +1851,7 @@ function bindUi(){
   $('#downloadSnapshotJsonBtn')?.addEventListener('click',downloadSnapshotJson);
   initModuleGraphicExports();
   window.addEventListener('scroll',syncMobileNowcastVisibility,{passive:true});
-  window.addEventListener('resize',()=>{syncMobileNowcastVisibility();if(state.central?.seats?.length)renderMarginals();if(state.polls?.length)renderPolls();});
+  window.addEventListener('resize',()=>{syncMobileNowcastVisibility();if(state.central?.seats?.length)renderMarginals();if(state.polls?.length){renderPolls();renderPollTrend();}});
   initMapNavigation();
   $('#detailZoomBtn')?.addEventListener('click',fitSelectedSeat);
   $('#detailCopyBtn')?.addEventListener('click',copySeatDeepLink);

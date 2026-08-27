@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.45 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.46 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,7 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.45.
+- **Interfaccia:** v0.9.46.
 - **Motore statistico di produzione:** **v0.9.29**, congelato durante le modifiche esclusivamente frontend.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche in 50 blocchi asincroni da 1.000; il risultato corrente viene persistito dal workflow delle social card e riutilizzato finché il fingerprint degli input non cambia.
@@ -134,6 +134,7 @@ modello-uk/
 ├── styles-v0943.css
 ├── styles-v0944.css
 ├── styles-v0945.css
+├── styles-v0946.css
 ├── map-performance.css
 ├── scripts/
 │   ├── app.js
@@ -177,6 +178,13 @@ Per una modifica esclusivamente frontend è sufficiente pubblicare i file dell'i
 ## Nota sulla lettura dei risultati
 
 La dashboard è un **nowcast**, non una previsione certa del risultato finale delle prossime elezioni. Il numero centrale dei seggi va letto insieme agli intervalli di probabilità, alla distribuzione Monte Carlo e alla geografia dei collegi. Lo scenario personalizzato dell'utente è uno strumento esplorativo deterministico e non modifica il modello di produzione.
+
+
+## UI v0.9.46
+
+La v0.9.46 interviene sul passaggio mobile dopo la verifica su dispositivo reale. La barra fissa a tre card viene sostituita da un riepilogo molto più sottile, opaco e a tutta larghezza: compare solo quando si torna verso l’alto e si nasconde durante lo scorrimento verso il basso, oltre a scomparire automaticamente dopo una breve pausa. Mostra soltanto i primi due partiti per seggi e la soglia statica di 326 seggi; la probabilità di Parlamento senza maggioranza non compare più nella barra e non produce quindi il passaggio tardivo da “…” a “100%”.
+
+La media storica usa un viewBox più alto sui telefoni, mantenendo invariata la serie e la logica del grafico. La barra della mappa mantiene `−`, livello di zoom, `+`, `Reset` e `Filtrati`; quando esiste un filtro attivo compare inoltre `Rimuovi filtri` (`× Filtri` su mobile), che azzera direttamente dalla mappa i filtri dei collegi e ripristina la vista completa.
 
 ## UI v0.9.45
 
