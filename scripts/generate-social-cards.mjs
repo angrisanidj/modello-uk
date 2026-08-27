@@ -9,6 +9,10 @@ page.on('pageerror', err => console.error('[pageerror]', err.message));
 await page.goto(base, {waitUntil:'domcontentloaded', timeout:120000});
 await page.waitForFunction(() => typeof window.socialCardReady === 'function' && window.socialCardReady(), null, {timeout:300000});
 const token = await page.evaluate(() => window.socialCardVersionToken());
+const monteCarlo = await page.evaluate(() => window.ukMonteCarloSummary?.());
+if (!monteCarlo || monteCarlo.sims !== 50000 || !monteCarlo.fingerprint) throw new Error('Monte Carlo summary unavailable after dashboard calculation');
+await writeFile('data/monte-carlo-current.json', JSON.stringify(monteCarlo));
+console.log(`persisted data/monte-carlo-current.json · ${monteCarlo.sims} simulations · ${monteCarlo.fingerprint}`);
 const outputs = [['landscape','social-card-uk-v2.png'],['instagram','social-card-uk-instagram-v2.png']];
 for (const [format,file] of outputs) {
   const dataUrl = await page.evaluate(async f => window.socialCardDataUrl(f), format);

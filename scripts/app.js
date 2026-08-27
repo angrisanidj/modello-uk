@@ -9,6 +9,7 @@ const CONFIG = {
   geometryLocal: 'data/constituencies-2024.geojson',
   modelParamsLocal: 'data/model-params.json',
   mrpLiteLocal: 'data/mrp-lite-live.json',
+  mcSummaryLocal: 'data/monte-carlo-current.json',
   subnationalLocal: 'data/subnational-polls.json',
   territorialBaselineLocal: 'data/territorial-baseline.json',
   niLocal: 'data/ni-2024.json',
@@ -65,12 +66,14 @@ const SEAT_ORDER=['lab','con','ref','ld','green','snp','pc','rb','sf','dup','all
 
 const BASE_GB = {lab:34.6,con:24.4,ref:14.7,ld:12.6,green:6.6,snp:2.6,pc:0.7,rb:0,other:3.8};
 const MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
-const OFFLINE = new URLSearchParams(location.search).get('offline') === '1';
+const URL_PARAMS = new URLSearchParams(location.search);
+const OFFLINE = URL_PARAMS.get('offline') === '1';
+const MC_BUILD_MODE = OFFLINE || URL_PARAMS.get('social_card_build') === '1' || URL_PARAMS.get('mc_build') === '1';
 
 const state = {
   polls:[], pollSource:'', average:null, latestAverage:null, pollTrendRange:180, pollTrendFocus:null,
   constituencies:[], constituencyIndex:new Map(), byId:new Map(), geometry:null, ni:null,
-  modelParams:null, mrpLite:null, subnational:[], territorialBaseline:null, geographicTargets:null,
+  modelParams:null, mrpLite:null, precomputedMc:null, subnational:[], territorialBaseline:null, geographicTargets:null,
   mapPaths:new Map(), selectedPath:null,
   central:null, mc:null, representative:null, customScenario:null, selectedSeat:null, mapMode:'central', coalition:new Set(), explorerPage:1, explorerPageSize:25, explorerMatchingIds:null, pollPage:1, pollPageSize:25, hemiFocus:null,
 };
@@ -314,14 +317,14 @@ function renderPollTrend(){
   for(let v=lo;v<=hi+.001;v+=5){const yy=y(v);grid.push(`<line x1="${pad.l}" x2="${W-pad.r}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" class="poll-trend-gridline"/><text x="${pad.l-9}" y="${(yy+4).toFixed(1)}" class="poll-trend-axis" text-anchor="end">${fmt0(v)}%</text>`);}
   const tickCount=4;for(let i=0;i<=tickCount;i++){const idx=Math.round((series.length-1)*i/tickCount),xx=x(idx);grid.push(`<text x="${xx.toFixed(1)}" y="${H-13}" class="poll-trend-axis poll-trend-date" text-anchor="middle">${new Date(`${series[idx].date}T12:00:00Z`).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit',timeZone:'UTC'})}</text>`);}
   const lines=parties.map(p=>{const pts=series.map((d,i)=>`${x(i).toFixed(1)},${y(d.values[p]).toFixed(1)}`).join(' '),last=series[series.length-1],cls=focus?(focus===p?'is-focused':'is-dimmed'):'';return `<polyline points="${pts}" fill="none" stroke="${PARTY[p].color}" stroke-width="${focus===p?4:3}" stroke-linecap="round" stroke-linejoin="round" class="poll-trend-line ${cls}" data-trend-party="${p}" tabindex="0"><title>${PARTY[p].name}</title></polyline><circle cx="${x(series.length-1).toFixed(1)}" cy="${y(last.values[p]).toFixed(1)}" r="${focus===p?5.2:4.2}" fill="${PARTY[p].color}" class="poll-trend-end ${cls}" data-trend-party="${p}"><title>${PARTY[p].name}: ${pctFmt(last.values[p])}</title></circle>`;}).join('');
-  svg.innerHTML=`<g>${grid.join('')}</g><line x1="${pad.l}" x2="${W-pad.r}" y1="${H-pad.b}" y2="${H-pad.b}" class="poll-trend-baseline"/>${lines}`;
+  svg.innerHTML=`<g>${grid.join('')}</g><line x1="${pad.l}" x2="${W-pad.r}" y1="${H-pad.b}" y2="${H-pad.b}" class="poll-trend-baseline"/><line class="poll-trend-crosshair" x1="${pad.l}" x2="${pad.l}" y1="${pad.t}" y2="${H-pad.b}" hidden/>${lines}`;
   legend.innerHTML=parties.map(p=>`<button type="button" class="poll-trend-legend-btn ${focus===p?'active':focus?'muted':''}" data-trend-party="${p}" aria-pressed="${focus===p?'true':'false'}"><i style="background:${PARTY[p].color}"></i><strong>${PARTY[p].short}</strong><b>${pctFmt(state.average.values[p])}</b></button>`).join('');
   const selectParty=p=>{state.pollTrendFocus=state.pollTrendFocus===p?null:p;renderPollTrend();};
   legend.querySelectorAll('[data-trend-party]').forEach(el=>el.addEventListener('click',()=>selectParty(el.dataset.trendParty)));
   svg.onclick=e=>{const el=e.target.closest?.('[data-trend-party]');if(el)selectParty(el.dataset.trendParty);};
   svg.onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target?.dataset?.trendParty){e.preventDefault();selectParty(e.target.dataset.trendParty);}};
-  svg.onpointermove=e=>{if(!tooltip)return;const rect=svg.getBoundingClientRect(),wrap=svg.parentElement.getBoundingClientRect(),sx=(e.clientX-rect.left)/Math.max(1,rect.width)*W,raw=(sx-pad.l)/(W-pad.l-pad.r),idx=Math.round(clamp(raw,0,1)*(series.length-1)),d=series[idx],shown=focus?[focus]:parties;tooltip.innerHTML=`<strong>${formatDate(d.date)}</strong>${shown.map(p=>`<span><i style="background:${PARTY[p].color}"></i>${PARTY[p].short}<b>${pctFmt(d.values[p])}</b></span>`).join('')}`;tooltip.hidden=false;const left=clamp(e.clientX-wrap.left+14,8,Math.max(8,wrap.width-188)),top=clamp(e.clientY-wrap.top-18,8,Math.max(8,wrap.height-140));tooltip.style.left=`${left}px`;tooltip.style.top=`${top}px`;};
-  svg.onpointerleave=()=>{if(tooltip)tooltip.hidden=true;};
+  svg.onpointermove=e=>{if(!tooltip)return;const rect=svg.getBoundingClientRect(),wrap=svg.parentElement.getBoundingClientRect(),sx=(e.clientX-rect.left)/Math.max(1,rect.width)*W,raw=(sx-pad.l)/(W-pad.l-pad.r),idx=Math.round(clamp(raw,0,1)*(series.length-1)),d=series[idx],shown=focus?[focus]:parties,cross=svg.querySelector('.poll-trend-crosshair'),cx=x(idx);if(cross){cross.hidden=false;cross.setAttribute('x1',cx.toFixed(1));cross.setAttribute('x2',cx.toFixed(1));}tooltip.innerHTML=`<strong>${formatDate(d.date)}</strong>${shown.map(p=>`<span><i style="background:${PARTY[p].color}"></i>${PARTY[p].short}<b>${pctFmt(d.values[p])}</b></span>`).join('')}`;tooltip.hidden=false;const left=clamp(e.clientX-wrap.left+14,8,Math.max(8,wrap.width-188)),top=clamp(e.clientY-wrap.top-18,8,Math.max(8,wrap.height-140));tooltip.style.left=`${left}px`;tooltip.style.top=`${top}px`;};
+  svg.onpointerleave=()=>{if(tooltip)tooltip.hidden=true;const cross=svg.querySelector('.poll-trend-crosshair');if(cross)cross.hidden=true;};
   const first=series[0],last=series[series.length-1];$('#pollTrendMeta').textContent=`${formatDate(first.date)} → ${formatDate(last.date)} · ${series.length} punti · stessa ponderazione della media corrente`;
   move.innerHTML=parties.map(p=>{const d7=historicalDelta(7,p),d30=historicalDelta(30,p),cls=v=>!Number.isFinite(v)?'flat':v>.05?'up':v<-.05?'down':'flat';return `<div class="poll-move-row"><span><i class="party-dot" style="background:${PARTY[p].color}"></i><strong>${PARTY[p].short}</strong></span><b>${pctFmt(state.average.values[p])}</b><em class="${cls(d7)}">7g ${signedPp(d7)}</em><em class="${cls(d30)}">30g ${signedPp(d30)}</em></div>`;}).join('');
   const latest=new Date(`${state.polls[0].date}T12:00:00Z`),cut7=addDaysUTC(latest,-7),cut30=addDaysUTC(latest,-30),recent7=state.polls.filter(p=>new Date(`${p.date}T12:00:00Z`)>=cut7),recent30=state.polls.filter(p=>new Date(`${p.date}T12:00:00Z`)>=cut30),uniq=new Set(recent30.map(p=>p.pollster).filter(Boolean)),sample30=recent30.reduce((n,p)=>n+(Number(p.sample)||0),0);
@@ -688,6 +691,9 @@ function buildTransferCentral(target,geo){
 }
 
 const GENERAL_ELECTION_2024='2024-07-04';
+const mobileDenseList=()=>window.matchMedia?.('(max-width:760px)')?.matches===true;
+function explorerPageSize(){return mobileDenseList()?10:state.explorerPageSize;}
+function pollPageSize(){return mobileDenseList()?10:state.pollPageSize;}
 function postElectionPolls(){return [...state.polls].filter(p=>String(p.date||'')>=GENERAL_ELECTION_2024).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.fieldwork||'').localeCompare(String(a.fieldwork||'')));}
 function populatePollTableFilters(){
   const base=postElectionPolls(),fill=(id,values,label)=>{const el=$(id);if(!el)return;const cur=el.value;el.innerHTML=`<option value="">${label}</option>`+values.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');if(values.includes(cur))el.value=cur;};
@@ -704,7 +710,7 @@ function renderPolls(){
   $('#pollAverageMeta').textContent=`${state.average.effective} rilevazioni con peso significativo · emivita ${CONFIG.halfLifeDays} giorni`;
   const latest=state.polls[0]; if(latest){$('#kpiLastPoll').textContent=formatDate(latest.date);$('#kpiLastPollMeta').textContent=`${latest.pollster} · ${latest.area} · n=${fmt0(latest.sample)}`;}
   $('#dataBadge').textContent=`Sondaggi: ${state.pollSource}`;updateEditorialMeta();populatePollTableFilters();
-  const filtered=pollTableFiltered(),pages=Math.max(1,Math.ceil(filtered.length/state.pollPageSize));state.pollPage=clamp(state.pollPage||1,1,pages);const start=(state.pollPage-1)*state.pollPageSize,visible=filtered.slice(start,start+state.pollPageSize);
+  const filtered=pollTableFiltered(),pageSize=pollPageSize(),pages=Math.max(1,Math.ceil(filtered.length/pageSize));state.pollPage=clamp(state.pollPage||1,1,pages);const start=(state.pollPage-1)*pageSize,visible=filtered.slice(start,start+pageSize);
   const rows=visible.map(p=>`<tr><td>${escapeHtml(p.fieldwork||formatDate(p.date))}</td><td><strong>${escapeHtml(p.pollster)}</strong></td><td>${escapeHtml(p.client||'—')}</td><td>${escapeHtml(p.area)}</td><td>${fmt0(p.sample)}</td>${['lab','con','ref','ld','green','snp','pc','rb'].map(k=>`<td>${Number.isFinite(p[k])?fmt1(p[k]):'—'}</td>`).join('')}</tr>`).join('');
   $('#pollTableBody').innerHTML=rows||'<tr><td colspan="13"><div class="empty-small">Nessuna rilevazione corrisponde ai filtri.</div></td></tr>';
   const pollMobile=$('#pollMobileList');if(pollMobile)pollMobile.innerHTML=visible.length?visible.map(p=>{const vals=['lab','con','ref','ld','green','snp','pc','rb'].filter(k=>Number.isFinite(p[k]));return `<article class="poll-mobile-card"><div class="poll-mobile-head"><div><strong>${escapeHtml(p.pollster||'Istituto non indicato')}</strong><span>${escapeHtml(p.fieldwork||formatDate(p.date))}</span></div><b>${escapeHtml(p.area||'—')}</b></div><div class="poll-mobile-meta"><span>${escapeHtml(p.client||'Senza committente indicato')}</span><span>Campione <strong>${fmt0(p.sample)}</strong></span></div><div class="poll-mobile-values">${vals.map(k=>`<span style="--party:${PARTY[k]?.color||PARTY.other.color}"><i></i><b>${PARTY[k]?.short||k}</b><strong>${fmt1(p[k])}</strong></span>`).join('')}</div></article>`;}).join(''):'<div class="empty-small mobile-empty">Nessuna rilevazione corrisponde ai filtri.</div>';
@@ -802,7 +808,31 @@ function logistic(rng){
 function normalApprox(rng){
   return (rng()+rng()+rng()+rng()+rng()+rng()-3)*Math.SQRT2;
 }
+const stableModelTokenCache=new WeakMap();
+function stableModelToken(obj,fallback){
+  if(!obj||typeof obj!=='object')return fallback;
+  if(stableModelTokenCache.has(obj))return stableModelTokenCache.get(obj);
+  const raw=JSON.stringify(obj,(key,value)=>/^(generated_at|updated_at|timestamp|build_time)$/i.test(key)?undefined:value);
+  const token=String(hashString(raw||fallback));stableModelTokenCache.set(obj,token);return token;
+}
 function fingerprint(){
+  const p=state.polls.slice(0,40)
+    .map(x=>`${x.date}|${x.pollster}|${x.lab}|${x.con}|${x.ref}|${x.ld}|${x.green}|${x.rb}`)
+    .join(';');
+  const sp=state.subnational.slice(0,24)
+    .map(x=>`${x.country}|${x.date}|${x.pollster}|${x.lab}|${x.con}|${x.ref}|${x.snp}|${x.pc}`)
+    .join(';');
+  const ni=stableModelToken(state.ni,'ni-fallback');
+  const mrp=stableModelToken(state.mrpLite,'mrp-fallback');
+  const cal=state.modelParams
+    ? `${state.modelParams.version||'model'}:${state.modelParams.model_type||''}:${state.modelParams.rake_strength??''}`
+    : 'fallback';
+  return `${CONFIG.cacheVersion}:${hashString(p+'|'+sp+'|'+state.constituencies.length+'|'+cal+'|'+ni+'|'+mrp)}`;
+}
+function simulationSeedKey(){
+  // Preserve the v0.9.43 Monte Carlo seed inputs whenever a new simulation is
+  // genuinely required. Caching uses the stable content fingerprint above,
+  // while the statistical draw sequence remains unchanged from the baseline.
   const p=state.polls.slice(0,40)
     .map(x=>`${x.date}|${x.pollster}|${x.lab}|${x.con}|${x.ref}|${x.ld}|${x.green}|${x.rb}`)
     .join(';');
@@ -828,6 +858,24 @@ function loadMcCache(){
   return null;
 }
 
+let publishedMcRefreshTimer=null,publishedMcRefreshAttempts=0;
+function applyMonteCarloSummary(summary){
+  state.mc=summary;saveMcCache(summary);renderMc();setMonteCarloPending(false);applyMapColors();return summary;
+}
+function waitForPublishedMonteCarlo(fp){
+  if(publishedMcRefreshTimer)return;
+  publishedMcRefreshAttempts=0;
+  const poll=async()=>{
+    publishedMcRefreshTimer=null;publishedMcRefreshAttempts++;
+    try{
+      const fresh=await fetchJson(`${CONFIG.mcSummaryLocal}?v=${Date.now()}`,5000);
+      if(fresh?.fingerprint===fp&&Number(fresh.sims)===CONFIG.mcSims){state.precomputedMc=fresh;applyMonteCarloSummary(fresh);$('#mcStatus').textContent='Completato';return;}
+    }catch(_){}
+    if(publishedMcRefreshAttempts<24)publishedMcRefreshTimer=setTimeout(poll,7500);
+  };
+  publishedMcRefreshTimer=setTimeout(poll,5000);
+}
+
 function prepareSeatModel(){
   const seats=state.central.seats,target=state.central.target,geo=state.central.geographic;
   const regions=[...new Set(seats.map(s=>s.isNorthernIreland?'Northern Ireland':(s.modelZone||s.region||s.country||'Other')))],regionIndex=new Map(regions.map((r,i)=>[r,i]));
@@ -851,24 +899,29 @@ function prepareSeatModel(){
   return {models,regions,target};
 }
 
-async function runMonteCarlo(force=false){
+let mcRunPromise=null,mcRunFingerprint=null;
+async function runMonteCarlo(){
   if(!state.central?.seats?.length)return;
+  const fp=fingerprint();
+  if(state.mc?.fingerprint===fp)return state.mc;
+  const precomputed=state.precomputedMc;
+  if(precomputed?.fingerprint===fp&&Number(precomputed.sims)===CONFIG.mcSims)return applyMonteCarloSummary(precomputed);
+  const cached=loadMcCache();
+  if(cached?.fingerprint===fp)return applyMonteCarloSummary(cached);
+  // Public browsers never launch a duplicate 50k run. The single authoritative
+  // calculation is performed by the post-update social-card workflow and then
+  // persisted to data/monte-carlo-current.json. While that short build is in
+  // progress, the page polls for the published summary instead of recomputing it.
+  if(!MC_BUILD_MODE){setMonteCarloPending(true);$('#mcStatus').textContent='Aggiornamento Monte Carlo in corso';waitForPublishedMonteCarlo(fp);return null;}
+  if(mcRunPromise&&mcRunFingerprint===fp)return mcRunPromise;
+  mcRunFingerprint=fp;
+  mcRunPromise=(async()=>{
   setMonteCarloPending(true);
-  if(!force){
-    const cached=loadMcCache();
-    if(cached){
-      state.mc=cached;
-      renderMc();
-      setMonteCarloPending(false);
-      applyMapColors();
-      return;
-    }
-  }
   const {models,regions,target}=prepareSeatModel(),P=SEAT_ORDER.length,N=CONFIG.mcSims,nSeats=models.length;
-  const partyIndex=new Map(SEAT_ORDER.map((p,i)=>[p,i])),dists=SEAT_ORDER.map(()=>new Uint16Array(N)),wins=new Uint32Array(nSeats*P),rng=mulberry32(hashString(fingerprint()));
+  const partyIndex=new Map(SEAT_ORDER.map((p,i)=>[p,i])),dists=SEAT_ORDER.map(()=>new Uint16Array(N)),wins=new Uint32Array(nSeats*P),rng=mulberry32(hashString(simulationSeedKey()));
   let hung=0,labMaj=0,conMaj=0,refMaj=0,labWorkMaj=0,conWorkMaj=0,refWorkMaj=0;
   const workThresholds=new Uint16Array(N),largestCounts=Object.fromEntries(SEAT_ORDER.map(p=>[p,0]));
-  $('#mcStatus').textContent='Calcolo in corso';$('#mcProgress').value=0;const centreAlreadyTransformed=mrpLiteActive()||partialRakeModelActive()||transferModelActive();
+  $('#mcStatus').textContent='50 blocchi asincroni da 1.000';$('#mcProgress').value=0;const centreAlreadyTransformed=mrpLiteActive()||partialRakeModelActive()||transferModelActive();
   for(let start=0;start<N;start+=CONFIG.mcBatch){
     const end=Math.min(N,start+CONFIG.mcBatch);
     for(let sim=start;sim<end;sim++){
@@ -897,15 +950,17 @@ async function runMonteCarlo(force=false){
   for(let pi=0;pi<P;pi++){const p=SEAT_ORDER[pi],arr=Array.from(dists[pi]).sort((a,b)=>a-b);medians[p]=quantileSorted(arr,.5);intervals[p]=[quantileSorted(arr,.1),quantileSorted(arr,.9)];distPlain[p]=Array.from(dists[pi]);}
   const seatProb={};for(let si=0;si<nSeats;si++){const obj={};for(let pi=0;pi<P;pi++)obj[SEAT_ORDER[pi]]=wins[si*P+pi]/N;seatProb[models[si].id]=obj;}
   const workArr=Array.from(workThresholds).sort((a,b)=>a-b);
-  const summary={sims:N,medians,intervals,labMaj:labMaj/N,conMaj:conMaj/N,refMaj:refMaj/N,labWorkMaj:labWorkMaj/N,conWorkMaj:conWorkMaj/N,refWorkMaj:refWorkMaj/N,workingThreshold:quantileSorted(workArr,.5),hung:hung/N,largest:Object.fromEntries(SEAT_ORDER.map(p=>[p,largestCounts[p]/N])),seatProb,dist:distPlain,fingerprint:fingerprint()};
+  const summary={sims:N,medians,intervals,labMaj:labMaj/N,conMaj:conMaj/N,refMaj:refMaj/N,labWorkMaj:labWorkMaj/N,conWorkMaj:conWorkMaj/N,refWorkMaj:refWorkMaj/N,workingThreshold:quantileSorted(workArr,.5),hung:hung/N,largest:Object.fromEntries(SEAT_ORDER.map(p=>[p,largestCounts[p]/N])),seatProb,dist:distPlain,fingerprint:fp};
   state.mc=summary;
   saveMcCache(summary);
   $('#mcStatus').textContent='Completato';
   renderMc();
   setMonteCarloPending(false);
   applyMapColors();
+  return summary;
+  })();
+  try{return await mcRunPromise;}finally{mcRunPromise=null;mcRunFingerprint=null;}
 }
-
 function quantileSorted(arr,q){
   const i=Math.floor((arr.length-1)*q);
   return arr[i];
@@ -1397,7 +1452,7 @@ function renderMarginals(){
   const body=$('#marginalTableBody'),meta=$('#marginalMeta');if(!body||!state.central?.seats?.length)return;populateSeatExplorerFilters();
   const f=explorerFilterValues(),all=state.central.seats.map(seat=>seatExplorerItem(seat,f.source)),filtered=sortExplorerItems(all.filter(x=>itemPassesExplorer(x,f)),f);
   state.explorerMatchingIds=new Set(filtered.map(x=>x.seat.id));applyExplorerMapFilter();
-  const pages=Math.max(1,Math.ceil(filtered.length/state.explorerPageSize));state.explorerPage=clamp(state.explorerPage||1,1,pages);const start=(state.explorerPage-1)*state.explorerPageSize,visible=filtered.slice(start,start+state.explorerPageSize);
+  const pageSize=explorerPageSize(),pages=Math.max(1,Math.ceil(filtered.length/pageSize));state.explorerPage=clamp(state.explorerPage||1,1,pages);const start=(state.explorerPage-1)*pageSize,visible=filtered.slice(start,start+pageSize);
   const count=$('#seatExplorerCount');if(count)count.textContent=`${fmt0(filtered.length)} di ${fmt0(all.length)} collegi`;
   if(meta)meta.textContent=f.source==='custom'?'Filtri applicati allo scenario utente; le probabilità indicate restano quelle del Monte Carlo corrente.':'Cerca, filtra e ordina ogni collegio del nowcast corrente; l’incertezza è quella delle 50.000 simulazioni.';
   body.innerHTML=visible.length?visible.map(x=>{const prev=x.seat.winner2024||'other';return `<tr data-marginal-seat="${escapeHtml(x.seat.id)}"><td><strong>${escapeHtml(x.seat.name)}</strong><small>${escapeHtml(x.seat.id||'')}</small></td><td>${escapeHtml([x.seat.region,x.seat.country].filter(Boolean).map(regionalDisplayName).join(' · ')||'—')}</td><td><span class="party-pill"><i style="background:${PARTY[prev]?.color||PARTY.other.color}"></i>${PARTY[prev]?.short||'Altro'}</span></td><td><span class="party-pill ${x.changed?'changed':''}"><i style="background:${PARTY[x.projected]?.color||PARTY.other.color}"></i>${PARTY[x.projected]?.short||'Altro'}</span></td><td>${fmt1(x.cm.margin)} p.p.</td><td>${x.bestProb==null?'—':pctFmt(x.bestProb*100)}</td></tr>`;}).join(''):'<tr><td colspan="6"><div class="empty-small">Nessun collegio corrisponde ai filtri selezionati.</div></td></tr>';
@@ -1584,6 +1639,7 @@ function socialCardReady(){return !!(state.average?.values&&state.central?.seats
 window.socialCardReady=socialCardReady;
 window.socialCardVersionToken=socialCardVersionToken;
 window.socialCardDataUrl=async(format='landscape')=>(await buildModelCardCanvas(format)).toDataURL('image/png');
+window.ukMonteCarloSummary=()=>state.mc?JSON.parse(JSON.stringify(state.mc)):null;
 async function downloadModelCard(format='landscape'){const c=await buildModelCardCanvas(format),b=await canvasBlob(c);downloadBlob(b,`uk_nowcast_${format==='instagram'?'instagram_4x5':'social_16x9'}_${exportDateStamp()}.png`);return b;}
 async function shareModelCard(format='landscape',trigger=null){const c=await buildModelCardCanvas(format),b=await canvasBlob(c),file=new File([b],`uk_nowcast_${format==='instagram'?'instagram_4x5':'social_16x9'}_${exportDateStamp()}.png`,{type:'image/png'}),text=modelShareText(),url=currentSiteUrl();if(navigator.share&&navigator.canShare?.({files:[file]})){await navigator.share({files:[file],title:'Elezioni nel Regno Unito — Nowcast',text:`${text}\n\n${url}`});return true;}downloadBlob(b,file.name);try{await navigator.clipboard?.writeText(`${text}\n\n${url}`);}catch(_){}if(trigger)flashButton(trigger,'PNG + testo copiato');return false;}
 function flashButton(btn,label='Fatto ✓'){if(!btn)return;const oldHtml=btn.innerHTML,oldTitle=btn.title,oldAria=btn.getAttribute('aria-label');if(btn.classList.contains('share-btn')){btn.classList.add('copied');btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';btn.title='Copiato';btn.setAttribute('aria-label','Copiato');}else{btn.textContent=label;}setTimeout(()=>{btn.innerHTML=oldHtml;btn.classList.remove('copied');btn.title=oldTitle;if(oldAria)btn.setAttribute('aria-label',oldAria);else btn.removeAttribute('aria-label');},1600);}
@@ -1730,7 +1786,7 @@ function bindUi(){
   $('#downloadSnapshotJsonBtn')?.addEventListener('click',downloadSnapshotJson);
   initModuleGraphicExports();
   window.addEventListener('scroll',syncMobileNowcastVisibility,{passive:true});
-  window.addEventListener('resize',syncMobileNowcastVisibility);
+  window.addEventListener('resize',()=>{syncMobileNowcastVisibility();if(state.central?.seats?.length)renderMarginals();if(state.polls?.length)renderPolls();});
   initMapNavigation();
   $('#detailZoomBtn')?.addEventListener('click',fitSelectedSeat);
   $('#detailCopyBtn')?.addEventListener('click',copySeatDeepLink);
@@ -1779,16 +1835,15 @@ async function init(force=false){
   setStatus('Caricamento dati…','loading');
   $('#refreshBtn').disabled=true;
   try{
-    if(force){try{localStorage.removeItem(mcCacheKey());}catch(_){ }}
-    const [polls,constituencies,geometry,ni,modelParams,mrpLite,subnational,territorialBaseline]=await Promise.all([
+    const [polls,constituencies,geometry,ni,modelParams,mrpLite,precomputedMc,subnational,territorialBaseline]=await Promise.all([
       loadPolls(),loadConstituencies(),loadGeometry(),fetchJson(CONFIG.niLocal,5000).catch(()=>null),
-      loadModelParams(),fetchJson(CONFIG.mrpLiteLocal,8000).catch(()=>null),loadSubnationalPolls(),loadTerritorialBaseline()
+      loadModelParams(),fetchJson(CONFIG.mrpLiteLocal,8000).catch(()=>null),fetchJson(CONFIG.mcSummaryLocal,5000).catch(()=>null),loadSubnationalPolls(),loadTerritorialBaseline()
     ]);
     state.polls=polls;state.average=calculateAverage(polls);state.latestAverage=latestPollAverage(polls);
     state.constituencies=constituencies;state.constituencyIndex=new Map(constituencies.map(c=>[c.id,c]));
-    state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;state.mrpLite=mrpLite;state.subnational=subnational;state.territorialBaseline=territorialBaseline;
+    state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;state.mrpLite=mrpLite;state.precomputedMc=precomputedMc;state.subnational=subnational;state.territorialBaseline=territorialBaseline;
     renderPolls();renderPollTrend();renderCoalitionButtons();
-    if(constituencies.length===650){buildCentral();renderScenarioInputs(true);renderCustomScenario();renderCentral();renderMap();restoreSeatDeepLink();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Dati: 650 collegi · sondaggi: ${state.pollSource} · rilevazioni subnazionali: ${state.subnational.length} · Irlanda del Nord: ${niModuleReady()?'18 collegi simulati':'base fissa'}`;await runMonteCarlo(force);}else{
+    if(constituencies.length===650){buildCentral();renderScenarioInputs(true);renderCustomScenario();renderCentral();renderMap();restoreSeatDeepLink();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Dati: 650 collegi · sondaggi: ${state.pollSource} · rilevazioni subnazionali: ${state.subnational.length} · Irlanda del Nord: ${niModuleReady()?'18 collegi simulati':'base fissa'}`;await runMonteCarlo();}else{
       setStatus('Sondaggi caricati · manca la base territoriale','error');showError('La dashboard nazionale è attiva, ma i 650 risultati di collegio non sono ancora nello archivio locale e il browser non è riuscito a recuperarli direttamente. Esegui la GitHub Action “Update UK election data”: genererà automaticamente baseline e geometrie.');renderMap();
     }
   }catch(err){console.error(err);setStatus('Errore di caricamento','error');showError(`Errore: ${err.message||err}`);}finally{$('#refreshBtn').disabled=false;}
