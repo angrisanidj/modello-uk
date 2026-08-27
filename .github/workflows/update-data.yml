@@ -36,12 +36,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Self-test shadow MRP update watcher
+        run: python tools/check_mrp_updates.py --self-test
+
       - name: Restore Democracy Club source cache
         uses: actions/cache@v4
         with:
           path: .cache/democracy-club
-          key: dc-v0925-${{ runner.os }}-${{ hashFiles('tools/build_mrp_lite.py') }}
+          key: dc-v0926-${{ runner.os }}-${{ hashFiles('tools/build_mrp_lite.py') }}
           restore-keys: |
+            dc-v0926-${{ runner.os }}-
             dc-v0925-${{ runner.os }}-
             dc-v0924-${{ runner.os }}-
             dc-v0923-${{ runner.os }}-
@@ -51,8 +55,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/mrp-bridge
-          key: mrp-bridge-v0925-${{ runner.os }}-${{ hashFiles('tools/build_mrp_geography_bridge.py') }}
+          key: mrp-bridge-v0926-${{ runner.os }}-${{ hashFiles('tools/build_mrp_geography_bridge.py') }}
           restore-keys: |
+            mrp-bridge-v0926-${{ runner.os }}-
             mrp-bridge-v0925-${{ runner.os }}-
             mrp-bridge-v0924-${{ runner.os }}-
             mrp-bridge-v0923-${{ runner.os }}-
@@ -60,19 +65,34 @@ jobs:
       - name: Update election data and territorial inputs
         run: python tools/build_data.py
 
+      - name: Shadow-check for newer Westminster MRP
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        env:
+          MRP_ALERT_TO: ${{ secrets.MRP_ALERT_TO }}
+          MRP_ALERT_SMTP_USERNAME: ${{ secrets.MRP_ALERT_SMTP_USERNAME }}
+          MRP_ALERT_SMTP_PASSWORD: ${{ secrets.MRP_ALERT_SMTP_PASSWORD }}
+          MRP_ALERT_SMTP_HOST: ${{ secrets.MRP_ALERT_SMTP_HOST }}
+          MRP_ALERT_SMTP_PORT: ${{ secrets.MRP_ALERT_SMTP_PORT }}
+          MRP_ALERT_FROM: ${{ secrets.MRP_ALERT_FROM }}
+          MRP_ALERT_SUBJECT_PREFIX: "[modello-UK]"
+        run: python tools/check_mrp_updates.py --state data/mrp-update-watch.json
+
       - name: Build Northern Ireland module
         run: python tools/build_ni.py
 
       - name: Calibrate legacy partial-raking benchmark
         run: python tools/build_backtest.py
 
-      - name: Verify v0.9.25 source bundle
+      - name: Verify v0.9.26 source bundle
         run: |
           python - <<'PY'
           from pathlib import Path
 
           core=Path("tools/build_mrp_lite.py").read_text(encoding="utf-8")
           bridge=Path("tools/build_mrp_geography_bridge.py").read_text(encoding="utf-8")
+          watcher=Path("tools/check_mrp_updates.py").read_text(encoding="utf-8")
+          watch_state=Path("data/mrp-update-watch.json").read_text(encoding="utf-8")
           workflow=Path(".github/workflows/update-data.yml").read_text(encoding="utf-8")
 
           required_core=[
@@ -81,11 +101,13 @@ jobs:
               'V0922_HOTFIX_DC_IO="retry-memory-disk-cache"',
           ]
           required_bridge=[
-              'V0925_BRIDGE="logspace-internal-to-external-geography-replacement"',
-              'V0925_SELECTION="yougov-2019-only-blend-selection"',
-              'V0925_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-relative-shift"',
-              'V0925_BASELINE="reconstruct-v0915-local-strength-both-elections"',
-              'V0925_DIAGNOSTICS="full-zero-to-pure-external-blend-sweep-2024"',
+              'V0926_BRIDGE="logspace-internal-to-external-geography-replacement"',
+              'V0926_SELECTION="yougov-2019-only-blend-selection"',
+              'V0926_LIVE_EVOLUTION="yougov24-anchor-plus-mic24-to-mic26-relative-shift"',
+              'V0926_BASELINE="reconstruct-v0915-local-strength-both-elections"',
+              'V0926_DIAGNOSTICS="full-zero-to-pure-external-blend-sweep-2024"',
+              'V0926_LIVE_CANDIDATE="latest-mic26-required-green-complete-plus-dynamic-internal-topline"',
+              'V0926_MRP_SOURCE="more-in-common-2026-07-19-fieldwork-2026-06-05-to-2026-06-28"',
               'YOUGOV_2019_URL=',
               'YOUGOV_2024_URL=',
               'MIC_2024_URL=',
@@ -94,22 +116,40 @@ jobs:
           ]
           for needle in required_core:
               if needle not in core:
-                  raise SystemExit(f"ERROR: v0.9.25 requires HOTFIX3 core; missing {needle!r}")
+                  raise SystemExit(f"ERROR: v0.9.26 requires HOTFIX3 core; missing {needle!r}")
           for needle in required_bridge:
               if needle not in bridge:
-                  raise SystemExit(f"ERROR: mixed/incomplete v0.9.25 bridge; missing {needle!r}")
-          if "Build v0.9.25 MRP geography replacement/blend" not in workflow:
-              raise SystemExit("ERROR: workflow is not the v0.9.25 geography-replacement/blend workflow")
-          print("v0.9.25 source bundle preflight: PASSED")
+                  raise SystemExit(f"ERROR: mixed/incomplete v0.9.26 bridge; missing {needle!r}")
+          required_watcher=[
+              'V0926_MRP_WATCHER = "shadow-official-provider-discovery-one-shot-email"',
+              'V0926_MRP_WATCHER_PROVIDERS = "more-in-common-yougov-focaldata"',
+              'V0926_MRP_WATCHER_POLICY = "detect-and-notify-never-auto-adopt"',
+          ]
+          for needle in required_watcher:
+              if needle not in watcher:
+                  raise SystemExit(f"ERROR: mixed/incomplete v0.9.26 MRP watcher; missing {needle!r}")
+          for needle in (
+              '"mode": "shadow_only"',
+              '"baseline_date": "2026-07-19"',
+              '"baseline_date": "2025-09-26"',
+              '"baseline_date": "2025-02-03"',
+          ):
+              if needle not in watch_state:
+                  raise SystemExit(f"ERROR: MRP watcher state is missing baseline marker {needle!r}")
+          if "Build v0.9.26 MRP geography replacement/blend" not in workflow:
+              raise SystemExit("ERROR: workflow is not the v0.9.26 geography-replacement/blend workflow")
+          if "Shadow-check for newer Westminster MRP" not in workflow:
+              raise SystemExit("ERROR: v0.9.26 shadow MRP watcher step missing from workflow")
+          print("v0.9.26 source bundle + shadow MRP watcher preflight: PASSED")
           PY
 
-      - name: Self-test v0.9.25 geography replacement/blend
+      - name: Self-test v0.9.26 geography replacement/blend
         run: python tools/build_mrp_geography_bridge.py --self-test
 
-      - name: Build v0.9.25 MRP geography replacement/blend
+      - name: Build v0.9.26 MRP geography replacement/blend
         run: python tools/build_mrp_geography_bridge.py
 
-      - name: Validate v0.9.25 research safeguards
+      - name: Validate v0.9.26 backtest and live-candidate safeguards
         run: |
           python - <<'PY'
           import json
@@ -118,19 +158,19 @@ jobs:
           def load(path):
               return json.loads(Path(path).read_text(encoding="utf-8"))
 
-          backtest=load("data/backtest-v0925-geography-bridge.json")
-          diagnostic=load("data/mrp-geography-bridge-v0925.json")
-          live=load("data/mrp-lite-live-v0925-shadow.json")
-          integrity=load("data/bes-integrity-v0925.json")
+          backtest=load("data/backtest-v0926-geography-bridge.json")
+          diagnostic=load("data/mrp-geography-bridge-v0926.json")
+          live=load("data/mrp-lite-live-v0926-candidate.json")
+          integrity=load("data/bes-integrity-v0926.json")
 
-          if backtest.get("version")!="uk-v0925-mrp-geography-bridge" or backtest.get("status")!="ok":
-              raise SystemExit(f"ERROR: invalid v0.9.25 backtest {backtest.get('version')} {backtest.get('error')}")
-          if diagnostic.get("version")!="uk-v0925-mrp-geography-bridge" or diagnostic.get("status")!="ok":
-              raise SystemExit(f"ERROR: invalid v0.9.25 diagnostic {diagnostic.get('version')} {diagnostic.get('error')}")
-          if live.get("version")!="uk-v0925-mrp-geography-bridge-live-shadow" or live.get("status")!="ok":
-              raise SystemExit(f"ERROR: invalid v0.9.25 live shadow {live.get('version')} {live.get('error')}")
+          if backtest.get("version")!="uk-v0926-mrp-geography-bridge" or backtest.get("status")!="ok":
+              raise SystemExit(f"ERROR: invalid v0.9.26 backtest {backtest.get('version')} {backtest.get('error')}")
+          if diagnostic.get("version")!="uk-v0926-mrp-geography-bridge" or diagnostic.get("status")!="ok":
+              raise SystemExit(f"ERROR: invalid v0.9.26 diagnostic {diagnostic.get('version')} {diagnostic.get('error')}")
+          if live.get("version")!="uk-v0926-mrp-geography-bridge-live-candidate" or live.get("status")!="ok":
+              raise SystemExit(f"ERROR: invalid v0.9.26 live candidate {live.get('version')} {live.get('error')}")
 
-          if integrity.get("version")!="uk-v0925-bes-integrity-wrapper" or integrity.get("status")!="passed":
+          if integrity.get("version")!="uk-v0926-bes-integrity-wrapper" or integrity.get("status")!="passed":
               raise SystemExit(f"ERROR: BES integrity failed: {integrity.get('errors')}")
           for check in integrity.get("checks",[]):
               if check.get("gb_rows")!=632:
@@ -141,13 +181,15 @@ jobs:
           # Methodological anti-leakage safeguards.
           for payload in (backtest,diagnostic,live):
               if payload.get("uses_2024_for_parameter_selection") is not False:
-                  raise SystemExit("ERROR: 2024 leaked into v0.9.25 parameter selection")
+                  raise SystemExit("ERROR: 2024 leaked into v0.9.26 parameter selection")
               if payload.get("parameter_selection_election")!="2019":
-                  raise SystemExit("ERROR: v0.9.25 strength was not selected on 2019")
+                  raise SystemExit("ERROR: v0.9.26 strength was not selected on 2019")
               if payload.get("provider_topline_used") is not False:
                   raise SystemExit("ERROR: external provider topline entered the model")
-              if payload.get("shadow_only") is not True or payload.get("publication_ready") is not False:
-                  raise SystemExit("ERROR: v0.9.25 auto-promotion safeguard missing")
+              if payload.get("approved_for_live") is not False or payload.get("publication_ready") is not False:
+                  raise SystemExit("ERROR: v0.9.26 must remain an unapproved live candidate until review")
+          if live.get("live_candidate") is not True or live.get("applied_to_production") is not False:
+              raise SystemExit("ERROR: v0.9.26 live candidate promotion safeguard missing")
 
           ref=backtest.get("reference_v0915",{})
           rv=ref.get("validation_2019",{}); rh=ref.get("benchmark_2024",{})
@@ -203,7 +245,7 @@ jobs:
           architecture=diagnostic.get("architecture",{})
           formula=architecture.get("formula","")
           if "R_internal^(1-s)*R_external^s" not in formula:
-              raise SystemExit(f"ERROR: v0.9.25 is not using true geography replacement/blend: {formula}")
+              raise SystemExit(f"ERROR: v0.9.26 is not using true geography replacement/blend: {formula}")
           endpoints=architecture.get("endpoint_semantics",{})
           if "pure external" not in str(endpoints.get("strength_1","")).lower():
               raise SystemExit(f"ERROR: strength=1 pure-external endpoint not documented {endpoints}")
@@ -221,6 +263,30 @@ jobs:
               raise SystemExit(f"ERROR: YouGov 2024 coverage too low {coverage.get('yougov2024')}")
           if int(coverage.get("mic2024",{}).get("matched_seats",0))<620:
               raise SystemExit(f"ERROR: MiC 2024 coverage too low {coverage.get('mic2024')}")
+          if int(coverage.get("mic2026",{}).get("matched_seats",0))<620:
+              raise SystemExit(f"ERROR: MiC 2026 coverage too low {coverage.get('mic2026')}")
+
+          source_meta=backtest.get("external_source_meta",{}).get("mic2026",{})
+          mapped=source_meta.get("mapped_columns",{})
+          required={"con","lab","ld","ref","green","snp","pc","other"}
+          if set(mapped)!=required:
+              raise SystemExit(f"ERROR: MiC 2026 major-party geography incomplete: mapped={mapped}")
+          rel=source_meta.get("relative_national_share",{})
+          if float(rel.get("green",0))<=0.1:
+              raise SystemExit(f"ERROR: MiC 2026 Green geography missing/zero: {rel.get('green')}")
+          if source_meta.get("date")!="2026-07-19":
+              raise SystemExit(f"ERROR: unexpected MiC 2026 source date {source_meta.get('date')}")
+
+          live_geo=live.get("live_geography",{})
+          if live_geo.get("status")!="yougov24_plus_latest_mic26_evolution":
+              raise SystemExit(f"ERROR: latest 2026 geography not applied: {live_geo}")
+          sensitivity=live.get("live_2026_sensitivity",{})
+          if sensitivity.get("selection_role")!="diagnostic_only_no_2026_ground_truth":
+              raise SystemExit(f"ERROR: live sensitivity role invalid {sensitivity}")
+          for key in ("primary_anchor_evolution_totals","direct_mic26_totals","static_yougov24_totals"):
+              totals=sensitivity.get(key,{})
+              if sum(int(v) for v in totals.values())!=632:
+                  raise SystemExit(f"ERROR: {key} does not sum to 632: {totals}")
 
           # Gate booleans are audited rather than used to fail the Action.  A
           # scientifically negative experiment must still persist its result.
@@ -239,18 +305,18 @@ jobs:
               raise SystemExit("ERROR: 90% stretch gate boolean inconsistent")
 
           if live.get("applied_to_production") is not False or live.get("approved_for_live") is not False:
-              raise SystemExit("ERROR: v0.9.25 live shadow was promoted automatically")
+              raise SystemExit("ERROR: v0.9.26 live candidate was promoted automatically")
           if len(live.get("seats",[]))!=632:
-              raise SystemExit(f"ERROR: live shadow has {len(live.get('seats',[]))} GB seats")
+              raise SystemExit(f"ERROR: live candidate has {len(live.get('seats',[]))} GB seats")
 
           mic26=live.get("live_geography",{}).get("status")
-          if mic26 not in {"yougov24_plus_mic_evolution","static_yougov_2024_fallback"}:
-              raise SystemExit(f"ERROR: unknown live geography status {mic26}")
+          if mic26!="yougov24_plus_latest_mic26_evolution":
+              raise SystemExit(f"ERROR: latest MiC 2026 geography was not used: {mic26}")
 
           print("v0.9.15 reference: 2019 585/632 seat error 42; 2024 501/632 seat error 166")
-          print("v0.9.25 selected strength:",backtest.get("selected_strength"))
-          print("v0.9.25 validation 2019:",val.get("correct_winners"),"/632; seat error",val.get("seat_abs_error_sum"))
-          print("v0.9.25 PRIMARY 2024:",primary.get("correct_winners"),"/632 =",round(100*primary.get("winner_accuracy",0),2),"%; seat error",primary.get("seat_abs_error_sum"))
+          print("v0.9.26 selected strength:",backtest.get("selected_strength"))
+          print("v0.9.26 validation 2019:",val.get("correct_winners"),"/632; seat error",val.get("seat_abs_error_sum"))
+          print("v0.9.26 PRIMARY 2024:",primary.get("correct_winners"),"/632 =",round(100*primary.get("winner_accuracy",0),2),"%; seat error",primary.get("seat_abs_error_sum"))
           print("Diagnostic MiC 2024:",bm.get("diagnostic_mic_anchor",{}).get("correct_winners"),"/632")
           print("Diagnostic ensemble 2024:",bm.get("diagnostic_equal_provider_ensemble",{}).get("correct_winners"),"/632")
           for provider,best in bm.get("best_expost_by_provider",{}).items():
@@ -271,7 +337,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add data/
-            git commit -m "chore: update UK data and v0.9.25 MRP geography replacement blend"
+            git commit -m "chore: update UK data and v0.9.26 MRP geography replacement blend"
             git push
           fi
 
