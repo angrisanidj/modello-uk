@@ -1,4 +1,4 @@
-# UI release v0.9.43: editorial finishing pass plus model-generated dynamic social cards; statistical production engine remains frozen on v0.9.29.
+
 name: Update and deploy UK model
 
 on:
@@ -40,7 +40,7 @@ jobs:
       - name: Self-test shadow MRP update watcher
         run: python tools/check_mrp_updates.py --self-test
       - name: Restore Democracy Club source cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .cache/democracy-club
           key: dc-v0929-${{ runner.os }}-${{ hashFiles('tools/build_mrp_lite.py') }}
@@ -54,7 +54,7 @@ jobs:
             dc-v0923-${{ runner.os }}-
             dc-v0922-${{ runner.os }}-
       - name: Restore external MRP source cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .cache/mrp-bridge
           key: mrp-bridge-v0929-${{ runner.os }}-${{ hashFiles('tools/build_mrp_geography_bridge.py') }}
@@ -337,12 +337,12 @@ jobs:
             git push
           fi
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload site artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: "."
 
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
