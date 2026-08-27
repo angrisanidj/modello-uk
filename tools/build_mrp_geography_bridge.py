@@ -60,6 +60,7 @@ V0926_BASELINE="reconstruct-v0915-local-strength-both-elections"
 V0926_DIAGNOSTICS="full-zero-to-pure-external-blend-sweep-2024"
 V0926_LIVE_CANDIDATE="latest-mic26-required-green-complete-plus-dynamic-internal-topline"
 V0926_MRP_SOURCE="more-in-common-2026-07-19-fieldwork-2026-06-05-to-2026-06-28"
+V0926_PARSER_HOTFIX="mic26-leading-article-aliases-complete-header-selection"
 
 ROOT=Path(__file__).resolve().parents[1]
 DATA=ROOT/"data"
@@ -251,29 +252,47 @@ def parse_yougov_2019(raw:bytes)->tuple[pd.DataFrame,dict[str,Any]]:
 
 
 def _party_from_header(value:Any)->str|None:
-    k=core.nkey(value)
+    """Map human-readable MiC party headers to internal party codes.
+
+    The workbook does not expose stable machine field names. In particular,
+    Green may be labelled ``The Green Party`` or use a longer descriptive
+    header. Strip only a leading definite article before conservative prefix
+    matching; never use unconstrained substring matching.
+    """
+    raw=core.nkey(value)
+    if not raw:
+        return None
     exact={
         "con":"con","conservative":"con","conservatives":"con","tories":"con",
         "lab":"lab","labour":"lab","labor":"lab",
         "ld":"ld","libdem":"ld","libdems":"ld","liberaldemocrat":"ld","liberaldemocrats":"ld",
         "ref":"ref","reform":"ref","reformuk":"ref",
-        "green":"green","greens":"green","greenparty":"green",
-        "snp":"snp","scottishnationalparty":"snp",
+        "green":"green","greens":"green","greenparty":"green","thegreenparty":"green","thegreens":"green",
+        "snp":"snp","scottishnationalparty":"snp","scottishnationalpartysnp":"snp",
         "pc":"pc","plaid":"pc","plaidcymru":"pc",
         "other":"other","others":"other","otherparty":"other","indother":"other","otherind":"other",
+        "otherindependent":"other","otherindependents":"other","independentother":"other",
+        "independentsandothers":"other","otherandindependent":"other","otherandindependents":"other",
     }
-    if k in exact:return exact[k]
-    # MiC 2026 uses descriptive party headers (notably a long Green label).
-    # Match a party-name prefix before applying a conservative length backstop.
-    if k.startswith("conservative"):return "con"
-    if k.startswith("labour"):return "lab"
-    if k.startswith("liberaldem"):return "ld"
-    if k.startswith("reform"):return "ref"
-    if k.startswith("green"):return "green"
-    if k.startswith("snp") or k.startswith("scottishnational"):return "snp"
-    if k.startswith("plaid"):return "pc"
-    if k.startswith("other") or k.startswith("independent"):return "other"
-    if len(k)>80:return None
+    if raw in exact:
+        return exact[raw]
+    k=raw[3:] if raw.startswith("the") and len(raw)>3 else raw
+    if k.startswith("conservative") or k.startswith("tory"):
+        return "con"
+    if k.startswith("labour") or k.startswith("labor"):
+        return "lab"
+    if k.startswith("liberaldem") or k.startswith("libdem"):
+        return "ld"
+    if k.startswith("reform"):
+        return "ref"
+    if k.startswith("green"):
+        return "green"
+    if k.startswith("snp") or k.startswith("scottishnational"):
+        return "snp"
+    if k.startswith("plaid"):
+        return "pc"
+    if k.startswith("other") or k.startswith("independent"):
+        return "other"
     return None
 
 
@@ -321,7 +340,9 @@ def parse_mic_2026_xlsx(raw:bytes)->tuple[pd.DataFrame,dict[str,Any]]:
             out=out[out.loc[:,PARTIES].sum(axis=1)>0].copy()
             # Constituency tables should have hundreds of distinct names.
             distinct=int(out["name"].map(_norm_name).nunique())
-            score=(distinct,len(party_cols))
+            # Prefer party completeness before row-count tie-breaking.
+            complete=int(set(PARTIES).issubset(set(party_cols)))
+            score=(complete,len(party_cols),distinct)
             if distinct>=500:
                 candidates.append((score,sheet,header_i,out,party_cols,vals))
     if not candidates:
@@ -331,9 +352,11 @@ def parse_mic_2026_xlsx(raw:bytes)->tuple[pd.DataFrame,dict[str,Any]]:
     required=set(PARTIES)
     missing=sorted(required-set(party_cols))
     if missing:
+        nonempty_headers=[str(x).strip() for x in headers if str(x).strip()]
         raise RuntimeError(
             f"MiC 2026 workbook: constituency table is missing required party columns {missing}; "
-            f"mapped={sorted(party_cols)}. Refusing a live candidate with incomplete geography."
+            f"mapped={sorted(party_cols)}; sheet={sheet!r}; header_row={header_i+1}; "
+            f"headers={nonempty_headers[:30]}. Refusing a live candidate with incomplete geography."
         )
     out=out.drop_duplicates(subset=["name"],keep="first").reset_index(drop=True)
     if len(out)<600:
@@ -672,11 +695,17 @@ def _self_test()->int:
     buf=io.BytesIO()
     synth=pd.DataFrame([
         ["More in Common synthetic MRP",None,None,None,None,None,None,None,None],
-        ["Constituency","Conservative","Labour","Liberal Democrats","Reform UK","Green Party (England and Wales only)","SNP","Plaid Cymru","Other"],
+        ["Constituency","Conservative","Labour","Liberal Democrats","Reform UK","The Green Party if standing in your constituency","Scottish National Party (SNP)","Plaid Cymru if standing in your constituency","Other / Independent"],
     ]+[[f"Seat {i}",25,30,12,20,8,0,0,5] for i in range(620)])
     with pd.ExcelWriter(buf,engine="openpyxl") as writer:synth.to_excel(writer,index=False,header=False,sheet_name="Constituencies")
+    if _party_from_header("The Green Party")!="green":
+        raise RuntimeError("self-test failed to map The Green Party")
+    if _party_from_header("The Green Party if standing in your constituency")!="green":
+        raise RuntimeError("self-test failed to map long Green header")
     xdf,xmeta=parse_mic_2026_xlsx(buf.getvalue())
     if len(xdf)!=620 or xmeta["sheet"]!="Constituencies":raise RuntimeError("self-test XLSX parser failed")
+    if set(xmeta.get("mapped_columns",{}))!=set(PARTIES):
+        raise RuntimeError(f"self-test XLSX party coverage failed: {xmeta.get('mapped_columns')}")
     print("v0.9.26 geography replacement/blend self-test: PASSED")
     return 0
 
