@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.41 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.42 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,7 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.41.
+- **Interfaccia:** v0.9.42.
 - **Motore statistico di produzione:** **v0.9.29**, congelato durante le modifiche esclusivamente frontend.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche con cache legata al fingerprint degli input.
@@ -129,11 +129,13 @@ modello-uk/
 ├── styles-v0939.css
 ├── styles-v0940.css
 ├── styles-v0941.css
+├── styles-v0942.css
 ├── map-performance.css
 ├── scripts/
 │   ├── app.js
 │   ├── map-performance.js
-│   └── interpretation.js
+│   ├── interpretation.js
+│   └── generate-social-cards.mjs
 ├── data/
 │   ├── polls.json
 │   ├── constituencies-2024.json
@@ -149,8 +151,12 @@ modello-uk/
 │   ├── promote_mrp_stack.py
 │   ├── check_mrp_updates.py
 │   └── ...
+├── share-x.html / share-threads.html / share-facebook.html / ...
+├── social-card-uk-v2.png
+├── social-card-uk-instagram-v2.png
 ├── .github/workflows/
-│   └── update-data.yml
+│   ├── update-data.yml
+│   └── update-social-cards.yml
 └── requirements.txt
 ```
 
@@ -158,12 +164,20 @@ modello-uk/
 
 La GitHub Action `Update and deploy UK model` può essere avviata manualmente, parte anche su push a `main` ed è programmata quotidianamente. La pipeline aggiorna e committa automaticamente soltanto i file sotto `data/` quando esistono modifiche effettive, quindi esegue il deploy su GitHub Pages.
 
-Per una modifica frontend come la v0.9.41 è sufficiente pubblicare i file dell'interfaccia; **non è necessario ritoccare il motore statistico**.
+Per una modifica frontend come la v0.9.42 è sufficiente pubblicare i file dell'interfaccia; **non è necessario ritoccare il motore statistico**.
 
 ## Nota sulla lettura dei risultati
 
 La dashboard è un **nowcast**, non una previsione certa del risultato finale delle prossime elezioni. Il numero centrale dei seggi va letto insieme agli intervalli di probabilità, alla distribuzione Monte Carlo e alla geografia dei collegi. Lo scenario personalizzato dell'utente è uno strumento esplorativo deterministico e non modifica il modello di produzione.
 
-## UI v0.9.41
+## UI v0.9.42
 
-La v0.9.41 è una release esclusivamente frontend/UX. Introduce il branding personale di Daniele Angrisani, una fascia superiore più sobria, il credito finale con collegamento a X, una revisione completa dell’italiano visibile, la serie storica interattiva con tooltip e focus per partito, la legenda interattiva dell’emiciclo, una maggiore distinzione cromatica tra Conservative e Reform UK, nomi territoriali in italiano, una lettura regionale più densa e il prompt IA a piena larghezza. Corregge inoltre la formattazione delle migliaia nelle tabelle e chiarisce la terminologia di validazione. Il motore statistico resta v0.9.29.
+La v0.9.42 è una release frontend/editoriale. Rifinisce la fascia nazionale superiore, aggiunge l’anno alle date dell’asse storico, riequilibra la sezione di validazione e lascia il prompt IA chiuso all’apertura. Introduce inoltre la stessa architettura di social card del modello Germania: il browser genera una card dai risultati correnti e un workflow dedicato la rigenera automaticamente in formato 1200×630 e 1080×1350 dopo gli aggiornamenti del modello, aggiornando anche le pagine di condivisione per X, Threads, Facebook, LinkedIn, Telegram e WhatsApp. Il motore statistico resta v0.9.29.
+
+
+### Social card dinamiche
+
+- `scripts/generate-social-cards.mjs`: genera le immagini direttamente dalla dashboard con Playwright.
+- `.github/workflows/update-social-cards.yml`: rigenera le card dopo il completamento dell’aggiornamento dati e su schedulazione.
+- `social-card-uk-v2.png` / `social-card-uk-instagram-v2.png`: immagini prodotte dal modello.
+- `share-*.html`: endpoint di condivisione con metadati Open Graph aggiornati.

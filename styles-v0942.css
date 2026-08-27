@@ -1,0 +1,33 @@
+/* Editorial finishing pass: continuous Union Jack ribbon, denser validation layout and share-card metadata. */
+
+/* A single full-width Union Jack, deliberately stretched as a ceremonial ribbon rather than tiled. */
+.flag-ribbon{
+  position:sticky!important;top:0!important;z-index:100!important;
+  height:11px!important;min-height:11px!important;overflow:hidden!important;
+  background-color:#012169!important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 30' preserveAspectRatio='none'%3E%3Cpath fill='%23012169' d='M0 0h60v30H0z'/%3E%3Cpath stroke='%23fff' stroke-width='6' d='m0 0 60 30M60 0 0 30'/%3E%3Cpath stroke='%23C8102E' stroke-width='2.4' d='m0 0 60 30M60 0 0 30'/%3E%3Cpath stroke='%23fff' stroke-width='10' d='M30 0v30M0 15h60'/%3E%3Cpath stroke='%23C8102E' stroke-width='5.6' d='M30 0v30M0 15h60'/%3E%3C/svg%3E")!important;
+  background-repeat:no-repeat!important;background-size:100% 100%!important;background-position:center!important;
+  border:0!important;border-radius:0!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.16),0 5px 16px rgba(0,0,0,.22)!important;
+}
+
+/* The year is now present on the polling trend axis: give the labels slightly more room. */
+.poll-trend-axis.poll-trend-date{font-size:9px!important;letter-spacing:-.01em!important}
+
+/* Backtest: two balanced columns, then one full-width editorial note. */
+.backtest-pro{display:grid!important;grid-template-columns:minmax(0,1.55fr) minmax(350px,.75fr)!important;gap:14px!important;align-items:start!important}
+.backtest-watch-note{grid-column:1/-1!important;display:grid!important;grid-template-columns:minmax(190px,.28fr) minmax(0,1fr)!important;gap:18px!important;align-items:start!important;padding:15px 18px!important;border:1px solid #315b47!important;border-radius:15px!important;background:linear-gradient(90deg,rgba(29,104,67,.16),rgba(12,23,31,.72))!important;color:#b8c8d7!important}
+.backtest-watch-note strong{color:#7ce4a8!important;font-size:12px!important;letter-spacing:.01em!important}.backtest-watch-note p{margin:0!important;font-size:11px!important;line-height:1.6!important;color:#a8b6c6!important}
+.production-pipeline-card{height:auto!important;align-self:stretch!important}
+
+/* Prompt remains collapsed on first load and reads like an optional appendix. */
+.ai-prompt-full:not([open]){background:#0d151f!important}.ai-prompt-full:not([open]) summary{color:#a9b9cb!important}
+
+@media(max-width:900px){
+  .backtest-pro{grid-template-columns:1fr!important}
+  .backtest-watch-note{grid-column:auto!important;grid-template-columns:1fr!important;gap:6px!important}
+}
+@media(max-width:640px){
+  .flag-ribbon{height:8px!important;min-height:8px!important}
+  .poll-trend-axis.poll-trend-date{font-size:8px!important}
+}
