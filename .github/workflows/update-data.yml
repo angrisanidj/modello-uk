@@ -1,4 +1,4 @@
- name: Update and deploy UK model
+name: Update and deploy UK model
 
 on:
   workflow_dispatch:
