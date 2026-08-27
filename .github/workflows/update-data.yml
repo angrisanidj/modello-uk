@@ -1,4 +1,4 @@
-# UI release v0.9.40: desktop UX polish, dense hemicycle, interactive uncertainty, paginated/filterable seat and poll tables, clearer validation and AI brands; statistical production engine remains frozen on v0.9.29.
+
 name: Update and deploy UK model
 
 on:
