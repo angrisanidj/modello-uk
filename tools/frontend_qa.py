@@ -165,6 +165,20 @@ def main() -> int:
                 if marker not in empty_branch:
                     fail(errors, f"scenario reset regression: missing shared reset marker {marker!r}")
 
+        card_dims = re.search(
+            r"const ig=format==='instagram',W=ig\?1080:(\d+),H=ig\?1350:(\d+),c=document\.createElement\('canvas'\)",
+            app,
+        )
+        if not card_dims:
+            fail(errors, "social card regression: landscape canvas dimensions not found")
+        else:
+            landscape_w, landscape_h = map(int, card_dims.groups())
+            if landscape_w * 9 != landscape_h * 16:
+                fail(
+                    errors,
+                    f"social card regression: landscape export must be 16:9; found {landscape_w}x{landscape_h}",
+                )
+
     if errors:
         print("Frontend QA FAILED", file=sys.stderr)
         for e in errors:
