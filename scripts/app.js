@@ -1348,20 +1348,22 @@ function hexagonPath(cx,cy,r){
 }
 let hexLayoutCache=null;
 function buildHexAssignments(features,project,W=640,H=760){
-  // Shape-preserving equal-area cartogram.  The previous implementation
-  // snapped every constituency to the nearest free cell of a large lattice;
-  // dense cities consumed the useful cells first and the remaining seats were
-  // pushed into an artificial triangular block.  Here every seat starts from
-  // its real projected centroid, dense clusters are gently de-overlapped, and
-  // sparse/coastal seats stay strongly anchored to geography.  The result is
-  // still a schematic map, but the outline remains recognisably UK-shaped.
+  // Collision-free hex cartogram.  We first create a geography-preserving
+  // target for every constituency, then snap those targets to a single shared
+  // pointy-top hex lattice.  A lattice cell can be owned by one seat only, so
+  // overlaps are impossible by construction.  Sparse/coastal seats are placed
+  // first; dense urban seats are allowed to expand into nearby free cells.
   if(hexLayoutCache?.features===features&&hexLayoutCache.W===W&&hexLayoutCache.H===H)return hexLayoutCache.assignments;
-  const pad=20,r=8.35,minDist=r*2.08,minDist2=minDist*minDist;
+  const pad=18,r=7.25,gap=1.08;
   const rows=features.map(f=>{
-    const id=geometryCode(f.properties||{}),name=geometryName(f.properties||{}),c=geometryProjectedCenter(f.geometry,project);
-    return {f,id,name,ax:c.x,ay:c.y,x:c.x,y:c.y,density:0};
+    const id=geometryCode(f.properties||{}),name=geometryName(f.properties||{}),c=geometryProjectedCenter(f.geometry,project),seat=state.byId.get(id);
+    return {f,id,name,country:seat?.country||'',ax:c.x,ay:c.y,x:c.x,y:c.y,density:0};
   }).filter(x=>x.id&&Number.isFinite(x.x)&&Number.isFinite(x.y));
-  const densityRadius2=34*34;
+
+  // Local density is used only to decide placement priority: rural/coastal
+  // seats keep their geographic anchor, while cities absorb the schematic
+  // expansion needed to give every constituency equal visual area.
+  const densityRadius2=32*32;
   for(let i=0;i<rows.length;i++){
     let d=0;
     for(let j=0;j<rows.length;j++){
@@ -1371,49 +1373,115 @@ function buildHexAssignments(features,project,W=640,H=760){
     }
     rows[i].density=d;
   }
+
+  // Produce a gentle, geography-preserving target before the strict grid snap.
+  // This does not draw the hexes: it merely tells the discrete assignment where
+  // a dense cluster would ideally expand.
+  const targetMin=r*2.12,targetMin2=targetMin*targetMin;
   const deterministicVector=(a,b)=>{
     let h=2166136261;const text=`${a}|${b}`;
     for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619);}
     const angle=((h>>>0)%3600)/3600*Math.PI*2;return [Math.cos(angle),Math.sin(angle)];
   };
-  const relax=(iterations,withSpring)=>{
-    const bucketSize=minDist*1.18;
-    for(let iter=0;iter<iterations;iter++){
-      const buckets=new Map(),fx=new Float64Array(rows.length),fy=new Float64Array(rows.length);
-      for(let i=0;i<rows.length;i++){
-        const p=rows[i],gx=Math.floor(p.x/bucketSize),gy=Math.floor(p.y/bucketSize),key=`${gx},${gy}`;
-        if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(i);
-      }
-      for(let i=0;i<rows.length;i++){
-        const a=rows[i],gx=Math.floor(a.x/bucketSize),gy=Math.floor(a.y/bucketSize);
-        for(let ox=-1;ox<=1;ox++)for(let oy=-1;oy<=1;oy++){
-          const bucket=buckets.get(`${gx+ox},${gy+oy}`);if(!bucket)continue;
-          for(const j of bucket){
-            if(j<=i)continue;const b=rows[j];let dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;if(d2>=minDist2)continue;
-            let d=Math.sqrt(d2);if(d<.001){const v=deterministicVector(a.id,b.id);dx=v[0];dy=v[1];d=1;}
-            const overlap=minDist-d,push=overlap*(withSpring?.48:.62),ux=dx/d,uy=dy/d;
-            fx[i]-=ux*push;fy[i]-=uy*push;fx[j]+=ux*push;fy[j]+=uy*push;
-          }
+  const bucketSize=targetMin*1.2;
+  for(let iter=0;iter<72;iter++){
+    const buckets=new Map(),fx=new Float64Array(rows.length),fy=new Float64Array(rows.length);
+    for(let i=0;i<rows.length;i++){
+      const p=rows[i],gx=Math.floor(p.x/bucketSize),gy=Math.floor(p.y/bucketSize),key=`${gx},${gy}`;
+      if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(i);
+    }
+    for(let i=0;i<rows.length;i++){
+      const a=rows[i],gx=Math.floor(a.x/bucketSize),gy=Math.floor(a.y/bucketSize);
+      for(let ox=-1;ox<=1;ox++)for(let oy=-1;oy<=1;oy++){
+        const bucket=buckets.get(`${gx+ox},${gy+oy}`);if(!bucket)continue;
+        for(const j of bucket){
+          if(j<=i)continue;const b=rows[j];let dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;if(d2>=targetMin2)continue;
+          let d=Math.sqrt(d2);if(d<.001){const v=deterministicVector(a.id,b.id);dx=v[0];dy=v[1];d=1;}
+          const push=(targetMin-d)*.42,ux=dx/d,uy=dy/d;
+          fx[i]-=ux*push;fy[i]-=uy*push;fx[j]+=ux*push;fy[j]+=uy*push;
         }
-      }
-      for(let i=0;i<rows.length;i++){
-        const p=rows[i];
-        if(withSpring){
-          // Urban seats are allowed to expand more; rural/coastal seats retain
-          // the silhouette and prevent the cartogram from turning into a blob.
-          const spring=.072/(1+p.density*.055);
-          fx[i]+=(p.ax-p.x)*spring;fy[i]+=(p.ay-p.y)*spring;
-        }
-        const maxStep=withSpring?2.65:1.9,mag=Math.hypot(fx[i],fy[i]);
-        const k=mag>maxStep?maxStep/mag:1;
-        p.x=clamp(p.x+fx[i]*k,pad+r,W-pad-r);
-        p.y=clamp(p.y+fy[i]*k,pad+r,H-pad-r);
       }
     }
+    for(let i=0;i<rows.length;i++){
+      const p=rows[i];
+      const spring=.086/(1+p.density*.06);
+      fx[i]+=(p.ax-p.x)*spring;fy[i]+=(p.ay-p.y)*spring;
+      const mag=Math.hypot(fx[i],fy[i]),maxStep=2.3,k=mag>maxStep?maxStep/mag:1;
+      p.x=clamp(p.x+fx[i]*k,pad+r,W-pad-r);
+      p.y=clamp(p.y+fy[i]*k,pad+r,H-pad-r);
+    }
+  }
+
+  // Pointy-top axial hex grid.  The extra gap leaves a thin dark/silhouette
+  // channel between neighbouring cells and makes collisions impossible.
+  const stepX=Math.sqrt(3)*r*gap,stepY=1.5*r*gap;
+  const cells=[];
+  let rowIndex=0;
+  for(let y=pad+r;y<=H-pad-r+.001;y+=stepY,rowIndex++){
+    const offset=(rowIndex&1)?stepX/2:0;
+    let colIndex=0;
+    for(let x=pad+r+offset;x<=W-pad-r+.001;x+=stepX,colIndex++){
+      cells.push({x,y,row:rowIndex,col:colIndex,key:`${rowIndex}:${colIndex}`});
+    }
+  }
+
+  const cost=(p,c)=>{
+    const tx=c.x-p.x,ty=c.y-p.y,ax=c.x-p.ax,ay=c.y-p.ay;
+    // The relaxed target handles dense-city expansion; the original centroid
+    // remains a secondary anchor so the coastline and national outline survive.
+    return tx*tx+ty*ty+.24*(ax*ax+ay*ay);
   };
-  relax(86,true);
-  relax(18,false);
-  const assigned=new Map(rows.map(p=>[p.id,{x:p.x,y:p.y,r,name:p.name}]));
+  const occupied=new Map(),placement=new Map();
+  const priority=[...rows].sort((a,b)=>a.density-b.density||Math.hypot(b.ax-W/2,b.ay-H/2)-Math.hypot(a.ax-W/2,a.ay-H/2)||a.id.localeCompare(b.id));
+  for(const p of priority){
+    let best=null,bestCost=Infinity;
+    for(const c of cells){
+      if(occupied.has(c.key))continue;
+      const v=cost(p,c);if(v<bestCost){bestCost=v;best=c;}
+    }
+    if(!best)continue;
+    occupied.set(best.key,p);placement.set(p.id,best);
+  }
+
+  // Small deterministic local optimisation.  Seats may move into an empty
+  // neighbouring grid cell or swap with a neighbour only when the total anchor
+  // error decreases.  Because every move remains on the same lattice, the
+  // no-overlap guarantee is preserved throughout.
+  const byRC=new Map(cells.map(c=>[`${c.row}:${c.col}`,c]));
+  const neighbourCells=c=>{
+    const even=(c.row&1)===0;
+    const offsets=even?[[0,-1],[0,1],[-1,-1],[-1,0],[1,-1],[1,0]]:[[0,-1],[0,1],[-1,0],[-1,1],[1,0],[1,1]];
+    return offsets.map(([dr,dc])=>byRC.get(`${c.row+dr}:${c.col+dc}`)).filter(Boolean);
+  };
+  const rowById=new Map(rows.map(p=>[p.id,p]));
+  for(let pass=0;pass<5;pass++){
+    let changed=false;
+    for(const p of priority){
+      const cur=placement.get(p.id);if(!cur)continue;
+      let bestMove=null,bestGain=0;
+      for(const next of neighbourCells(cur)){
+        const other=occupied.get(next.key);
+        if(!other){
+          const gain=cost(p,cur)-cost(p,next);
+          if(gain>bestGain+.01){bestGain=gain;bestMove={next,other:null};}
+        }else if(other!==p){
+          const q=rowById.get(other.id);if(!q)continue;
+          const gain=(cost(p,cur)+cost(q,next))-(cost(p,next)+cost(q,cur));
+          if(gain>bestGain+.01){bestGain=gain;bestMove={next,other:q};}
+        }
+      }
+      if(!bestMove)continue;
+      occupied.delete(cur.key);
+      if(bestMove.other){
+        placement.set(bestMove.other.id,cur);occupied.set(cur.key,bestMove.other);
+      }
+      placement.set(p.id,bestMove.next);occupied.set(bestMove.next.key,p);changed=true;
+    }
+    if(!changed)break;
+  }
+
+  const assigned=new Map();
+  for(const p of rows){const c=placement.get(p.id);if(c)assigned.set(p.id,{x:c.x,y:c.y,r,name:p.name});}
   hexLayoutCache={features,W,H,assignments:assigned};
   return assigned;
 }
@@ -1466,7 +1534,7 @@ function renderMap(){
   resetMapZoom();
   $('#mapEmpty').style.display='none';
   const reduced=state.geometry?.meta?.vertices_after;
-  $('#mapMeta').textContent=state.mapLayout==='hex'?`${features.length} esagoni · 1 esagono = 1 collegio · forma geografica preservata`:(reduced?`${features.length} collegi · geometria web ottimizzata`:`${features.length} geometrie ONS · BGC 20 m`);
+  $('#mapMeta').textContent=state.mapLayout==='hex'?`${features.length} esagoni · 1 esagono = 1 collegio · griglia senza sovrapposizioni`:(reduced?`${features.length} collegi · geometria web ottimizzata`:`${features.length} geometrie ONS · BGC 20 m`);
   updateMapLayoutButtons();
   applyMapColors();
   renderMarginals();

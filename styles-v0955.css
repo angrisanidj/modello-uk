@@ -1,0 +1,20 @@
+/* v0.9.55 — collision-free UK hex cartogram. */
+
+.map-wrap.is-hex-layout .hex-uk-silhouette{
+  fill:rgba(115,139,168,.155);
+  stroke:none;
+  pointer-events:none;
+}
+.map-wrap.is-hex-layout path.constituency-hex{
+  stroke:#080f17;
+  stroke-width:.82;
+  stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;
+  shape-rendering:geometricPrecision;
+}
+.map-wrap.is-hex-layout path.constituency-hex:hover{stroke:#f8fbff;stroke-width:1.55}
+.map-wrap.is-hex-layout path.constituency-hex.selected{stroke:#fff;stroke-width:2.3}
+@media(max-width:760px){
+  .map-wrap.is-hex-layout .hex-uk-silhouette{fill:rgba(115,139,168,.135)}
+  .map-wrap.is-hex-layout path.constituency-hex{stroke-width:.72}
+}
