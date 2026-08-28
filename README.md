@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.55 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.56 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,8 +6,9 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.55.
+- **Interfaccia:** v0.9.56.
 - **v0.9.55 — cartogramma esagonale:** griglia discreta senza sovrapposizioni, packing locale e sagoma UK più leggibile.
+- **v0.9.56 — export serie storica:** snapshot PNG senza crosshair e riepilogo corrente con valori, variazione a 30 giorni e partito in testa.
 - **Motore statistico di produzione:** **v0.9.29**, congelato durante le modifiche esclusivamente frontend.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche in 50 blocchi asincroni da 1.000; il risultato corrente viene persistito dal workflow delle social card e riutilizzato finché il fingerprint degli input non cambia.
