@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.46 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.47 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,7 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.46.
+- **Interfaccia:** v0.9.47.
 - **Motore statistico di produzione:** **v0.9.29**, congelato durante le modifiche esclusivamente frontend.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche in 50 blocchi asincroni da 1.000; il risultato corrente viene persistito dal workflow delle social card e riutilizzato finché il fingerprint degli input non cambia.
@@ -135,6 +135,7 @@ modello-uk/
 ├── styles-v0944.css
 ├── styles-v0945.css
 ├── styles-v0946.css
+├── styles-v0947.css
 ├── map-performance.css
 ├── scripts/
 │   ├── app.js
@@ -216,3 +217,12 @@ La v0.9.45 rifinisce il passaggio mobile sulla base della verifica reale su tele
 ### Manutenzione GitHub Actions
 
 I workflow restano sulle release delle Action basate su Node.js 24 (`cache@v5`, `configure-pages@v6`, `upload-pages-artifact@v5`, `deploy-pages@v5`, `setup-node@v6` nel workflow social).
+
+
+## v0.9.47 — verifica sondaggi e filtri mappa
+
+- Corretto il parser della verifica manuale MediaWiki: riferimenti bibliografici rimossi e campioni con separatore delle migliaia letti correttamente.
+- Nuovi sondaggi, correzioni e rimozioni sono distinti e mostrati puntualmente prima/durante il ricalcolo.
+- Il Monte Carlo non parte se il controllo live restituisce campioni manifestamente implausibili.
+- I filtri attivi dei collegi sono ora visibili sopra la mappa e rimovibili singolarmente.
+- Motore statistico invariato.

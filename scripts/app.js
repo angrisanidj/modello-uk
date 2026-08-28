@@ -101,13 +101,14 @@ function showError(text) {
 }
 function clearError(){ $('#errorBox').style.display='none'; }
 
-function setRefreshReview(kind,title,detail=''){
+function setRefreshReview(kind,title,detail='',changes=null){
   const box=$('#refreshReview'),head=$('#refreshReviewTitle'),copy=$('#refreshReviewDetail');
   if(!box)return;
   box.hidden=false;
   box.className=`refresh-review is-${kind}`;
   if(head)head.textContent=title;
   if(copy)copy.textContent=detail;
+  renderRefreshReviewChanges(changes);
 }
 function normalizePollText(value){
   return String(value??'').normalize('NFKD').toLowerCase().replace(/\[[^\]]*\]/g,'').replace(/\s+/g,' ').trim();
@@ -115,17 +116,28 @@ function normalizePollText(value){
 function normalizePollArea(value){
   const x=normalizePollText(value);
   if(x==='gb'||x.includes('great britain'))return 'gb';
+  if(x==='uk'||x.includes('united kingdom'))return 'uk';
   if(x.includes('scotland'))return 'scotland';
   if(x.includes('wales'))return 'wales';
   return x;
 }
 function pollIdentityKey(p){
-  return [p?.date||'',normalizePollText(p?.pollster),normalizePollArea(p?.area),Math.round(Number(p?.sample)||0)].join('|');
+  // Stable identity intentionally excludes sample size and vote shares: those are
+  // model inputs that may be corrected for the same published poll.
+  return [p?.date||'',normalizePollText(p?.pollster),normalizePollArea(p?.area)].join('|');
 }
 function pollVoteSignature(p){
   return ['lab','con','ref','ld','green','snp','pc','rb','other'].map(k=>{
     const n=Number(p?.[k]);return Number.isFinite(n)?n.toFixed(2):'';
   }).join('|');
+}
+function pollModelSignature(p){
+  return `${Math.round(Number(p?.sample)||0)}|${pollVoteSignature(p)}`;
+}
+function groupPollsByIdentity(rows){
+  const grouped=new Map();
+  for(const row of rows||[]){const key=pollIdentityKey(row);if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(row);}
+  return grouped;
 }
 function reviewPollingChanges(current,live){
   const all=[...(current||[]),...(live||[])].filter(x=>x?.date).map(x=>x.date).sort();
@@ -133,18 +145,53 @@ function reviewPollingChanges(current,live){
   const d=latest?new Date(`${latest}T12:00:00Z`):new Date();d.setUTCDate(d.getUTCDate()-21);
   const cutoff=d.toISOString().slice(0,10);
   const currentRecent=(current||[]).filter(x=>(x?.date||'')>=cutoff),liveRecent=(live||[]).filter(x=>(x?.date||'')>=cutoff);
-  const oldMap=new Map(currentRecent.map(x=>[pollIdentityKey(x),x])),newMap=new Map(liveRecent.map(x=>[pollIdentityKey(x),x]));
+  const oldGroups=groupPollsByIdentity(currentRecent),newGroups=groupPollsByIdentity(liveRecent),keys=new Set([...oldGroups.keys(),...newGroups.keys()]);
   const added=[],corrected=[],removed=[];
-  for(const [key,row] of newMap){const old=oldMap.get(key);if(!old)added.push(row);else if(pollVoteSignature(old)!==pollVoteSignature(row))corrected.push(row);}
-  for(const [key,row] of oldMap)if(!newMap.has(key))removed.push(row);
+  for(const key of keys){
+    const oldRows=[...(oldGroups.get(key)||[])],newRows=[...(newGroups.get(key)||[])];
+    // First remove exact model-equivalent matches. This prevents harmless source
+    // formatting/client/reference changes from looking like new polls.
+    for(let i=newRows.length-1;i>=0;i--){
+      const sig=pollModelSignature(newRows[i]),j=oldRows.findIndex(row=>pollModelSignature(row)===sig);
+      if(j>=0){newRows.splice(i,1);oldRows.splice(j,1);}
+    }
+    // Remaining rows under the same date+pollster+area are corrections, not new polls.
+    const paired=Math.min(oldRows.length,newRows.length);
+    for(let i=0;i<paired;i++)corrected.push(newRows[i]);
+    if(newRows.length>paired)added.push(...newRows.slice(paired));
+    if(oldRows.length>paired)removed.push(...oldRows.slice(paired));
+  }
   const byDate=(a,b)=>(b?.date||'').localeCompare(a?.date||'')||normalizePollText(a?.pollster).localeCompare(normalizePollText(b?.pollster));
   added.sort(byDate);corrected.sort(byDate);removed.sort(byDate);
   return {changed:!!(added.length||corrected.length||removed.length),added,corrected,removed};
 }
 function pollReviewDescription(p){
   if(!p)return 'Fonte nazionale controllata.';
-  const bits=[p.pollster||'Istituto non indicato',p.date?formatDate(p.date):null,Number(p.sample)>0?`n=${fmt0(Number(p.sample))}`:null].filter(Boolean);
+  const normArea=normalizePollArea(p.area),area=normArea==='gb'?'GB':normArea==='uk'?'UK':regionalDisplayName(p.area||'');
+  const bits=[p.pollster||'Istituto non indicato',p.date?formatDate(p.date):null,area||null,Number(p.sample)>0?`n=${fmt0(Number(p.sample))}`:null].filter(Boolean);
   return bits.join(' · ');
+}
+function pollReviewCountLabel(n,singular,plural){return `${n} ${n===1?singular:plural}`;}
+function renderRefreshReviewChanges(review){
+  const details=$('#refreshReviewChanges'),summary=$('#refreshReviewChangesSummary'),body=$('#refreshReviewChangesBody');
+  if(!details||!summary||!body)return;
+  const groups=review?[['added','Nuovi',review.added||[]],['corrected','Corretti',review.corrected||[]],['removed','Rimossi',review.removed||[]]]:[];
+  const total=groups.reduce((n,g)=>n+g[2].length,0);
+  if(!total){details.hidden=true;details.open=false;body.innerHTML='';return;}
+  const labels=[];
+  if(review.added?.length)labels.push(pollReviewCountLabel(review.added.length,'nuovo','nuovi'));
+  if(review.corrected?.length)labels.push(pollReviewCountLabel(review.corrected.length,'corretto','corretti'));
+  if(review.removed?.length)labels.push(pollReviewCountLabel(review.removed.length,'rimosso','rimossi'));
+  summary.textContent=`Dettaglio rilevazioni · ${labels.join(' · ')}`;
+  body.innerHTML=groups.filter(([, ,rows])=>rows.length).map(([kind,label,rows])=>`<section class="refresh-review-group is-${kind}"><strong>${label}</strong>${rows.map(row=>`<div class="refresh-review-row"><span>${escapeHtml(pollReviewDescription(row))}</span></div>`).join('')}</section>`).join('');
+  details.hidden=false;
+  details.open=total<=4;
+}
+function validateLivePollSnapshot(live){
+  const suspicious=(live||[]).filter(p=>Number(p?.sample)>0&&Number(p.sample)<100);
+  if(suspicious.length){throw new Error(`Verifica annullata: campione non plausibile letto dalla fonte (${pollReviewDescription(suspicious[0])}). Nessun Monte Carlo è stato avviato.`);}
+  const badPollster=(live||[]).find(p=>/\[\d+\]\s*$/.test(String(p?.pollster||'')));
+  if(badPollster)throw new Error('Verifica annullata: la fonte contiene riferimenti bibliografici non ripuliti. Nessun Monte Carlo è stato avviato.');
 }
 async function fetchLiveNationalPolls(){
   if(OFFLINE)throw new Error('Verifica in tempo reale non disponibile in modalità offline.');
@@ -170,6 +217,17 @@ async function fetchText(url, timeout=18000) {
 }
 
 function parsePercent(text){ const m=String(text??'').replace(',','.').match(/-?\d+(?:\.\d+)?/); return m?Number(m[0]):null; }
+function cleanWikiCellText(cell){
+  if(!cell)return '';
+  const clone=cell.cloneNode(true);
+  clone.querySelectorAll('sup.reference,.reference,.mw-ref,.mw-reference-text,style,script').forEach(el=>el.remove());
+  return clone.textContent.replace(/\[[0-9]+\]/g,'').replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();
+}
+function parsePollSample(text){
+  const clean=String(text??'').replace(/\[[^\]]*\]/g,'').replace(/\u00a0/g,' ').trim();
+  const m=clean.match(/\b\d{1,3}(?:[.,\s]\d{3})+\b|\b\d{3,6}\b/);
+  return m?Number(m[0].replace(/\D/g,'')):0;
+}
 function parseEndDate(text, year){
   const matches=[...String(text).replace(/—|−/g,'–').matchAll(/(\d{1,2})\s+([A-Za-z]{3,9})/g)];
   let day,mon;
@@ -191,7 +249,7 @@ function parseWikipediaPolls(html){
     }
     if(!inNational || !year) continue;
     const rows=Array.from(el.querySelectorAll('tr')); if(!rows.length)continue;
-    const heads=Array.from(rows[0].querySelectorAll('th,td')).map(x=>x.textContent.replace(/\s+/g,' ').trim().toLowerCase());
+    const heads=Array.from(rows[0].querySelectorAll('th,td')).map(x=>cleanWikiCellText(x).toLowerCase());
     const idx={};
     heads.forEach((h,i)=>{
       if(h.includes('date')&&h.includes('conduct'))idx.date=i; else if(h==='pollster')idx.pollster=i; else if(h==='client')idx.client=i;
@@ -201,13 +259,13 @@ function parseWikipediaPolls(html){
     });
     if(['date','pollster','area','lab','con','ref','ld','green'].some(k=>idx[k]==null))continue;
     for(const tr of rows.slice(1)){
-      const cells=Array.from(tr.querySelectorAll(':scope > th,:scope > td')).map(x=>x.textContent.replace(/\s+/g,' ').trim());
+      const cells=Array.from(tr.querySelectorAll(':scope > th,:scope > td')).map(cleanWikiCellText);
       if(cells.length<=Math.max(...Object.values(idx)))continue;
       const date=parseEndDate(cells[idx.date],year); if(!date)continue;
       const pollster=cells[idx.pollster]; if(!pollster||/election|by-election/i.test(pollster))continue;
-      const rec={date,fieldwork:cells[idx.date],pollster,client:idx.client!=null?cells[idx.client]:'',area:String(cells[idx.area]).toUpperCase(),sample:Math.round(parsePercent(cells[idx.sample])||0)};
+      const rec={date,fieldwork:cells[idx.date],pollster,client:idx.client!=null?cells[idx.client]:'',area:String(cells[idx.area]).toUpperCase(),sample:idx.sample!=null?parsePollSample(cells[idx.sample]):0};
       for(const p of ['lab','con','ref','ld','green','snp','pc','rb','other']) rec[p]=idx[p]!=null?parsePercent(cells[idx[p]]):null;
-      const key=[date,pollster,rec.sample,rec.lab,rec.con,rec.ref].join('|'); if(seen.has(key))continue; seen.add(key); out.push(rec);
+      const key=[date,normalizePollText(pollster),normalizePollArea(rec.area),normalizePollText(rec.client),rec.sample,pollVoteSignature(rec)].join('|'); if(seen.has(key))continue; seen.add(key); out.push(rec);
     }
   }
   return out.sort((a,b)=>b.date.localeCompare(a.date));
@@ -1495,7 +1553,28 @@ function sortExplorerItems(items,f){
 function explorerFiltersActive(){
   return ['seatSearch','seatCountry','seatRegion','seatWinner','seatWinner2024','seatStatus'].some(id=>String($(`#${id}`)?.value||'').trim()!=='');
 }
+function mapFilterLabel(id,value){
+  if(!value)return '';
+  if(id==='seatSearch')return `Ricerca: ${value}`;
+  if(id==='seatCountry')return `Paese: ${regionalDisplayName(value)}`;
+  if(id==='seatRegion')return `Regione: ${regionalDisplayName(value)}`;
+  if(id==='seatWinner')return `Scenario: ${PARTY[value]?.short||value}`;
+  if(id==='seatWinner2024')return `2024: ${PARTY[value]?.short||value}`;
+  if(id==='seatStatus'){const labels={changed:'Cambio di seggio',held:'Seggio confermato',margin25:'Margine < 2,5 p.p.',margin5:'Margine < 5 p.p.',tossup55:'Favorito < 55%',uncertain65:'Favorito < 65%',safe80:'Favorito ≥ 80%'};return labels[value]||value;}
+  return value;
+}
+function renderMapFilterChips(){
+  const wrap=$('#mapActiveFilters');if(!wrap)return;
+  const ids=['seatSearch','seatCountry','seatRegion','seatWinner','seatWinner2024','seatStatus'];
+  const active=ids.map(id=>({id,value:String($(`#${id}`)?.value||'').trim()})).filter(x=>x.value);
+  if(!active.length){wrap.hidden=true;wrap.innerHTML='';return;}
+  wrap.hidden=false;
+  wrap.innerHTML=`<span class="map-active-filters-label">Filtri attivi</span><div class="map-filter-chip-list">${active.map(x=>`<button type="button" class="map-filter-chip" data-clear-seat-filter="${x.id}" title="Rimuovi ${escapeHtml(mapFilterLabel(x.id,x.value))}"><span>${escapeHtml(mapFilterLabel(x.id,x.value))}</span><b aria-hidden="true">×</b></button>`).join('')}</div>${active.length>1?'<button type="button" class="map-filter-clear-all" data-clear-all-seat-filters>Rimuovi tutti</button>':''}`;
+  wrap.querySelectorAll('[data-clear-seat-filter]').forEach(btn=>btn.addEventListener('click',()=>{const el=$(`#${btn.dataset.clearSeatFilter}`);if(el)el.value='';state.explorerPage=1;renderMarginals();}));
+  wrap.querySelector('[data-clear-all-seat-filters]')?.addEventListener('click',resetSeatFilters);
+}
 function applyExplorerMapFilter(){
+  renderMapFilterChips();
   if(!state.mapPaths?.size)return;const enabled=$('#seatFilterMap')?.checked!==false,ids=state.explorerMatchingIds,active=enabled&&explorerFiltersActive()&&!!ids&&ids.size<state.mapPaths.size;
   for(const [id,el] of state.mapPaths){const match=!enabled||!ids||ids.has(id);el.classList.toggle('filtered-out',!match);}
   const fit=$('[data-mapzoom="filtered"]');if(fit){const n=ids?.size||state.mapPaths.size;fit.disabled=!active;fit.classList.toggle('is-active',active);fit.textContent=active?`Filtrati (${n})`:'Filtrati';}
@@ -1897,16 +1976,22 @@ async function refreshDataManually(){
   setStatus('Controllo nuovi sondaggi…','loading');
   setRefreshReview('checking','Verifica aggiornamenti in corso','Confronto la fonte nazionale in tempo reale con i sondaggi già caricati.');
   try{
-    const live=await fetchLiveNationalPolls(),review=reviewPollingChanges(state.polls,live);
+    const live=await fetchLiveNationalPolls();
+    validateLivePollSnapshot(live);
+    const review=reviewPollingChanges(state.polls,live);
     if(!review.changed){
       const latest=live[0]||state.polls[0];
       setStatus('Nessun nuovo sondaggio · modello invariato','ok');
-      setRefreshReview('unchanged','Nessun nuovo sondaggio trovato',`${pollReviewDescription(latest)} · Monte Carlo non ricalcolato · review automatica ogni 3 ore.`);
+      setRefreshReview('unchanged','Nessuna variazione nei sondaggi',`${pollReviewDescription(latest)} · Monte Carlo non ricalcolato · review automatica ogni 3 ore.`);
       return;
     }
 
-    const changedRow=review.added[0]||review.corrected[0]||live[0];
-    const title=review.added.length===1?'Nuovo sondaggio trovato':review.added.length>1?`${review.added.length} nuovi sondaggi trovati`:'Sondaggio aggiornato nella fonte';
+    const changedRow=review.added[0]||review.corrected[0]||review.removed[0]||live[0];
+    const labels=[];
+    if(review.added.length)labels.push(pollReviewCountLabel(review.added.length,'nuovo sondaggio','nuovi sondaggi'));
+    if(review.corrected.length)labels.push(pollReviewCountLabel(review.corrected.length,'sondaggio corretto','sondaggi corretti'));
+    if(review.removed.length)labels.push(pollReviewCountLabel(review.removed.length,'sondaggio rimosso','sondaggi rimossi'));
+    const title=labels.join(' · ');
     state.polls=live;
     state.pollSource='MediaWiki in tempo reale · verifica manuale';
     state.average=calculateAverage(live);
@@ -1918,11 +2003,11 @@ async function refreshDataManually(){
     if(state.constituencies.length!==650)throw new Error('I 650 collegi non sono disponibili per ricalcolare il modello.');
     buildCentral();renderScenarioInputs(true);renderCustomScenario();renderCentral();renderMap();restoreSeatDeepLink();
     setStatus('Nuovi dati trovati · Monte Carlo in avvio','loading');
-    setRefreshReview('changed',title,`${pollReviewDescription(changedRow)} · Monte Carlo: 50.000 simulazioni in avvio.`);
+    setRefreshReview('changed',title,`Variazioni confermate nella fonte · Monte Carlo: 50.000 simulazioni in avvio.`,review);
     const fp=fingerprint(),cached=loadMcCache(),alreadyAvailable=cached?.fingerprint===fp;
     await runMonteCarlo({allowClientBuild:true});
     setStatus('Dati aggiornati · Monte Carlo completato','ok');
-    setRefreshReview('done',`${title} · Monte Carlo completato`,alreadyAvailable?`${pollReviewDescription(changedRow)} · Risultato già disponibile per questi dati.`:`${pollReviewDescription(changedRow)} · 50.000 simulazioni completate; l'aggiornamento automatico renderà persistenti dati e card.`);
+    setRefreshReview('done',`${title} · Monte Carlo completato`,alreadyAvailable?`Risultato già disponibile per queste rilevazioni.`:`50.000 simulazioni completate; l'aggiornamento automatico renderà persistenti dati e card.`,review);
     $('#footerBuild').textContent=`Dati: 650 collegi · sondaggi: ${state.pollSource} · rilevazioni subnazionali: ${state.subnational.length} · Irlanda del Nord: ${niModuleReady()?'18 collegi simulati':'base fissa'}`;
   }catch(err){
     console.error(err);
