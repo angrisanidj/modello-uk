@@ -12,8 +12,8 @@
 <meta property="og:url" content="https://angrisanidj.github.io/modello-uk/" />
 <meta property="og:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta property="og:description" content="Nowcast probabilistico della House of Commons: sondaggi, proiezione dei seggi, Monte Carlo e probabilità collegio per collegio." />
-<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=20260826-8ff7cd0d" />
-<meta property="og:image:secure_url" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=20260826-8ff7cd0d" />
+<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=bootstrap" />
+<meta property="og:image:secure_url" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=bootstrap" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -22,26 +22,42 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta name="twitter:description" content="Nowcast probabilistico della House of Commons: sondaggi, seggi, collegi e probabilità." />
-<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=20260826-8ff7cd0d" />
+<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=bootstrap" />
 <meta name="twitter:image:alt" content="Nowcast delle elezioni nel Regno Unito — proiezione della House of Commons" />
 <meta name="twitter:url" content="https://angrisanidj.github.io/modello-uk/" />
-<link rel="stylesheet" href="styles.css?v=0.9.47" />
-<link rel="stylesheet" href="styles-v0935.css?v=0.9.47" />
-<link rel="stylesheet" href="styles-v0936.css?v=0.9.47" />
-<link rel="stylesheet" href="styles-v0937.css?v=0.9.47" />
-<link rel="stylesheet" href="styles-v0938.css?v=0.9.47" />
-<link rel="stylesheet" href="styles-v0939.css?v=0.9.47" />
-<link rel="stylesheet" href="styles-v0940.css?v=0.9.47" />
-<link rel="stylesheet" href="styles-v0941.css?v=0.9.47" />
-<link rel="stylesheet" href="styles-v0942.css?v=0.9.47" />
-<link rel="stylesheet" href="styles-v0943.css?v=0.9.47" />
-<link rel="stylesheet" href="styles-v0944.css?v=0.9.47" />
-<link rel="stylesheet" href="styles-v0945.css?v=0.9.47" />
-<link rel="stylesheet" href="styles-v0946.css?v=0.9.47" />
-<link rel="stylesheet" href="styles-v0947.css?v=0.9.47" />
-<link rel="stylesheet" href="map-performance.css?v=0.9.47" />
+<link rel="stylesheet" href="styles.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0935.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0936.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0937.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0938.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0939.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0940.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0941.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0942.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0943.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0944.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0945.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0946.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0947.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0948.css?v=0.9.49" />
+<link rel="stylesheet" href="styles-v0949.css?v=0.9.49" />
+<link rel="stylesheet" href="map-performance.css?v=0.9.49" />
 </head>
 <body>
+<div id="desktopNowcastSticky" class="desktop-nowcast-sticky" aria-label="Riepilogo rapido del nowcast">
+  <div class="desktop-nowcast-inner">
+    <button class="desktop-nowcast-brand" type="button" data-desktop-jump="top" title="Torna all’inizio">
+      <span class="desktop-uk-flag" aria-hidden="true"></span>
+      <strong>ELEZIONI UK</strong><span>· SONDAGGI E PROIEZIONI</span>
+    </button>
+    <div class="desktop-nowcast-summary">
+      <span class="desktop-nowcast-tag">NOWCAST</span>
+      <button class="desktop-nowcast-party" type="button" data-desktop-jump="seggi" title="Vai alla proiezione dei seggi"><i id="desktopParty1Dot"></i><span id="desktopParty1Name">—</span><strong id="desktopParty1Seats">—</strong></button>
+      <button class="desktop-nowcast-party" type="button" data-desktop-jump="seggi" title="Vai alla proiezione dei seggi"><i id="desktopParty2Dot"></i><span id="desktopParty2Name">—</span><strong id="desktopParty2Seats">—</strong></button>
+      <button class="desktop-nowcast-majority" type="button" data-desktop-jump="probabilita" title="Vai alle probabilità di governo"><strong>326</strong><span>MAGGIORANZA</span></button>
+    </div>
+  </div>
+</div>
 <div id="mobileNowcastSticky" class="mobile-nowcast-sticky" aria-label="Riepilogo rapido del nowcast">
   <div class="mobile-nowcast-shell">
     <div class="mobile-nowcast-flag" aria-hidden="true"></div>
@@ -53,6 +69,18 @@
         <span class="mobile-nowcast-majority" aria-label="Soglia di maggioranza"><strong>326</strong><span>magg.</span></span>
       </div>
     </div>
+  </div>
+</div>
+<div id="viewStateBar" class="view-state-bar" role="status" aria-live="polite" hidden>
+  <div class="view-state-inner">
+    <span id="viewStateMark" class="view-state-mark" aria-hidden="true"></span>
+    <div class="view-state-copy">
+      <span id="viewStateKicker" class="view-state-kicker">Vista corrente</span>
+      <strong id="viewStateTitle">Nowcast completo</strong>
+      <small id="viewStateDetail">—</small>
+    </div>
+    <div id="viewStateChips" class="view-state-chips" aria-label="Filtri e scenari attivi"></div>
+    <button id="returnFullNowcastBtn" class="view-state-reset" type="button" title="Rimuovi filtri e scenario personalizzato e torna al nowcast corrente"><span class="view-state-reset-long">Torna al nowcast completo</span><span class="view-state-reset-short">Nowcast completo</span></button>
   </div>
 </div>
 <div class="flag-ribbon" aria-hidden="true"></div>
@@ -173,7 +201,7 @@
       </article>
     </aside>
   </section>
-  <div class="section-title"><div><div class="section-kicker">House of Commons</div><h2>Proiezione dei seggi</h2><p>Mediane e intervallo centrale 80%. La maggioranza assoluta è a quota 326.</p></div></div>
+  <div class="section-title" id="seggi"><div><div class="section-kicker">House of Commons</div><h2>Proiezione dei seggi</h2><p>Mediane e intervallo centrale 80%. La maggioranza assoluta è a quota 326.</p></div></div>
   <section class="projection-layout">
     <article class="card parliament-card">
       <div class="projection-head"><div><h2 id="projectionTitle">In attesa dei dati territoriali</h2><p id="projectionSubtitle">La simulazione parte quando sono disponibili i risultati dei collegi.</p></div><span id="mcBadge" class="proj-badge">50.000 simulazioni</span></div>
@@ -189,7 +217,7 @@
       <div class="hemicycle-interaction-note">Clicca un partito nella legenda per evidenziarne i seggi nell’emiciclo; clicca di nuovo per tornare alla vista completa.</div>
     </article>
     <aside class="projection-side">
-      <article class="card probability-card">
+      <article class="card probability-card" id="probabilita">
         <div class="cardhead"><div><h3>Probabilità di governo</h3><p>Frequenza dell’esito nelle 50.000 simulazioni.</p></div></div>
         <div class="prob-section-label">Maggioranza assoluta</div>
         <div class="prob-list compact-probs">
@@ -328,7 +356,7 @@
         <div class="scenario-intro"><strong>Scenario deterministico, separato dal nowcast</strong><p>Non modifica il modello di produzione e non ricalcola le probabilità Monte Carlo. Le quote locali relative restano invariate; cambia soltanto il voto nazionale inserito qui sotto.</p></div>
         <div id="scenarioInputs" class="scenario-inputs"></div>
         <div class="scenario-total"><span>Totale</span><strong id="scenarioTotal">100,0%</strong><button id="scenarioNormalizeBtn" class="small-action">Normalizza a 100</button></div>
-        <div class="scenario-actions"><button id="scenarioRunBtn" class="primary">Calcola scenario</button><button id="scenarioResetBtn" class="small-action">Ripristina nowcast</button><button id="scenarioMapBtn" class="small-action" disabled>Mostra sulla mappa</button></div>
+        <div class="scenario-actions"><button id="scenarioRunBtn" class="primary">Calcola scenario</button><button id="scenarioResetBtn" class="small-action">Ripristina nowcast</button><button id="scenarioMapBtn" class="small-action" disabled>Attiva scenario nelle viste</button></div>
         <div id="scenarioMessage" class="small-note">Restore Britain non entra nella conversione per collegio finché non esiste una base geografica sufficientemente solida; lo scenario lavora sui partiti attualmente modellati nei seggi.</div>
       </div>
       <div class="scenario-results">
@@ -336,6 +364,25 @@
         <div id="scenarioSeatStrip" class="seat-strip scenario-strip"></div>
         <div id="scenarioSeatTable" class="seat-table scenario-seat-table"><div class="empty-small">Calcola uno scenario per vedere la distribuzione dei seggi.</div></div>
       </div>
+    </div>
+    <div class="scenario-majority-tool" id="scenarioMajorityTool">
+      <div class="scenario-majority-copy">
+        <span class="scenario-majority-kicker">Obiettivo seggi</span>
+        <h3>Quanto voto serve per arrivare alla maggioranza?</h3>
+        <p>Stima la quota nazionale necessaria perché un partito raggiunga l’obiettivo nella <strong>proiezione mediana</strong>. Gli altri partiti modellati vengono ridimensionati proporzionalmente rispetto alla base corrente dello scenario. Il calcolo è esplorativo e non modifica il nowcast di produzione.</p>
+      </div>
+      <div class="scenario-majority-quick" aria-label="Calcoli rapidi per la maggioranza">
+        <button type="button" data-majority-party="lab"><i style="background:var(--lab)"></i>Labour <span>→ 326</span></button>
+        <button type="button" data-majority-party="ref"><i style="background:var(--ref)"></i>Reform UK <span>→ 326</span></button>
+        <button type="button" data-majority-party="con"><i style="background:var(--con)"></i>Conservative <span>→ 326</span></button>
+      </div>
+      <div class="scenario-majority-controls">
+        <label><span>Partito</span><select id="scenarioMajorityParty"><option value="lab">Labour</option><option value="ref">Reform UK</option><option value="con">Conservative</option></select></label>
+        <label><span>Obiettivo</span><span class="scenario-majority-seat-input"><input id="scenarioMajoritySeats" type="number" min="1" max="632" step="1" value="326"><b>seggi</b></span></label>
+        <button id="scenarioMajorityRun" class="primary" type="button">Calcola quota necessaria</button>
+      </div>
+      <div id="scenarioMajorityProgress" class="scenario-majority-progress" aria-live="polite" hidden><span>Preparazione…</span><progress value="0" max="100"></progress></div>
+      <div id="scenarioMajorityResult" class="scenario-majority-result" hidden></div>
     </div>
   </section>
   <div class="section-title"><div><div class="section-kicker">Sondaggi</div><h2>Tutti i sondaggi dalle elezioni del 2024</h2><p>Dal 4 luglio 2024 a oggi, ordinati dal più recente. Puoi filtrare per istituto o area e sfogliare 25 rilevazioni alla volta.</p></div><span id="pollTableCount" class="badge">—</span></div>
@@ -395,8 +442,8 @@
   </footer>
   <div class="author-signature">Daniele Angrisani · Nowcast probabilistico delle elezioni nel Regno Unito · <a href="https://x.com/putino" target="_blank" rel="noopener">@putino</a></div>
 </main>
-<script src="scripts/app.js?v=0.9.47"></script>
-<script src="scripts/map-performance.js?v=0.9.47"></script>
-<script src="scripts/interpretation.js?v=0.9.47"></script>
+<script src="scripts/app.js?v=0.9.49"></script>
+<script src="scripts/map-performance.js?v=0.9.49"></script>
+<script src="scripts/interpretation.js?v=0.9.49"></script>
 </body>
 </html>

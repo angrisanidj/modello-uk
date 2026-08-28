@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.47 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.49 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,7 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.47.
+- **Interfaccia:** v0.9.49.
 - **Motore statistico di produzione:** **v0.9.29**, congelato durante le modifiche esclusivamente frontend.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche in 50 blocchi asincroni da 1.000; il risultato corrente viene persistito dal workflow delle social card e riutilizzato finché il fingerprint degli input non cambia.
@@ -53,11 +53,13 @@ Il progetto resta nella serie **0.x**: il passaggio a v1.0 richiede una qualità
 - elenco dei collegi più marginali/incerti;
 - export CSV dei risultati filtrati e dell'intero set dei 650 seggi;
 - scenario builder nazionale deterministico, separato dal Monte Carlo di produzione;
+- calcolatore esplorativo **“Quanto voto serve?”** per stimare la quota nazionale necessaria a Labour, Reform UK o Conservative per raggiungere un obiettivo di seggi nella proiezione mediana, con conferma finale su 50.000 simulazioni e pulsante per applicare il risultato allo scenario;
 - coalition builder e combinazioni minime di maggioranza;
 - export grafici e strumenti di condivisione social;
 - **masthead editoriale professionale** con Union Jack, metadati principali del modello, gerarchia tipografica e spaziatura ripensate sul linguaggio visivo del modello Germania;
 - **condivisioni ridisegnate** con icone vettoriali, rail verticale su desktop ampio e barra orizzontale compatta sui dispositivi più piccoli;
-- **barra sticky del nowcast**, visibile durante lo scorrimento su desktop e mobile, con bandiera UK, i due primi partiti per seggi, probabilità di Hung Parliament e soglia di maggioranza;
+- **barra sticky del nowcast** differenziata per viewport: su desktop una fascia editoriale chiara e sottile con i primi due partiti e la soglia 326; su mobile un riepilogo minimale che appare solo tornando verso l’alto;
+- **stato della vista sempre esplicito**: quando sono attivi filtri o uno scenario utente compare un indicatore persistente desktop/mobile che segnala che non si sta guardando il nowcast completo, mostra i filtri attivi e offre sempre “Torna al nowcast completo”;
 - **export grafici modulari** 16:9 / 5:2 per proiezione dei seggi, mappa e andamento dei sondaggi, con condivisione nativa quando disponibile;
 - **snapshot JSON** dello stato corrente (media, seggi, intervalli, probabilità e scenario rappresentativo) per uso editoriale/archivio;
 - guida **“Come leggere il modello”**;
@@ -226,3 +228,14 @@ I workflow restano sulle release delle Action basate su Node.js 24 (`cache@v5`, 
 - Il Monte Carlo non parte se il controllo live restituisce campioni manifestamente implausibili.
 - I filtri attivi dei collegi sono ora visibili sopra la mappa e rimovibili singolarmente.
 - Motore statistico invariato.
+
+
+## UI v0.9.48 — barra desktop e soglia di maggioranza
+
+- Aggiunta una barra sticky desktop ispirata alla soluzione del modello Germania: fondo chiaro, richiamo UK molto sottile, primi due partiti per seggi e soglia 326. Compare solo dopo aver superato l’intestazione ed è navigabile verso proiezione e probabilità di governo.
+- La barra desktop mostra sempre il **nowcast corrente**, non lo scenario personalizzato.
+- Nello scenario personalizzato è disponibile il nuovo strumento **“Quanto voto serve per arrivare alla maggioranza?”** con comandi rapidi per Labour, Reform UK e Conservative e obiettivo modificabile.
+- Gli altri partiti vengono ridimensionati proporzionalmente alla media corrente mentre varia la quota del partito scelto.
+- La ricerca usa prima una fase rapida per individuare la zona della soglia; il valore finale viene confermato con **50.000 simulazioni asincrone in blocchi da 1.000**, senza sovrascrivere o riutilizzare il Monte Carlo di produzione.
+- Il risultato riporta quota nazionale indicativa, differenza dalla media corrente, mediana dei seggi, intervallo centrale 80% e probabilità di raggiungere l’obiettivo; può essere applicato con un clic allo scenario deterministico.
+- `calculateAverage`, `buildCentral`, `prepareSeatModel`, `buildCustomScenario` e `runMonteCarlo` di produzione restano invariati.
