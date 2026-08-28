@@ -76,7 +76,7 @@ def main() -> int:
     required_ids = {
         "refreshBtn", "pollTrendSvg", "pollTrendTooltip", "seatTable",
         "mapWrap", "ukMap", "mapGeoLayoutBtn", "mapHexLayoutBtn",
-        "detailName", "detailZoomBtn", "detailCopyBtn",
+        "detailName", "detailZoomBtn", "detailCopyBtn", "scenarioMapBtn",
     }
     missing_ids = sorted(required_ids - set(parser.ids))
     if missing_ids:
@@ -147,6 +147,23 @@ def main() -> int:
         for marker in accessibility_markers:
             if marker not in app:
                 fail(errors, f"map keyboard accessibility regression: missing {marker!r}")
+
+        render_start = app.find("function renderCustomScenario(){")
+        render_end = app.find("\nfunction runCustomScenario()", render_start)
+        if render_start < 0 or render_end < 0:
+            fail(errors, "scenario reset regression: renderCustomScenario() not found")
+        else:
+            empty_branch = app[render_start:render_end].split("const sum=", 1)[0]
+            scenario_reset_markers = (
+                "$('#scenarioMapBtn').disabled=true",
+                "mb.disabled=true;mb.setAttribute('aria-disabled','true')",
+                "const src=$('#seatSource');if(src){src.value='live'",
+                "const reg=$('#regionalSource');if(reg){reg.value='live'",
+                "option[value=\"custom\"]');if(o)o.disabled=true",
+            )
+            for marker in scenario_reset_markers:
+                if marker not in empty_branch:
+                    fail(errors, f"scenario reset regression: missing shared reset marker {marker!r}")
 
     if errors:
         print("Frontend QA FAILED", file=sys.stderr)

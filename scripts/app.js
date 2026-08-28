@@ -1785,7 +1785,13 @@ function buildCustomScenario(rawTarget){
 }
 function renderCustomScenario(){
   const s=state.customScenario,table=$('#scenarioSeatTable'),strip=$('#scenarioSeatStrip');if(!table||!strip)return;
-  if(!s){table.innerHTML='<div class="empty-small">Calcola uno scenario per vedere la distribuzione dei seggi.</div>';strip.innerHTML='';$('#scenarioChanges').textContent='—';return;}
+  if(!s){
+    table.innerHTML='<div class="empty-small">Calcola uno scenario per vedere la distribuzione dei seggi.</div>';strip.innerHTML='';$('#scenarioChanges').textContent='—';
+    $('#scenarioMapBtn').disabled=true;const mb=$('#mapUserBtn');if(mb){mb.disabled=true;mb.setAttribute('aria-disabled','true');}
+    const src=$('#seatSource');if(src){src.value='live';const o=src.querySelector('option[value="custom"]');if(o)o.disabled=true;}
+    const reg=$('#regionalSource');if(reg){reg.value='live';const o=reg.querySelector('option[value="custom"]');if(o)o.disabled=true;}
+    return;
+  }
   const sum=SEAT_ORDER.reduce((a,p)=>a+(s.totals[p]||0),0)||650;
   strip.innerHTML=SEAT_ORDER.filter(p=>(s.totals[p]||0)>0).map(p=>`<span style="width:${(s.totals[p]/sum)*100}%;background:${PARTY[p]?.color||PARTY.other.color}" title="${PARTY[p]?.name||p}: ${fmt0(s.totals[p])}"></span>`).join('');
   table.innerHTML=SEAT_ORDER.filter(p=>(s.totals[p]||0)>0).map(p=>{const live=state.mc?.medians?.[p]??state.central?.totals?.[p]??0,d=(s.totals[p]||0)-live;return `<div class="seat-row"><div class="left"><i class="party-dot" style="background:${PARTY[p]?.color||PARTY.other.color}"></i>${PARTY[p]?.short||p}</div><strong>${fmt0(s.totals[p])} <small class="scenario-delta ${d>0?'up':d<0?'down':''}">${d===0?'=':(d>0?'+':'')+fmt0(d)}</small></strong></div>`;}).join('');
@@ -1799,9 +1805,8 @@ function runCustomScenario(){
   state.explorerPage=1;renderMarginals();
 }
 function resetCustomScenario(){
-  state.scenarioHemicycleActive=false;state.customScenario=null;renderScenarioInputs(true);renderCustomScenario();renderNowcastSeatProjection();const src=$('#seatSource');if(src){src.value='live';const o=src.querySelector('option[value="custom"]');if(o)o.disabled=true;}
-  const mb=$('#mapUserBtn');if(mb){mb.disabled=true;mb.setAttribute('aria-disabled','true');}if(state.mapMode==='custom')state.mapMode=state.mc?.seatProb?'representative':'central';applyMapColors();state.explorerPage=1;renderMarginals();
-  const reg=$('#regionalSource');if(reg)reg.value='live';renderRegionalDashboard();
+  state.scenarioHemicycleActive=false;state.customScenario=null;renderScenarioInputs(true);renderCustomScenario();renderNowcastSeatProjection();
+  if(state.mapMode==='custom')state.mapMode=state.mc?.seatProb?'representative':'central';applyMapColors();state.explorerPage=1;renderMarginals();renderRegionalDashboard();
   const msg=$('#scenarioMessage');if(msg)msg.textContent='Scenario ripristinato. Emiciclo, mappa, regioni e collegi sono tornati al nowcast completo; il Monte Carlo di produzione non è stato modificato.';syncViewContextBar();
 }
 let scenarioThresholdRunToken=0,scenarioThresholdResult=null;
