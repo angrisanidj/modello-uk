@@ -1519,18 +1519,19 @@ function renderMap(){
     map.innerHTML=`<path class="hex-uk-silhouette" d="${silhouette}" fill-rule="evenodd" aria-hidden="true"></path>`+features.map(f=>{
       const id=geometryCode(f.properties||{}),name=geometryName(f.properties||{}),seat=state.byId.get(id),hex=hexes.get(id);if(!hex)return'';
       const fill=seat?PARTY[seat.centralWinner]?.color:partyColorFrom2024(id),label=seat?.name||name||id;
-      return `<path class="constituency constituency-hex" data-id="${escapeHtml(id)}" data-map-name="${escapeHtml(label)}" d="${hexagonPath(hex.x,hex.y,hex.r)}" fill="${fill||'#414957'}"></path>`;
+      return `<path class="constituency constituency-hex" data-id="${escapeHtml(id)}" data-map-name="${escapeHtml(label)}" tabindex="-1" role="button" aria-label="${escapeHtml(label)}: apri dettaglio collegio" d="${hexagonPath(hex.x,hex.y,hex.r)}" fill="${fill||'#414957'}"></path>`;
     }).join('');
   }else{
     map.innerHTML=features.map(f=>{
       const id=geometryCode(f.properties||{}),name=geometryName(f.properties||{}),seat=state.byId.get(id);
       const fill=seat?PARTY[seat.centralWinner]?.color:partyColorFrom2024(id);
       const label=seat?.name||name||id;
-      return `<path class="constituency" data-id="${escapeHtml(id)}" data-map-name="${escapeHtml(label)}" d="${pathForGeometry(f.geometry,project)}" fill="${fill||'#414957'}"></path>`;
+      return `<path class="constituency" data-id="${escapeHtml(id)}" data-map-name="${escapeHtml(label)}" tabindex="-1" role="button" aria-label="${escapeHtml(label)}: apri dettaglio collegio" d="${pathForGeometry(f.geometry,project)}" fill="${fill||'#414957'}"></path>`;
     }).join('');
   }
   state.mapPaths=new Map(Array.from(map.querySelectorAll('path.constituency')).map(el=>[el.dataset.id,el]));
   state.selectedPath=state.selectedSeat?state.mapPaths.get(state.selectedSeat)||null:null;if(state.selectedPath)state.selectedPath.classList.add('selected');
+  const keyboardAnchor=state.selectedPath||state.mapPaths.values().next().value;if(keyboardAnchor)keyboardAnchor.setAttribute('tabindex','0');
   resetMapZoom();
   $('#mapEmpty').style.display='none';
   const reduced=state.geometry?.meta?.vertices_after;
@@ -1588,11 +1589,14 @@ function initMapNavigation(){
   const stop=ev=>{if(!mapZoomState.panning||ev.pointerId!==mapZoomState.pointerId)return;if(mapZoomState.moved)mapZoomState.suppressClick=true;mapZoomState.panning=false;mapZoomState.pointerId=null;try{map.releasePointerCapture?.(ev.pointerId);}catch(_){}applyMapView();};map.addEventListener('pointerup',stop);map.addEventListener('pointercancel',stop);
 }
 function partyColorFrom2024(id){const c=state.byId.get(id)||state.constituencyIndex.get(id);return PARTY[c?.winner2024||'other']?.color||PARTY.other.color;}
+function setMapKeyboardAnchor(path,focus=false){
+  if(!path)return;const map=$('#ukMap'),current=map?.querySelector('path.constituency[tabindex="0"]');if(current&&current!==path)current.setAttribute('tabindex','-1');path.setAttribute('tabindex','0');if(focus)path.focus();
+}
 function selectSeat(id){
   state.selectedSeat=id;
   if(state.selectedPath)state.selectedPath.classList.remove('selected');
   state.selectedPath=state.mapPaths.get(id)||null;
-  if(state.selectedPath)state.selectedPath.classList.add('selected');
+  if(state.selectedPath){state.selectedPath.classList.add('selected');setMapKeyboardAnchor(state.selectedPath);}
   const zb=$('#detailZoomBtn'),cb=$('#detailCopyBtn'),pb=$('#detailPngBtn'),sb=$('#detailShareBtn');if(zb)zb.disabled=!state.selectedPath;if(cb)cb.disabled=false;if(pb)pb.disabled=false;if(sb)sb.disabled=false;
   renderDetail(id);
 }
@@ -2373,6 +2377,12 @@ function bindUi(){
     if(mapZoomState.suppressClick){mapZoomState.suppressClick=false;return;}
     const path=event.target instanceof Element?event.target.closest('path.constituency'):null;
     if(path&&$('#ukMap').contains(path))selectSeat(path.dataset.id);
+  });
+  $('#ukMap').addEventListener('keydown',event=>{
+    const path=event.target instanceof Element?event.target.closest('path.constituency'):null;if(!path||!$('#ukMap').contains(path))return;
+    if(event.key==='Enter'||event.key===' '){event.preventDefault();selectSeat(path.dataset.id);return;}
+    const keys=['ArrowLeft','ArrowUp','ArrowRight','ArrowDown','Home','End'];if(!keys.includes(event.key))return;event.preventDefault();
+    const paths=Array.from(state.mapPaths.values()),i=Math.max(0,paths.indexOf(path));let j=i;if(event.key==='Home')j=0;else if(event.key==='End')j=paths.length-1;else if(event.key==='ArrowLeft'||event.key==='ArrowUp')j=(i-1+paths.length)%paths.length;else j=(i+1)%paths.length;setMapKeyboardAnchor(paths[j],true);
   });
   $('#mapGeoLayoutBtn')?.addEventListener('click',()=>{if(state.mapLayout==='geo')return;state.mapLayout='geo';renderMap();});
   $('#mapHexLayoutBtn')?.addEventListener('click',()=>{if(state.mapLayout==='hex')return;state.mapLayout='hex';renderMap();});
