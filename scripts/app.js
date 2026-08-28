@@ -75,7 +75,7 @@ const state = {
   constituencies:[], constituencyIndex:new Map(), byId:new Map(), geometry:null, ni:null,
   modelParams:null, mrpLite:null, precomputedMc:null, subnational:[], territorialBaseline:null, geographicTargets:null,
   mapPaths:new Map(), selectedPath:null,
-  central:null, mc:null, representative:null, customScenario:null, selectedSeat:null, mapMode:'central', coalition:new Set(), explorerPage:1, explorerPageSize:25, explorerMatchingIds:null, pollPage:1, pollPageSize:25, hemiFocus:null,
+  central:null, mc:null, representative:null, customScenario:null, scenarioHemicycleActive:false, selectedSeat:null, mapMode:'central', coalition:new Set(), explorerPage:1, explorerPageSize:25, explorerMatchingIds:null, pollPage:1, pollPageSize:25, hemiFocus:null,
 };
 
 const MAP_BASE_VIEW={x:0,y:0,w:640,h:760};
@@ -111,6 +111,7 @@ function pollFiltersActive(){
 function activeScenarioSections(){
   if(!state.customScenario)return [];
   const out=[];
+  if(state.scenarioHemicycleActive)out.push('Emiciclo');
   if(state.mapMode==='custom')out.push('Mappa');
   if($('#regionalSource')?.value==='custom')out.push('Regioni');
   if($('#seatSource')?.value==='custom')out.push('Collegi');
@@ -159,16 +160,35 @@ function clearSeatFiltersRaw(){
   const sort=$('#seatSort');if(sort)sort.value='uncertainty';
 }
 function clearPollFiltersRaw(){for(const id of ['pollSearch','pollPollster','pollArea']){const el=$(`#${id}`);if(el)el.value='';}}
+function renderNowcastSeatProjection(){
+  const totals=state.mc?.medians||state.central?.totals;if(!totals)return;
+  renderSeats(totals,state.mc?.intervals||null);
+  if(state.mc){
+    $('#projectionTitle').textContent='Scenario rappresentativo Monte Carlo';
+    $('#projectionSubtitle').textContent='Mediane di 50.000 simulazioni; intervallo centrale 80% tra parentesi. La mappa viene ricomposta per aderire il più possibile alle mediane dei seggi.';
+  }else{
+    $('#projectionTitle').textContent='Scenario alla media dei sondaggi';
+    $('#projectionSubtitle').textContent='Proiezione centrale del nowcast; la distribuzione probabilistica sarà disponibile al termine del Monte Carlo.';
+  }
+}
+function renderCustomSeatProjection(){
+  if(!state.customScenario?.totals)return;
+  renderSeats(state.customScenario.totals,null);
+  $('#projectionTitle').textContent='Scenario personalizzato';
+  $('#projectionSubtitle').textContent='Emiciclo e distribuzione dei seggi mostrano lo scenario deterministico costruito dall’utente. Intervalli e probabilità restano quelli del nowcast di produzione.';
+}
 function deactivateCustomScenarioViews(){
   const seatSource=$('#seatSource');if(seatSource)seatSource.value='live';
   const regional=$('#regionalSource');if(regional)regional.value='live';
   if(state.mapMode==='custom')state.mapMode=state.mc?.seatProb?'representative':'central';
+  state.scenarioHemicycleActive=false;renderNowcastSeatProjection();
   state.explorerPage=1;applyMapColors();renderMarginals();renderRegionalDashboard();syncViewContextBar();
 }
 function activateCustomScenarioViews(){
   if(!state.customScenario)return;
   const seatSource=$('#seatSource');if(seatSource){const o=seatSource.querySelector('option[value="custom"]');if(o)o.disabled=false;seatSource.value='custom';}
   const regional=$('#regionalSource');if(regional){const o=regional.querySelector('option[value="custom"]');if(o)o.disabled=false;regional.value='custom';}
+  state.scenarioHemicycleActive=true;renderCustomSeatProjection();
   state.mapMode='custom';state.explorerPage=1;applyMapColors();renderMarginals();renderRegionalDashboard();syncViewContextBar();
 }
 function returnToFullNowcast(){
@@ -1247,7 +1267,7 @@ function renderCentral(){
   const sm=state.geographicTargets?.meta?.Scotland,wm=state.geographicTargets?.meta?.Wales;
   const sub=[sm?.polls?`Scozia: ${sm.polls} sondaggi`:null,wm?.polls?`Galles: ${wm.polls} sondaggi`:null].filter(Boolean).join(' · ');
   $('#projectionSubtitle').textContent=`Struttura geografica validata${sub?` · ${sub}`:''}${state.central?.ni?.signalWeight?` · Irlanda del Nord: segnale Assemblea ×${state.central.ni.signalWeight.toFixed(2)}`:' · Irlanda del Nord: base 2024'} · Il Monte Carlo sta costruendo la distribuzione probabilistica e lo scenario territoriale rappresentativo.`;
-  renderSeats(totals,null);
+  if(state.scenarioHemicycleActive&&state.customScenario)renderCustomSeatProjection();else renderSeats(totals,null);
   $('#kpiLargest').textContent=PARTY[Object.entries(totals).sort((a,b)=>b[1]-a[1])[0][0]]?.short||'—';
   $('#kpiLargestMeta').textContent='scenario centrale provvisorio';
   renderOutcomeDashboard();
@@ -1261,9 +1281,12 @@ function renderCentral(){
 function renderMc(){
   const m=state.mc;if(!m)return;
   state.representative=buildRepresentativeScenario(m);
-  renderSeats(m.medians,m.intervals);
-  $('#projectionTitle').textContent='Scenario rappresentativo Monte Carlo';
-  $('#projectionSubtitle').textContent='Mediane di 50.000 simulazioni; intervallo centrale 80% tra parentesi. La mappa viene ricomposta per aderire il più possibile alle mediane dei seggi.';
+  if(state.scenarioHemicycleActive&&state.customScenario)renderCustomSeatProjection();
+  else{
+    renderSeats(m.medians,m.intervals);
+    $('#projectionTitle').textContent='Scenario rappresentativo Monte Carlo';
+    $('#projectionSubtitle').textContent='Mediane di 50.000 simulazioni; intervallo centrale 80% tra parentesi. La mappa viene ricomposta per aderire il più possibile alle mediane dei seggi.';
+  }
   $('#probLabMaj').textContent=pctFmt(m.labMaj*100);$('#probConMaj').textContent=pctFmt(m.conMaj*100);$('#probRefMaj').textContent=pctFmt(m.refMaj*100);$('#probHung').textContent=pctFmt(m.hung*100);
   if($('#probLabWorkMaj'))$('#probLabWorkMaj').textContent=pctFmt((m.labWorkMaj||0)*100);if($('#probConWorkMaj'))$('#probConWorkMaj').textContent=pctFmt((m.conWorkMaj||0)*100);if($('#probRefWorkMaj'))$('#probRefWorkMaj').textContent=pctFmt((m.refWorkMaj||0)*100);if($('#workingThreshold'))$('#workingThreshold').textContent=fmt0(m.workingThreshold||326);
   const largest=Object.entries(m.largest).sort((a,b)=>b[1]-a[1])[0];$('#kpiLargest').textContent=PARTY[largest[0]]?.short||largest[0];$('#kpiLargestMeta').textContent=`${pctFmt(largest[1]*100)} di essere il primo partito`;
@@ -1585,15 +1608,15 @@ function renderCustomScenario(){
 }
 function runCustomScenario(){
   const originalTotal=updateScenarioTotal(),raw=scenarioInputValues();state.customScenario=buildCustomScenario(raw);renderCustomScenario();
-  renderRegionalDashboard();
-  const msg=$('#scenarioMessage');if(msg)msg.textContent=`Scenario calcolato su ${fmt0(Object.values(state.customScenario?.totals||{}).reduce((a,b)=>a+b,0))} seggi. ${Math.abs(originalTotal-100)>.051?`Gli input (${pctFmt(originalTotal)}) sono stati normalizzati automaticamente a 100%. `:''}Mappa, regioni e collegi restano sul nowcast finché non premi «Attiva scenario nelle viste». Le probabilità Monte Carlo restano quelle del nowcast corrente.`;
+  state.scenarioHemicycleActive=true;renderCustomSeatProjection();renderRegionalDashboard();syncViewContextBar();
+  const msg=$('#scenarioMessage');if(msg)msg.textContent=`Scenario calcolato su ${fmt0(Object.values(state.customScenario?.totals||{}).reduce((a,b)=>a+b,0))} seggi. ${Math.abs(originalTotal-100)>.051?`Gli input (${pctFmt(originalTotal)}) sono stati normalizzati automaticamente a 100%. `:''}L’emiciclo mostra già lo scenario personalizzato; mappa, regioni e collegi restano sul nowcast finché non premi «Attiva scenario nelle viste». Le probabilità Monte Carlo restano quelle del nowcast corrente.`;
   state.explorerPage=1;renderMarginals();
 }
 function resetCustomScenario(){
-  state.customScenario=null;renderScenarioInputs(true);renderCustomScenario();const src=$('#seatSource');if(src){src.value='live';const o=src.querySelector('option[value="custom"]');if(o)o.disabled=true;}
+  state.scenarioHemicycleActive=false;state.customScenario=null;renderScenarioInputs(true);renderCustomScenario();renderNowcastSeatProjection();const src=$('#seatSource');if(src){src.value='live';const o=src.querySelector('option[value="custom"]');if(o)o.disabled=true;}
   const mb=$('#mapUserBtn');if(mb){mb.disabled=true;mb.setAttribute('aria-disabled','true');}if(state.mapMode==='custom')state.mapMode=state.mc?.seatProb?'representative':'central';applyMapColors();state.explorerPage=1;renderMarginals();
   const reg=$('#regionalSource');if(reg)reg.value='live';renderRegionalDashboard();
-  const msg=$('#scenarioMessage');if(msg)msg.textContent='Scenario ripristinato. Il nowcast di produzione e il Monte Carlo non sono stati modificati.';syncViewContextBar();
+  const msg=$('#scenarioMessage');if(msg)msg.textContent='Scenario ripristinato. Emiciclo, mappa, regioni e collegi sono tornati al nowcast completo; il Monte Carlo di produzione non è stato modificato.';syncViewContextBar();
 }
 let scenarioThresholdRunToken=0,scenarioThresholdResult=null;
 function scenarioTargetAtPartyShare(party,share,base=scenarioBaseTarget()){
@@ -2191,7 +2214,7 @@ async function refreshDataManually(){
     state.pollSource='MediaWiki in tempo reale · verifica manuale';
     state.average=calculateAverage(live);
     state.latestAverage=latestPollAverage(live);
-    state.mc=null;state.precomputedMc=null;state.representative=null;state.customScenario=null;
+    state.mc=null;state.precomputedMc=null;state.representative=null;state.customScenario=null;state.scenarioHemicycleActive=false;
     state.explorerPage=1;state.pollPage=1;state.mapMode='central';
     if(publishedMcRefreshTimer){clearTimeout(publishedMcRefreshTimer);publishedMcRefreshTimer=null;publishedMcRefreshAttempts=0;}
     renderPolls();renderPollTrend();renderCoalitionButtons();
@@ -2218,6 +2241,7 @@ async function init(force=false){
   state.mc=null;
   state.representative=null;
   state.customScenario=null;
+  state.scenarioHemicycleActive=false;
   state.explorerPage=1;state.explorerMatchingIds=null;state.pollPage=1;
   state.mapMode='central';
   document.body.classList.remove('has-active-view');const viewBar=$('#viewStateBar');if(viewBar){viewBar.hidden=true;viewBar.classList.remove('is-active','is-filtered','is-scenario','is-mixed','below-desktop-sticky');}

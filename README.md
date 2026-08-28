@@ -248,3 +248,10 @@ I workflow restano sulle release delle Action basate su Node.js 24 (`cache@v5`, 
 - Gli stati della verifica sondaggi sono resi più evidenti con codifica visiva coerente: controllo, variazione trovata, completato, nessuna variazione, errore.
 - La riga di stato del refresh occupa tutta la larghezza su mobile e il pannello dettaglio rilevazioni ha contrasto e gerarchia tipografica maggiori.
 - Nessuna modifica al motore statistico o alle simulazioni Monte Carlo.
+
+## v0.9.52 — allineamento sticky e emiciclo scenario
+- Allineamento verticale uniforme del blocco `326 MAGGIORANZA` nella sticky bar desktop.
+- Quando viene calcolato uno scenario personalizzato, l'emiciclo principale e la relativa legenda dei seggi passano subito ai totali dello scenario.
+- La barra di contesto segnala `Emiciclo` come vista alternativa attiva.
+- Disattivando lo scenario dalle viste o tornando al nowcast completo, emiciclo e legenda tornano immediatamente ai valori del nowcast/Monte Carlo di produzione.
+- Nessuna modifica alle funzioni statistiche o al Monte Carlo di produzione.
