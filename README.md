@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.57 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.58 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,8 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.57.
+- **Interfaccia:** v0.9.58.
+- **v0.9.58 — consolidamento CSS:** la cascade storica è stata riunita in un solo stylesheet principale, mantenendo separato il layer dedicato alle prestazioni della mappa; nessuna modifica al rendering o al motore statistico.
 - **v0.9.55 — cartogramma esagonale:** griglia discreta senza sovrapposizioni, packing locale e sagoma UK più leggibile.
 - **v0.9.56 — export serie storica:** snapshot PNG senza crosshair e riepilogo corrente con valori, variazione a 30 giorni e partito in testa.
 - **v0.9.57 — QA frontend:** gate automatico JS/HTML/asset/versioni nella pipeline e mappa navigabile da tastiera; nessuna modifica al motore statistico.
@@ -128,28 +129,8 @@ Le fonti MRP esterne sono usate e validate dal relativo geography stack secondo 
 ```text
 modello-uk/
 ├── index.html
-├── styles.css
-├── styles-v0935.css
-├── styles-v0936.css
-├── styles-v0937.css
-├── styles-v0938.css
-├── styles-v0939.css
-├── styles-v0940.css
-├── styles-v0941.css
-├── styles-v0942.css
-├── styles-v0943.css
-├── styles-v0944.css
-├── styles-v0945.css
-├── styles-v0946.css
-├── styles-v0947.css
-├── styles-v0948.css
-├── styles-v0949.css
-├── styles-v0951.css
-├── styles-v0952.css
-├── styles-v0953.css
-├── styles-v0954.css
-├── styles-v0955.css
-├── map-performance.css
+├── styles.css              # cascade principale consolidata
+├── map-performance.css     # layer separato per le prestazioni della mappa
 ├── scripts/
 │   ├── app.js
 │   ├── map-performance.js

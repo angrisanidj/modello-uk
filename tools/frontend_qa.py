@@ -121,6 +121,21 @@ def main() -> int:
     if missing_scripts:
         fail(errors, "required scripts not referenced by index.html: " + ", ".join(missing_scripts))
 
+    expected_styles = ["styles.css", "map-performance.css"]
+    referenced_styles = [urlsplit(url).path.lstrip("/") for kind, url in local if kind == "style"]
+    if referenced_styles != expected_styles:
+        fail(
+            errors,
+            "stylesheet cascade must be exactly "
+            + repr(expected_styles)
+            + "; found "
+            + repr(referenced_styles),
+        )
+
+    legacy_styles = sorted(path.name for path in root.glob("styles-v*.css"))
+    if legacy_styles:
+        fail(errors, "legacy override stylesheets still present: " + ", ".join(legacy_styles))
+
     app_path = root / "scripts/app.js"
     if app_path.is_file():
         app = app_path.read_text(encoding="utf-8")
