@@ -195,6 +195,25 @@ def main() -> int:
                     f"social card regression: landscape export must be 16:9; found {landscape_w}x{landscape_h}",
                 )
 
+    # v0.9.62 final editorial polish: on mobile, sharing follows the result/export
+    # block and the top-of-page density reductions remain in the consolidated CSS.
+    share_idx = html.find('<nav class="share-rail"')
+    export_idx = html.find('<section class="card export-card"')
+    if share_idx < 0 or export_idx < 0 or share_idx < export_idx:
+        fail(errors, "final editorial polish regression: share rail must follow the result/export block")
+
+    styles_path = root / "styles.css"
+    if styles_path.is_file():
+        styles = styles_path.read_text(encoding="utf-8")
+        final_polish_markers = (
+            "v0.9.62 — final editorial polish",
+            ".editorial-meta-main>div:nth-child(1),.editorial-meta-main>div:nth-child(4){display:none!important}",
+            ".kpis .kpi{min-height:90px!important;padding:12px 10px!important}",
+        )
+        for marker in final_polish_markers:
+            if marker not in styles:
+                fail(errors, f"final editorial polish regression: missing {marker!r}")
+
     if errors:
         print("Frontend QA FAILED", file=sys.stderr)
         for e in errors:

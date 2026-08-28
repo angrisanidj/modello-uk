@@ -1296,3 +1296,28 @@ body.has-active-view #desktopNowcastSticky.is-visible{z-index:919}
 @media(max-width:900px){.run-transparency-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:760px){.run-transparency{margin:10px 0 26px;border-radius:12px}.run-transparency>summary{align-items:flex-start;padding:13px 14px}.run-transparency>summary small{font-size:9px}.run-transparency-status{font-size:7.5px;white-space:nowrap}.run-transparency-body{padding:13px 12px 15px}.run-transparency-grid{grid-template-columns:1fr 1fr;gap:6px}.run-transparency-card{padding:9px}.run-transparency-card>strong{font-size:12px}.run-weight-table{font-size:9px}.run-weight-table th,.run-weight-table td{padding:7px 6px}.run-fingerprint{align-items:flex-start;flex-direction:column;gap:3px}}
 @media(max-width:420px){.run-transparency-grid{grid-template-columns:1fr}}
+
+
+/* ===== v0.9.62 — final editorial polish =====
+   UI only: tighter mobile hierarchy, less duplicated metadata above the
+   result and sharing controls placed after the result/export block. */
+@media(max-width:760px){
+  .hero{padding:21px 0 15px!important}
+  .hero h1{font-size:clamp(38px,10.8vw,42px)!important;line-height:.96!important;margin:8px 0 11px!important}
+  .hero .subtitle{font-size:13.25px!important;line-height:1.5!important}
+  .actions{gap:7px!important;padding-top:0!important}
+  .hero-meta{margin-top:13px!important;padding-top:0!important;gap:6px!important}
+  .hero-meta .badge{padding:5px 7px!important;font-size:8.5px!important}
+  .editorial-meta{padding:9px 0!important}
+  .editorial-meta-main{grid-template-columns:1fr 1fr!important;gap:10px 18px!important}
+  .editorial-meta-main>div:nth-child(1),.editorial-meta-main>div:nth-child(4){display:none!important}
+  .kpis{margin-bottom:12px!important}
+  .kpis .kpi{min-height:90px!important;padding:12px 10px!important}
+  .kpi .label{font-size:8px!important}
+  .kpi .value{font-size:20px!important;margin-top:6px!important}
+  .kpi .meta{font-size:9px!important;margin-top:5px!important}
+  .read-guide-separated{margin:12px 0 20px!important}
+  .section-title{margin-top:28px!important;margin-bottom:10px!important}
+  .share-rail{margin:10px 0 20px!important;padding:10px 0!important}
+}
+@media(max-width:420px){.hero h1{font-size:40px!important}}
