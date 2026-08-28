@@ -1346,19 +1346,75 @@ function hexagonPath(cx,cy,r){
   const pts=[];for(let i=0;i<6;i++){const a=(Math.PI/180)*(60*i-30);pts.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}
   return pts.map((pt,i)=>`${i?'L':'M'}${pt[0].toFixed(1)},${pt[1].toFixed(1)}`).join(' ')+' Z';
 }
+let hexLayoutCache=null;
 function buildHexAssignments(features,project,W=640,H=760){
-  const rows=features.map(f=>{const id=geometryCode(f.properties||{}),name=geometryName(f.properties||{}),c=geometryProjectedCenter(f.geometry,project);return {f,id,name,x:c.x,y:c.y,density:0};}).filter(x=>x.id);
-  const densityRadius2=48*48;
-  for(let i=0;i<rows.length;i++){let d=0;for(let j=0;j<rows.length;j++){if(i===j)continue;const dx=rows[i].x-rows[j].x,dy=rows[i].y-rows[j].y;if(dx*dx+dy*dy<=densityRadius2)d++;}rows[i].density=d;}
-  const r=11.4,dx=Math.sqrt(3)*r,dy=1.5*r,pad=17,cells=[];
-  for(let row=0,y=pad+r;y<=H-pad-r;row++,y+=dy){const offset=(row%2)*dx/2;for(let x=pad+r+offset;x<=W-pad-r;x+=dx)cells.push({x,y});}
-  const used=new Uint8Array(cells.length),assigned=new Map();
-  rows.sort((a,b)=>b.density-a.density||a.y-b.y||a.x-b.x||a.id.localeCompare(b.id));
-  for(const item of rows){
-    let best=-1,bestD=Infinity;
-    for(let i=0;i<cells.length;i++){if(used[i])continue;const ddx=item.x-cells[i].x,ddy=item.y-cells[i].y,d=ddx*ddx+ddy*ddy;if(d<bestD){bestD=d;best=i;}}
-    if(best>=0){used[best]=1;assigned.set(item.id,{...cells[best],r,name:item.name});}
+  // Shape-preserving equal-area cartogram.  The previous implementation
+  // snapped every constituency to the nearest free cell of a large lattice;
+  // dense cities consumed the useful cells first and the remaining seats were
+  // pushed into an artificial triangular block.  Here every seat starts from
+  // its real projected centroid, dense clusters are gently de-overlapped, and
+  // sparse/coastal seats stay strongly anchored to geography.  The result is
+  // still a schematic map, but the outline remains recognisably UK-shaped.
+  if(hexLayoutCache?.features===features&&hexLayoutCache.W===W&&hexLayoutCache.H===H)return hexLayoutCache.assignments;
+  const pad=20,r=8.35,minDist=r*2.08,minDist2=minDist*minDist;
+  const rows=features.map(f=>{
+    const id=geometryCode(f.properties||{}),name=geometryName(f.properties||{}),c=geometryProjectedCenter(f.geometry,project);
+    return {f,id,name,ax:c.x,ay:c.y,x:c.x,y:c.y,density:0};
+  }).filter(x=>x.id&&Number.isFinite(x.x)&&Number.isFinite(x.y));
+  const densityRadius2=34*34;
+  for(let i=0;i<rows.length;i++){
+    let d=0;
+    for(let j=0;j<rows.length;j++){
+      if(i===j)continue;
+      const dx=rows[i].ax-rows[j].ax,dy=rows[i].ay-rows[j].ay;
+      if(dx*dx+dy*dy<=densityRadius2)d++;
+    }
+    rows[i].density=d;
   }
+  const deterministicVector=(a,b)=>{
+    let h=2166136261;const text=`${a}|${b}`;
+    for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619);}
+    const angle=((h>>>0)%3600)/3600*Math.PI*2;return [Math.cos(angle),Math.sin(angle)];
+  };
+  const relax=(iterations,withSpring)=>{
+    const bucketSize=minDist*1.18;
+    for(let iter=0;iter<iterations;iter++){
+      const buckets=new Map(),fx=new Float64Array(rows.length),fy=new Float64Array(rows.length);
+      for(let i=0;i<rows.length;i++){
+        const p=rows[i],gx=Math.floor(p.x/bucketSize),gy=Math.floor(p.y/bucketSize),key=`${gx},${gy}`;
+        if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push(i);
+      }
+      for(let i=0;i<rows.length;i++){
+        const a=rows[i],gx=Math.floor(a.x/bucketSize),gy=Math.floor(a.y/bucketSize);
+        for(let ox=-1;ox<=1;ox++)for(let oy=-1;oy<=1;oy++){
+          const bucket=buckets.get(`${gx+ox},${gy+oy}`);if(!bucket)continue;
+          for(const j of bucket){
+            if(j<=i)continue;const b=rows[j];let dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;if(d2>=minDist2)continue;
+            let d=Math.sqrt(d2);if(d<.001){const v=deterministicVector(a.id,b.id);dx=v[0];dy=v[1];d=1;}
+            const overlap=minDist-d,push=overlap*(withSpring?.48:.62),ux=dx/d,uy=dy/d;
+            fx[i]-=ux*push;fy[i]-=uy*push;fx[j]+=ux*push;fy[j]+=uy*push;
+          }
+        }
+      }
+      for(let i=0;i<rows.length;i++){
+        const p=rows[i];
+        if(withSpring){
+          // Urban seats are allowed to expand more; rural/coastal seats retain
+          // the silhouette and prevent the cartogram from turning into a blob.
+          const spring=.072/(1+p.density*.055);
+          fx[i]+=(p.ax-p.x)*spring;fy[i]+=(p.ay-p.y)*spring;
+        }
+        const maxStep=withSpring?2.65:1.9,mag=Math.hypot(fx[i],fy[i]);
+        const k=mag>maxStep?maxStep/mag:1;
+        p.x=clamp(p.x+fx[i]*k,pad+r,W-pad-r);
+        p.y=clamp(p.y+fy[i]*k,pad+r,H-pad-r);
+      }
+    }
+  };
+  relax(86,true);
+  relax(18,false);
+  const assigned=new Map(rows.map(p=>[p.id,{x:p.x,y:p.y,r,name:p.name}]));
+  hexLayoutCache={features,W,H,assignments:assigned};
   return assigned;
 }
 function updateMapLayoutButtons(){
@@ -1391,7 +1447,8 @@ function renderMap(){
   const project=c=>{const p=mercator(c);return [pad+(p[0]-minX)*s,H-pad-(p[1]-minY)*s];};
   if(state.mapLayout==='hex'){
     const hexes=buildHexAssignments(features,project,W,H);
-    map.innerHTML=features.map(f=>{
+    const silhouette=features.map(f=>pathForGeometry(f.geometry,project)).join(' ');
+    map.innerHTML=`<path class="hex-uk-silhouette" d="${silhouette}" fill-rule="evenodd" aria-hidden="true"></path>`+features.map(f=>{
       const id=geometryCode(f.properties||{}),name=geometryName(f.properties||{}),seat=state.byId.get(id),hex=hexes.get(id);if(!hex)return'';
       const fill=seat?PARTY[seat.centralWinner]?.color:partyColorFrom2024(id),label=seat?.name||name||id;
       return `<path class="constituency constituency-hex" data-id="${escapeHtml(id)}" data-map-name="${escapeHtml(label)}" d="${hexagonPath(hex.x,hex.y,hex.r)}" fill="${fill||'#414957'}"></path>`;
@@ -1409,7 +1466,7 @@ function renderMap(){
   resetMapZoom();
   $('#mapEmpty').style.display='none';
   const reduced=state.geometry?.meta?.vertices_after;
-  $('#mapMeta').textContent=state.mapLayout==='hex'?`${features.length} esagoni · 1 esagono = 1 collegio · posizione geografica approssimata`:(reduced?`${features.length} collegi · geometria web ottimizzata`:`${features.length} geometrie ONS · BGC 20 m`);
+  $('#mapMeta').textContent=state.mapLayout==='hex'?`${features.length} esagoni · 1 esagono = 1 collegio · forma geografica preservata`:(reduced?`${features.length} collegi · geometria web ottimizzata`:`${features.length} geometrie ONS · BGC 20 m`);
   updateMapLayoutButtons();
   applyMapColors();
   renderMarginals();
