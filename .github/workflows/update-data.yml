@@ -1,4 +1,4 @@
-# UI release v0.9.44: mobile interaction polish and update-review infrastructure; statistical production engine remains frozen on v0.9.29.
+
 name: Update and deploy UK model
 
 on:
@@ -36,6 +36,12 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Frontend QA gate (v0.9.57)
+        run: |
+          set -euo pipefail
+          find scripts -maxdepth 1 -type f -name '*.js' -print0 | xargs -0 -r -n1 node --check
+          python tools/frontend_qa.py --root . --index index.html --readme README.md
 
       - name: Self-test shadow MRP update watcher
         run: python tools/check_mrp_updates.py --self-test
