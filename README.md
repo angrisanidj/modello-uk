@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.50 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.53 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,7 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.50.
+- **Interfaccia:** v0.9.53.
 - **Motore statistico di produzione:** **v0.9.29**, congelato durante le modifiche esclusivamente frontend.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche in 50 blocchi asincroni da 1.000; il risultato corrente viene persistito dal workflow delle social card e riutilizzato finché il fingerprint degli input non cambia.
@@ -21,6 +21,7 @@ Il progetto resta nella serie **0.x**: il passaggio a v1.0 richiede una qualità
 - aggiorna automaticamente il polling average nazionale;
 - usa snapshot prodotti dalla GitHub Action con fallback fail-soft;
 - mostra ultimo sondaggio, partito in testa e quadro nazionale corrente;
+- distingue esplicitamente la **media ponderata del modello** dalla media aritmetica dei **6 sondaggi più recenti**: soltanto la prima alimenta il nowcast;
 - ricostruisce una **serie storica della media del modello** con la stessa half-life/lookback del topline live, con intervalli 90 giorni / 6 mesi / 1 anno / tutto;
 - mostra variazioni a 7 e 30 giorni, volume delle rilevazioni, numero di istituti attivi, campione cumulato e istituti più presenti negli ultimi 30 giorni;
 - mantiene separati il dato nazionale e la traduzione in seggi.
@@ -138,6 +139,11 @@ modello-uk/
 ├── styles-v0945.css
 ├── styles-v0946.css
 ├── styles-v0947.css
+├── styles-v0948.css
+├── styles-v0949.css
+├── styles-v0951.css
+├── styles-v0952.css
+├── styles-v0953.css
 ├── map-performance.css
 ├── scripts/
 │   ├── app.js

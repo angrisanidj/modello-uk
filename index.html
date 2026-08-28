@@ -12,8 +12,8 @@
 <meta property="og:url" content="https://angrisanidj.github.io/modello-uk/" />
 <meta property="og:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta property="og:description" content="Nowcast probabilistico della House of Commons: sondaggi, proiezione dei seggi, Monte Carlo e probabilità collegio per collegio." />
-<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=20260826-86099419" />
-<meta property="og:image:secure_url" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=20260826-86099419" />
+<meta property="og:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=bootstrap" />
+<meta property="og:image:secure_url" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=bootstrap" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -22,28 +22,29 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Elezioni nel Regno Unito — Sondaggi, seggi e probabilità" />
 <meta name="twitter:description" content="Nowcast probabilistico della House of Commons: sondaggi, seggi, collegi e probabilità." />
-<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=20260826-86099419" />
+<meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=bootstrap" />
 <meta name="twitter:image:alt" content="Nowcast delle elezioni nel Regno Unito — proiezione della House of Commons" />
 <meta name="twitter:url" content="https://angrisanidj.github.io/modello-uk/" />
-<link rel="stylesheet" href="styles.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0935.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0936.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0937.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0938.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0939.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0940.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0941.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0942.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0943.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0944.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0945.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0946.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0947.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0948.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0949.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0951.css?v=0.9.52" />
-<link rel="stylesheet" href="styles-v0952.css?v=0.9.52" />
-<link rel="stylesheet" href="map-performance.css?v=0.9.52" />
+<link rel="stylesheet" href="styles.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0935.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0936.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0937.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0938.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0939.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0940.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0941.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0942.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0943.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0944.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0945.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0946.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0947.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0948.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0949.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0951.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0952.css?v=0.9.53" />
+<link rel="stylesheet" href="styles-v0953.css?v=0.9.53" />
+<link rel="stylesheet" href="map-performance.css?v=0.9.53" />
 </head>
 <body>
 <div id="desktopNowcastSticky" class="desktop-nowcast-sticky" aria-label="Riepilogo rapido del nowcast">
@@ -161,7 +162,8 @@
   <div class="section-title"><div><div class="section-kicker">Voto nazionale</div><h2>Media dei sondaggi</h2><p>La media nazionale nasce esclusivamente dai sondaggi; le fonti MRP aggiungono informazione geografica relativa e non sostituiscono il voto nazionale.</p></div></div>
   <section class="grid two">
     <article class="card feature">
-      <div class="cardhead"><div><h3>Intenzione di voto</h3><p id="pollAverageMeta">—</p></div><div class="controls"><button class="active" data-window="all">Media</button><button data-window="latest">Ultimi sondaggi</button></div></div>
+      <div class="cardhead"><div><h3>Intenzione di voto</h3><p id="pollAverageMeta">—</p></div><div class="controls"><button class="active" data-window="all">Media ponderata</button><button data-window="latest">Ultimi 6 sondaggi</button></div></div>
+      <div id="pollAverageModeNote" class="poll-average-mode-note"><strong>Media ponderata:</strong> usa le rilevazioni fino a 100 giorni, dando più peso a quelle recenti e tenendo conto della numerosità del campione. È il dato che alimenta il nowcast.</div>
       <div id="voteBars" class="vote-bars"></div>
     </article>
     <article class="card methodbox">
@@ -264,12 +266,15 @@
       </article>
     </aside>
   </section>
-  <div class="section-title" id="territorio"><div><div class="section-kicker">Territorio</div><h2>Mappa dei 650 collegi</h2><p>Scenario rappresentativo, margine centrale e probabilità di vittoria nello stesso pannello.</p></div></div>
+  <div class="section-title" id="territorio"><div><div class="section-kicker">Territorio</div><h2>Mappa dei 650 collegi</h2><p>Scegli tra la geografia reale e il cartogramma a esagoni: ogni area rappresenta sempre un collegio.</p></div></div>
   <section class="map-stage">
     <article class="card map-card">
       <div class="map-head">
         <div><h3>Collegi di Westminster</h3><p id="mapMeta">Caricamento geometrie ONS…</p></div>
-        <div class="controls map-mode" id="mapModeControls"><button id="mapCentralBtn" class="active">Proiezione</button><button id="mapMarginBtn">Margine</button><button id="mapProbBtn" disabled aria-disabled="true" title="Disponibile al termine delle 50.000 simulazioni">Probabilità</button><button id="mapUserBtn" disabled aria-disabled="true" title="Crea prima uno scenario nazionale">Scenario utente</button></div>
+        <div class="map-head-actions">
+          <div class="controls map-layout" id="mapLayoutControls" aria-label="Tipo di mappa"><button id="mapGeoLayoutBtn" class="active" type="button">Geografica</button><button id="mapHexLayoutBtn" type="button">Esagoni</button></div>
+          <div class="controls map-mode" id="mapModeControls"><button id="mapCentralBtn" class="active">Proiezione</button><button id="mapMarginBtn">Margine</button><button id="mapProbBtn" disabled aria-disabled="true" title="Disponibile al termine delle 50.000 simulazioni">Probabilità</button><button id="mapUserBtn" disabled aria-disabled="true" title="Crea prima uno scenario nazionale">Scenario utente</button></div>
+        </div>
       </div>
       <div class="graphic-export-inline" data-graphic-panel="map">
         <span class="graphic-export-label">Mappa collegi</span>
@@ -278,6 +283,8 @@
         <button type="button" data-share-graphic="map">Condividi</button>
       </div>
       <div id="mapSummary" class="map-summary"><span class="map-summary-chip"><strong>Caricamento della base territoriale…</strong></span></div>
+      <div id="mapPartyLegend" class="map-party-legend" aria-label="Legenda dei partiti"></div>
+      <div id="mapIntensityLegend" class="map-intensity-legend" aria-live="polite"></div>
       <div id="mapActiveFilters" class="map-active-filters" aria-live="polite" hidden></div>
       <div id="mapWrap" class="map-wrap">
         <div class="map-zoom-controls" id="mapZoomControls" aria-label="Controlli zoom mappa">
@@ -301,9 +308,10 @@
     </aside>
   </section>
   <article class="card map-method-card map-method-wide">
-    <div class="map-method-title"><div class="section-kicker">Legenda della mappa</div><h3>Tre letture diverse</h3></div>
+    <div class="map-method-title"><div class="section-kicker">Come leggere la mappa</div><h3>Due forme, tre letture</h3></div>
+    <div class="map-read"><b>Geografica / Esagoni</b><span>La prima conserva i confini reali; la seconda assegna la stessa area a ogni collegio e rende più leggibili le zone urbane.</span></div>
     <div class="map-read"><b>Scenario</b><span>Il vincitore di uno scenario coerente con le mediane nazionali.</span></div>
-    <div class="map-read"><b>Margine</b><span>Più il colore è scuro, più ampio è il vantaggio centrale.</span></div>
+    <div class="map-read"><b>Margine</b><span>Più il colore del partito è intenso, più ampio è il vantaggio centrale.</span></div>
     <div class="map-read"><b>Probabilità</b><span>Più il colore è intenso, più alta è la probabilità simulata del favorito.</span></div>
   </article>
   <div class="section-title" id="regioni"><div><div class="section-kicker">Geografia politica</div><h2>Regioni e flussi di seggi</h2><p>Una lettura territoriale del nowcast: chi domina ogni area, dove cambiano i seggi e quali trasferimenti contano di più.</p></div><div class="regional-title-actions"><label class="compact-select"><span>Scenario</span><select id="regionalSource"><option value="live">Nowcast corrente</option><option value="custom" disabled>Scenario utente</option></select></label></div></div>
@@ -403,7 +411,7 @@
   <div class="section-title" id="metodo"><div><div class="section-kicker">Validazione</div><h2>Backtest e metodologia</h2><p>La validazione è separata dall’interfaccia: il modello viene pubblicato soltanto se supera tutti i controlli automatici previsti.</p></div><span class="validation-badge">CONTROLLI SUPERATI</span></div>
   <section class="backtest-pro">
     <article class="card backtest-summary-card">
-      <div class="backtest-head"><div><h3>Prestazioni validate</h3><p>Accuratezza a livello di collegio e controllo dell’errore complessivo sui seggi.</p></div><span class="engine-lock">MOTORE CONGELATO</span></div>
+      <div class="backtest-head"><div><h3>Risultati della validazione</h3><p>Accuratezza a livello di collegio e controllo dell’errore complessivo sui seggi.</p></div><span class="engine-lock">MOTORE CONGELATO</span></div>
       <div class="backtest-metrics">
         <div class="bt-metric"><strong>96,36%</strong><span>2019 · vincitori corretti</span><small>609 / 632 · errore seggi 14</small></div>
         <div class="bt-metric"><strong>91,46%</strong><span>2024 · confronto YouGov</span><small>578 / 632 · errore seggi 56</small></div>
@@ -444,8 +452,8 @@
   </footer>
   <div class="author-signature">Daniele Angrisani · Nowcast probabilistico delle elezioni nel Regno Unito · <a href="https://x.com/putino" target="_blank" rel="noopener">@putino</a></div>
 </main>
-<script src="scripts/app.js?v=0.9.52"></script>
-<script src="scripts/map-performance.js?v=0.9.52"></script>
-<script src="scripts/interpretation.js?v=0.9.52"></script>
+<script src="scripts/app.js?v=0.9.53"></script>
+<script src="scripts/map-performance.js?v=0.9.53"></script>
+<script src="scripts/interpretation.js?v=0.9.53"></script>
 </body>
 </html>
