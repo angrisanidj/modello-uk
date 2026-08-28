@@ -1,7 +1,7 @@
 {
   "version": "uk-v0928-mrp-geography-stack",
   "status": "ok",
-  "generated_at": "2026-08-28T14:28:19.945718+00:00",
+  "generated_at": "2026-08-28T15:04:55.602149+00:00",
   "diagnostic_only": false,
   "shadow_only": true,
   "live_candidate": true,
@@ -5730,12 +5730,12 @@
       "majority_consensus_available": 632,
       "all_scenarios_different": 0,
       "majority_consensus_totals": {
-        "ref": 190,
         "lab": 224,
-        "snp": 49,
-        "other": 11,
+        "ref": 190,
         "ld": 69,
         "con": 72,
+        "other": 11,
+        "snp": 49,
         "pc": 10,
         "green": 7
       },
