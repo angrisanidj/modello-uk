@@ -25,8 +25,8 @@
 <meta name="twitter:image" content="https://angrisanidj.github.io/modello-uk/social-card-uk-v2.png?v=20260826-170a81b3" />
 <meta name="twitter:image:alt" content="Nowcast delle elezioni nel Regno Unito — proiezione della House of Commons" />
 <meta name="twitter:url" content="https://angrisanidj.github.io/modello-uk/" />
-<link rel="stylesheet" href="styles.css?v=0.9.60" />
-<link rel="stylesheet" href="map-performance.css?v=0.9.60" />
+<link rel="stylesheet" href="styles.css?v=0.9.61" />
+<link rel="stylesheet" href="map-performance.css?v=0.9.61" />
 </head>
 <body>
 <div id="desktopNowcastSticky" class="desktop-nowcast-sticky" aria-label="Riepilogo rapido del nowcast">
@@ -159,6 +159,16 @@
       <div class="audit-chip"><strong>Motore validato:</strong> 609/632 nel 2019 · 578/632 nel confronto YouGov 2024 · 584/632 nella validazione geografica 2024.</div>
     </article>
   </section>
+  <details id="runTransparency" class="run-transparency">
+    <summary><span><strong>Trasparenza del run</strong><small>Provenienza dei dati, pesi della media e coerenza interna dell’istantanea corrente.</small></span><b id="runTransparencyStatus" class="run-transparency-status">In attesa dei dati</b></summary>
+    <div class="run-transparency-body">
+      <div id="runTransparencyGrid" class="run-transparency-grid"></div>
+      <div class="run-weight-head"><div><strong>Pesi effettivi della media</strong><span>Rilevazioni con peso base significativo. Il peso deriva dalla stessa formula che alimenta il nowcast.</span></div></div>
+      <div class="run-weight-table-wrap"><table class="run-weight-table"><thead><tr><th>Rilevazione</th><th>Area</th><th>n</th><th>Peso base</th></tr></thead><tbody id="runWeightBody"><tr><td colspan="4">In attesa dei dati…</td></tr></tbody></table></div>
+      <div class="run-fingerprint"><span>Run ID</span><code id="runFingerprint">—</code></div>
+      <p class="run-transparency-note"><strong>Che cosa certifica.</strong> Questo pannello verifica la coerenza interna tra l’archivio caricato, i conteggi del build, il modello geografico di produzione e l’identificatore usato dal Monte Carlo. Non è una certificazione indipendente della fonte upstream.</p>
+    </div>
+  </details>
   <div class="section-title" id="trend-polling"><div><div class="section-kicker">Trend dei sondaggi</div><h2>Come si sta muovendo il voto</h2><p>Una serie storica ricostruita giorno per giorno con la stessa ponderazione temporale usata dalla media corrente.</p></div><span class="badge">Serie storica ricostruita</span></div>
   <section class="poll-trend-layout">
     <article class="card poll-trend-card">
@@ -434,8 +444,8 @@
   </footer>
   <div class="author-signature">Daniele Angrisani · Nowcast probabilistico delle elezioni nel Regno Unito · <a href="https://x.com/putino" target="_blank" rel="noopener">@putino</a></div>
 </main>
-<script src="scripts/app.js?v=0.9.60"></script>
-<script src="scripts/map-performance.js?v=0.9.60"></script>
-<script src="scripts/interpretation.js?v=0.9.60"></script>
+<script src="scripts/app.js?v=0.9.61"></script>
+<script src="scripts/map-performance.js?v=0.9.61"></script>
+<script src="scripts/interpretation.js?v=0.9.61"></script>
 </body>
 </html>

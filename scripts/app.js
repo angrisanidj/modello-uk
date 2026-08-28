@@ -12,6 +12,7 @@ const CONFIG = {
   mcSummaryLocal: 'data/monte-carlo-current.json',
   subnationalLocal: 'data/subnational-polls.json',
   territorialBaselineLocal: 'data/territorial-baseline.json',
+  buildMetaLocal: 'data/build-meta.json',
   niLocal: 'data/ni-2024.json',
   commonsCandidateCsv: 'https://researchbriefings.files.parliament.uk/documents/CBP-10009/HoC-GE2024-results-by-candidate.csv',
   wikiApi: 'https://en.wikipedia.org/w/api.php?action=parse&page=Opinion_polling_for_the_next_United_Kingdom_general_election&prop=text&format=json&origin=*',
@@ -71,9 +72,9 @@ const OFFLINE = URL_PARAMS.get('offline') === '1';
 const MC_BUILD_MODE = OFFLINE || URL_PARAMS.get('social_card_build') === '1' || URL_PARAMS.get('mc_build') === '1';
 
 const state = {
-  polls:[], pollSource:'', average:null, latestAverage:null, pollAverageView:'weighted', pollTrendRange:180, pollTrendFocus:null,
+  polls:[], pollSource:'', pollMeta:null, average:null, latestAverage:null, pollAverageView:'weighted', pollTrendRange:180, pollTrendFocus:null,
   constituencies:[], constituencyIndex:new Map(), byId:new Map(), geometry:null, ni:null,
-  modelParams:null, mrpLite:null, precomputedMc:null, subnational:[], territorialBaseline:null, geographicTargets:null,
+  modelParams:null, mrpLite:null, precomputedMc:null, subnational:[], territorialBaseline:null, buildMeta:null, geographicTargets:null,
   mapPaths:new Map(), selectedPath:null,
   central:null, mc:null, representative:null, customScenario:null, scenarioHemicycleActive:false, selectedSeat:null, mapMode:'central', mapLayout:'geo', coalition:new Set(), explorerPage:1, explorerPageSize:25, explorerMatchingIds:null, pollPage:1, pollPageSize:25, hemiFocus:null,
 };
@@ -379,9 +380,15 @@ function parseWikipediaPolls(html){
 }
 
 async function loadPolls(){
-  try { const j=await fetchJson(CONFIG.pollsLocal,5000); if(j?.polls?.length>=20){state.pollSource='archivio automatico';return j.polls;} } catch(_){ }
-  if(!OFFLINE) try { const j=await fetchJson(CONFIG.wikiApi,12000); const polls=parseWikipediaPolls(j.parse.text['*']); if(polls.length>=20){state.pollSource='MediaWiki in tempo reale';return polls;} } catch(_){ }
-  const f=await fetchJson(CONFIG.pollsFallback,5000); state.pollSource='archivio di sicurezza'; return f.polls||[];
+  try {
+    const j=await fetchJson(CONFIG.pollsLocal,5000);
+    if(j?.polls?.length>=20){state.pollSource='archivio automatico';state.pollMeta={...(j.meta||{}),fallback:j.meta?.fallback===true};return j.polls;}
+  } catch(_){ }
+  if(!OFFLINE) try {
+    const j=await fetchJson(CONFIG.wikiApi,12000),polls=parseWikipediaPolls(j.parse.text['*']);
+    if(polls.length>=20){state.pollSource='MediaWiki in tempo reale';state.pollMeta={source:'Wikipedia / MediaWiki API',generated_at:new Date().toISOString(),fallback:false,mode:'live-browser'};return polls;}
+  } catch(_){ }
+  const f=await fetchJson(CONFIG.pollsFallback,5000);state.pollSource='archivio di sicurezza';state.pollMeta={...(f.meta||{}),fallback:true};return f.polls||[];
 }
 
 function parseCsv(text){
@@ -485,16 +492,20 @@ function baseGroup(zone){
 }
 
 function calculateAverage(polls){
-  const now=new Date(); const sums=Object.fromEntries(PARTY_ORDER.map(p=>[p,0])), den=Object.fromEntries(PARTY_ORDER.map(p=>[p,0])); let effective=0;
+  const now=new Date(),sums=Object.fromEntries(PARTY_ORDER.map(p=>[p,0])),den=Object.fromEntries(PARTY_ORDER.map(p=>[p,0])),weightedRows=[];let effective=0;
   for(const poll of polls){
-    const d=new Date(`${poll.date}T12:00:00Z`), age=Math.max(0,(now-d)/86400000); if(age>CONFIG.modelLookbackDays)continue;
-    const temporal=Math.pow(0.5,age/CONFIG.halfLifeDays); const sample=clamp(Math.sqrt(Math.max(500,poll.sample||2000)/2000),.75,1.25); const area=poll.area==='UK'?.97:1;
-    const w=temporal*sample*area; if(w>.04)effective++;
-    for(const p of PARTY_ORDER){ const v=poll[p]; if(Number.isFinite(v)){sums[p]+=w*v;den[p]+=w;} }
+    const d=new Date(`${poll.date}T12:00:00Z`),age=Math.max(0,(now-d)/86400000);if(age>CONFIG.modelLookbackDays)continue;
+    const temporal=Math.pow(0.5,age/CONFIG.halfLifeDays),sample=clamp(Math.sqrt(Math.max(500,poll.sample||2000)/2000),.75,1.25),area=poll.area==='UK'?.97:1,w=temporal*sample*area;
+    if(w>.04)effective++;
+    weightedRows.push({date:poll.date,pollster:poll.pollster||'',area:poll.area||'',sample:Number(poll.sample)||0,ageDays:age,temporalFactor:temporal,sampleFactor:sample,areaFactor:area,rawWeight:w});
+    for(const p of PARTY_ORDER){const v=poll[p];if(Number.isFinite(v)){sums[p]+=w*v;den[p]+=w;}}
   }
-  const avg={}; for(const p of PARTY_ORDER)avg[p]=den[p]?sums[p]/den[p]:0;
+  const avg={};for(const p of PARTY_ORDER)avg[p]=den[p]?sums[p]/den[p]:0;
+  const weightTotal=weightedRows.reduce((sum,row)=>sum+row.rawWeight,0);
+  const rows=weightedRows.map(row=>({...row,weight:weightTotal>0?row.rawWeight/weightTotal:0}));
   // Do not force a strict 100 here: some pollsters do not separately report national parties.
-  return {values:avg,effective};
+  // `rows` exposes the exact base weights already used above; it does not alter the average.
+  return {values:avg,effective,rows};
 }
 function latestPollAverage(polls,n=6){
   const slice=polls.slice(0,n), out={}; for(const p of PARTY_ORDER){const vals=slice.map(x=>x[p]).filter(Number.isFinite);out[p]=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;}return out;
@@ -930,7 +941,7 @@ function renderPolls(){
   $('#pollAverageMeta').textContent=latestView?'Media aritmetica semplice delle 6 rilevazioni più recenti · solo confronto':`${state.average.effective} rilevazioni con peso significativo · emivita ${CONFIG.halfLifeDays} giorni`;
   const modeNote=$('#pollAverageModeNote');if(modeNote)modeNote.innerHTML=latestView?'<strong>Ultimi 6 sondaggi:</strong> media aritmetica semplice delle sei rilevazioni più recenti. Serve per confrontare il segnale più immediato con la media del modello e non alimenta il nowcast.':`<strong>Media ponderata:</strong> usa le rilevazioni fino a ${CONFIG.modelLookbackDays} giorni, dando più peso a quelle recenti e tenendo conto della numerosità del campione. È il dato che alimenta il nowcast.`;
   const latest=state.polls[0]; if(latest){$('#kpiLastPoll').textContent=formatDate(latest.date);$('#kpiLastPollMeta').textContent=`${latest.pollster} · ${latest.area} · n=${fmt0(latest.sample)}`;}
-  $('#dataBadge').textContent=`Sondaggi: ${state.pollSource}`;updateEditorialMeta();populatePollTableFilters();
+  $('#dataBadge').textContent=`Sondaggi: ${state.pollSource}`;updateEditorialMeta();renderRunTransparency();populatePollTableFilters();
   const filtered=pollTableFiltered(),pageSize=pollPageSize(),pages=Math.max(1,Math.ceil(filtered.length/pageSize));state.pollPage=clamp(state.pollPage||1,1,pages);const start=(state.pollPage-1)*pageSize,visible=filtered.slice(start,start+pageSize);
   const rows=visible.map(p=>`<tr><td>${escapeHtml(p.fieldwork||formatDate(p.date))}</td><td><strong>${escapeHtml(p.pollster)}</strong></td><td>${escapeHtml(p.client||'—')}</td><td>${escapeHtml(p.area)}</td><td>${fmt0(p.sample)}</td>${['lab','con','ref','ld','green','snp','pc','rb'].map(k=>`<td>${Number.isFinite(p[k])?fmt1(p[k]):'—'}</td>`).join('')}</tr>`).join('');
   $('#pollTableBody').innerHTML=rows||'<tr><td colspan="13"><div class="empty-small">Nessuna rilevazione corrisponde ai filtri.</div></td></tr>';
@@ -939,6 +950,41 @@ function renderPolls(){
   const meta=$('#pollTableMeta');if(meta)meta.textContent=filtered.length?`Pagina ${state.pollPage} di ${pages} · record ${fmt0(start+1)}–${fmt0(start+visible.length)} · dalle elezioni generali del 4 luglio 2024.`:'Nessuna rilevazione filtrata.';
   renderPagination($('#pollPagination'),pages,state.pollPage,p=>{state.pollPage=p;renderPolls();document.querySelector('.poll-browser-card')?.scrollIntoView({behavior:'smooth',block:'start'});});
   syncViewContextBar();
+}
+function runTransparencyData(){
+  const build=state.buildMeta||{},pollMeta=state.pollMeta||{},mrp=state.mrpLite||{},avg=state.average||{},geometryCount=state.geometry?.features?.length||0;
+  const checks={
+    polls:Number.isFinite(Number(build.polls))?Number(build.polls)===state.polls.length:null,
+    constituencies:Number.isFinite(Number(build.constituencies))?Number(build.constituencies)===state.constituencies.length:null,
+    map:Number.isFinite(Number(build.map_features))?Number(build.map_features)===geometryCount:null,
+    mrp:mrpLiteActive()?Array.isArray(mrp.seats)&&mrp.seats.length===CONFIG.gbSeats:false,
+  };
+  const known=Object.values(checks).filter(v=>v!==null),allKnown=known.length===Object.keys(checks).length,coherent=allKnown&&known.every(Boolean);
+  const liveBrowser=/tempo reale|verifica manuale/i.test(state.pollSource||'');
+  const status=coherent?'Run coerente':liveBrowser?'Vista live non ancora persistita':'Coerenza interna da verificare';
+  const significant=(avg.rows||[]).filter(row=>row.rawWeight>.04).sort((a,b)=>b.weight-a.weight);
+  return {
+    status,coherent,checks,fingerprint:fingerprint(),
+    polls:{source:state.pollSource||'—',meta:pollMeta,total:state.polls.length,effective:Number(avg.effective)||0,lookbackDays:CONFIG.modelLookbackDays,halfLifeDays:CONFIG.halfLifeDays,weights:significant},
+    model:{version:mrp.version||null,modelType:mrp.model_type||null,approved:mrpLiteActive(),selectedStrength:Number.isFinite(Number(mrp.selected_strength))?Number(mrp.selected_strength):null,cv2024:Number.isFinite(Number(mrp.provider_stack_cv_2024_accuracy))?Number(mrp.provider_stack_cv_2024_accuracy):null,validation2019:Number.isFinite(Number(mrp.validation_2019_accuracy))?Number(mrp.validation_2019_accuracy):null},
+    build:{generatedAt:build.generated_at||null,polls:Number(build.polls)||null,subnationalPolls:build.subnational_polls||null,constituencies:Number(build.constituencies)||null,mapFeatures:Number(build.map_features)||null,geometryFeatures:geometryCount||null},
+  };
+}
+function runTransparencySnapshot(){
+  const d=runTransparencyData();
+  return {
+    ui_version:'0.9.61',fingerprint:d.fingerprint,status:d.status,internal_coherence:d.checks,
+    polls:{source:d.polls.source,source_meta:d.polls.meta,total:d.polls.total,average:{lookback_days:d.polls.lookbackDays,half_life_days:d.polls.halfLifeDays,effective_rows:d.polls.effective,base_weights:d.polls.weights.map(row=>({date:row.date,pollster:row.pollster,area:row.area,sample:row.sample,age_days:Number(row.ageDays.toFixed(4)),weight:Number(row.weight.toFixed(8))}))}},
+    model:d.model,build:d.build,
+  };
+}
+function renderRunTransparency(){
+  const root=$('#runTransparency'),grid=$('#runTransparencyGrid'),body=$('#runWeightBody'),fingerprintEl=$('#runFingerprint'),statusEl=$('#runTransparencyStatus');if(!root||!grid||!body||!fingerprintEl)return;
+  const d=runTransparencyData(),fallback=d.polls.meta?.fallback===true,sourceTime=d.polls.meta?.generated_at?formatModelTimestamp(d.polls.meta.generated_at):'—',buildTime=d.build.generatedAt?formatModelTimestamp(d.build.generatedAt):'—';
+  if(statusEl){statusEl.textContent=d.status;statusEl.classList.toggle('ok',d.coherent);statusEl.classList.toggle('warn',!d.coherent);}
+  grid.innerHTML=`<div class="run-transparency-card"><span>Fonte sondaggi</span><strong>${escapeHtml(d.polls.source)}</strong><small>${fallback?'Fallback attivo':'Fonte primaria/fonte live'} · ${escapeHtml(sourceTime)}</small></div><div class="run-transparency-card"><span>Media nazionale</span><strong>${fmt0(d.polls.effective)} rilevazioni</strong><small>Peso significativo · ${d.polls.lookbackDays} giorni · emivita ${d.polls.halfLifeDays}</small></div><div class="run-transparency-card"><span>Motore geografico</span><strong>${d.model.approved?'v0.9.29 live':'stato da verificare'}</strong><small>${d.model.selectedStrength!=null?`strength ${d.model.selectedStrength.toFixed(3)}`:'parametri congelati'} · 632 seggi GB</small></div><div class="run-transparency-card"><span>Build</span><strong>${d.build.constituencies||state.constituencies.length}/650 collegi</strong><small>${d.build.mapFeatures||d.build.geometryFeatures||0} geometrie · ${escapeHtml(buildTime)}</small></div>`;
+  body.innerHTML=d.polls.weights.length?d.polls.weights.map(row=>`<tr><td><strong>${escapeHtml(row.pollster||'—')}</strong><span>${escapeHtml(formatDate(row.date))}</span></td><td>${escapeHtml(row.area||'—')}</td><td>${fmt0(row.sample)}</td><td>${pctFmt(row.weight*100)}</td></tr>`).join(''):'<tr><td colspan="4">Pesi non disponibili.</td></tr>';
+  fingerprintEl.textContent=d.fingerprint;
 }
 function formatDate(iso){ try{return new Date(`${iso}T12:00:00Z`).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(_){return iso;} }
 function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -2331,6 +2377,7 @@ function buildCurrentSnapshot(){
     latest_poll_date:state.polls?.[0]?.date||null,
     poll_source:state.pollSource||null,
     poll_average:Object.fromEntries(PARTY_ORDER.filter(p=>Number.isFinite(state.average?.values?.[p])).map(p=>[p,Number(state.average.values[p].toFixed(4))])),
+    run:runTransparencySnapshot(),
     projection:{
       seats:Object.fromEntries(SEAT_ORDER.filter(p=>Number.isFinite(Number(totals[p]))).map(p=>[p,Number(totals[p])])),
       interval_80:m.intervals||null,
@@ -2442,6 +2489,7 @@ async function refreshDataManually(){
     const title=labels.join(' · ');
     state.polls=live;
     state.pollSource='MediaWiki in tempo reale · verifica manuale';
+    state.pollMeta={source:'Wikipedia / MediaWiki API',generated_at:new Date().toISOString(),fallback:false,mode:'live-browser-manual-refresh'};
     state.average=calculateAverage(live);
     state.latestAverage=latestPollAverage(live);
     state.mc=null;state.precomputedMc=null;state.representative=null;state.customScenario=null;state.scenarioHemicycleActive=false;
@@ -2481,13 +2529,13 @@ async function init(force=false){
   setStatus('Caricamento dati…','loading');
   $('#refreshBtn').disabled=true;
   try{
-    const [polls,constituencies,geometry,ni,modelParams,mrpLite,precomputedMc,subnational,territorialBaseline]=await Promise.all([
+    const [polls,constituencies,geometry,ni,modelParams,mrpLite,precomputedMc,subnational,territorialBaseline,buildMeta]=await Promise.all([
       loadPolls(),loadConstituencies(),loadGeometry(),fetchJson(CONFIG.niLocal,5000).catch(()=>null),
-      loadModelParams(),fetchJson(CONFIG.mrpLiteLocal,8000).catch(()=>null),fetchJson(CONFIG.mcSummaryLocal,5000).catch(()=>null),loadSubnationalPolls(),loadTerritorialBaseline()
+      loadModelParams(),fetchJson(CONFIG.mrpLiteLocal,8000).catch(()=>null),fetchJson(CONFIG.mcSummaryLocal,5000).catch(()=>null),loadSubnationalPolls(),loadTerritorialBaseline(),fetchJson(CONFIG.buildMetaLocal,5000).catch(()=>null)
     ]);
     state.polls=polls;state.average=calculateAverage(polls);state.latestAverage=latestPollAverage(polls);
     state.constituencies=constituencies;state.constituencyIndex=new Map(constituencies.map(c=>[c.id,c]));
-    state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;state.mrpLite=mrpLite;state.precomputedMc=precomputedMc;state.subnational=subnational;state.territorialBaseline=territorialBaseline;
+    state.geometry=geometry;state.ni=ni;state.modelParams=modelParams;state.mrpLite=mrpLite;state.precomputedMc=precomputedMc;state.subnational=subnational;state.territorialBaseline=territorialBaseline;state.buildMeta=buildMeta;
     renderPolls();renderPollTrend();renderCoalitionButtons();
     if(constituencies.length===650){buildCentral();renderScenarioInputs(true);renderCustomScenario();renderCentral();renderMap();restoreSeatDeepLink();setStatus('Dati aggiornati · simulazione pronta','ok');$('#footerBuild').textContent=`Dati: 650 collegi · sondaggi: ${state.pollSource} · rilevazioni subnazionali: ${state.subnational.length} · Irlanda del Nord: ${niModuleReady()?'18 collegi simulati':'base fissa'}`;await runMonteCarlo();}else{
       setStatus('Sondaggi caricati · manca la base territoriale','error');showError('La dashboard nazionale è attiva, ma i 650 risultati di collegio non sono ancora nello archivio locale e il browser non è riuscito a recuperarli direttamente. Esegui la GitHub Action “Update UK election data”: genererà automaticamente baseline e geometrie.');renderMap();

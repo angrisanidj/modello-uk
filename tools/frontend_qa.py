@@ -77,6 +77,7 @@ def main() -> int:
         "refreshBtn", "pollTrendSvg", "pollTrendTooltip", "seatTable",
         "mapWrap", "ukMap", "mapGeoLayoutBtn", "mapHexLayoutBtn",
         "detailName", "detailZoomBtn", "detailCopyBtn", "scenarioMapBtn",
+        "runTransparency", "runTransparencyGrid", "runWeightBody", "runFingerprint",
     }
     missing_ids = sorted(required_ids - set(parser.ids))
     if missing_ids:
@@ -164,6 +165,21 @@ def main() -> int:
             for marker in scenario_reset_markers:
                 if marker not in empty_branch:
                     fail(errors, f"scenario reset regression: missing shared reset marker {marker!r}")
+
+        run_transparency_markers = (
+            "buildMetaLocal: 'data/build-meta.json'",
+            "pollMeta:null",
+            "buildMeta:null",
+            "function runTransparencyData(){",
+            "function renderRunTransparency(){",
+            "function runTransparencySnapshot(){",
+            "state.buildMeta=buildMeta",
+            "fingerprintEl.textContent=d.fingerprint",
+            "run:runTransparencySnapshot()",
+        )
+        for marker in run_transparency_markers:
+            if marker not in app:
+                fail(errors, f"run transparency regression: missing {marker!r}")
 
         card_dims = re.search(
             r"const ig=format==='instagram',W=ig\?1080:(\d+),H=ig\?1350:(\d+),c=document\.createElement\('canvas'\)",
