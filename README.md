@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.49 / motore statistico v0.9.29
+# Modello Regno Unito — UI v0.9.50 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,7 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.49.
+- **Interfaccia:** v0.9.50.
 - **Motore statistico di produzione:** **v0.9.29**, congelato durante le modifiche esclusivamente frontend.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche in 50 blocchi asincroni da 1.000; il risultato corrente viene persistito dal workflow delle social card e riutilizzato finché il fingerprint degli input non cambia.
@@ -239,3 +239,12 @@ I workflow restano sulle release delle Action basate su Node.js 24 (`cache@v5`, 
 - La ricerca usa prima una fase rapida per individuare la zona della soglia; il valore finale viene confermato con **50.000 simulazioni asincrone in blocchi da 1.000**, senza sovrascrivere o riutilizzare il Monte Carlo di produzione.
 - Il risultato riporta quota nazionale indicativa, differenza dalla media corrente, mediana dei seggi, intervallo centrale 80% e probabilità di raggiungere l’obiettivo; può essere applicato con un clic allo scenario deterministico.
 - `calculateAverage`, `buildCentral`, `prepareSeatModel`, `buildCustomScenario` e `runMonteCarlo` di produzione restano invariati.
+
+
+## UI v0.9.51 — banner mobile e notifiche refresh
+
+- Su mobile gli avvisi `Vista filtrata` / `Scenario personalizzato` diventano una striscia compatta a due righe: stato + ritorno immediato al nowcast nella prima riga, filtri/scenario nella seconda.
+- Il dettaglio verboso viene nascosto sul telefono per evitare card troppo alte; resta disponibile su desktop.
+- Gli stati della verifica sondaggi sono resi più evidenti con codifica visiva coerente: controllo, variazione trovata, completato, nessuna variazione, errore.
+- La riga di stato del refresh occupa tutta la larghezza su mobile e il pannello dettaglio rilevazioni ha contrasto e gerarchia tipografica maggiori.
+- Nessuna modifica al motore statistico o alle simulazioni Monte Carlo.

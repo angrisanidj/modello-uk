@@ -93,8 +93,11 @@ const clamp = (x,a,b) => Math.max(a,Math.min(b,x));
 const sleepFrame = () => new Promise(resolve => requestAnimationFrame(() => resolve()));
 
 function setStatus(text, kind='loading') {
-  $('#statusText').textContent = text;
-  $('#statusDot').className = `dot ${kind}`;
+  const textEl=$('#statusText'),dot=$('#statusDot');
+  if(textEl)textEl.textContent=text;
+  if(dot)dot.className=`dot ${kind}`;
+  const wrap=textEl?.closest?.('.status');
+  if(wrap){wrap.classList.remove('is-loading','is-ok','is-error');wrap.classList.add(`is-${kind}`);}
 }
 function showError(text) {
   const el = $('#errorBox'); el.textContent = text; el.style.display = 'block';
@@ -189,6 +192,7 @@ function setRefreshReview(kind,title,detail='',changes=null){
   if(!box)return;
   box.hidden=false;
   box.className=`refresh-review is-${kind}`;
+  box.setAttribute('aria-live',(kind==='changed'||kind==='error')?'assertive':'polite');
   if(head)head.textContent=title;
   if(copy)copy.textContent=detail;
   renderRefreshReviewChanges(changes);
