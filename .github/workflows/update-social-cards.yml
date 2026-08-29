@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   generate:
-    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && !contains(github.event.workflow_run.head_commit.message, '[social-card]')) }}
+    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.event != 'push' || !contains(github.event.workflow_run.head_commit.message, '[social-card]'))) }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
