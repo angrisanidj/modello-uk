@@ -110,9 +110,9 @@ def main() -> int:
         fail(errors, "inconsistent CSS/JS cache versions: " + repr(unique_versions))
     elif readme.is_file():
         text = readme.read_text(encoding="utf-8")
-        m = re.search(r"UI v(\d+\.\d+\.\d+)", text)
+        m = re.search(r"UI v(\d+\.\d+(?:\.\d+)?)", text)
         if not m:
-            fail(errors, "README does not expose a parseable 'UI vX.Y.Z' version")
+            fail(errors, "README does not expose a parseable 'UI vX.Y or vX.Y.Z' version")
         elif m.group(1) != unique_versions[0]:
             fail(errors, f"README UI version {m.group(1)} != asset cache version {unique_versions[0]}")
 

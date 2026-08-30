@@ -1,4 +1,4 @@
-# Modello Regno Unito — UI v0.9.62 / motore statistico v0.9.29
+# Modello Regno Unito — UI v1.0 / motore statistico v0.9.29
 
 Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
@@ -6,7 +6,8 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 
 ## Stato attuale
 
-- **Interfaccia:** v0.9.62.
+- **Interfaccia:** v1.0.
+- **v1.0 — release stabile:** promozione dell'interfaccia dopo il consolidamento funzionale, i backtest congelati e la verifica end-to-end della pipeline automatica review → produzione → Pages → social card; motore statistico invariato a v0.9.29.
 - **v0.9.62 — rifinitura editoriale finale:** gerarchia mobile più compatta, rimozione delle duplicazioni informative sopra il risultato e condivisione spostata dopo esito/export; nessuna nuova funzione e motore statistico invariato.
 - **v0.9.61 — trasparenza del run:** pannello richiudibile con provenienza dei sondaggi, pesi base effettivi della media, coerenza interna del build, stato del motore v0.9.29 e fingerprint del run; l’Istantanea JSON include gli stessi metadati. Modifica esclusivamente frontend, motore statistico invariato.
 - **v0.9.60 — export PNG 16:9:** la card principale landscape usa ora un canvas 1200×675 realmente 16:9; aggiunto un controllo di regressione nel Frontend QA gate. Motore statistico invariato.
@@ -20,7 +21,7 @@ La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-u
 - **Monte Carlo:** 50.000 simulazioni deterministiche in 50 blocchi asincroni da 1.000; il risultato corrente viene persistito dal workflow delle social card e riutilizzato finché il fingerprint degli input non cambia.
 - **Output principale:** mediane dei seggi, intervalli centrali all'80%, probabilità di maggioranza/hung parliament e probabilità di vittoria per collegio.
 
-Il progetto resta nella serie **0.x**: il passaggio a v1.0 richiede una qualità e una stabilità del backtest considerate sufficienti, non soltanto il completamento delle funzionalità dell'interfaccia.
+La **v1.0** certifica la maturità dell'interfaccia e della pipeline di pubblicazione. Il motore statistico resta separatamente versionato e congelato alla **v0.9.29**: il bump dell'interfaccia non modifica parametri, proiezioni, backtest o logica Monte Carlo.
 
 ## Cosa fa oggi
 
