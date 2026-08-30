@@ -4,9 +4,6 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "35 5,17 * * *"
-  workflow_run:
-    workflows: ["Update and deploy UK model"]
-    types: [completed]
 
 permissions:
   contents: write
@@ -19,7 +16,6 @@ concurrency:
 
 jobs:
   generate:
-    if: ${{ github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.event != 'push' || !contains(github.event.workflow_run.head_commit.message, '[social-card]'))) }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages

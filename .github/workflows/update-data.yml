@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
   pages: write
   id-token: write
 
@@ -42,6 +43,7 @@ jobs:
           set -euo pipefail
           find scripts -maxdepth 1 -type f -name '*.js' -print0 | xargs -0 -r -n1 node --check
           python tools/frontend_qa.py --root . --index index.html --readme README.md
+          python tools/workflow_orchestration_qa.py --root .
 
       - name: Self-test shadow MRP update watcher
         run: python tools/check_mrp_updates.py --self-test
@@ -352,3 +354,8 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v5
+
+      - name: Trigger social-card refresh after successful deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run update-social-cards.yml --ref main
