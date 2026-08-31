@@ -1,7 +1,7 @@
 {
   "version": "uk-v0928-mrp-geography-stack",
   "status": "ok",
-  "generated_at": "2026-08-31T11:56:38.335048+00:00",
+  "generated_at": "2026-08-31T12:36:35.284977+00:00",
   "diagnostic_only": false,
   "shadow_only": true,
   "live_candidate": true,
@@ -623,7 +623,7 @@
         "source": "ONS Open Geography Portal public Hub CSV",
         "year": "2019",
         "url": "https://open-geography-portalx-ons.hub.arcgis.com/api/download/v1/items/552d79e95b30497bb073a9ac79c6a641/csv?layers=0",
-        "resolved_url": "https://stg-arcgisazurecdataprod1.az.arcgis.com/exportfiles-1559-7194/WD19_PCON19_LAD19_UK_LU_2b79d5f36feb42938063932a4d4a3533_-4112990169553552279.csv?sv=2025-05-05&st=2026-08-31T11%3A51%3A08Z&se=2026-08-31T12%3A56%3A08Z&sr=b&sp=r&sig=9NOOI1gjfySyK2FmLk16QqZZZifFyleLk86%2FZLDp9ss%3D",
+        "resolved_url": "https://stg-arcgisazurecdataprod1.az.arcgis.com/exportfiles-1559-7194/WD19_PCON19_LAD19_UK_LU_2b79d5f36feb42938063932a4d4a3533_-4112990169553552279.csv?sv=2025-05-05&st=2026-08-31T12%3A30%3A54Z&se=2026-08-31T13%3A35%3A54Z&sr=b&sp=r&sig=a0MFkkN%2FL4ucZB4FtOdcdCGnDkufSZqx6LPV%2FEo6mik%3D",
         "rows": 9511,
         "fallbacks_tried": 0,
         "transport": "hub_csv"
