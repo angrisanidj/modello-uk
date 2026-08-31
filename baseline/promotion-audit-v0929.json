@@ -1,0 +1,39 @@
+{
+  "version": "uk-v0929-production-promotion-audit",
+  "status": "passed",
+  "generated_at": "2026-08-30T11:38:30.232537+00:00",
+  "promotion_marker": "audited-v0928-precision-stack-to-production",
+  "model_freeze": "no-statistical-retuning-during-promotion",
+  "production_schema": "precision-weighted-contemporary-mrp-geography-v1",
+  "statistical_engine_source": "v0.9.28 precision-weighted contemporary MRP stack",
+  "statistical_retraining_in_v0929": false,
+  "gates": {
+    "frozen_2019": {
+      "correct_winners": 609,
+      "seat_abs_error_sum": 14,
+      "passed": true
+    },
+    "frozen_2024_yougov_benchmark": {
+      "correct_winners": 578,
+      "seat_abs_error_sum": 56,
+      "passed": true
+    },
+    "provider_stack_2024_leave_region_out": {
+      "correct_winners": 584,
+      "seat_abs_error_sum": 44,
+      "passed": true
+    },
+    "provider_topline_excluded": true,
+    "candidate_seat_count": 632,
+    "internal_target_sum": 100.0,
+    "core_2026_changed_winners_vs_primary": {
+      "skill_only_stack": 48,
+      "equal_provider_stack": 32,
+      "direct_mic26": 50
+    },
+    "core_2026_max_changed_winners_allowed": 75,
+    "core_2026_stability_passed": true
+  },
+  "warnings": [],
+  "errors": []
+}
