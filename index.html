@@ -75,7 +75,7 @@
       <div>
         <div class="eyebrow"><span class="flag-dot" aria-hidden="true"></span> Daniele Angrisani · modello elettorale</div>
         <h1>Elezioni nel Regno Unito</h1>
-        <p class="subtitle">Un nowcast indipendente dei <strong>650 seggi</strong> della Camera dei Comuni: media nazionale dei sondaggi, struttura geografica MRP, simulazioni Monte Carlo e probabilità di vittoria collegio per collegio. <strong>La domanda è: che cosa accadrebbe se si votasse oggi?</strong></p>
+        <p class="subtitle">Un nowcast indipendente dei <strong>650 seggi</strong> della Camera dei Comuni: media nazionale dei sondaggi, modello territoriale MRP, simulazioni Monte Carlo e probabilità di vittoria collegio per collegio. <strong>La domanda è: che cosa accadrebbe se si votasse oggi?</strong></p>
       </div>
       <div class="actions">
         <button id="refreshBtn" class="primary">Aggiorna dati</button>
@@ -107,14 +107,14 @@
     <article class="card kpi"><div class="label">Ultimo sondaggio</div><div id="kpiLastPoll" class="value">—</div><div id="kpiLastPollMeta" class="meta">—</div></article>
     <article class="card kpi"><div class="label">Leader nel voto</div><div id="kpiLeader" class="value">—</div><div id="kpiLeaderMeta" class="meta">—</div></article>
     <article class="card kpi"><div class="label">Primo partito</div><div id="kpiLargest" class="value">—</div><div id="kpiLargestMeta" class="meta">Monte Carlo</div></article>
-    <article class="card kpi"><div class="label">Chance di maggioranza</div><div id="kpiMajority" class="value">—</div><div id="kpiMajorityMeta" class="meta">326 seggi</div></article>
+    <article class="card kpi"><div class="label">Probabilità di maggioranza</div><div id="kpiMajority" class="value">—</div><div id="kpiMajorityMeta" class="meta">326 seggi</div></article>
   </section>
   <details class="read-guide read-guide-separated">
     <summary>Come leggere il modello</summary>
     <div class="read-guide-grid">
       <p><strong>È un nowcast, non una previsione del giorno delle elezioni.</strong> Risponde a una domanda precisa: che cosa accadrebbe se si votasse oggi con il quadro dei sondaggi disponibile.</p>
       <p><strong>Il numero centrale non è una certezza.</strong> Le mediane dei seggi vanno lette insieme all’intervallo centrale 80% e alle probabilità prodotte dalle 50.000 simulazioni Monte Carlo.</p>
-      <p><strong>Nel Regno Unito conta la geografia.</strong> Il voto nazionale viene tradotto nei 632 collegi della Gran Bretagna con la struttura geografica MRP; i 18 seggi dell’Irlanda del Nord sono trattati separatamente. Restore Britain resta visibile nel polling nazionale ma non entra ancora nella conversione in seggi, perché manca una base geografica sufficientemente solida.</p>
+      <p><strong>Nel Regno Unito conta la geografia.</strong> Il voto nazionale viene tradotto nei 632 collegi della Gran Bretagna con la modello territoriale MRP; i 18 seggi dell’Irlanda del Nord sono trattati separatamente. Restore Britain resta visibile nella media nazionale dei sondaggi ma non entra ancora nella conversione in seggi, perché manca una base geografica sufficientemente solida.</p>
       <p><strong>Mappa e scenari hanno funzioni diverse.</strong> La mappa corrente usa uno scenario territoriale rappresentativo coerente con le mediane; lo scenario personalizzato dell’utente è deterministico e non modifica né il modello di produzione né le probabilità Monte Carlo.</p>
     </div>
   </details>
@@ -128,7 +128,7 @@
     <div id="largestPartyGrid" class="largest-party-grid"></div>
   </section>
   <section class="card export-card" aria-label="Esporta il nowcast">
-    <div class="export-copy"><div class="export-kicker">Export</div><strong>Trasforma il nowcast in una card pronta da condividere</strong><p>PNG 16:9 per web e social, formato 4:5 per Instagram. Le card sono generate nel browser dai dati correnti, senza inviare dati a servizi esterni.</p></div>
+    <div class="export-copy"><div class="export-kicker">Esporta</div><strong>Crea un’immagine del nowcast pronta da condividere</strong><p>PNG 16:9 per web e social, formato 4:5 per Instagram. Le immagini sono generate nel browser dai dati correnti, senza inviare informazioni a servizi esterni.</p></div>
     <div class="export-actions"><button id="downloadSocialCardBtn" class="small-action" type="button">Scarica PNG 16:9</button><button id="downloadInstagramCardBtn" class="small-action" type="button">Scarica 4:5</button><button id="downloadSnapshotJsonBtn" class="small-action" type="button">Istantanea JSON</button><button id="shareSocialCardBtn" class="primary compact-primary" type="button">Condividi card</button></div>
   </section>
   <nav class="share-rail" aria-label="Condividi il nowcast">
@@ -155,13 +155,13 @@
         <div class="method-row"><span class="method-num">1</span><div><strong>Media nazionale interna</strong><span>Media ponderata dei sondaggi; i valori nazionali delle fonti MRP non vengono importati.</span></div></div>
         <div class="method-row"><span class="method-num">2</span><div><strong>632 collegi della Gran Bretagna</strong><span>Struttura geografica MRP: YouGov 2024 + More in Common 2026, pesati per precisione e freschezza. Restore Britain è incluso nel polling nazionale ma escluso dalla conversione in seggi finché non esiste una base geografica e di candidature sufficientemente solida.</span></div></div>
         <div class="method-row"><span class="method-num">3</span><div><strong>18 collegi dell’Irlanda del Nord</strong><span>Modulo separato con base Westminster 2024 e un segnale debole dalle elezioni dell’Assemblea nordirlandese.</span></div></div>
-        <div class="method-row"><span class="method-num">4</span><div><strong>50.000 simulazioni</strong><span>Incertezza nazionale, regionale e locale propagata fino ai vincitori di collegio. La scala nazionale usa il moltiplicatore ×1,75 e gli shock nazionali una normale Box–Muller a sei draw RNG fissi. Nell’A/B di promozione le σ effettive post-rinormalizzazione sono 2,1205 p.p. per Labour, 2,1111 per Conservative e 2,0970 per Reform UK (≈2,11 p.p.), al limite inferiore del range esterno BPC 2,07–2,43. Box–Muller rimuove il supporto finito del precedente Irwin–Hall: sui 450.000 shock grezzi del test ha prodotto 10 draw oltre il vecchio limite, contro 9,94 attesi da una normale e 0 possibili con Irwin–Hall. È una correzione della forma dell’incertezza, non del centro. Il precedente storico del 1992 ricorda perché errori molto grandi non vanno resi impossibili per costruzione: l'ultimo sondaggio Ipsos MORI mancò il divario Conservative–Labour del risultato di circa 8,6 p.p. (<a href="https://commonslibrary.parliament.uk/how-much-did-the-polls-vary-from-the-general-election-result/" target="_blank" rel="noopener noreferrer">House of Commons Library</a>).</span></div></div>
+        <div class="method-row"><span class="method-num">4</span><div><strong>50.000 simulazioni</strong><span>Incertezza nazionale, regionale e locale propagata fino ai vincitori di collegio. La scala nazionale usa il moltiplicatore ×1,75 e gli shock nazionali una normale Box–Muller a sei estrazioni dal generatore casuale per ogni shock. Nell’A/B di promozione le σ effettive post-rinormalizzazione sono 2,1205 p.p. per Labour, 2,1111 per Conservative e 2,0970 per Reform UK (≈2,11 p.p.), al limite inferiore del intervallo esterno BPC 2,07–2,43. Box–Muller rimuove il supporto finito del precedente Irwin–Hall: sui 450.000 shock grezzi del test ha prodotto 10 draw oltre il vecchio limite, contro 9,94 attesi da una normale e 0 possibili con Irwin–Hall. È una correzione della forma dell’incertezza, non del centro. Il precedente storico del 1992 ricorda perché errori molto grandi non vanno resi impossibili per costruzione: l'ultimo sondaggio Ipsos MORI mancò il divario Conservative–Labour del risultato di circa 8,6 p.p. (<a href="https://commonslibrary.parliament.uk/how-much-did-the-polls-vary-from-the-general-election-result/" target="_blank" rel="noopener noreferrer">House of Commons Library</a>).</span></div></div>
       </div>
-      <div class="audit-chip"><strong>Controlli storici:</strong> 609/632 nel 2019 (in-sample: il 2019 è stato usato per selezionare la forza geografica 0,875) · 578/632 nel confronto YouGov 2024 · 584/632 nella cross-validation geografica 2024, che non è un holdout elettorale puro.</div>
+      <div class="audit-chip"><strong>Controlli storici:</strong> 609/632 nel 2019 (in-sample: il 2019 è stato usato per selezionare la forza geografica 0,875) · 578/632 nel confronto YouGov 2024 · 584/632 nella validazione incrociata geografica 2024, che non è un test elettorale completamente separato dalla calibrazione.</div>
     </article>
   </section>
   <details id="runTransparency" class="run-transparency">
-    <summary><span><strong>Trasparenza del run</strong><small>Provenienza dei dati, pesi della media e coerenza interna dell’istantanea corrente.</small></span><b id="runTransparencyStatus" class="run-transparency-status">In attesa dei dati</b></summary>
+    <summary><span><strong>Trasparenza dell’esecuzione</strong><small>Origine dei dati, pesi della media e controlli di coerenza dell’istantanea corrente.</small></span><b id="runTransparencyStatus" class="run-transparency-status">In attesa dei dati</b></summary>
     <div class="run-transparency-body">
       <div id="runTransparencyGrid" class="run-transparency-grid"></div>
       <div class="run-weight-head"><div><strong>Pesi effettivi della media</strong><span>Rilevazioni con peso base significativo. Il peso deriva dalla stessa formula che alimenta il nowcast.</span></div></div>

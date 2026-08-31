@@ -1,47 +1,48 @@
 # Modello Regno Unito — UI v1.0 / motore statistico v0.9.29
 
-Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina polling nazionale, geografia elettorale constituency-by-constituency, uno stack MRP territoriale e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
+Nowcast indipendente delle prossime elezioni generali del Regno Unito. Il progetto combina sondaggi nazionali, geografia elettorale collegio per collegio e un modello territoriale MRP e simulazioni Monte Carlo per rispondere a una domanda precisa: **che cosa accadrebbe se si votasse oggi?**
 
 La dashboard pubblica è disponibile su: https://angrisanidj.github.io/modello-uk/
 
 ## Stato attuale
 
 - **Interfaccia:** v1.0.
-- **Calibrazione Monte Carlo (31 agosto 2026):** la dispersione nazionale usa un moltiplicatore globale **×1,75** e shock normali generati con **Box–Muller**. Nell'A/B di promozione sulle stesse 50.000 simulazioni, la deviazione standard effettiva post-rinormalizzazione è **2,1205 p.p. per Labour, 2,1111 per Conservative e 2,0970 per Reform UK** (≈ **2,11 p.p.**), quindi resta al limite inferiore dell'intervallo esterno BPC **2,07–2,43 p.p.**. Il centro del nowcast, la geografia e il materiale del seed restano invariati.
+- **Calibrazione Monte Carlo (31 agosto 2026):** la dispersione nazionale usa un moltiplicatore globale **×1,75** e shock normali generati con **Box–Muller**. Nell'A/B di promozione sulle stesse 50.000 simulazioni, la deviazione standard effettiva post-rinormalizzazione è **2,1205 p.p. per Labour, 2,1111 per Conservative e 2,0970 per Reform UK** (≈ **2,11 p.p.**), quindi resta al limite inferiore dell'intervallo esterno BPC **2,07–2,43 p.p.**. Il centro del nowcast, la geografia e il materiale del seed (seme casuale) restano invariati.
 - **Audit Box–Muller (31 agosto 2026):** il primo esperimento A/B resta registrato come **FAIL** perché il gate preregistrato a `|errore| > 4 p.p.` era mal specificato (~1,9σ) e non viene reinterpretato retroattivamente. Il secondo esperimento preregistrato passa tutti i gate: la coda post-rinormalizzazione oltre 6 p.p. aumenta per Labour, Conservative e Reform UK; la scala resta nel corridoio 2,05–2,17; gli indicatori parlamentari restano entro i limiti fissati; sui **450.000 shock nazionali grezzi** Box–Muller produce **10** draw oltre `|z| = 3√2`, contro **9,94 attesi** da una normale, mentre l'Irwin–Hall ne produce **0** per costruzione.
 - **Perché correggere una differenza quasi invisibile nei risultati:** il precedente generatore Irwin–Hall imponeva un supporto finito; con la scala attuale dei tre grandi lo shock grezzo non poteva superare circa **±10,02 p.p.**. Box–Muller rimuove quell'assunzione. È una correzione di correttezza, non un rituning del centro: nel 1992, nel confronto storico della House of Commons Library, l'ultimo sondaggio Ipsos MORI mancò il divario Conservative–Labour del risultato di circa **8,6 p.p.**, un precedente che mostra perché errori di grande ampiezza non dovrebbero essere resi impossibili per costruzione ([House of Commons Library](https://commonslibrary.parliament.uk/how-much-did-the-polls-vary-from-the-general-election-result/)).
-- **v1.0 — release stabile:** promozione dell'interfaccia dopo il consolidamento funzionale, i backtest congelati e la verifica end-to-end della pipeline automatica review → produzione → Pages → social card; motore statistico invariato a v0.9.29.
+- **Floor e Geometry audit (31 agosto 2026):** la geometria nazionale alternativa logistic-normal ILR è stata calibrata fino a riprodurre con precisione media e covarianza nazionali, ma **non è stata promossa**: nel secondo A/B tutti i controlli nazionali e parlamentari aggregati passano, mentre le probabilità di vittoria nei singoli collegi restano fuori dai limiti preregistrati (scarto massimo `8,376 p.p.`, 18 celle oltre `5 p.p.`). L'audit mostra inoltre che `Math.max(0.05, ...)` introduce una censura materialmente attiva, soprattutto per Plaid Cymru. Dossier: [`GEOMETRY_AUDIT_2026-08-31.md`](GEOMETRY_AUDIT_2026-08-31.md).
+- **v1.0 — versione stabile:** promozione dell'interfaccia dopo il consolidamento funzionale, i backtest congelati e la verifica end-to-end della pipeline automatica revisione → produzione → Pages → immagine social; motore statistico invariato a v0.9.29.
 - **v0.9.62 — rifinitura editoriale finale:** gerarchia mobile più compatta, rimozione delle duplicazioni informative sopra il risultato e condivisione spostata dopo esito/export; nessuna nuova funzione e motore statistico invariato.
-- **v0.9.61 — trasparenza del run:** pannello richiudibile con provenienza dei sondaggi, pesi base effettivi della media, coerenza interna del build, stato del motore v0.9.29 e fingerprint del run; l’Istantanea JSON include gli stessi metadati. Modifica esclusivamente frontend, motore statistico invariato.
+- **v0.9.61 — trasparenza dell’esecuzione:** pannello richiudibile con provenienza dei sondaggi, pesi base effettivi della media, coerenza interna del build, stato del motore v0.9.29 e fingerprint del run; l’Istantanea JSON include gli stessi metadati. Modifica esclusivamente dell’interfaccia, motore statistico invariato.
 - **v0.9.60 — export PNG 16:9:** la card principale landscape usa ora un canvas 1200×675 realmente 16:9; aggiunto un controllo di regressione nel Frontend QA gate. Motore statistico invariato.
 - **v0.9.59 — reset Scenario Builder:** il ripristino del nowcast disabilita nuovamente il comando di attivazione dello scenario eliminato; nessuna modifica al motore statistico.
 - **v0.9.58 — consolidamento CSS:** la cascade storica è stata riunita in un solo stylesheet principale, mantenendo separato il layer dedicato alle prestazioni della mappa; nessuna modifica al rendering o al motore statistico.
 - **v0.9.55 — cartogramma esagonale:** griglia discreta senza sovrapposizioni, packing locale e sagoma UK più leggibile.
-- **v0.9.56 — export serie storica:** snapshot PNG senza crosshair e riepilogo corrente con valori, variazione a 30 giorni e partito in testa.
+- **v0.9.56 — export serie storica:** immagine PNG senza crosshair e riepilogo corrente con valori, variazione a 30 giorni e partito in testa.
 - **v0.9.57 — QA frontend:** gate automatico JS/HTML/asset/versioni nella pipeline e mappa navigabile da tastiera; nessuna modifica al motore statistico.
 - **Motore statistico di produzione:** **v0.9.29**. Il **centro resta congelato/invariato rispetto alla ricalibrazione della dispersione**: geography stack, `selected_strength = 0,875` e logica di traduzione in seggi non sono stati ritarati. Il 31 agosto 2026 è stata ricalibrata soltanto la dispersione nazionale del Monte Carlo.
 - **Seggi:** 650 totali; 632 collegi della Gran Bretagna modellati constituency-by-constituency e 18 seggi dell'Irlanda del Nord trattati separatamente.
 - **Monte Carlo:** 50.000 simulazioni deterministiche in 50 blocchi asincroni da 1.000; il risultato corrente viene persistito dal workflow delle social card e riutilizzato finché il fingerprint degli input non cambia.
 - **Output principale:** mediane dei seggi, intervalli centrali all'80%, probabilità di maggioranza/hung parliament e probabilità di vittoria per collegio.
 
-La **v1.0** certifica la maturità dell'interfaccia e della pipeline di pubblicazione. Il motore statistico resta separatamente versionato alla **v0.9.29**. Le correzioni Monte Carlo del 31 agosto intervengono sulla **scala** dell'incertezza nazionale (×1,75) e sulla sua **forma marginale** (Box–Muller al posto dell'Irwin–Hall): non ritarano il centro del modello, la geografia MRP, `selected_strength`, i parametri regionali/locali o il materiale del seed.
+La **v1.0** certifica la maturità dell'interfaccia e della pipeline di pubblicazione. Il motore statistico resta separatamente versionato alla **v0.9.29**. Le correzioni Monte Carlo del 31 agosto intervengono sulla **scala** dell'incertezza nazionale (×1,75) e sulla sua **forma marginale** (Box–Muller al posto dell'Irwin–Hall): non ritarano il centro del modello, la geografia MRP, `selected_strength`, i parametri regionali/locali o il materiale del seed (seme casuale).
 
 ## Cosa fa oggi
 
 ### Sondaggi e nowcast
 
-- aggiorna automaticamente il polling average nazionale;
-- usa snapshot prodotti dalla GitHub Action con fallback fail-soft;
+- aggiorna automaticamente il media ponderata nazionale dei sondaggi;
+- usa istantanee prodotte dalla GitHub Action, con ripiego sull’ultima versione valida in caso di errore;
 - mostra ultimo sondaggio, partito in testa e quadro nazionale corrente;
 - distingue esplicitamente la **media ponderata del modello** dalla media aritmetica dei **6 sondaggi più recenti**: soltanto la prima alimenta il nowcast;
-- ricostruisce una **serie storica della media del modello** con la stessa half-life/lookback del topline live, con intervalli 90 giorni / 6 mesi / 1 anno / tutto;
+- ricostruisce una **serie storica della media del modello** con la stessa stessa emivita e finestra temporale del dato nazionale corrente, con intervalli 90 giorni / 6 mesi / 1 anno / tutto;
 - mostra variazioni a 7 e 30 giorni, volume delle rilevazioni, numero di istituti attivi, campione cumulato e istituti più presenti negli ultimi 30 giorni;
 - mantiene separati il dato nazionale e la traduzione in seggi.
 
 ### Proiezione territoriale
 
 - parte dalla baseline 2024 a livello di constituency;
-- usa un **precision-weighted contemporary MRP geography stack** per i 632 seggi GB;
+- usa un **modello geografico MRP contemporaneo, ponderato per precisione** per i 632 seggi GB;
 - integra la dimensione England / Scotland / Wales e le regioni inglesi nella lettura territoriale;
 - tratta Northern Ireland con un modulo separato invece di forzarla nel modello GB;
 - mantiene Restore Britain nel polling nazionale ma lo esclude dalla conversione constituency-by-constituency finché non esiste una base geografica e di candidature sufficientemente solida;
@@ -53,7 +54,8 @@ La **v1.0** certifica la maturità dell'interfaccia e della pipeline di pubblica
 - restituisce scenario centrale e intervallo 10°–90° percentile;
 - calcola probabilità di maggioranza per i principali partiti e probabilità di hung parliament;
 - applica agli shock nazionali un moltiplicatore globale ×1,75 e una normale **Box–Muller a sei draw RNG fissi**; nell'A/B di promozione le σ effettive post-rinormalizzazione sono 2,1205 p.p. (Labour), 2,1111 (Conservative) e 2,0970 (Reform UK), cioè circa 2,11 p.p. e quindi al limite inferiore del range esterno BPC 2,07–2,43;
-- la calibrazione corregge la **scala** e la **forma marginale** dell'incertezza nazionale, ma non la sua struttura congiunta: correlazioni nazionali/di blocco e house effects restano limiti separati da affrontare;
+- la calibrazione corregge la **scala** e la **forma marginale** dell'incertezza nazionale, ma non la sua struttura congiunta: correlazioni nazionali/di blocco e gli effetti sistematici degli istituti (house effects) restano un limite separato da affrontare;
+- l'audit Geometry del 31 agosto 2026 mostra che preservare media e covarianza nazionali non garantisce probabilità di vittoria equivalenti nei collegi. Di conseguenza, un futuro esperimento sulla **struttura** delle correlazioni dovrà preregistrare gli effetti territoriali attesi e quelli collaterali, non limitarsi a controlli sui momenti nazionali;
 - calcola la probabilità di vittoria constituency-by-constituency;
 - riutilizza prima il riepilogo Monte Carlo persistito nel repository e poi la cache locale; un nuovo calcolo parte soltanto quando il fingerprint degli input è cambiato;
 - il pulsante **Aggiorna dati** confronta la fonte nazionale live con i dati caricati: se non trova variazioni dichiara esplicitamente che il Monte Carlo resta invariato; se trova una nuova rilevazione o una correzione, aggiorna il nowcast e autorizza un solo nuovo Monte Carlo per quel fingerprint.
@@ -65,38 +67,38 @@ La **v1.0** certifica la maturità dell'interfaccia e della pipeline di pubblica
 - dashboard **“Quanto è aperta davvero la corsa”** con intervalli 80% dei seggi, probabilità di primo partito e battlefield dei collegi più contendibili;
 - constituency explorer completo con ricerca, filtri per nazione/regione/partito/stato del seggio e ordinamento;
 - evidenziazione sulla mappa dei collegi filtrati;
-- dashboard regionale e seat flows;
+- dashboard regionale e flussi di seggi;
 - elenco dei collegi più marginali/incerti;
 - export CSV dei risultati filtrati e dell'intero set dei 650 seggi;
-- scenario builder nazionale deterministico, separato dal Monte Carlo di produzione;
+- costruttore deterministico di scenari nazionali, separato dal Monte Carlo di produzione;
 - calcolatore esplorativo **“Quanto voto serve?”** per stimare la quota nazionale necessaria a Labour, Reform UK o Conservative per raggiungere un obiettivo di seggi nella proiezione mediana, con conferma finale su 50.000 simulazioni e pulsante per applicare il risultato allo scenario;
-- coalition builder e combinazioni minime di maggioranza;
+- costruttore di coalizioni e combinazioni minime di maggioranza;
 - export grafici e strumenti di condivisione social;
 - **masthead editoriale professionale** con Union Jack, metadati principali del modello, gerarchia tipografica e spaziatura ripensate sul linguaggio visivo del modello Germania;
 - **condivisioni ridisegnate** con icone vettoriali, rail verticale su desktop ampio e barra orizzontale compatta sui dispositivi più piccoli;
 - **barra sticky del nowcast** differenziata per viewport: su desktop una fascia editoriale chiara e sottile con i primi due partiti e la soglia 326; su mobile un riepilogo minimale che appare solo tornando verso l’alto;
 - **stato della vista sempre esplicito**: quando sono attivi filtri o uno scenario utente compare un indicatore persistente desktop/mobile che segnala che non si sta guardando il nowcast completo, mostra i filtri attivi e offre sempre “Torna al nowcast completo”;
 - **export grafici modulari** 16:9 / 5:2 per proiezione dei seggi, mappa e andamento dei sondaggi, con condivisione nativa quando disponibile;
-- **snapshot JSON** dello stato corrente (media, seggi, intervalli, probabilità e scenario rappresentativo) per uso editoriale/archivio;
+- **istantanea JSON** dello stato corrente (media, seggi, intervalli, probabilità e scenario rappresentativo) per uso editoriale/archivio;
 - guida **“Come leggere il modello”**;
 - pannello **“Verifica e interpreta le stime con un'IA”**, che costruisce un prompt dai dati già visibili nella dashboard senza modificare il modello o i suoi risultati;
 - sezione **“Come si sta muovendo il voto”** con serie storica del topline, movimento recente e attività demoscopica.
 
 ## Motore statistico e validazione
 
-La versione di produzione v0.9.29 promuove, dopo audit, il geography stack sviluppato nella v0.9.28. La promozione non effettua un nuovo tuning statistico: il candidate viene validato e poi promosso soltanto se supera i gate previsti.
+La versione di produzione v0.9.29 promuove, dopo audit, il modello geografico sviluppato nella v0.9.28. La promozione non effettua un nuovo tuning statistico: la versione candidata viene validata e poi promosso soltanto se supera i gate previsti.
 
 Risultati congelati controllati dalla pipeline:
 
 - **2019 — Geography Blend (in-sample/tuning):** 609/632 vincitori corretti; errore assoluto complessivo sui seggi 14;
 - **2024 — benchmark YouGov:** 578/632; errore seggi 56;
-- **2024 — provider stack, cross-validation leave-one-region-out:** 584/632; errore seggi 44.
+- **2024 — combinazione delle fonti, validazione incrociata leave-one-region-out:** 584/632; errore seggi 44.
 
-Il **609/632 del 2019 non è una validazione indipendente**: il 2019 è stato riutilizzato nel percorso di sviluppo e, in particolare, per selezionare la forza geografica **0,875**. Va quindi letto come risultato **in-sample/tuning**. La misura 2024 del provider stack è una validazione regionale del weighting geografico e **non va descritta come un holdout elettorale puro e incontaminato**. La pipeline verifica esplicitamente che il 2024 non entri nella selezione del parametro storico 0,875.
+Il **609/632 del 2019 non è una validazione indipendente**: il 2019 è stato riutilizzato nel percorso di sviluppo e, in particolare, per selezionare la forza geografica **0,875**. Va quindi letto come risultato **in-sample/tuning**. La misura 2024 del combinazione delle fonti è una validazione regionale della ponderazione geografica e **non va descritta come un test elettorale completamente separato dalla calibrazione**. La pipeline verifica esplicitamente che il 2024 non entri nella selezione del parametro storico 0,875.
 
 Di conseguenza, il repository non dispone oggi di un holdout elettorale completamente incontaminato per validare il centro del modello: i risultati storici documentano tuning, confronti e validazione geografica, non una stima indipendente dell'accuratezza futura.
 
-I **topline nazionali dei provider MRP esterni non vengono importati nel modello**. Le informazioni esterne entrano nel geography stack secondo le regole dichiarate e con controlli espliciti contro leakage e regressioni.
+I **valori nazionali dei fornitori MRP esterni non vengono importati nel modello**. Le informazioni esterne entrano nel geography stack secondo le regole dichiarate e con controlli espliciti contro contaminazioni fra calibrazione e verifica e contro regressioni.
 
 ## Promotion gate v0.9.29
 
@@ -107,23 +109,23 @@ La GitHub Action:
 3. ricostruisce il candidate v0.9.28 congelato;
 4. verifica integrità, copertura, backtest, cross-validation e stabilità 2026;
 5. impedisce la promozione se i risultati storici congelati regrediscono o se vengono violate le invarianti metodologiche;
-6. promuove il candidate a **v0.9.29 production live**;
+6. promuove il candidate a **v0.9.29 di produzione**;
 7. verifica che la promozione non abbia mutato le proiezioni constituency-by-constituency o il target GB;
 8. pubblica GitHub Pages soltanto dopo il completamento della pipeline.
 
 ## Shadow MRP watcher
 
-La pipeline contiene anche un controllo **shadow-only** per individuare eventuali nuovi MRP Westminster pubblicati da:
+La pipeline contiene anche un controllo **solo di monitoraggio** per individuare eventuali nuovi MRP Westminster pubblicati da:
 
 - More in Common;
 - YouGov;
 - Focaldata.
 
-Il watcher può segnalare un nuovo aggiornamento, ma la policy è **detect and notify, never auto-adopt**: una nuova fonte non viene mai inserita automaticamente nel modello di produzione.
+Il watcher può segnalare un nuovo aggiornamento, ma la policy è **rileva e segnala, non adotta mai automaticamente**: una nuova fonte non viene mai inserita automaticamente nel modello di produzione.
 
 ## Northern Ireland
 
-I 18 seggi nordirlandesi sono tenuti separati dal geography stack della Gran Bretagna. La dashboard li ricompone poi nel totale dei 650 seggi della House of Commons. Anche gli export CSV completi mantengono le colonne dei partiti NI necessarie a rappresentare correttamente questi collegi.
+I 18 seggi nordirlandesi sono tenuti separati dal modello geografico della Gran Bretagna. La dashboard li ricompone poi nel totale dei 650 seggi della House of Commons. Anche gli export CSV completi mantengono le colonne dei partiti NI necessarie a rappresentare correttamente questi collegi.
 
 ## Fonti principali
 
