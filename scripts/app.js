@@ -28,6 +28,10 @@ const CONFIG = {
   niSeats: 18,
   cacheVersion: 'uk-v0931-20260827-constituency-explorer-scenario-builder',
   swingLambda: 0.82,
+  // Global national polling-error calibration. A 1.75 multiplier yields
+  // ~2.11 pp effective post-renormalisation sigma for Lab/Con/Ref,
+  // the lower bound of the external BPC calibration range (2.07-2.43).
+  nationalSigmaMultiplier: 1.75,
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
   localNoise: 0.055,
@@ -1095,7 +1099,7 @@ function fingerprint(){
   const cal=state.modelParams
     ? `${state.modelParams.version||'model'}:${state.modelParams.model_type||''}:${state.modelParams.rake_strength??''}`
     : 'fallback';
-  return `${CONFIG.cacheVersion}:${hashString(p+'|'+sp+'|'+state.constituencies.length+'|'+cal+'|'+ni+'|'+mrp)}`;
+  return `${CONFIG.cacheVersion}:${hashString(p+'|'+sp+'|'+state.constituencies.length+'|'+cal+'|'+ni+'|'+mrp+'|nationalSigmaMultiplier:'+CONFIG.nationalSigmaMultiplier)}`;
 }
 function simulationSeedKey(){
   // Preserve the v0.9.43 Monte Carlo seed inputs whenever a new simulation is
@@ -1194,7 +1198,7 @@ async function runMonteCarlo({allowClientBuild=false}={}){
     const end=Math.min(N,start+CONFIG.mcBatch);
     for(let sim=start;sim<end;sim++){
       const drawn={};let sum=0;
-      for(const p of PARTY_ORDER){const sigma=CONFIG.nationalSigma[p]||.8;drawn[p]=Math.max(.05,target[p]+normalApprox(rng)*sigma);sum+=drawn[p];}
+      for(const p of PARTY_ORDER){const sigma=(CONFIG.nationalSigma[p]||.8)*CONFIG.nationalSigmaMultiplier;drawn[p]=Math.max(.05,target[p]+normalApprox(rng)*sigma);sum+=drawn[p];}
       for(const p of PARTY_ORDER)drawn[p]=drawn[p]/sum*100;
       const natShift={};for(const p of PARTY_ORDER){const elastic=centreAlreadyTransformed?CONFIG.swingLambda:lambdaFor(p);natShift[p]=elastic*Math.log(Math.max(.05,drawn[p])/Math.max(.05,target[p]||.05));}
       const regNoise=Array.from({length:regions.length},()=>Object.fromEntries(PARTY_ORDER.map(p=>[p,logistic(rng)*CONFIG.regionNoise])));
