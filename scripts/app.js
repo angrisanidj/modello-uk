@@ -32,6 +32,10 @@ const CONFIG = {
   // ~2.11 pp effective post-renormalisation sigma for Lab/Con/Ref,
   // the lower bound of the external BPC calibration range (2.07-2.43).
   nationalSigmaMultiplier: 1.75,
+  // Shape of the national polling-error shock. Kept in the Monte Carlo
+  // fingerprint so persisted Irwin-Hall summaries cannot be reused after
+  // the Box-Muller promotion. It is intentionally NOT part of the seed key.
+  nationalNoiseDistribution: 'box-muller-v1',
   nationalSigma: {lab:1.35,con:1.35,ref:1.35,ld:0.95,green:0.95,snp:0.50,pc:0.30,rb:0.65,other:0.70},
   regionNoise: 0.035,
   localNoise: 0.055,
@@ -1078,7 +1082,18 @@ function logistic(rng){
   return Math.log(u/(1-u))/Math.PI*Math.sqrt(3);
 }
 function normalApprox(rng){
-  return (rng()+rng()+rng()+rng()+rng()+rng()-3)*Math.SQRT2;
+  // Box-Muller with a fixed six-draw RNG budget. The second normal is
+  // deliberately discarded so party-to-party RNG alignment is preserved.
+  // If the first radial uniform is exactly zero, reuse an already-drawn
+  // pair; never draw again. 2^-32 is the deterministic final floor because
+  // it is the smallest positive value representable by mulberry32.
+  const a=rng(),b=rng(),c=rng(),d=rng(),e=rng(),f=rng();
+  let u1,u2;
+  if(a>0){u1=a;u2=b;}
+  else if(c>0){u1=c;u2=d;}
+  else if(e>0){u1=e;u2=f;}
+  else {u1=1/4294967296;u2=b;}
+  return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
 }
 const stableModelTokenCache=new WeakMap();
 function stableModelToken(obj,fallback){
@@ -1099,7 +1114,7 @@ function fingerprint(){
   const cal=state.modelParams
     ? `${state.modelParams.version||'model'}:${state.modelParams.model_type||''}:${state.modelParams.rake_strength??''}`
     : 'fallback';
-  return `${CONFIG.cacheVersion}:${hashString(p+'|'+sp+'|'+state.constituencies.length+'|'+cal+'|'+ni+'|'+mrp+'|nationalSigmaMultiplier:'+CONFIG.nationalSigmaMultiplier)}`;
+  return `${CONFIG.cacheVersion}:${hashString(p+'|'+sp+'|'+state.constituencies.length+'|'+cal+'|'+ni+'|'+mrp+'|nationalSigmaMultiplier:'+CONFIG.nationalSigmaMultiplier+'|nationalNoiseDistribution:'+CONFIG.nationalNoiseDistribution)}`;
 }
 function simulationSeedKey(){
   // Preserve the v0.9.43 Monte Carlo seed inputs whenever a new simulation is
