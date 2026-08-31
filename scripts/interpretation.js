@@ -55,13 +55,14 @@ Sto consultando un nowcast sulle elezioni generali britanniche. Voglio una lettu
 Pagina: ${dashboardUrl()}
 INDICATORI PRINCIPALI
 ${kpis.map((row) => `- ${row}`).join("\n")}
-${section("MEDIA CORRENTE DEI SONDAGGI", voteRows)}${section("STIME CORRENTI PER PARTITO", seatRows)}${section("PROBABILITÀ MONTE CARLO", probabilityRows)}${section("DISTRIBUZIONE DEI SEGGI — MEDIANA E INTERVALLO 80%", uncertaintyRows)}${section("QUADRO TERRITORIALE", countryRows)}${section("COLLEGI IN BILICO — SEGGI PIÙ INCERTI", battlefieldRows)}${section("COLLEGI PIÙ INCERTI MOSTRATI NELL’ESPLORATORE", marginalRows)}${section("COMBINAZIONI MINIME DI MAGGIORANZA MOSTRATE", coalitionRows)}
+${section("MEDIA CORRENTE DEI SONDAGGI", voteRows)}${section("STIME CORRENTI PER PARTITO", seatRows)}${section("PROBABILITÀ MONTE CARLO", probabilityRows)}${section("DISTRIBUZIONE DEI SEGGI — MEDIANA E INTERVALLO 80%", uncertaintyRows)}${section("QUADRO TERRITORIALE", countryRows)}${section("COLLEGI IN BILICO — 8 SEGGI PIÙ INCERTI MOSTRATI; LE FASCE SONO CALCOLATE SU TUTTI I 650", battlefieldRows)}${section("COLLEGI PIÙ INCERTI MOSTRATI NELL’ESPLORATORE", marginalRows)}${section("COMBINAZIONI MINIME DI MAGGIORANZA MOSTRATE", coalitionRows)}
 VALIDAZIONE DICHIARATA DAL MODELLO
-- Backtest 2019 della componente geografica: 609/632 vincitori corretti, errore assoluto complessivo sui seggi 14.
+- Risultato 2019 della componente geografica: 609/632 vincitori corretti, errore assoluto complessivo sui seggi 14. È un risultato in-sample/tuning, non una validazione indipendente: il 2019 è stato usato per selezionare la forza geografica 0,875.
 - Confronto 2024 sulla geografia YouGov: 578/632, errore seggi 56.
 - Validazione incrociata geografica 2024, escludendo a turno una regione, della combinazione delle fonti esterne: 584/632, errore seggi 44. Questa misura non usa un’elezione interamente separata dalla calibrazione: serve a validare la ponderazione geografica delle fonti esterne.
-- La forza geografica 0,875 è stata selezionata sul 2019; il 2024 non è usato per selezionare quel parametro storico.
 - I valori nazionali delle fonti MRP esterne non vengono importati nel modello: vengono usate soltanto informazioni geografiche secondo le regole dichiarate.
+- Restore Britain è incluso nel polling nazionale ma non nella conversione constituency-by-constituency, in attesa di una base geografica e di candidature sufficientemente solida.
+- L'incertezza nazionale Monte Carlo usa un moltiplicatore ×1,75. La misura diretta sulle 50.000 estrazioni post-rinormalizzazione è σ=2,1115 p.p. per Labour, 2,1077 per Conservative e 2,1056 per Reform UK (≈2,11 p.p.), al limite inferiore del range esterno BPC 2,07–2,43. Questa calibrazione modifica la scala dell'incertezza, non il centro del modello, e non introduce house effects o nuove correlazioni strutturali.
 
 COSA TI CHIEDO
 1. Spiega in modo chiaro che cosa dice oggi il nowcast, distinguendo voto nazionale, seggi e probabilità. Non trattare lo scenario centrale come una certezza.

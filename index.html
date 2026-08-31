@@ -86,7 +86,7 @@
     <div class="hero-meta">
       <span class="status"><i id="statusDot" class="dot loading"></i><span id="statusText">Caricamento dati…</span></span>
       <span class="badge" id="dataBadge">Sondaggi: —</span>
-      <span class="badge badge-strong">Motore statistico congelato · controlli superati</span>
+      <span class="badge badge-strong">Centro v0.9.29 invariato · dispersione ricalibrata il 31 agosto</span>
     </div>
     <div id="refreshReview" class="refresh-review" role="status" aria-live="polite" hidden>
       <span class="refresh-review-mark" aria-hidden="true"></span>
@@ -114,7 +114,7 @@
     <div class="read-guide-grid">
       <p><strong>È un nowcast, non una previsione del giorno delle elezioni.</strong> Risponde a una domanda precisa: che cosa accadrebbe se si votasse oggi con il quadro dei sondaggi disponibile.</p>
       <p><strong>Il numero centrale non è una certezza.</strong> Le mediane dei seggi vanno lette insieme all’intervallo centrale 80% e alle probabilità prodotte dalle 50.000 simulazioni Monte Carlo.</p>
-      <p><strong>Nel Regno Unito conta la geografia.</strong> Il voto nazionale viene tradotto nei 632 collegi della Gran Bretagna con la struttura geografica MRP; i 18 seggi dell’Irlanda del Nord sono trattati separatamente.</p>
+      <p><strong>Nel Regno Unito conta la geografia.</strong> Il voto nazionale viene tradotto nei 632 collegi della Gran Bretagna con la struttura geografica MRP; i 18 seggi dell’Irlanda del Nord sono trattati separatamente. Restore Britain resta visibile nel polling nazionale ma non entra ancora nella conversione in seggi, perché manca una base geografica sufficientemente solida.</p>
       <p><strong>Mappa e scenari hanno funzioni diverse.</strong> La mappa corrente usa uno scenario territoriale rappresentativo coerente con le mediane; lo scenario personalizzato dell’utente è deterministico e non modifica né il modello di produzione né le probabilità Monte Carlo.</p>
     </div>
   </details>
@@ -153,11 +153,11 @@
       <div class="cardhead"><div><h3>Dal voto ai collegi</h3><p>Il sistema maggioritario uninominale (First Past the Post) rende decisiva la distribuzione geografica del voto.</p></div></div>
       <div class="method-list">
         <div class="method-row"><span class="method-num">1</span><div><strong>Media nazionale interna</strong><span>Media ponderata dei sondaggi; i valori nazionali delle fonti MRP non vengono importati.</span></div></div>
-        <div class="method-row"><span class="method-num">2</span><div><strong>632 collegi della Gran Bretagna</strong><span>Struttura geografica MRP: YouGov 2024 + More in Common 2026, pesati per precisione e freschezza.</span></div></div>
+        <div class="method-row"><span class="method-num">2</span><div><strong>632 collegi della Gran Bretagna</strong><span>Struttura geografica MRP: YouGov 2024 + More in Common 2026, pesati per precisione e freschezza. Restore Britain è incluso nel polling nazionale ma escluso dalla conversione in seggi finché non esiste una base geografica e di candidature sufficientemente solida.</span></div></div>
         <div class="method-row"><span class="method-num">3</span><div><strong>18 collegi dell’Irlanda del Nord</strong><span>Modulo separato con base Westminster 2024 e un segnale debole dalle elezioni dell’Assemblea nordirlandese.</span></div></div>
-        <div class="method-row"><span class="method-num">4</span><div><strong>50.000 simulazioni</strong><span>Incertezza nazionale, regionale e locale propagata fino ai vincitori di collegio.</span></div></div>
+        <div class="method-row"><span class="method-num">4</span><div><strong>50.000 simulazioni</strong><span>Incertezza nazionale, regionale e locale propagata fino ai vincitori di collegio. La scala nazionale usa il moltiplicatore ×1,75; misurata direttamente sulle 50.000 estrazioni dopo la rinormalizzazione, la σ effettiva è 2,1115 p.p. per Labour, 2,1077 per Conservative e 2,1056 per Reform UK (≈2,11 p.p.), al limite inferiore del range esterno BPC 2,07–2,43. La ricalibrazione modifica la dispersione, non il centro del modello.</span></div></div>
       </div>
-      <div class="audit-chip"><strong>Motore validato:</strong> 609/632 nel 2019 · 578/632 nel confronto YouGov 2024 · 584/632 nella validazione geografica 2024.</div>
+      <div class="audit-chip"><strong>Controlli storici:</strong> 609/632 nel 2019 (in-sample: il 2019 è stato usato per selezionare la forza geografica 0,875) · 578/632 nel confronto YouGov 2024 · 584/632 nella cross-validation geografica 2024, che non è un holdout elettorale puro.</div>
     </article>
   </section>
   <details id="runTransparency" class="run-transparency">
@@ -252,7 +252,7 @@
         <div id="uncertaintyLeaderGrid" class="uncertainty-leader-grid"><div class="empty-small">Calcolo in corso…</div></div>
       </article>
       <article class="card battlefield-card">
-        <div class="cardhead"><div><h3>Collegi in bilico</h3><p>Quanti collegi restano realmente contendibili nelle simulazioni.</p></div></div>
+        <div class="cardhead"><div><h3>Collegi in bilico</h3><p>Le fasce di contendibilità sono calcolate su tutti i 650 collegi; sotto sono mostrati solo gli 8 con la probabilità del leader più bassa.</p></div></div>
         <div id="battlefieldStats" class="battlefield-stats"><div class="empty-small">In attesa delle probabilità di collegio.</div></div>
         <div class="battlefield-head"><strong>Collegi più incerti</strong><span id="battlefieldRegionNote">—</span></div>
         <div id="battlefieldList" class="battlefield-list"></div>
