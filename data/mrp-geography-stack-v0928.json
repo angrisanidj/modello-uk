@@ -1,7 +1,7 @@
 {
   "version": "uk-v0928-mrp-geography-stack",
   "status": "ok",
-  "generated_at": "2026-09-01T18:25:38.020295+00:00",
+  "generated_at": "2026-09-02T09:38:35.241945+00:00",
   "diagnostic_only": false,
   "shadow_only": true,
   "live_candidate": true,
@@ -121,7 +121,7 @@
       "other": -1
     },
     "seat_abs_error_sum": 14,
-    "share_mae": 1.4437290270661631,
+    "share_mae": 1.4437290270648668,
     "winner_source": "official_BES_WinnerXX",
     "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
     "regional_accuracy": {
@@ -388,7 +388,7 @@
           "other": -5
         },
         "seat_abs_error_sum": 44,
-        "share_mae": 2.3861699982497404,
+        "share_mae": 2.3861699982818974,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -683,7 +683,7 @@
         "other": -5
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.3733502312004275,
+      "share_mae": 2.3733502312417825,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -860,7 +860,7 @@
             },
             "snp": {
               "pairs": 57,
-              "mean_abs_log_error": 0.07211586968173635,
+              "mean_abs_log_error": 0.07211586968173633,
               "median_abs_log_error": 0.06180180428021178
             },
             "pc": {
@@ -881,7 +881,7 @@
         "metrics": {
           "pairs": 3474,
           "median_abs_log_error": 0.1291765581276621,
-          "mean_abs_log_error": 0.28480478422527283,
+          "mean_abs_log_error": 0.2848047842252729,
           "rmse_log_error": 0.6551439160779761,
           "by_party": {
             "lab": {
@@ -891,7 +891,7 @@
             },
             "con": {
               "pairs": 632,
-              "mean_abs_log_error": 0.1823458711878486,
+              "mean_abs_log_error": 0.18234587118784862,
               "median_abs_log_error": 0.08255362885453657
             },
             "ref": {
@@ -902,7 +902,7 @@
             "ld": {
               "pairs": 629,
               "mean_abs_log_error": 0.23372060806506056,
-              "median_abs_log_error": 0.1931133605052971
+              "median_abs_log_error": 0.19311336050529723
             },
             "green": {
               "pairs": 614,
@@ -911,13 +911,13 @@
             },
             "snp": {
               "pairs": 57,
-              "mean_abs_log_error": 0.07149562520500867,
+              "mean_abs_log_error": 0.07149562520500866,
               "median_abs_log_error": 0.06123635491998738
             },
             "pc": {
               "pairs": 32,
               "mean_abs_log_error": 0.23410016685007792,
-              "median_abs_log_error": 0.17374948064063817
+              "median_abs_log_error": 0.17374948064063805
             },
             "other": {
               "pairs": 246,
@@ -962,12 +962,12 @@
             },
             "snp": {
               "pairs": 57,
-              "mean_abs_log_error": 0.08053819476172337,
+              "mean_abs_log_error": 0.08053819476172339,
               "median_abs_log_error": 0.06798001423235665
             },
             "pc": {
               "pairs": 32,
-              "mean_abs_log_error": 0.25172121943553855,
+              "mean_abs_log_error": 0.2517212194355386,
               "median_abs_log_error": 0.19928785256000345
             },
             "other": {
@@ -1024,7 +1024,7 @@
             "other": {
               "pairs": 246,
               "mean_abs_log_error": 1.2471177863439864,
-              "median_abs_log_error": 0.7034977297460441
+              "median_abs_log_error": 0.7034977297460443
             }
           }
         }
@@ -1105,7 +1105,7 @@
             },
             "ld": {
               "pairs": 629,
-              "mean_abs_log_error": 0.35121682463972614,
+              "mean_abs_log_error": 0.35121682463972625,
               "median_abs_log_error": 0.30319084371544414
             },
             "green": {
@@ -1161,7 +1161,7 @@
             },
             "green": {
               "pairs": 614,
-              "mean_abs_log_error": 0.3855307381091166,
+              "mean_abs_log_error": 0.38553073810911664,
               "median_abs_log_error": 0.2864078893439673
             },
             "snp": {
@@ -1171,7 +1171,7 @@
             },
             "pc": {
               "pairs": 32,
-              "mean_abs_log_error": 0.3333791866338042,
+              "mean_abs_log_error": 0.33337918663380417,
               "median_abs_log_error": 0.22536959953632985
             },
             "other": {
@@ -1420,7 +1420,7 @@
           "other": -5
         },
         "seat_abs_error_sum": 84,
-        "share_mae": 2.716953129270803,
+        "share_mae": 2.716953129296369,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -1516,7 +1516,7 @@
           "other": -5
         },
         "seat_abs_error_sum": 84,
-        "share_mae": 2.716953129270803,
+        "share_mae": 2.716953129296369,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -1612,7 +1612,7 @@
           "other": -5
         },
         "seat_abs_error_sum": 86,
-        "share_mae": 2.771054198999028,
+        "share_mae": 2.7710541990255817,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -1708,7 +1708,7 @@
           "other": -5
         },
         "seat_abs_error_sum": 56,
-        "share_mae": 2.468124757543097,
+        "share_mae": 2.4681247576193592,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -1804,7 +1804,7 @@
           "other": -6
         },
         "seat_abs_error_sum": 100,
-        "share_mae": 3.2899497113914036,
+        "share_mae": 3.28994971137133,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -1904,7 +1904,7 @@
       "other": -5
     },
     "seat_abs_error_sum": 56,
-    "share_mae": 2.468124757543097,
+    "share_mae": 2.4681247576193592,
     "winner_source": "official_BES_WinnerXX",
     "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
     "regional_accuracy": {
@@ -2001,7 +2001,7 @@
         "other": -6
       },
       "seat_abs_error_sum": 100,
-      "share_mae": 3.2899497113914036,
+      "share_mae": 3.28994971137133,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -2097,7 +2097,7 @@
         "other": -5
       },
       "seat_abs_error_sum": 54,
-      "share_mae": 2.4907355765505277,
+      "share_mae": 2.490735576582746,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -2197,7 +2197,7 @@
             "other": -1
           },
           "seat_abs_error_sum": 166,
-          "share_mae": 5.55680761701318,
+          "share_mae": 5.556807618048258,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2298,7 +2298,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 140,
-          "share_mae": 4.974827838321066,
+          "share_mae": 4.97482783919971,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2399,7 +2399,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 124,
-          "share_mae": 4.424385271587517,
+          "share_mae": 4.424385272316427,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2500,7 +2500,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 108,
-          "share_mae": 3.907939596505709,
+          "share_mae": 3.907939597087097,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2601,7 +2601,7 @@
             "other": -3
           },
           "seat_abs_error_sum": 86,
-          "share_mae": 3.444731578137115,
+          "share_mae": 3.444731578523333,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2702,7 +2702,7 @@
             "other": -4
           },
           "seat_abs_error_sum": 70,
-          "share_mae": 3.0285562592161432,
+          "share_mae": 3.028556259464098,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2803,7 +2803,7 @@
             "other": -5
           },
           "seat_abs_error_sum": 70,
-          "share_mae": 2.679960335209287,
+          "share_mae": 2.6799603353751396,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2904,7 +2904,7 @@
             "other": -5
           },
           "seat_abs_error_sum": 56,
-          "share_mae": 2.468124757543097,
+          "share_mae": 2.4681247576193592,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3106,7 +3106,7 @@
             "other": -1
           },
           "seat_abs_error_sum": 166,
-          "share_mae": 5.55680761701318,
+          "share_mae": 5.556807618048258,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3207,7 +3207,7 @@
             "other": -1
           },
           "seat_abs_error_sum": 150,
-          "share_mae": 5.117239094487391,
+          "share_mae": 5.117239095268623,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3308,7 +3308,7 @@
             "other": -1
           },
           "seat_abs_error_sum": 136,
-          "share_mae": 4.715318858629432,
+          "share_mae": 4.715318859201137,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3409,7 +3409,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 124,
-          "share_mae": 4.345530841384098,
+          "share_mae": 4.345530841796416,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3510,7 +3510,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 108,
-          "share_mae": 4.016385222068582,
+          "share_mae": 4.016385222267259,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3611,7 +3611,7 @@
             "other": -6
           },
           "seat_abs_error_sum": 114,
-          "share_mae": 3.715309275139931,
+          "share_mae": 3.7153092752152763,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3712,7 +3712,7 @@
             "other": -6
           },
           "seat_abs_error_sum": 104,
-          "share_mae": 3.4582921505399886,
+          "share_mae": 3.4582921505247857,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3813,7 +3813,7 @@
             "other": -6
           },
           "seat_abs_error_sum": 100,
-          "share_mae": 3.2899497113914036,
+          "share_mae": 3.28994971137133,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4015,7 +4015,7 @@
             "other": -1
           },
           "seat_abs_error_sum": 166,
-          "share_mae": 5.55680761701318,
+          "share_mae": 5.556807618048258,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4116,7 +4116,7 @@
             "other": -1
           },
           "seat_abs_error_sum": 140,
-          "share_mae": 5.0414356329650545,
+          "share_mae": 5.041435633759562,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4217,7 +4217,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 124,
-          "share_mae": 4.550260370923736,
+          "share_mae": 4.5502603715655265,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4318,7 +4318,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 108,
-          "share_mae": 4.075595395164496,
+          "share_mae": 4.075595395603543,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4419,7 +4419,7 @@
             "other": -3
           },
           "seat_abs_error_sum": 94,
-          "share_mae": 3.622806930964905,
+          "share_mae": 3.622806931281765,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4520,7 +4520,7 @@
             "other": -5
           },
           "seat_abs_error_sum": 82,
-          "share_mae": 3.1944146522036108,
+          "share_mae": 3.19441465236354,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4621,7 +4621,7 @@
             "other": -5
           },
           "seat_abs_error_sum": 64,
-          "share_mae": 2.8093664767534796,
+          "share_mae": 2.8093664768310496,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4722,7 +4722,7 @@
             "other": -5
           },
           "seat_abs_error_sum": 54,
-          "share_mae": 2.4907355765505277,
+          "share_mae": 2.490735576582746,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4926,7 +4926,7 @@
             "other": -5
           },
           "seat_abs_error_sum": 56,
-          "share_mae": 2.468124757543097,
+          "share_mae": 2.4681247576193592,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -5205,98 +5205,98 @@
     "provider_toplines_used": false,
     "provider_reliability_training_election": "2024",
     "provider_stack_leave_region_out_validation_passed": true,
-    "yougov_anchor_age_years": 2.16290212183436,
-    "mic26_age_years": 0.2108145106091718,
+    "yougov_anchor_age_years": 2.1656399726214923,
+    "mic26_age_years": 0.2135523613963039,
     "current_provider_weights_by_party": {
-      "lab": 0.5085811131006707,
-      "con": 0.500958774816392,
-      "ref": 0.8761204383077346,
-      "ld": 0.4513658479939345,
-      "green": 0.6731490908960989,
-      "snp": 0.2805711367418588,
-      "pc": 0.7363475091537027,
-      "other": 0.7663938935354223
+      "lab": 0.5085739303541988,
+      "con": 0.500958222113036,
+      "ref": 0.8753160401302106,
+      "ld": 0.45139668711578534,
+      "green": 0.6729062916501914,
+      "snp": 0.28061949742400677,
+      "pc": 0.7361223043528667,
+      "other": 0.7661338500988008
     },
     "components_by_party": {
       "lab": {
         "anchor_measurement_variance": 0.03379214606942445,
         "current_measurement_variance": 0.08733018210308745,
         "drift_variance_per_year": 0.029098168183670732,
-        "anchor_age_years": 2.16290212183436,
-        "current_age_years": 0.2108145106091718,
-        "anchor_total_variance": 0.09672863577537893,
-        "current_total_variance": 0.09346449818835137,
-        "current_provider_weight": 0.5085811131006707
+        "anchor_age_years": 2.1656399726214923,
+        "current_age_years": 0.2135523613963039,
+        "anchor_total_variance": 0.0968083022180447,
+        "current_total_variance": 0.09354416463101713,
+        "current_provider_weight": 0.5085739303541988
       },
       "con": {
         "anchor_measurement_variance": 0.03717140056740165,
         "current_measurement_variance": 0.06489617968865045,
         "drift_variance_per_year": 0.01433632052189644,
-        "anchor_age_years": 2.16290212183436,
-        "current_age_years": 0.2108145106091718,
-        "anchor_total_variance": 0.06817945864350894,
-        "current_total_variance": 0.06791848408341028,
-        "current_provider_weight": 0.500958774816392
+        "anchor_age_years": 2.1656399726214923,
+        "current_age_years": 0.2135523613963039,
+        "anchor_total_variance": 0.06821870934993439,
+        "current_total_variance": 0.06795773478983573,
+        "current_provider_weight": 0.500958222113036
       },
       "ref": {
         "anchor_measurement_variance": 0.058100139084117854,
         "current_measurement_variance": 0.08137150636704009,
         "drift_variance_per_year": 0.769983922511564,
-        "anchor_age_years": 2.16290212183436,
-        "current_age_years": 0.2108145106091718,
-        "anchor_total_variance": 1.7234999988627229,
-        "current_total_variance": 0.24369529016824593,
-        "current_provider_weight": 0.8761204383077346
+        "anchor_age_years": 2.1656399726214923,
+        "current_age_years": 0.2135523613963039,
+        "anchor_total_variance": 1.7256080999510506,
+        "current_total_variance": 0.24580339125657324,
+        "current_provider_weight": 0.8753160401302106
       },
       "ld": {
         "anchor_measurement_variance": 0.12733571691733833,
         "current_measurement_variance": 0.332527227939262,
         "drift_variance_per_year": 0.07350584506508796,
-        "anchor_age_years": 2.16290212183436,
-        "current_age_years": 0.2108145106091718,
-        "anchor_total_variance": 0.2863216651758448,
-        "current_total_variance": 0.3480233266935721,
-        "current_provider_weight": 0.4513658479939345
+        "anchor_age_years": 2.1656399726214923,
+        "current_age_years": 0.2135523613963039,
+        "anchor_total_variance": 0.28652291321161505,
+        "current_total_variance": 0.3482245747293424,
+        "current_provider_weight": 0.45139668711578534
       },
       "green": {
         "anchor_measurement_variance": 0.09927844728008574,
         "current_measurement_variance": 0.2285778060492817,
         "drift_variance_per_year": 0.21488452424006013,
-        "anchor_age_years": 2.16290212183436,
-        "current_age_years": 0.2108145106091718,
-        "anchor_total_variance": 0.5640526407082788,
-        "current_total_variance": 0.2738785818644347,
-        "current_provider_weight": 0.6731490908960989
+        "anchor_age_years": 2.1656399726214923,
+        "current_age_years": 0.2135523613963039,
+        "anchor_total_variance": 0.5646409624721119,
+        "current_total_variance": 0.27446690362826787,
+        "current_provider_weight": 0.6729062916501914
       },
       "snp": {
         "anchor_measurement_variance": 0.012214885792703247,
         "current_measurement_variance": 0.04487973572774666,
         "drift_variance_per_year": 0.0025413871743783334,
-        "anchor_age_years": 2.16290212183436,
-        "current_age_years": 0.2108145106091718,
-        "anchor_total_variance": 0.017711657504568774,
-        "current_total_variance": 0.04541549702118165,
-        "current_provider_weight": 0.2805711367418588
+        "anchor_age_years": 2.1656399726214923,
+        "current_age_years": 0.2135523613963039,
+        "anchor_total_variance": 0.017718615443444552,
+        "current_total_variance": 0.04542245496005743,
+        "current_provider_weight": 0.28061949742400677
       },
       "pc": {
         "anchor_measurement_variance": 0.22478423573911993,
         "current_measurement_variance": 0.14185014819166283,
         "drift_variance_per_year": 0.10887640239325248,
-        "anchor_age_years": 2.16290212183436,
-        "current_age_years": 0.2108145106091718,
-        "anchor_total_variance": 0.4602732374931773,
-        "current_total_variance": 0.1648028736790836,
-        "current_provider_weight": 0.7363475091537027
+        "anchor_age_years": 2.1656399726214923,
+        "current_age_years": 0.2135523613963039,
+        "anchor_total_variance": 0.4605713248371698,
+        "current_total_variance": 0.1651009610230761,
+        "current_provider_weight": 0.7361223043528667
       },
       "other": {
         "anchor_measurement_variance": 1.775428079298443,
         "current_measurement_variance": 0.914644044719191,
         "drift_variance_per_year": 0.8327803657307229,
-        "anchor_age_years": 2.16290212183436,
-        "current_age_years": 0.2108145106091718,
-        "anchor_total_variance": 3.5766504993594177,
-        "current_total_variance": 1.0902062299656405,
-        "current_provider_weight": 0.7663938935354223
+        "anchor_age_years": 2.1656399726214923,
+        "current_age_years": 0.2135523613963039,
+        "anchor_total_variance": 3.5789305277392423,
+        "current_total_variance": 1.0924862583454644,
+        "current_provider_weight": 0.7661338500988008
       }
     },
     "formula": "logR=(1-w_current)*logR_anchor+w_current*logR_current; w_current=Var_anchor_total/(Var_anchor_total+Var_current_total)"
@@ -5726,14 +5726,14 @@
       "majority_consensus_available": 632,
       "all_scenarios_different": 0,
       "majority_consensus_totals": {
-        "snp": 48,
-        "ref": 176,
-        "con": 74,
         "lab": 243,
-        "ld": 69,
-        "other": 8,
+        "green": 6,
+        "ref": 176,
         "pc": 8,
-        "green": 6
+        "con": 74,
+        "ld": 69,
+        "snp": 48,
+        "other": 8
       },
       "note": "Consensus is diagnostic only and never selects the live route."
     },
@@ -5748,14 +5748,14 @@
       "other": 0.6599927427398614
     },
     "freshness_adjusted_weights_by_party": {
-      "lab": 0.5085811131006707,
-      "con": 0.500958774816392,
-      "ref": 0.8761204383077346,
-      "ld": 0.4513658479939345,
-      "green": 0.6731490908960989,
-      "snp": 0.2805711367418588,
-      "pc": 0.7363475091537027,
-      "other": 0.7663938935354223
+      "lab": 0.5085739303541988,
+      "con": 0.500958222113036,
+      "ref": 0.8753160401302106,
+      "ld": 0.45139668711578534,
+      "green": 0.6729062916501914,
+      "snp": 0.28061949742400677,
+      "pc": 0.7361223043528667,
+      "other": 0.7661338500988008
     }
   },
   "promotion_policy": "Never auto-promote. Passing the research gate only nominates the method for review and a fresh external validation."
