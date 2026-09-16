@@ -1,7 +1,7 @@
 {
   "version": "uk-v0929-precision-weighted-mrp-live",
   "status": "ok",
-  "generated_at": "2026-09-16T16:45:49.597345+00:00",
+  "generated_at": "2026-09-16T21:17:14.300738+00:00",
   "diagnostic_only": false,
   "shadow_only": false,
   "live_candidate": false,
@@ -598,14 +598,14 @@
       "majority_consensus_available": 632,
       "all_scenarios_different": 0,
       "majority_consensus_totals": {
-        "pc": 11,
-        "ref": 156,
-        "other": 8,
         "lab": 256,
         "con": 86,
-        "snp": 38,
+        "ref": 156,
         "ld": 71,
-        "green": 6
+        "pc": 11,
+        "snp": 38,
+        "green": 6,
+        "other": 8
       },
       "note": "Consensus is diagnostic only and never selects the live route."
     },
@@ -631,26 +631,26 @@
     }
   },
   "target_gb": {
-    "lab": 26.099914625066305,
-    "con": 20.67279049175478,
-    "ref": 23.928298743289687,
-    "ld": 11.085208708607567,
-    "green": 11.067061835082662,
-    "snp": 2.7300916346422643,
-    "pc": 1.1136696615668469,
-    "other": 3.302964299989898
+    "lab": 26.0999146250663,
+    "con": 20.67279049175476,
+    "ref": 23.928298743289698,
+    "ld": 11.085208708607569,
+    "green": 11.067061835082658,
+    "snp": 2.7300916346422635,
+    "pc": 1.1136696615668473,
+    "other": 3.3029642999899016
   },
   "poll_meta": {
     "effective_polls": 25,
     "raw_average": {
-      "lab": 25.471712446506537,
-      "con": 20.175214457105316,
-      "ref": 23.352365464744516,
-      "ld": 10.818397404410847,
-      "green": 10.800687310302509,
-      "snp": 2.664380710404109,
-      "pc": 1.0868646042460728,
-      "other": 3.223464830402897
+      "lab": 25.471712446506505,
+      "con": 20.175214457105277,
+      "ref": 23.352365464744498,
+      "ld": 10.818397404410836,
+      "green": 10.800687310302495,
+      "snp": 2.664380710404105,
+      "pc": 1.0868646042460721,
+      "other": 3.223464830402896
     }
   },
   "source_meta": {
@@ -19564,7 +19564,7 @@
   "changes_production_model": true,
   "source_candidate_version": "uk-v0928-mrp-geography-stack-live-candidate",
   "production_promotion_version": "v0.9.29",
-  "promoted_at": "2026-09-16T16:45:50.139199+00:00",
+  "promoted_at": "2026-09-16T21:17:15.027093+00:00",
   "holdout_accuracy": 0.9145569620253164,
   "holdout_seat_abs_error": 56,
   "benchmark_label": "2024 development benchmark, pre-election YouGov geography; not a pristine holdout",
