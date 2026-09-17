@@ -1,1 +1,1 @@
-{"generated_at":"2026-09-17T09:58:25Z","polls":558,"subnational_polls":{"Wales":16,"Scotland":24},"constituencies":650,"english_regions":9,"geometry_error":"HTTPSConnectionPool(host='services1.arcgis.com', port=443): Read timed out. (read timeout=45)"}
+{"generated_at":"2026-09-17T21:14:40Z","polls":559,"subnational_polls":{"Wales":16,"Scotland":24},"constituencies":650,"english_regions":9,"features":650,"map_features":650,"vertices_before":568298,"vertices_after":105675,"map_display_bytes":2187645,"map_full_bytes":21200427}
