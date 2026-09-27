@@ -31,5 +31,17 @@
       "latest_alerted_url": "https://www.focaldata.com/blog/focaldata-hope-not-hate-uk-general-election-mrp"
     }
   },
-  "events": {}
+  "events": {
+    "423cc30b796fa75ab75fdde0": {
+      "provider": "more_in_common",
+      "provider_name": "More in Common",
+      "published_date": "2026-09-26",
+      "title": "More in Common’s September 2026 MRP",
+      "url": "https://www.moreincommon.org.uk/research/more-in-commons-september-2026-mrp/",
+      "first_detected_at_utc": "2026-09-27T10:33:12+00:00",
+      "alert_sent": false,
+      "review_status": "pending_manual_review",
+      "auto_applied_to_model": false
+    }
+  }
 }
