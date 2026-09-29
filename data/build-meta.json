@@ -1,1 +1,1 @@
-{"generated_at":"2026-09-29T11:21:28Z","polls":573,"subnational_polls":{"Wales":17,"Scotland":24},"constituencies":650,"english_regions":9,"geometry_error":"HTTPSConnectionPool(host='services1.arcgis.com', port=443): Read timed out. (read timeout=45)"}
+{"generated_at":"2026-09-29T19:56:05Z","polls":574,"subnational_polls":{"Wales":17,"Scotland":24},"constituencies":650,"english_regions":9,"geometry_error":"HTTPSConnectionPool(host='services1.arcgis.com', port=443): Read timed out."}
