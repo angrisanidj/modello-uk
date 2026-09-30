@@ -1,7 +1,7 @@
 {
   "version": "uk-v0928-mrp-geography-stack-live-candidate",
   "status": "ok",
-  "generated_at": "2026-09-30T09:37:56.420108+00:00",
+  "generated_at": "2026-09-30T11:12:42.673954+00:00",
   "diagnostic_only": false,
   "shadow_only": true,
   "live_candidate": true,
@@ -599,14 +599,14 @@
       "majority_consensus_available": 632,
       "all_scenarios_different": 0,
       "majority_consensus_totals": {
-        "ref": 160,
         "lab": 269,
-        "snp": 37,
-        "con": 75,
+        "ref": 160,
         "ld": 70,
-        "green": 6,
+        "con": 75,
+        "pc": 7,
         "other": 8,
-        "pc": 7
+        "green": 6,
+        "snp": 37
       },
       "note": "Consensus is diagnostic only and never selects the live route."
     },
@@ -632,26 +632,26 @@
     }
   },
   "target_gb": {
-    "lab": 26.874773315759864,
+    "lab": 26.874773315759874,
     "con": 20.471115424096155,
-    "ref": 24.02483405244493,
-    "ld": 10.927851961643086,
-    "green": 10.675035674965097,
-    "snp": 2.70792376314956,
-    "pc": 1.0241963224837227,
-    "other": 3.294269485457587
+    "ref": 24.02483405244492,
+    "ld": 10.927851961643082,
+    "green": 10.675035674965091,
+    "snp": 2.7079237631495614,
+    "pc": 1.024196322483722,
+    "other": 3.2942694854575842
   },
   "poll_meta": {
     "effective_polls": 30,
     "raw_average": {
-      "lab": 26.06771490372782,
+      "lab": 26.06771490372783,
       "con": 19.85636099574876,
-      "ref": 23.3033602676473,
-      "ld": 10.599684920103313,
-      "green": 10.354460790890798,
-      "snp": 2.6266039087822777,
-      "pc": 0.9934393650976654,
-      "other": 3.1953414733586003
+      "ref": 23.30336026764729,
+      "ld": 10.599684920103309,
+      "green": 10.354460790890792,
+      "snp": 2.626603908782278,
+      "pc": 0.9934393650976647,
+      "other": 3.195341473358597
     }
   },
   "source_meta": {
