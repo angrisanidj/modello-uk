@@ -1,7 +1,7 @@
 {
   "version": "uk-v0929-production-promotion-audit",
   "status": "passed",
-  "generated_at": "2026-09-30T18:01:10.554989+00:00",
+  "generated_at": "2026-10-01T20:22:53.658077+00:00",
   "promotion_marker": "audited-v0928-precision-stack-to-production",
   "model_freeze": "no-statistical-retuning-during-promotion",
   "production_schema": "precision-weighted-contemporary-mrp-geography-v1",
@@ -28,8 +28,8 @@
     "internal_target_sum": 100.0,
     "core_2026_changed_winners_vs_primary": {
       "skill_only_stack": 44,
-      "equal_provider_stack": 30,
-      "direct_mic26": 50
+      "equal_provider_stack": 32,
+      "direct_mic26": 52
     },
     "core_2026_max_changed_winners_allowed": 75,
     "core_2026_stability_passed": true
