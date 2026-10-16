@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Test polling source boundaries
+        run: python -m unittest discover -s tests -v
+
       - name: Review national and subnational polling feeds
         id: review
         run: python tools/review_poll_updates.py
