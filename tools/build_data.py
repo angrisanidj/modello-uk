@@ -30,6 +30,7 @@ DATA = ROOT / "data"
 DATA.mkdir(exist_ok=True)
 
 POLL_PAGE = "Opinion_polling_for_the_next_United_Kingdom_general_election"
+SCOTLAND_POLL_PAGE = "Opinion_polling_in_Scotland_for_the_next_United_Kingdom_general_election"
 MEDIAWIKI_API = "https://en.wikipedia.org/w/api.php"
 RESULTS_CSV = "https://researchbriefings.files.parliament.uk/documents/CBP-10009/HoC-GE2024-results-by-candidate.csv"
 ONS_GEOJSON = (
@@ -274,36 +275,37 @@ def parse_subnational_table(table: Any, country: str) -> list[dict[str, Any]]:
 
 
 def fetch_subnational_polls() -> list[dict[str, Any]]:
-    """Read Westminster polling for Scotland and Wales from the main polling page."""
-    params = {"action": "parse", "page": POLL_PAGE, "prop": "text", "format": "json"}
-    payload = get(MEDIAWIKI_API, params=params).json()
-    soup = BeautifulSoup(payload["parse"]["text"]["*"], "html.parser")
-    in_subnational = False
-    country: str | None = None
+    """Read dedicated Westminster polls, excluding regional and sub-sample tables."""
     polls: list[dict[str, Any]] = []
     seen: set[tuple[Any, ...]] = set()
-
-    for el in soup.find_all(["h2", "h3", "h4", "table"]):
-        if el.name in {"h2", "h3", "h4"}:
-            title = re.sub(r"\[edit\]", "", clean_text(el), flags=re.I).strip()
-            if el.name == "h2":
-                if "Sub-national poll results" in title:
-                    in_subnational = True
-                    country = None
-                    continue
-                if in_subnational:
-                    break
-            if in_subnational and title in {"Scotland", "Wales"}:
-                country = title
-            continue
-        if not in_subnational or country not in {"Scotland", "Wales"}:
-            continue
-        for rec in parse_subnational_table(el, country):
-            key = (rec["country"], rec["date"], rec["pollster"], rec.get("sample"),
-                   rec.get("lab"), rec.get("con"), rec.get("ref"), rec.get("snp"), rec.get("pc"))
-            if key not in seen:
-                seen.add(key)
-                polls.append(rec)
+    sources = (
+        ("Scotland", SCOTLAND_POLL_PAGE, "Polls", None),
+        ("Wales", POLL_PAGE, "Sub-national poll results", "Wales"),
+    )
+    for country, page, section, subsection in sources:
+        params = {"action": "parse", "page": page, "prop": "text", "format": "json"}
+        payload = get(MEDIAWIKI_API, params=params).json()
+        soup = BeautifulSoup(payload["parse"]["text"]["*"], "html.parser")
+        in_section = False
+        in_country = False
+        for el in soup.find_all(["h2", "h3", "h4", "table"]):
+            if el.name in {"h2", "h3", "h4"}:
+                title = re.sub(r"\[edit\]", "", clean_text(el), flags=re.I).strip()
+                if el.name == "h2":
+                    in_section = title == section
+                    in_country = in_section and subsection is None
+                elif el.name == "h3" and subsection is not None:
+                    # A new peer section must not inherit the previous country.
+                    in_country = in_section and title == subsection
+                continue
+            if not in_country:
+                continue
+            for rec in parse_subnational_table(el, country):
+                key = (rec["country"], rec["date"], rec["pollster"], rec.get("sample"),
+                       rec.get("lab"), rec.get("con"), rec.get("ref"), rec.get("snp"), rec.get("pc"))
+                if key not in seen:
+                    seen.add(key)
+                    polls.append(rec)
 
     polls.sort(key=lambda x: x["date"], reverse=True)
     counts = Counter(p["country"] for p in polls)
