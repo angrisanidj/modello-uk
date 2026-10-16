@@ -130,6 +130,7 @@ I 18 seggi nordirlandesi sono tenuti separati dal modello geografico della Gran 
 ## Fonti principali
 
 - Sondaggi: https://en.wikipedia.org/wiki/Opinion_polling_for_the_next_United_Kingdom_general_election
+- Sondaggi Westminster scozzesi: https://en.wikipedia.org/wiki/Opinion_polling_in_Scotland_for_the_next_United_Kingdom_general_election (sezione “Polls”; esclusi sottocampioni e proiezioni MRP). I sondaggi gallesi provengono esclusivamente dalla sezione “Wales” della pagina generale.
 - MediaWiki API: https://en.wikipedia.org/w/api.php
 - House of Commons Library, General Election 2024: https://commonslibrary.parliament.uk/research-briefings/cbp-10009/
 - Risultati per candidato 2024: https://researchbriefings.files.parliament.uk/documents/CBP-10009/HoC-GE2024-results-by-candidate.csv
