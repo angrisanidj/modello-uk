@@ -1,7 +1,7 @@
 {
   "version": "uk-v0928-mrp-geography-stack",
   "status": "ok",
-  "generated_at": "2026-10-18T09:48:36.621966+00:00",
+  "generated_at": "2026-10-18T15:48:46.469525+00:00",
   "diagnostic_only": false,
   "shadow_only": true,
   "live_candidate": true,
@@ -5720,14 +5720,14 @@
       "majority_consensus_available": 632,
       "all_scenarios_different": 0,
       "majority_consensus_totals": {
-        "con": 111,
-        "lab": 296,
-        "ld": 68,
         "ref": 105,
+        "lab": 296,
+        "con": 111,
+        "ld": 68,
+        "other": 8,
         "snp": 31,
-        "green": 5,
         "pc": 8,
-        "other": 8
+        "green": 5
       },
       "note": "Consensus is diagnostic only and never selects the live route."
     },
