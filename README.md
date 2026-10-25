@@ -113,6 +113,11 @@ La GitHub Action:
 7. verifica che la promozione non abbia mutato le proiezioni constituency-by-constituency o il target GB;
 8. pubblica GitHub Pages soltanto dopo il completamento della pipeline.
 
+Il confronto tra gli scenari contemporanei conserva **75 vincitori diversi** come soglia di avviso, non come test dell'accuratezza del modello. Un superamento viene registrato nei warning dell'audit e nei log; `core_2026_stability_passed` resta `false`, mentre `core_2026_stability_blocking` è esplicitamente `false`. La pubblicazione richiede comunque diagnostiche complete (conteggi interi tra 0 e 632) e tutti i controlli bloccanti su integrità, copertura, quote, backtest e cross-validation. Il motore statistico, i pesi e le proiezioni non vengono ritarati. Ogni esecuzione conserva per 14 giorni uno snapshot degli input di polling e degli output di audit, anche in caso di errore. Il manifest allegato riporta hash e stato dei passaggi per distinguere gli output aggiornati dai file precedenti rimasti nel checkout.
+
+La revisione della policy è motivata dalla riesecuzione diagnostica del 25 ottobre 2026: il nuovo Ipsos porta i disaccordi con la geografia diretta More in Common da 70 a 76, mentre il margine mediano nei collegi in disaccordo scende da 1,38 a 1,25 punti. Questa evidenza chiarisce il limite della soglia discreta; non dimostra l'accuratezza futura della proiezione né elimina la sensibilità alle fonti territoriali.
+
+
 ## Shadow MRP watcher
 
 La pipeline contiene anche un controllo **solo di monitoraggio** per individuare eventuali nuovi MRP Westminster pubblicati da:
