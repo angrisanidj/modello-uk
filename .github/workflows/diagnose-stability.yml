@@ -1,0 +1,60 @@
+name: Diagnose UK MRP stability
+on:
+  push:
+    branches: [fix/uk-stability-audit]
+permissions:
+  contents: read
+concurrency:
+  group: uk-mrp-stability-diagnostic
+  cancel-in-progress: true
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Restore Democracy Club source cache
+        uses: actions/cache@v5
+        with:
+          path: .cache/democracy-club
+          key: dc-v0929-${{ runner.os }}-${{ hashFiles('tools/build_mrp_lite.py') }}
+          restore-keys: |
+            dc-v0929-${{ runner.os }}-
+            dc-v0928-${{ runner.os }}-
+            dc-v0927-${{ runner.os }}-
+            dc-v0926-${{ runner.os }}-
+            dc-v0925-${{ runner.os }}-
+            dc-v0924-${{ runner.os }}-
+            dc-v0923-${{ runner.os }}-
+            dc-v0922-${{ runner.os }}-
+      - name: Restore external MRP source cache
+        uses: actions/cache@v5
+        with:
+          path: .cache/mrp-bridge
+          key: mrp-bridge-v0929-${{ runner.os }}-${{ hashFiles('tools/build_mrp_geography_bridge.py') }}
+          restore-keys: |
+            mrp-bridge-v0929-${{ runner.os }}-
+            mrp-bridge-v0928-${{ runner.os }}-
+            mrp-bridge-v0927-${{ runner.os }}-
+            mrp-bridge-v0926-${{ runner.os }}-
+            mrp-bridge-v0925-${{ runner.os }}-
+            mrp-bridge-v0924-${{ runner.os }}-
+            mrp-bridge-v0923-${{ runner.os }}-
+      - name: Replay reference and refreshed polling snapshots
+        run: python tools/diagnose_mrp_stability.py
+      - name: Retain replay evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mrp-stability-diagnostics
+          path: |
+            diagnostics/
+            .cache/mrp-bridge/
+            .cache/democracy-club/
+          include-hidden-files: true
+          retention-days: 7
