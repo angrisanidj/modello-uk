@@ -45,11 +45,17 @@ jobs:
             mrp-bridge-v0925-${{ runner.os }}-
             mrp-bridge-v0924-${{ runner.os }}-
             mrp-bridge-v0923-${{ runner.os }}-
+      - name: Run regression tests
+        run: python -m unittest discover -s tests -v
+      - name: Frontend and workflow QA
+        run: |
+          python tools/frontend_qa.py --root . --index index.html --readme README.md
+          python tools/workflow_orchestration_qa.py --root .
       - name: Replay reference and refreshed polling snapshots
         run: python tools/diagnose_mrp_stability.py
       - name: Retain replay evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: mrp-stability-diagnostics
           path: |
