@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import csv, io, json, re, unicodedata
+import csv, io, json, math, re, unicodedata
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,6 +14,7 @@ NI_PARTIES=("sf","dup","alliance","sdlp","uup","tuv","aontu","pbp","ni_green","i
 ASSEMBLY_MAY_2024={"sf":29.0,"dup":21.0,"alliance":15.0,"uup":11.0,"sdlp":8.0,"tuv":8.0,"ni_green":1.0}
 ASSEMBLY_JULY_2026={"sf":22.0,"dup":15.0,"alliance":10.0,"uup":16.0,"sdlp":13.0,"tuv":12.0,"ni_green":5.0,"pbp":2.0,"aontu":3.0,"ni_other":2.0}
 SIGNAL_WEIGHT=.25
+EXPECTED_WINNERS={"sf":7,"dup":5,"sdlp":2,"alliance":1,"uup":1,"tuv":1,"ind":1}
 
 def clean(v):
     text=unicodedata.normalize("NFKD",v or "")
@@ -39,9 +40,72 @@ def fetch_csv():
     r.raise_for_status()
     return r.content.decode("utf-8-sig")
 
+def saved_baseline(error):
+    """Use historical results only after validating the saved constituency data."""
+    try:
+        saved=json.loads((DATA/"ni-2024.json").read_text(encoding="utf-8"))
+        meta=saved["meta"]
+        if meta["version"]!="uk-v08-ni-constituency" or meta["seats"]!=18:
+            raise ValueError("wrong NI baseline schema")
+        seats=saved["constituencies"]
+        if len(seats)!=18 or {s["id"] for s in seats}!={f"N050000{i:02d}" for i in range(1,19)}:
+            raise ValueError("expected all 18 unique NI constituency IDs")
+        votes=Counter(); winners=Counter()
+        for seat in seats:
+            if seat["country"]!="Northern Ireland" or seat["region"]!="Northern Ireland" or not seat["name"]:
+                raise ValueError("invalid NI constituency identity")
+            total=seat["valid_votes"]; party_votes=seat["party_votes"]
+            if type(total) is not int or total<=0 or not party_votes or not set(party_votes)<=set(NI_PARTIES):
+                raise ValueError("invalid NI vote totals")
+            if any(type(v) is not int or v<0 for v in party_votes.values()) or sum(party_votes.values())!=total:
+                raise ValueError("NI party votes do not match valid votes")
+            if set(seat["shares"])!=set(NI_PARTIES) or set(seat["eligible_parties"])!=set(party_votes):
+                raise ValueError("incomplete NI party coverage")
+            for party in NI_PARTIES:
+                share=seat["shares"][party]
+                if type(share) not in (int,float) or not math.isfinite(share) or not math.isclose(
+                    share,party_votes.get(party,0)/total*100,rel_tol=0,abs_tol=.0001
+                ):
+                    raise ValueError("NI shares do not match party votes")
+            top=seat["top_candidates_2024"]
+            if (len(top)<2 or top[0]["party"]!=seat["winner2024"]
+                or top[0]["votes"]<top[1]["votes"]
+                or top[0]["votes"]>party_votes[top[0]["party"]]
+                or seat["majority2024"]!=top[0]["votes"]-top[1]["votes"]):
+                raise ValueError("inconsistent NI winner or majority")
+            votes.update(party_votes); winners[seat["winner2024"]]+=1
+        if dict(winners)!=EXPECTED_WINNERS or saved["winner_counts_2024"]!=EXPECTED_WINNERS:
+            raise ValueError("NI historical winner counts do not match 2024")
+        total=sum(votes.values())
+        baseline={p:votes[p]/total*100 for p in NI_PARTIES}
+        if set(saved["national_2024"])!=set(NI_PARTIES):
+            raise ValueError("incomplete NI national baseline")
+        for party,share in baseline.items():
+            value=saved["national_2024"][party]
+            if type(value) not in (int,float) or not math.isfinite(value) or not math.isclose(
+                value,share,rel_tol=0,abs_tol=.00001
+            ):
+                raise ValueError("NI national baseline does not match constituency votes")
+        previous=meta.get("results_source",{})
+        baseline_date=previous.get("baseline_generated_at",meta["generated_at"])
+        datetime.fromisoformat(baseline_date)
+    except (OSError,ValueError,KeyError,TypeError,AttributeError,IndexError) as invalid:
+        raise RuntimeError(f"NI source unavailable ({error}); saved baseline is invalid: {invalid}") from invalid
+    print(f"WARNING: NI source unavailable ({error}); using validated saved 2024 results for all 18 constituencies")
+    payload=build_payload(seats,baseline,winners)
+    payload["meta"]["results_source"]={
+        "status":"validated_saved_baseline","url":RESULTS_CSV,
+        "baseline_generated_at":baseline_date,"download_error":str(error),
+    }
+    return payload
+
 def build():
+    try:
+        source=fetch_csv()
+    except requests.RequestException as error:
+        return saved_baseline(error)
     grouped={}
-    for row in csv.DictReader(io.StringIO(fetch_csv())):
+    for row in csv.DictReader(io.StringIO(source)):
         if (row.get("Country name") or "").strip().lower()!="northern ireland": continue
         ons=(row.get("ONS ID") or "").strip()
         if not ons: continue
@@ -80,11 +144,16 @@ def build():
         })
         constituencies.append(item)
 
-    expected={"sf":7,"dup":5,"sdlp":2,"alliance":1,"uup":1,"tuv":1,"ind":1}
+    expected=EXPECTED_WINNERS
     if {p:winner_counts.get(p,0) for p in expected}!=expected or sum(winner_counts.values())!=18:
         raise RuntimeError(f"NI winner validation failed: {dict(winner_counts)}")
 
     baseline={p:national_votes[p]/total_ni_votes*100 for p in NI_PARTIES}
+    payload=build_payload(constituencies,baseline,winner_counts)
+    payload["meta"]["results_source"]={"status":"downloaded","url":RESULTS_CSV}
+    return payload
+
+def build_payload(constituencies,baseline,winner_counts):
     target=dict(baseline)
     for p in ASSEMBLY_MAY_2024:
         target[p]=max(.05,baseline[p]+SIGNAL_WEIGHT*(ASSEMBLY_JULY_2026[p]-ASSEMBLY_MAY_2024[p]))
