@@ -21,6 +21,9 @@ class NorthernIrelandFallbackTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.baseline = json.loads((ROOT / "data/ni-2024.json").read_text())
+        # Model runs update this file; give each test explicit source provenance.
+        cls.baseline["meta"]["generated_at"] = "2026-10-25T10:00:00+00:00"
+        cls.baseline["meta"].pop("results_source", None)
 
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
@@ -93,6 +96,20 @@ class NorthernIrelandFallbackTests(unittest.TestCase):
                     with self.assertRaises(RuntimeError):
                         build_ni.main()
                 self.assertEqual(self.path.read_bytes(), before)
+
+    def test_already_cached_results_preserve_source_date_after_another_rebuild(self):
+        cached = copy.deepcopy(self.baseline)
+        cached["meta"]["generated_at"] = "2026-10-26T11:00:00+00:00"
+        cached["meta"]["results_source"] = {
+            "status": "validated_saved_baseline",
+            "baseline_generated_at": "2026-10-25T10:00:00+00:00",
+        }
+        self.write_cache(cached)
+        with patch.object(build_ni, "fetch_csv", side_effect=requests.HTTPError("403 Forbidden")):
+            rebuilt = build_ni.build()
+        self.assertEqual(rebuilt["meta"]["results_source"]["baseline_generated_at"],
+                         "2026-10-25T10:00:00+00:00")
+        self.assertEqual(rebuilt["constituencies"], cached["constituencies"])
 
     def test_missing_or_malformed_cache_is_rejected(self):
         for content in (None, "not json", "null", "[]"):
