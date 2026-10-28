@@ -1,7 +1,7 @@
 {
   "version": "uk-v0929-production-promotion-audit",
   "status": "passed",
-  "generated_at": "2026-10-27T15:21:28.950854+00:00",
+  "generated_at": "2026-10-28T11:21:28.796226+00:00",
   "promotion_marker": "audited-v0928-precision-stack-to-production",
   "model_freeze": "no-statistical-retuning-during-promotion",
   "production_schema": "precision-weighted-contemporary-mrp-geography-v1",
@@ -27,17 +27,17 @@
     "candidate_seat_count": 632,
     "internal_target_sum": 100.0,
     "core_2026_changed_winners_vs_primary": {
-      "skill_only_stack": 35,
-      "equal_provider_stack": 22,
-      "direct_mic26": 80
+      "skill_only_stack": 38,
+      "equal_provider_stack": 28,
+      "direct_mic26": 72
     },
     "core_2026_changed_winners_warning_threshold": 75,
     "core_2026_sensitivity_diagnostics_valid": true,
     "core_2026_stability_blocking": false,
-    "core_2026_stability_passed": false
+    "core_2026_stability_passed": true
   },
   "warnings": [
-    "2026 core-sensitivity exceeds the advisory threshold of 75 changed winners: {'skill_only_stack': 35, 'equal_provider_stack': 22, 'direct_mic26': 80}; publication allowed after all hard validation gates pass"
+    "one or more core contemporary alternatives differ in >60 seats: {'skill_only_stack': 38, 'equal_provider_stack': 28, 'direct_mic26': 72}"
   ],
   "errors": []
 }
