@@ -1,7 +1,7 @@
 {
   "version": "uk-v0929-production-promotion-audit",
   "status": "passed",
-  "generated_at": "2026-10-31T10:58:31.004134+00:00",
+  "generated_at": "2026-11-01T00:03:35.507395+00:00",
   "promotion_marker": "audited-v0928-precision-stack-to-production",
   "model_freeze": "no-statistical-retuning-during-promotion",
   "production_schema": "precision-weighted-contemporary-mrp-geography-v1",
@@ -28,8 +28,8 @@
     "internal_target_sum": 100.0,
     "core_2026_changed_winners_vs_primary": {
       "skill_only_stack": 38,
-      "equal_provider_stack": 27,
-      "direct_mic26": 77
+      "equal_provider_stack": 26,
+      "direct_mic26": 80
     },
     "core_2026_changed_winners_warning_threshold": 75,
     "core_2026_sensitivity_diagnostics_valid": true,
@@ -37,7 +37,7 @@
     "core_2026_stability_passed": false
   },
   "warnings": [
-    "2026 core-sensitivity exceeds the advisory threshold of 75 changed winners: {'skill_only_stack': 38, 'equal_provider_stack': 27, 'direct_mic26': 77}; publication allowed after all hard validation gates pass"
+    "2026 core-sensitivity exceeds the advisory threshold of 75 changed winners: {'skill_only_stack': 38, 'equal_provider_stack': 26, 'direct_mic26': 80}; publication allowed after all hard validation gates pass"
   ],
   "errors": []
 }
