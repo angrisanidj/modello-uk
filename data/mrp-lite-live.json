@@ -1,7 +1,7 @@
 {
   "version": "uk-v0929-precision-weighted-mrp-live",
   "status": "ok",
-  "generated_at": "2026-11-02T00:35:13.273435+00:00",
+  "generated_at": "2026-11-02T13:32:01.059401+00:00",
   "diagnostic_only": false,
   "shadow_only": false,
   "live_candidate": false,
@@ -591,10 +591,10 @@
         "lab": 331,
         "ref": 62,
         "con": 124,
-        "snp": 36,
-        "ld": 62,
-        "pc": 6,
         "other": 7,
+        "ld": 62,
+        "snp": 36,
+        "pc": 6,
         "green": 4
       },
       "note": "Consensus is diagnostic only and never selects the live route."
@@ -622,25 +622,25 @@
   },
   "target_gb": {
     "lab": 29.224982955812123,
-    "con": 21.931905516404157,
-    "ref": 22.44928338893227,
-    "ld": 9.889443261997812,
-    "green": 9.441459131970369,
-    "snp": 2.7150954003694263,
-    "pc": 1.0320104835009778,
-    "other": 3.3158198610128626
+    "con": 21.931905516404175,
+    "ref": 22.449283388932248,
+    "ld": 9.88944326199781,
+    "green": 9.44145913197037,
+    "snp": 2.7150954003694276,
+    "pc": 1.032010483500978,
+    "other": 3.315819861012864
   },
   "poll_meta": {
-    "effective_polls": 27,
+    "effective_polls": 26,
     "raw_average": {
-      "lab": 28.537698166221674,
-      "con": 21.416132244920977,
-      "ref": 21.9213429267001,
-      "ld": 9.656872931956366,
+      "lab": 28.53769816622167,
+      "con": 21.41613224492099,
+      "ref": 21.921342926700078,
+      "ld": 9.656872931956363,
       "green": 9.219424057980614,
-      "snp": 2.651244421438751,
+      "snp": 2.651244421438752,
       "pc": 1.0077406624002936,
-      "other": 3.23784162715241
+      "other": 3.237841627152411
     }
   },
   "source_meta": {
@@ -19554,7 +19554,7 @@
   "changes_production_model": true,
   "source_candidate_version": "uk-v0928-mrp-geography-stack-live-candidate",
   "production_promotion_version": "v0.9.29",
-  "promoted_at": "2026-11-02T00:35:13.870471+00:00",
+  "promoted_at": "2026-11-02T13:32:01.595253+00:00",
   "holdout_accuracy": 0.9145569620253164,
   "holdout_seat_abs_error": 56,
   "benchmark_label": "2024 development benchmark, pre-election YouGov geography; not a pristine holdout",
