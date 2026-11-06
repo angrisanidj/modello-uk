@@ -1,7 +1,7 @@
 {
   "version": "uk-v0928-mrp-geography-stack",
   "status": "ok",
-  "generated_at": "2026-11-05T13:13:04.989348+00:00",
+  "generated_at": "2026-11-06T12:59:32.118635+00:00",
   "diagnostic_only": false,
   "shadow_only": true,
   "live_candidate": true,
@@ -121,7 +121,7 @@
       "other": -1
     },
     "seat_abs_error_sum": 14,
-    "share_mae": 1.4437290270648668,
+    "share_mae": 1.4437290270661631,
     "winner_source": "official_BES_WinnerXX",
     "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
     "regional_accuracy": {
@@ -388,7 +388,7 @@
           "other": -5
         },
         "seat_abs_error_sum": 44,
-        "share_mae": 2.3861699982818974,
+        "share_mae": 2.3861699982497404,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -683,7 +683,7 @@
         "other": -5
       },
       "seat_abs_error_sum": 42,
-      "share_mae": 2.3733502312417825,
+      "share_mae": 2.3733502312004275,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -860,7 +860,7 @@
             },
             "snp": {
               "pairs": 57,
-              "mean_abs_log_error": 0.07211586968173633,
+              "mean_abs_log_error": 0.07211586968173635,
               "median_abs_log_error": 0.06180180428021178
             },
             "pc": {
@@ -881,7 +881,7 @@
         "metrics": {
           "pairs": 3474,
           "median_abs_log_error": 0.1291765581276621,
-          "mean_abs_log_error": 0.2848047842252729,
+          "mean_abs_log_error": 0.28480478422527283,
           "rmse_log_error": 0.6551439160779761,
           "by_party": {
             "lab": {
@@ -891,7 +891,7 @@
             },
             "con": {
               "pairs": 632,
-              "mean_abs_log_error": 0.18234587118784862,
+              "mean_abs_log_error": 0.1823458711878486,
               "median_abs_log_error": 0.08255362885453657
             },
             "ref": {
@@ -902,7 +902,7 @@
             "ld": {
               "pairs": 629,
               "mean_abs_log_error": 0.23372060806506056,
-              "median_abs_log_error": 0.19311336050529723
+              "median_abs_log_error": 0.1931133605052971
             },
             "green": {
               "pairs": 614,
@@ -911,13 +911,13 @@
             },
             "snp": {
               "pairs": 57,
-              "mean_abs_log_error": 0.07149562520500866,
+              "mean_abs_log_error": 0.07149562520500867,
               "median_abs_log_error": 0.06123635491998738
             },
             "pc": {
               "pairs": 32,
               "mean_abs_log_error": 0.23410016685007792,
-              "median_abs_log_error": 0.17374948064063805
+              "median_abs_log_error": 0.17374948064063817
             },
             "other": {
               "pairs": 246,
@@ -962,12 +962,12 @@
             },
             "snp": {
               "pairs": 57,
-              "mean_abs_log_error": 0.08053819476172339,
+              "mean_abs_log_error": 0.08053819476172337,
               "median_abs_log_error": 0.06798001423235665
             },
             "pc": {
               "pairs": 32,
-              "mean_abs_log_error": 0.2517212194355386,
+              "mean_abs_log_error": 0.25172121943553855,
               "median_abs_log_error": 0.19928785256000345
             },
             "other": {
@@ -1024,7 +1024,7 @@
             "other": {
               "pairs": 246,
               "mean_abs_log_error": 1.2471177863439864,
-              "median_abs_log_error": 0.7034977297460443
+              "median_abs_log_error": 0.7034977297460441
             }
           }
         }
@@ -1105,7 +1105,7 @@
             },
             "ld": {
               "pairs": 629,
-              "mean_abs_log_error": 0.35121682463972625,
+              "mean_abs_log_error": 0.35121682463972614,
               "median_abs_log_error": 0.30319084371544414
             },
             "green": {
@@ -1161,7 +1161,7 @@
             },
             "green": {
               "pairs": 614,
-              "mean_abs_log_error": 0.38553073810911664,
+              "mean_abs_log_error": 0.3855307381091166,
               "median_abs_log_error": 0.2864078893439673
             },
             "snp": {
@@ -1171,7 +1171,7 @@
             },
             "pc": {
               "pairs": 32,
-              "mean_abs_log_error": 0.33337918663380417,
+              "mean_abs_log_error": 0.3333791866338042,
               "median_abs_log_error": 0.22536959953632985
             },
             "other": {
@@ -1420,7 +1420,7 @@
           "other": -5
         },
         "seat_abs_error_sum": 84,
-        "share_mae": 2.716953129296369,
+        "share_mae": 2.716953129270803,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -1516,7 +1516,7 @@
           "other": -5
         },
         "seat_abs_error_sum": 84,
-        "share_mae": 2.716953129296369,
+        "share_mae": 2.716953129270803,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -1612,7 +1612,7 @@
           "other": -5
         },
         "seat_abs_error_sum": 86,
-        "share_mae": 2.7710541990255817,
+        "share_mae": 2.771054198999028,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -1708,7 +1708,7 @@
           "other": -5
         },
         "seat_abs_error_sum": 56,
-        "share_mae": 2.4681247576193592,
+        "share_mae": 2.468124757543097,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -1804,7 +1804,7 @@
           "other": -6
         },
         "seat_abs_error_sum": 100,
-        "share_mae": 3.28994971137133,
+        "share_mae": 3.2899497113914036,
         "winner_source": "official_BES_WinnerXX",
         "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
         "regional_accuracy": {
@@ -1904,7 +1904,7 @@
       "other": -5
     },
     "seat_abs_error_sum": 56,
-    "share_mae": 2.4681247576193592,
+    "share_mae": 2.468124757543097,
     "winner_source": "official_BES_WinnerXX",
     "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
     "regional_accuracy": {
@@ -2001,7 +2001,7 @@
         "other": -6
       },
       "seat_abs_error_sum": 100,
-      "share_mae": 3.28994971137133,
+      "share_mae": 3.2899497113914036,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -2097,7 +2097,7 @@
         "other": -5
       },
       "seat_abs_error_sum": 54,
-      "share_mae": 2.490735576582746,
+      "share_mae": 2.4907355765505277,
       "winner_source": "official_BES_WinnerXX",
       "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
       "regional_accuracy": {
@@ -2197,7 +2197,7 @@
             "other": -1
           },
           "seat_abs_error_sum": 166,
-          "share_mae": 5.556807618048258,
+          "share_mae": 5.55680761701318,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2298,7 +2298,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 140,
-          "share_mae": 4.97482783919971,
+          "share_mae": 4.974827838321066,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2399,7 +2399,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 124,
-          "share_mae": 4.424385272316427,
+          "share_mae": 4.424385271587517,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2500,7 +2500,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 108,
-          "share_mae": 3.907939597087097,
+          "share_mae": 3.907939596505709,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2601,7 +2601,7 @@
             "other": -3
           },
           "seat_abs_error_sum": 86,
-          "share_mae": 3.444731578523333,
+          "share_mae": 3.444731578137115,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2702,7 +2702,7 @@
             "other": -4
           },
           "seat_abs_error_sum": 70,
-          "share_mae": 3.028556259464098,
+          "share_mae": 3.0285562592161432,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2803,7 +2803,7 @@
             "other": -5
           },
           "seat_abs_error_sum": 70,
-          "share_mae": 2.6799603353751396,
+          "share_mae": 2.679960335209287,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -2904,7 +2904,7 @@
             "other": -5
           },
           "seat_abs_error_sum": 56,
-          "share_mae": 2.4681247576193592,
+          "share_mae": 2.468124757543097,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3106,7 +3106,7 @@
             "other": -1
           },
           "seat_abs_error_sum": 166,
-          "share_mae": 5.556807618048258,
+          "share_mae": 5.55680761701318,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3207,7 +3207,7 @@
             "other": -1
           },
           "seat_abs_error_sum": 150,
-          "share_mae": 5.117239095268623,
+          "share_mae": 5.117239094487391,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3308,7 +3308,7 @@
             "other": -1
           },
           "seat_abs_error_sum": 136,
-          "share_mae": 4.715318859201137,
+          "share_mae": 4.715318858629432,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3409,7 +3409,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 124,
-          "share_mae": 4.345530841796416,
+          "share_mae": 4.345530841384098,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3510,7 +3510,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 108,
-          "share_mae": 4.016385222267259,
+          "share_mae": 4.016385222068582,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3611,7 +3611,7 @@
             "other": -6
           },
           "seat_abs_error_sum": 114,
-          "share_mae": 3.7153092752152763,
+          "share_mae": 3.715309275139931,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3712,7 +3712,7 @@
             "other": -6
           },
           "seat_abs_error_sum": 104,
-          "share_mae": 3.4582921505247857,
+          "share_mae": 3.4582921505399886,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -3813,7 +3813,7 @@
             "other": -6
           },
           "seat_abs_error_sum": 100,
-          "share_mae": 3.28994971137133,
+          "share_mae": 3.2899497113914036,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4015,7 +4015,7 @@
             "other": -1
           },
           "seat_abs_error_sum": 166,
-          "share_mae": 5.556807618048258,
+          "share_mae": 5.55680761701318,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4116,7 +4116,7 @@
             "other": -1
           },
           "seat_abs_error_sum": 140,
-          "share_mae": 5.041435633759562,
+          "share_mae": 5.0414356329650545,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4217,7 +4217,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 124,
-          "share_mae": 4.5502603715655265,
+          "share_mae": 4.550260370923736,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4318,7 +4318,7 @@
             "other": -2
           },
           "seat_abs_error_sum": 108,
-          "share_mae": 4.075595395603543,
+          "share_mae": 4.075595395164496,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4419,7 +4419,7 @@
             "other": -3
           },
           "seat_abs_error_sum": 94,
-          "share_mae": 3.622806931281765,
+          "share_mae": 3.622806930964905,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4520,7 +4520,7 @@
             "other": -5
           },
           "seat_abs_error_sum": 82,
-          "share_mae": 3.19441465236354,
+          "share_mae": 3.1944146522036108,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4621,7 +4621,7 @@
             "other": -5
           },
           "seat_abs_error_sum": 64,
-          "share_mae": 2.8093664768310496,
+          "share_mae": 2.8093664767534796,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4722,7 +4722,7 @@
             "other": -5
           },
           "seat_abs_error_sum": 54,
-          "share_mae": 2.490735576582746,
+          "share_mae": 2.4907355765505277,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -4926,7 +4926,7 @@
             "other": -5
           },
           "seat_abs_error_sum": 56,
-          "share_mae": 2.4681247576193592,
+          "share_mae": 2.468124757543097,
           "winner_source": "official_BES_WinnerXX",
           "other_prediction_rule": "eligible_only_if_baseline_winner_or_runner_up",
           "regional_accuracy": {
@@ -5205,98 +5205,98 @@
     "provider_toplines_used": false,
     "provider_reliability_training_election": "2024",
     "provider_stack_leave_region_out_validation_passed": true,
-    "yougov_anchor_age_years": 2.3408624229979464,
-    "mic26_age_years": 0.3887748117727584,
+    "yougov_anchor_age_years": 2.3436002737850785,
+    "mic26_age_years": 0.3915126625598905,
     "current_provider_weights_by_party": {
-      "lab": 0.5081379738367348,
-      "con": 0.5009241273799273,
-      "ref": 0.8301295582737828,
-      "ld": 0.4532922138424588,
-      "green": 0.6586668400292981,
-      "snp": 0.2836708589412795,
-      "pc": 0.7225505714932889,
-      "other": 0.7504849695196878
+      "lab": 0.5081315135077125,
+      "con": 0.500923613890403,
+      "ref": 0.8295096896987412,
+      "ld": 0.45332065902871,
+      "green": 0.6584629339441663,
+      "snp": 0.2837178631034009,
+      "pc": 0.7223508811008682,
+      "other": 0.7502550446091379
     },
     "components_by_party": {
       "lab": {
         "anchor_measurement_variance": 0.03379214606942445,
         "current_measurement_variance": 0.08733018210308745,
         "drift_variance_per_year": 0.029098168183670732,
-        "anchor_age_years": 2.3408624229979464,
-        "current_age_years": 0.3887748117727584,
-        "anchor_total_variance": 0.10190695454865367,
-        "current_total_variance": 0.0986428169616261,
-        "current_provider_weight": 0.5081379738367348
+        "anchor_age_years": 2.3436002737850785,
+        "current_age_years": 0.3915126625598905,
+        "anchor_total_variance": 0.10198662099131943,
+        "current_total_variance": 0.09872248340429186,
+        "current_provider_weight": 0.5081315135077125
       },
       "con": {
         "anchor_measurement_variance": 0.03717140056740165,
         "current_measurement_variance": 0.06489617968865045,
         "drift_variance_per_year": 0.01433632052189644,
-        "anchor_age_years": 2.3408624229979464,
-        "current_age_years": 0.3887748117727584,
-        "anchor_total_variance": 0.07073075456116333,
-        "current_total_variance": 0.07046978000106467,
-        "current_provider_weight": 0.5009241273799273
+        "anchor_age_years": 2.3436002737850785,
+        "current_age_years": 0.3915126625598905,
+        "anchor_total_variance": 0.07077000526758878,
+        "current_total_variance": 0.07050903070749012,
+        "current_provider_weight": 0.500923613890403
       },
       "ref": {
         "anchor_measurement_variance": 0.058100139084117854,
         "current_measurement_variance": 0.08137150636704009,
         "drift_variance_per_year": 0.769983922511564,
-        "anchor_age_years": 2.3408624229979464,
-        "current_age_years": 0.3887748117727584,
-        "anchor_total_variance": 1.8605265696040005,
-        "current_total_variance": 0.3807218609095236,
-        "current_provider_weight": 0.8301295582737828
+        "anchor_age_years": 2.3436002737850785,
+        "current_age_years": 0.3915126625598905,
+        "anchor_total_variance": 1.8626346706923278,
+        "current_total_variance": 0.3828299619978509,
+        "current_provider_weight": 0.8295096896987412
       },
       "ld": {
         "anchor_measurement_variance": 0.12733571691733833,
         "current_measurement_variance": 0.332527227939262,
         "drift_variance_per_year": 0.07350584506508796,
-        "anchor_age_years": 2.3408624229979464,
-        "current_age_years": 0.3887748117727584,
-        "anchor_total_variance": 0.29940278750091176,
-        "current_total_variance": 0.3611044490186391,
-        "current_provider_weight": 0.4532922138424588
+        "anchor_age_years": 2.3436002737850785,
+        "current_age_years": 0.3915126625598905,
+        "anchor_total_variance": 0.299604035536682,
+        "current_total_variance": 0.36130569705440935,
+        "current_provider_weight": 0.45332065902871
       },
       "green": {
         "anchor_measurement_variance": 0.09927844728008574,
         "current_measurement_variance": 0.2285778060492817,
         "drift_variance_per_year": 0.21488452424006013,
-        "anchor_age_years": 2.3408624229979464,
-        "current_age_years": 0.3887748117727584,
-        "anchor_total_variance": 0.6022935553574339,
-        "current_total_variance": 0.31211949651358983,
-        "current_provider_weight": 0.6586668400292981
+        "anchor_age_years": 2.3436002737850785,
+        "current_age_years": 0.3915126625598905,
+        "anchor_total_variance": 0.602881877121267,
+        "current_total_variance": 0.312707818277423,
+        "current_provider_weight": 0.6584629339441663
       },
       "snp": {
         "anchor_measurement_variance": 0.012214885792703247,
         "current_measurement_variance": 0.04487973572774666,
         "drift_variance_per_year": 0.0025413871743783334,
-        "anchor_age_years": 2.3408624229979464,
-        "current_age_years": 0.3887748117727584,
-        "anchor_total_variance": 0.018163923531494416,
-        "current_total_variance": 0.045867763048107295,
-        "current_provider_weight": 0.2836708589412795
+        "anchor_age_years": 2.3436002737850785,
+        "current_age_years": 0.3915126625598905,
+        "anchor_total_variance": 0.018170881470370194,
+        "current_total_variance": 0.04587472098698308,
+        "current_provider_weight": 0.2837178631034009
       },
       "pc": {
         "anchor_measurement_variance": 0.22478423573911993,
         "current_measurement_variance": 0.14185014819166283,
         "drift_variance_per_year": 0.10887640239325248,
-        "anchor_age_years": 2.3408624229979464,
-        "current_age_years": 0.3887748117727584,
-        "anchor_total_variance": 0.47964891485268835,
-        "current_total_variance": 0.18417855103859468,
-        "current_provider_weight": 0.7225505714932889
+        "anchor_age_years": 2.3436002737850785,
+        "current_age_years": 0.3915126625598905,
+        "anchor_total_variance": 0.47994700219668085,
+        "current_total_variance": 0.18447663838258715,
+        "current_provider_weight": 0.7223508811008682
       },
       "other": {
         "anchor_measurement_variance": 1.775428079298443,
         "current_measurement_variance": 0.914644044719191,
         "drift_variance_per_year": 0.8327803657307229,
-        "anchor_age_years": 2.3408624229979464,
-        "current_age_years": 0.3887748117727584,
-        "anchor_total_variance": 3.724852344047979,
-        "current_total_variance": 1.2384080746542017,
-        "current_provider_weight": 0.7504849695196878
+        "anchor_age_years": 2.3436002737850785,
+        "current_age_years": 0.3915126625598905,
+        "anchor_total_variance": 3.727132372427803,
+        "current_total_variance": 1.2406881030340258,
+        "current_provider_weight": 0.7502550446091379
       }
     },
     "formula": "logR=(1-w_current)*logR_anchor+w_current*logR_current; w_current=Var_anchor_total/(Var_anchor_total+Var_current_total)"
@@ -5304,39 +5304,39 @@
   "live_2026_sensitivity": {
     "selection_role": "diagnostic_only_no_2026_ground_truth",
     "precision_freshness_primary_totals": {
-      "lab": 327,
+      "lab": 325,
       "con": 140,
-      "ref": 55,
-      "ld": 58,
+      "ref": 59,
+      "ld": 57,
       "green": 4,
       "snp": 32,
       "pc": 10,
-      "other": 6
+      "other": 5
     },
     "skill_only_stack_totals": {
-      "lab": 317,
-      "con": 137,
-      "ref": 70,
-      "ld": 57,
+      "lab": 316,
+      "con": 136,
+      "ref": 71,
+      "ld": 58,
       "green": 5,
       "snp": 31,
       "pc": 9,
       "other": 6
     },
     "equal_provider_stack_totals": {
-      "lab": 313,
-      "con": 138,
-      "ref": 71,
-      "ld": 55,
+      "lab": 315,
+      "con": 137,
+      "ref": 73,
+      "ld": 54,
       "green": 4,
       "snp": 35,
-      "pc": 9,
-      "other": 7
+      "pc": 8,
+      "other": 6
     },
     "direct_mic26_totals": {
-      "lab": 317,
+      "lab": 316,
       "con": 146,
-      "ref": 72,
+      "ref": 73,
       "ld": 42,
       "green": 4,
       "snp": 36,
@@ -5354,18 +5354,18 @@
       "other": 6
     },
     "legacy_full_temporal_transfer_totals": {
-      "lab": 302,
+      "lab": 304,
       "con": 142,
       "ref": 97,
       "ld": 38,
       "green": 7,
       "snp": 25,
       "pc": 12,
-      "other": 9
+      "other": 7
     },
     "changed_winners_vs_primary": {
-      "skill_only_stack": 36,
-      "equal_provider_stack": 23,
+      "skill_only_stack": 37,
+      "equal_provider_stack": 24,
       "direct_mic26": 78,
       "static_yougov24": 90,
       "legacy_full_temporal_transfer": 143
@@ -5381,32 +5381,35 @@
       ],
       "pairwise": {
         "precision_freshness_primary__vs__skill_only_stack": {
-          "changed_winners": 36,
+          "changed_winners": 37,
           "transitions": {
-            "lab->ref": 14,
+            "lab->ref": 13,
             "con->ref": 4,
-            "ld->con": 3,
+            "ref->lab": 3,
             "snp->lab": 3,
-            "ref->lab": 2,
             "con->lab": 2,
+            "ld->con": 2,
             "con->ld": 2,
             "lab->snp": 2,
             "ref->con": 1,
             "lab->green": 1,
             "lab->con": 1,
+            "ref->ld": 1,
+            "lab->other": 1,
             "pc->lab": 1
           }
         },
         "precision_freshness_primary__vs__equal_provider_stack": {
-          "changed_winners": 23,
+          "changed_winners": 24,
           "transitions": {
-            "lab->ref": 11,
-            "con->ref": 4,
+            "lab->ref": 9,
+            "con->ref": 5,
             "lab->snp": 3,
             "ld->con": 2,
+            "pc->lab": 2,
             "lab->other": 1,
-            "ld->ref": 1,
-            "pc->lab": 1
+            "ref->lab": 1,
+            "ld->ref": 1
           }
         },
         "precision_freshness_primary__vs__direct_mic26": {
@@ -5417,14 +5420,14 @@
             "lab->ref": 10,
             "lab->con": 8,
             "lab->snp": 8,
+            "ref->lab": 7,
             "con->lab": 7,
-            "ref->lab": 5,
-            "ld->ref": 4,
             "ref->con": 3,
-            "other->lab": 2,
+            "ld->ref": 3,
             "snp->lab": 2,
             "con->ld": 1,
             "ld->lab": 1,
+            "other->lab": 1,
             "snp->con": 1,
             "snp->ld": 1,
             "lab->pc": 1
@@ -5433,21 +5436,22 @@
         "precision_freshness_primary__vs__static_yougov24": {
           "changed_winners": 90,
           "transitions": {
-            "lab->ref": 29,
+            "lab->ref": 27,
             "snp->lab": 11,
             "con->ref": 10,
             "con->lab": 7,
             "ref->lab": 4,
-            "lab->con": 4,
             "lab->snp": 4,
             "pc->lab": 4,
+            "ref->con": 3,
+            "lab->con": 3,
             "ld->con": 3,
             "con->ld": 3,
-            "ref->con": 2,
+            "lab->other": 2,
             "lab->pc": 2,
             "lab->green": 1,
             "other->lab": 1,
-            "lab->other": 1,
+            "ref->ld": 1,
             "ld->snp": 1,
             "con->snp": 1,
             "pc->ref": 1,
@@ -5457,8 +5461,8 @@
         "precision_freshness_primary__vs__legacy_full_temporal_transfer": {
           "changed_winners": 143,
           "transitions": {
-            "lab->ref": 29,
-            "ref->lab": 15,
+            "lab->ref": 26,
+            "ref->lab": 16,
             "con->ref": 13,
             "con->lab": 12,
             "ld->con": 12,
@@ -5474,42 +5478,44 @@
             "ref->con": 2,
             "green->con": 2,
             "ld->snp": 2,
+            "other->ref": 1,
+            "ref->ld": 1,
             "other->lab": 1,
             "con->ld": 1,
             "pc->lab": 1
           }
         },
         "skill_only_stack__vs__equal_provider_stack": {
-          "changed_winners": 29,
+          "changed_winners": 31,
           "transitions": {
-            "ref->lab": 5,
+            "ref->lab": 6,
             "lab->snp": 5,
             "lab->ref": 4,
             "ld->con": 4,
-            "con->ld": 3,
+            "con->ref": 2,
             "lab->con": 2,
-            "lab->other": 1,
-            "con->ref": 1,
+            "con->ld": 2,
+            "ld->ref": 2,
             "green->lab": 1,
             "con->lab": 1,
-            "ld->ref": 1,
-            "snp->lab": 1
+            "snp->lab": 1,
+            "pc->lab": 1
           }
         },
         "skill_only_stack__vs__direct_mic26": {
-          "changed_winners": 110,
+          "changed_winners": 111,
           "transitions": {
-            "ref->lab": 19,
+            "ref->lab": 20,
             "ld->con": 15,
-            "lab->ref": 12,
+            "lab->ref": 13,
             "lab->snp": 11,
             "con->ref": 10,
             "lab->con": 10,
             "con->lab": 8,
             "ref->con": 5,
-            "con->ld": 4,
             "ld->ref": 4,
             "snp->lab": 4,
+            "con->ld": 3,
             "other->lab": 2,
             "lab->pc": 2,
             "green->lab": 1,
@@ -5521,7 +5527,7 @@
         "skill_only_stack__vs__static_yougov24": {
           "changed_winners": 54,
           "transitions": {
-            "lab->ref": 15,
+            "lab->ref": 14,
             "snp->lab": 8,
             "con->ref": 6,
             "con->lab": 5,
@@ -5533,6 +5539,7 @@
             "other->lab": 1,
             "con->ld": 1,
             "lab->other": 1,
+            "ld->con": 1,
             "ref->con": 1,
             "ld->snp": 1,
             "con->snp": 1,
@@ -5541,44 +5548,45 @@
           }
         },
         "skill_only_stack__vs__legacy_full_temporal_transfer": {
-          "changed_winners": 134,
+          "changed_winners": 135,
           "transitions": {
-            "lab->ref": 21,
-            "ref->lab": 17,
+            "lab->ref": 20,
+            "ref->lab": 18,
             "con->ref": 12,
             "con->lab": 12,
-            "ld->con": 11,
+            "ld->con": 12,
             "lab->con": 9,
             "snp->ref": 9,
             "lab->snp": 8,
             "ld->ref": 6,
             "lab->green": 5,
-            "lab->other": 4,
             "ref->con": 4,
             "snp->lab": 4,
+            "lab->other": 3,
             "snp->con": 3,
             "lab->pc": 3,
             "green->con": 2,
             "ld->snp": 2,
             "green->lab": 1,
+            "other->ref": 1,
             "other->lab": 1
           }
         },
         "equal_provider_stack__vs__direct_mic26": {
-          "changed_winners": 85,
+          "changed_winners": 84,
           "transitions": {
             "ref->lab": 14,
+            "lab->ref": 10,
             "ld->con": 10,
-            "con->ref": 9,
-            "lab->ref": 9,
+            "con->ref": 8,
             "ref->con": 7,
             "con->lab": 7,
             "lab->con": 7,
             "lab->snp": 6,
-            "ld->ref": 4,
-            "other->lab": 3,
+            "ld->ref": 3,
             "snp->lab": 3,
-            "lab->pc": 2,
+            "lab->pc": 3,
+            "other->lab": 2,
             "con->ld": 1,
             "ld->lab": 1,
             "snp->con": 1,
@@ -5595,15 +5603,15 @@
             "ref->lab": 5,
             "con->ld": 5,
             "lab->con": 4,
+            "ref->con": 3,
             "ld->con": 3,
             "lab->snp": 3,
-            "pc->lab": 3,
-            "other->lab": 2,
-            "ref->con": 2,
+            "ref->ld": 2,
             "lab->pc": 2,
+            "pc->lab": 2,
             "lab->green": 1,
+            "other->lab": 1,
             "lab->other": 1,
-            "ref->ld": 1,
             "ld->snp": 1,
             "con->snp": 1,
             "pc->ref": 1,
@@ -5611,9 +5619,9 @@
           }
         },
         "equal_provider_stack__vs__legacy_full_temporal_transfer": {
-          "changed_winners": 138,
+          "changed_winners": 141,
           "transitions": {
-            "lab->ref": 22,
+            "lab->ref": 21,
             "ref->lab": 19,
             "con->ref": 12,
             "con->lab": 12,
@@ -5621,27 +5629,28 @@
             "snp->ref": 10,
             "lab->con": 9,
             "ld->ref": 7,
-            "ref->con": 5,
+            "ref->con": 6,
             "lab->green": 5,
             "lab->snp": 5,
             "snp->lab": 4,
+            "lab->pc": 4,
             "lab->other": 3,
             "snp->con": 3,
-            "lab->pc": 3,
+            "ref->ld": 2,
             "con->ld": 2,
             "green->con": 2,
             "ld->snp": 2,
-            "other->lab": 1,
-            "ref->ld": 1
+            "other->ref": 1,
+            "other->lab": 1
           }
         },
         "direct_mic26__vs__static_yougov24": {
-          "changed_winners": 159,
+          "changed_winners": 160,
           "transitions": {
             "lab->ref": 33,
             "snp->lab": 19,
             "con->ld": 16,
-            "ref->lab": 13,
+            "ref->lab": 14,
             "con->lab": 13,
             "ref->con": 12,
             "con->ref": 12,
@@ -5661,9 +5670,9 @@
           }
         },
         "direct_mic26__vs__legacy_full_temporal_transfer": {
-          "changed_winners": 152,
+          "changed_winners": 150,
           "transitions": {
-            "lab->ref": 29,
+            "lab->ref": 27,
             "ref->lab": 20,
             "con->ref": 14,
             "con->lab": 13,
@@ -5673,8 +5682,8 @@
             "con->ld": 8,
             "ld->con": 7,
             "ld->ref": 5,
-            "lab->other": 5,
             "lab->green": 5,
+            "lab->other": 4,
             "snp->lab": 4,
             "ref->ld": 2,
             "green->con": 2,
@@ -5682,11 +5691,12 @@
             "ld->snp": 2,
             "lab->snp": 2,
             "lab->pc": 2,
+            "other->ref": 1,
             "pc->lab": 1
           }
         },
         "static_yougov24__vs__legacy_full_temporal_transfer": {
-          "changed_winners": 161,
+          "changed_winners": 159,
           "transitions": {
             "ref->lab": 27,
             "lab->ref": 17,
@@ -5701,8 +5711,8 @@
             "snp->lab": 6,
             "lab->pc": 6,
             "lab->green": 5,
-            "lab->other": 4,
             "snp->con": 4,
+            "lab->other": 2,
             "green->con": 2,
             "pc->lab": 2,
             "green->lab": 1,
@@ -5713,18 +5723,18 @@
           }
         }
       },
-      "all_scenarios_agree": 402,
+      "all_scenarios_agree": 404,
       "majority_consensus_available": 632,
       "all_scenarios_different": 0,
       "majority_consensus_totals": {
-        "lab": 321,
-        "ref": 64,
+        "ref": 67,
+        "lab": 319,
+        "pc": 9,
         "con": 137,
         "snp": 33,
-        "pc": 9,
-        "ld": 58,
         "other": 6,
-        "green": 4
+        "green": 4,
+        "ld": 57
       },
       "note": "Consensus is diagnostic only and never selects the live route."
     },
@@ -5739,14 +5749,14 @@
       "other": 0.6599927427398614
     },
     "freshness_adjusted_weights_by_party": {
-      "lab": 0.5081379738367348,
-      "con": 0.5009241273799273,
-      "ref": 0.8301295582737828,
-      "ld": 0.4532922138424588,
-      "green": 0.6586668400292981,
-      "snp": 0.2836708589412795,
-      "pc": 0.7225505714932889,
-      "other": 0.7504849695196878
+      "lab": 0.5081315135077125,
+      "con": 0.500923613890403,
+      "ref": 0.8295096896987412,
+      "ld": 0.45332065902871,
+      "green": 0.6584629339441663,
+      "snp": 0.2837178631034009,
+      "pc": 0.7223508811008682,
+      "other": 0.7502550446091379
     }
   },
   "promotion_policy": "Never auto-promote. Passing the research gate only nominates the method for review and a fresh external validation."
