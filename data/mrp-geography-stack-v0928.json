@@ -1,7 +1,7 @@
 {
   "version": "uk-v0928-mrp-geography-stack",
   "status": "ok",
-  "generated_at": "2026-11-07T11:44:37.294482+00:00",
+  "generated_at": "2026-11-08T10:10:12.493299+00:00",
   "diagnostic_only": false,
   "shadow_only": true,
   "live_candidate": true,
@@ -5205,98 +5205,98 @@
     "provider_toplines_used": false,
     "provider_reliability_training_election": "2024",
     "provider_stack_leave_region_out_validation_passed": true,
-    "yougov_anchor_age_years": 2.346338124572211,
-    "mic26_age_years": 0.3942505133470226,
+    "yougov_anchor_age_years": 2.349075975359343,
+    "mic26_age_years": 0.39698836413415467,
     "current_provider_weights_by_party": {
-      "lab": 0.5081250634276161,
-      "con": 0.5009231009712006,
-      "ref": 0.8288921445566014,
-      "ld": 0.4533490695896353,
-      "green": 0.658259551274359,
-      "snp": 0.28376484684375874,
-      "pc": 0.7221515487439667,
-      "other": 0.7500255414163691
+      "lab": 0.5081186235720759,
+      "con": 0.5009225886213706,
+      "ref": 0.8282769098085301,
+      "ld": 0.45337744558841847,
+      "green": 0.6580566900070932,
+      "snp": 0.28381181017565876,
+      "pc": 0.7219525734605353,
+      "other": 0.7497964587822015
     },
     "components_by_party": {
       "lab": {
         "anchor_measurement_variance": 0.03379214606942445,
         "current_measurement_variance": 0.08733018210308745,
         "drift_variance_per_year": 0.029098168183670732,
-        "anchor_age_years": 2.346338124572211,
-        "current_age_years": 0.3942505133470226,
-        "anchor_total_variance": 0.10206628743398521,
-        "current_total_variance": 0.09880214984695763,
-        "current_provider_weight": 0.5081250634276161
+        "anchor_age_years": 2.349075975359343,
+        "current_age_years": 0.39698836413415467,
+        "anchor_total_variance": 0.10214595387665097,
+        "current_total_variance": 0.09888181628962339,
+        "current_provider_weight": 0.5081186235720759
       },
       "con": {
         "anchor_measurement_variance": 0.03717140056740165,
         "current_measurement_variance": 0.06489617968865045,
         "drift_variance_per_year": 0.01433632052189644,
-        "anchor_age_years": 2.346338124572211,
-        "current_age_years": 0.3942505133470226,
-        "anchor_total_variance": 0.07080925597401425,
-        "current_total_variance": 0.07054828141391559,
-        "current_provider_weight": 0.5009231009712006
+        "anchor_age_years": 2.349075975359343,
+        "current_age_years": 0.39698836413415467,
+        "anchor_total_variance": 0.0708485066804397,
+        "current_total_variance": 0.07058753212034104,
+        "current_provider_weight": 0.5009225886213706
       },
       "ref": {
         "anchor_measurement_variance": 0.058100139084117854,
         "current_measurement_variance": 0.08137150636704009,
         "drift_variance_per_year": 0.769983922511564,
-        "anchor_age_years": 2.346338124572211,
-        "current_age_years": 0.3942505133470226,
-        "anchor_total_variance": 1.8647427717806555,
-        "current_total_variance": 0.3849380630861783,
-        "current_provider_weight": 0.8288921445566014
+        "anchor_age_years": 2.349075975359343,
+        "current_age_years": 0.39698836413415467,
+        "anchor_total_variance": 1.8668508728689828,
+        "current_total_variance": 0.3870461641745056,
+        "current_provider_weight": 0.8282769098085301
       },
       "ld": {
         "anchor_measurement_variance": 0.12733571691733833,
         "current_measurement_variance": 0.332527227939262,
         "drift_variance_per_year": 0.07350584506508796,
-        "anchor_age_years": 2.346338124572211,
-        "current_age_years": 0.3942505133470226,
-        "anchor_total_variance": 0.29980528357245234,
-        "current_total_variance": 0.3615069450901796,
-        "current_provider_weight": 0.4533490695896353
+        "anchor_age_years": 2.349075975359343,
+        "current_age_years": 0.39698836413415467,
+        "anchor_total_variance": 0.3000065316082226,
+        "current_total_variance": 0.3617081931259499,
+        "current_provider_weight": 0.45337744558841847
       },
       "green": {
         "anchor_measurement_variance": 0.09927844728008574,
         "current_measurement_variance": 0.2285778060492817,
         "drift_variance_per_year": 0.21488452424006013,
-        "anchor_age_years": 2.346338124572211,
-        "current_age_years": 0.3942505133470226,
-        "anchor_total_variance": 0.6034701988851002,
-        "current_total_variance": 0.31329614004125617,
-        "current_provider_weight": 0.658259551274359
+        "anchor_age_years": 2.349075975359343,
+        "current_age_years": 0.39698836413415467,
+        "anchor_total_variance": 0.6040585206489334,
+        "current_total_variance": 0.3138844618050893,
+        "current_provider_weight": 0.6580566900070932
       },
       "snp": {
         "anchor_measurement_variance": 0.012214885792703247,
         "current_measurement_variance": 0.04487973572774666,
         "drift_variance_per_year": 0.0025413871743783334,
-        "anchor_age_years": 2.346338124572211,
-        "current_age_years": 0.3942505133470226,
-        "anchor_total_variance": 0.018177839409245975,
-        "current_total_variance": 0.04588167892585886,
-        "current_provider_weight": 0.28376484684375874
+        "anchor_age_years": 2.349075975359343,
+        "current_age_years": 0.39698836413415467,
+        "anchor_total_variance": 0.018184797348121756,
+        "current_total_variance": 0.045888636864734635,
+        "current_provider_weight": 0.28381181017565876
       },
       "pc": {
         "anchor_measurement_variance": 0.22478423573911993,
         "current_measurement_variance": 0.14185014819166283,
         "drift_variance_per_year": 0.10887640239325248,
-        "anchor_age_years": 2.346338124572211,
-        "current_age_years": 0.3942505133470226,
-        "anchor_total_variance": 0.48024508954067335,
-        "current_total_variance": 0.18477472572657963,
-        "current_provider_weight": 0.7221515487439667
+        "anchor_age_years": 2.349075975359343,
+        "current_age_years": 0.39698836413415467,
+        "anchor_total_variance": 0.4805431768846658,
+        "current_total_variance": 0.1850728130705721,
+        "current_provider_weight": 0.7219525734605353
       },
       "other": {
         "anchor_measurement_variance": 1.775428079298443,
         "current_measurement_variance": 0.914644044719191,
         "drift_variance_per_year": 0.8327803657307229,
-        "anchor_age_years": 2.346338124572211,
-        "current_age_years": 0.3942505133470226,
-        "anchor_total_variance": 3.729412400807627,
-        "current_total_variance": 1.2429681314138499,
-        "current_provider_weight": 0.7500255414163691
+        "anchor_age_years": 2.349075975359343,
+        "current_age_years": 0.39698836413415467,
+        "anchor_total_variance": 3.7316924291874516,
+        "current_total_variance": 1.2452481597936738,
+        "current_provider_weight": 0.7497964587822015
       }
     },
     "formula": "logR=(1-w_current)*logR_anchor+w_current*logR_current; w_current=Var_anchor_total/(Var_anchor_total+Var_current_total)"
@@ -5324,12 +5324,12 @@
       "other": 7
     },
     "equal_provider_stack_totals": {
-      "lab": 320,
+      "lab": 319,
       "con": 142,
       "ref": 66,
       "ld": 53,
       "green": 5,
-      "snp": 31,
+      "snp": 32,
       "pc": 8,
       "other": 7
     },
@@ -5344,8 +5344,8 @@
       "other": 7
     },
     "static_yougov24_totals": {
-      "lab": 323,
-      "con": 130,
+      "lab": 324,
+      "con": 129,
       "ref": 80,
       "ld": 56,
       "green": 5,
@@ -5365,9 +5365,9 @@
     },
     "changed_winners_vs_primary": {
       "skill_only_stack": 35,
-      "equal_provider_stack": 28,
+      "equal_provider_stack": 29,
       "direct_mic26": 74,
-      "static_yougov24": 86,
+      "static_yougov24": 87,
       "legacy_full_temporal_transfer": 145
     },
     "stability_audit": {
@@ -5395,11 +5395,11 @@
           }
         },
         "precision_freshness_primary__vs__equal_provider_stack": {
-          "changed_winners": 28,
+          "changed_winners": 29,
           "transitions": {
             "lab->ref": 12,
             "con->ref": 7,
-            "lab->snp": 3,
+            "lab->snp": 4,
             "ld->con": 2,
             "ref->con": 1,
             "ld->ref": 1,
@@ -5432,12 +5432,12 @@
           }
         },
         "precision_freshness_primary__vs__static_yougov24": {
-          "changed_winners": 86,
+          "changed_winners": 87,
           "transitions": {
             "lab->ref": 26,
             "con->ref": 11,
             "snp->lab": 10,
-            "con->lab": 7,
+            "con->lab": 8,
             "con->ld": 5,
             "lab->con": 4,
             "lab->snp": 4,
@@ -5480,9 +5480,9 @@
           }
         },
         "skill_only_stack__vs__equal_provider_stack": {
-          "changed_winners": 25,
+          "changed_winners": 26,
           "transitions": {
-            "lab->snp": 6,
+            "lab->snp": 7,
             "ld->con": 5,
             "lab->con": 4,
             "lab->ref": 2,
@@ -5519,13 +5519,13 @@
           }
         },
         "skill_only_stack__vs__static_yougov24": {
-          "changed_winners": 53,
+          "changed_winners": 54,
           "transitions": {
             "lab->ref": 13,
             "snp->lab": 7,
             "con->ref": 5,
+            "con->lab": 4,
             "lab->snp": 4,
-            "con->lab": 3,
             "lab->con": 3,
             "pc->lab": 3,
             "other->lab": 2,
@@ -5567,7 +5567,7 @@
           }
         },
         "equal_provider_stack__vs__direct_mic26": {
-          "changed_winners": 82,
+          "changed_winners": 81,
           "transitions": {
             "ref->lab": 13,
             "con->ref": 9,
@@ -5575,8 +5575,8 @@
             "ref->con": 8,
             "lab->ref": 7,
             "con->lab": 7,
-            "lab->snp": 7,
             "lab->con": 6,
+            "lab->snp": 6,
             "ld->ref": 3,
             "lab->pc": 3,
             "con->ld": 2,
@@ -5590,11 +5590,11 @@
           }
         },
         "equal_provider_stack__vs__static_yougov24": {
-          "changed_winners": 76,
+          "changed_winners": 78,
           "transitions": {
             "lab->ref": 15,
-            "snp->lab": 13,
-            "con->lab": 7,
+            "snp->lab": 14,
+            "con->lab": 8,
             "con->ld": 7,
             "con->ref": 5,
             "ref->lab": 4,
@@ -5614,7 +5614,7 @@
           }
         },
         "equal_provider_stack__vs__legacy_full_temporal_transfer": {
-          "changed_winners": 140,
+          "changed_winners": 139,
           "transitions": {
             "lab->ref": 21,
             "ref->lab": 19,
@@ -5623,8 +5623,8 @@
             "ld->con": 11,
             "snp->ref": 10,
             "lab->con": 9,
-            "lab->snp": 7,
             "ld->ref": 6,
+            "lab->snp": 6,
             "lab->green": 5,
             "lab->other": 4,
             "snp->lab": 4,
@@ -5640,14 +5640,14 @@
           }
         },
         "direct_mic26__vs__static_yougov24": {
-          "changed_winners": 153,
+          "changed_winners": 154,
           "transitions": {
             "lab->ref": 28,
             "snp->lab": 20,
             "con->ld": 17,
+            "con->lab": 13,
             "ref->con": 12,
             "con->ref": 12,
-            "con->lab": 12,
             "ref->lab": 11,
             "lab->con": 9,
             "lab->snp": 6,
@@ -5692,15 +5692,15 @@
           }
         },
         "static_yougov24__vs__legacy_full_temporal_transfer": {
-          "changed_winners": 164,
+          "changed_winners": 165,
           "transitions": {
             "ref->lab": 26,
             "lab->ref": 18,
             "lab->snp": 16,
             "con->ref": 15,
             "ld->con": 14,
+            "lab->con": 12,
             "con->lab": 11,
-            "lab->con": 11,
             "snp->ref": 9,
             "ref->con": 6,
             "snp->lab": 6,
@@ -5719,18 +5719,18 @@
           }
         }
       },
-      "all_scenarios_agree": 405,
+      "all_scenarios_agree": 404,
       "majority_consensus_available": 632,
       "all_scenarios_different": 0,
       "majority_consensus_totals": {
-        "ld": 55,
-        "con": 142,
         "lab": 327,
-        "pc": 9,
-        "ref": 58,
-        "green": 5,
         "snp": 29,
-        "other": 7
+        "ld": 55,
+        "ref": 58,
+        "con": 142,
+        "pc": 9,
+        "other": 7,
+        "green": 5
       },
       "note": "Consensus is diagnostic only and never selects the live route."
     },
@@ -5745,14 +5745,14 @@
       "other": 0.6599927427398614
     },
     "freshness_adjusted_weights_by_party": {
-      "lab": 0.5081250634276161,
-      "con": 0.5009231009712006,
-      "ref": 0.8288921445566014,
-      "ld": 0.4533490695896353,
-      "green": 0.658259551274359,
-      "snp": 0.28376484684375874,
-      "pc": 0.7221515487439667,
-      "other": 0.7500255414163691
+      "lab": 0.5081186235720759,
+      "con": 0.5009225886213706,
+      "ref": 0.8282769098085301,
+      "ld": 0.45337744558841847,
+      "green": 0.6580566900070932,
+      "snp": 0.28381181017565876,
+      "pc": 0.7219525734605353,
+      "other": 0.7497964587822015
     }
   },
   "promotion_policy": "Never auto-promote. Passing the research gate only nominates the method for review and a fresh external validation."
