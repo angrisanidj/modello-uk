@@ -1,7 +1,7 @@
 {
   "version": "uk-v0928-mrp-geography-stack",
   "status": "ok",
-  "generated_at": "2026-11-11T12:43:35.068875+00:00",
+  "generated_at": "2026-11-11T19:33:27.184513+00:00",
   "diagnostic_only": false,
   "shadow_only": true,
   "live_candidate": true,
@@ -5334,13 +5334,13 @@
       "other": 7
     },
     "direct_mic26_totals": {
-      "lab": 332,
+      "lab": 333,
       "con": 156,
       "ref": 42,
       "ld": 42,
       "green": 4,
       "snp": 40,
-      "pc": 10,
+      "pc": 9,
       "other": 6
     },
     "static_yougov24_totals": {
@@ -5354,21 +5354,21 @@
       "other": 6
     },
     "legacy_full_temporal_transfer_totals": {
-      "lab": 319,
+      "lab": 320,
       "con": 145,
       "ref": 65,
       "ld": 40,
       "green": 7,
       "snp": 34,
-      "pc": 12,
+      "pc": 11,
       "other": 10
     },
     "changed_winners_vs_primary": {
       "skill_only_stack": 36,
       "equal_provider_stack": 16,
-      "direct_mic26": 66,
+      "direct_mic26": 65,
       "static_yougov24": 74,
-      "legacy_full_temporal_transfer": 124
+      "legacy_full_temporal_transfer": 123
     },
     "stability_audit": {
       "scenario_names": [
@@ -5410,7 +5410,7 @@
           }
         },
         "precision_freshness_primary__vs__direct_mic26": {
-          "changed_winners": 66,
+          "changed_winners": 65,
           "transitions": {
             "ld->con": 13,
             "lab->con": 8,
@@ -5422,13 +5422,13 @@
             "ref->con": 3,
             "snp->lab": 3,
             "ld->ref": 2,
-            "lab->pc": 2,
             "con->ld": 1,
             "ld->lab": 1,
             "other->lab": 1,
             "snp->ld": 1,
             "ld->snp": 1,
-            "snp->con": 1
+            "snp->con": 1,
+            "lab->pc": 1
           }
         },
         "precision_freshness_primary__vs__static_yougov24": {
@@ -5454,7 +5454,7 @@
           }
         },
         "precision_freshness_primary__vs__legacy_full_temporal_transfer": {
-          "changed_winners": 124,
+          "changed_winners": 123,
           "transitions": {
             "lab->ref": 21,
             "con->ref": 14,
@@ -5467,9 +5467,9 @@
             "ld->ref": 4,
             "snp->lab": 4,
             "lab->snp": 4,
-            "lab->pc": 4,
             "snp->con": 3,
             "snp->ref": 3,
+            "lab->pc": 3,
             "con->ld": 2,
             "green->con": 2,
             "ld->snp": 2,
@@ -5493,7 +5493,7 @@
           }
         },
         "skill_only_stack__vs__direct_mic26": {
-          "changed_winners": 101,
+          "changed_winners": 100,
           "transitions": {
             "ref->lab": 17,
             "ld->con": 16,
@@ -5505,7 +5505,7 @@
             "lab->ref": 5,
             "con->ld": 4,
             "snp->lab": 4,
-            "lab->pc": 4,
+            "lab->pc": 3,
             "ld->ref": 2,
             "green->lab": 1,
             "ld->lab": 1,
@@ -5536,7 +5536,7 @@
           }
         },
         "skill_only_stack__vs__legacy_full_temporal_transfer": {
-          "changed_winners": 125,
+          "changed_winners": 124,
           "transitions": {
             "ref->lab": 19,
             "lab->ref": 16,
@@ -5545,9 +5545,9 @@
             "ld->con": 11,
             "con->ref": 10,
             "lab->snp": 7,
-            "lab->pc": 6,
             "lab->green": 5,
             "snp->lab": 5,
+            "lab->pc": 5,
             "lab->other": 4,
             "ld->ref": 4,
             "snp->con": 3,
@@ -5560,7 +5560,7 @@
           }
         },
         "equal_provider_stack__vs__direct_mic26": {
-          "changed_winners": 74,
+          "changed_winners": 73,
           "transitions": {
             "ld->con": 12,
             "ref->lab": 10,
@@ -5571,8 +5571,8 @@
             "lab->snp": 5,
             "lab->ref": 4,
             "snp->lab": 3,
-            "lab->pc": 3,
             "ld->ref": 2,
+            "lab->pc": 2,
             "green->lab": 1,
             "con->ld": 1,
             "ld->lab": 1,
@@ -5604,7 +5604,7 @@
           }
         },
         "equal_provider_stack__vs__legacy_full_temporal_transfer": {
-          "changed_winners": 122,
+          "changed_winners": 121,
           "transitions": {
             "lab->ref": 19,
             "ref->lab": 16,
@@ -5613,10 +5613,10 @@
             "con->ref": 11,
             "lab->con": 10,
             "lab->green": 5,
-            "lab->pc": 5,
             "lab->other": 4,
             "ld->ref": 4,
             "snp->lab": 4,
+            "lab->pc": 4,
             "snp->ref": 3,
             "lab->snp": 3,
             "con->ld": 2,
@@ -5629,7 +5629,7 @@
           }
         },
         "direct_mic26__vs__static_yougov24": {
-          "changed_winners": 137,
+          "changed_winners": 136,
           "transitions": {
             "lab->ref": 29,
             "con->ld": 17,
@@ -5640,8 +5640,8 @@
             "lab->con": 9,
             "ref->lab": 6,
             "lab->snp": 6,
-            "pc->lab": 5,
             "ld->con": 4,
+            "pc->lab": 4,
             "other->lab": 2,
             "ref->ld": 2,
             "lab->other": 2,
@@ -5680,7 +5680,7 @@
           }
         },
         "static_yougov24__vs__legacy_full_temporal_transfer": {
-          "changed_winners": 140,
+          "changed_winners": 139,
           "transitions": {
             "ref->lab": 24,
             "con->lab": 14,
@@ -5689,8 +5689,8 @@
             "con->ref": 11,
             "lab->con": 11,
             "lab->snp": 11,
-            "lab->pc": 7,
             "snp->lab": 6,
+            "lab->pc": 6,
             "lab->other": 5,
             "ref->con": 5,
             "lab->green": 5,
@@ -5706,18 +5706,18 @@
           }
         }
       },
-      "all_scenarios_agree": 433,
+      "all_scenarios_agree": 434,
       "majority_consensus_available": 632,
       "all_scenarios_different": 0,
       "majority_consensus_totals": {
-        "ref": 42,
+        "ld": 57,
         "lab": 333,
         "con": 143,
         "snp": 38,
-        "ld": 57,
-        "pc": 8,
         "other": 7,
-        "green": 4
+        "ref": 42,
+        "green": 4,
+        "pc": 8
       },
       "note": "Consensus is diagnostic only and never selects the live route."
     },
