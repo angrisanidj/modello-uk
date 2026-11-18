@@ -1,7 +1,7 @@
 {
   "version": "uk-v0929-production-promotion-audit",
   "status": "passed",
-  "generated_at": "2026-11-18T13:58:15.028183+00:00",
+  "generated_at": "2026-11-18T20:23:46.016161+00:00",
   "promotion_marker": "audited-v0928-precision-stack-to-production",
   "model_freeze": "no-statistical-retuning-during-promotion",
   "production_schema": "precision-weighted-contemporary-mrp-geography-v1",
@@ -28,7 +28,7 @@
     "internal_target_sum": 100.0,
     "core_2026_changed_winners_vs_primary": {
       "skill_only_stack": 36,
-      "equal_provider_stack": 18,
+      "equal_provider_stack": 17,
       "direct_mic26": 66
     },
     "core_2026_changed_winners_warning_threshold": 75,
@@ -37,7 +37,7 @@
     "core_2026_stability_passed": true
   },
   "warnings": [
-    "one or more core contemporary alternatives differ in >60 seats: {'skill_only_stack': 36, 'equal_provider_stack': 18, 'direct_mic26': 66}"
+    "one or more core contemporary alternatives differ in >60 seats: {'skill_only_stack': 36, 'equal_provider_stack': 17, 'direct_mic26': 66}"
   ],
   "errors": []
 }
