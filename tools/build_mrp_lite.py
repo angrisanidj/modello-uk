@@ -386,14 +386,36 @@ def cols_matching(df:pd.DataFrame, include:list[str], exclude:list[str]|None=Non
             out.append(c)
     return out
 
+def _bes_article_metadata(article_id: int) -> dict[str, Any]:
+    try:
+        response = requests.get(
+            FIGSHARE_API.format(article_id=article_id), headers={"User-Agent": UA}, timeout=60
+        )
+        response.raise_for_status()
+    except (requests.Timeout, requests.ConnectionError, requests.HTTPError) as exc:
+        if isinstance(exc, requests.HTTPError):
+            if exc.response is None or exc.response.status_code not in (429, 500, 502, 503, 504):
+                raise
+        # The checked-in model records the exact Figshare files used for validation.
+        sources = json.loads(MODEL_OUT.read_text(encoding="utf-8"))["sources"]
+        for key in ("historical_bes", "current_bes"):
+            source = sources[key]
+            if source["article_id"] == article_id:
+                file_id = source["file_id"]
+                print(f"Figshare metadata unavailable ({exc}); using audited BES file {file_id}")
+                return {
+                    "title": source["title"], "doi": source["doi"], "license": source["license"],
+                    "files": [{
+                        "id": file_id, "name": source["file_name"], "size": source["file_size"],
+                        "download_url": f"https://ndownloader.figshare.com/files/{file_id}",
+                    }],
+                }
+        raise
+    return response.json()
+
+
 def fetch_article_file(article_id:int,dest:Path)->tuple[Path,dict[str,Any]]:
-    meta=requests.get(
-        FIGSHARE_API.format(article_id=article_id),
-        headers={"User-Agent":UA},
-        timeout=60
-    )
-    meta.raise_for_status()
-    article=meta.json()
+    article = _bes_article_metadata(article_id)
     files=article.get("files") or []
     if not files:
         raise RuntimeError(f"Figshare article {article_id}: no files returned")
@@ -424,6 +446,9 @@ def fetch_article_file(article_id:int,dest:Path)->tuple[Path,dict[str,Any]]:
         with path.open("wb") as fh:
             for chunk in r.iter_content(1024*1024):
                 if chunk:fh.write(chunk)
+    expected_size = chosen.get("size")
+    if expected_size and path.stat().st_size != int(expected_size):
+        raise RuntimeError(f"BES file size mismatch for {name}: expected {expected_size}, got {path.stat().st_size}")
     if path.stat().st_size<20_000:
         raise RuntimeError(f"Downloaded BES file unexpectedly small: {path}")
     return path,{
