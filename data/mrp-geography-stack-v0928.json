@@ -1,7 +1,7 @@
 {
   "version": "uk-v0928-mrp-geography-stack",
   "status": "ok",
-  "generated_at": "2026-11-25T16:39:06.015555+00:00",
+  "generated_at": "2026-11-26T15:12:57.440213+00:00",
   "diagnostic_only": false,
   "shadow_only": true,
   "live_candidate": true,
@@ -5205,98 +5205,98 @@
     "provider_toplines_used": false,
     "provider_reliability_training_election": "2024",
     "provider_stack_leave_region_out_validation_passed": true,
-    "yougov_anchor_age_years": 2.3956194387405887,
-    "mic26_age_years": 0.44353182751540043,
+    "yougov_anchor_age_years": 2.3983572895277208,
+    "mic26_age_years": 0.4462696783025325,
     "current_provider_weights_by_party": {
-      "lab": 0.5080106871401785,
-      "con": 0.5009139648781418,
-      "ref": 0.8181592328790209,
-      "ld": 0.45385461004793515,
-      "green": 0.654685921600799,
-      "snp": 0.2846070771616268,
-      "pc": 0.7186237101066796,
-      "other": 0.745965296489162
+      "lab": 0.5080044272459935,
+      "con": 0.5009134626169991,
+      "ref": 0.8175834623536177,
+      "ld": 0.4538823745596867,
+      "green": 0.6544921128317719,
+      "snp": 0.28465367540349695,
+      "pc": 0.7184310014877744,
+      "other": 0.74574359043625
     },
     "components_by_party": {
       "lab": {
         "anchor_measurement_variance": 0.03379214606942445,
         "current_measurement_variance": 0.08733018210308745,
         "drift_variance_per_year": 0.029098168183670732,
-        "anchor_age_years": 2.3956194387405887,
-        "current_age_years": 0.44353182751540043,
-        "anchor_total_variance": 0.10350028340196898,
-        "current_total_variance": 0.1002361458149414,
-        "current_provider_weight": 0.5080106871401785
+        "anchor_age_years": 2.3983572895277208,
+        "current_age_years": 0.4462696783025325,
+        "anchor_total_variance": 0.10357994984463474,
+        "current_total_variance": 0.10031581225760718,
+        "current_provider_weight": 0.5080044272459935
       },
       "con": {
         "anchor_measurement_variance": 0.03717140056740165,
         "current_measurement_variance": 0.06489617968865045,
         "drift_variance_per_year": 0.01433632052189644,
-        "anchor_age_years": 2.3956194387405887,
-        "current_age_years": 0.44353182751540043,
-        "anchor_total_variance": 0.07151576868967238,
-        "current_total_variance": 0.07125479412957372,
-        "current_provider_weight": 0.5009139648781418
+        "anchor_age_years": 2.3983572895277208,
+        "current_age_years": 0.4462696783025325,
+        "anchor_total_variance": 0.07155501939609783,
+        "current_total_variance": 0.07129404483599917,
+        "current_provider_weight": 0.5009134626169991
       },
       "ref": {
         "anchor_measurement_variance": 0.058100139084117854,
         "current_measurement_variance": 0.08137150636704009,
         "drift_variance_per_year": 0.769983922511564,
-        "anchor_age_years": 2.3956194387405887,
-        "current_age_years": 0.44353182751540043,
-        "anchor_total_variance": 1.9026885913705478,
-        "current_total_variance": 0.4228838826760706,
-        "current_provider_weight": 0.8181592328790209
+        "anchor_age_years": 2.3983572895277208,
+        "current_age_years": 0.4462696783025325,
+        "anchor_total_variance": 1.904796692458875,
+        "current_total_variance": 0.4249919837643979,
+        "current_provider_weight": 0.8175834623536177
       },
       "ld": {
         "anchor_measurement_variance": 0.12733571691733833,
         "current_measurement_variance": 0.332527227939262,
         "drift_variance_per_year": 0.07350584506508796,
-        "anchor_age_years": 2.3956194387405887,
-        "current_age_years": 0.44353182751540043,
-        "anchor_total_variance": 0.303427748216317,
-        "current_total_variance": 0.36512940973404434,
-        "current_provider_weight": 0.45385461004793515
+        "anchor_age_years": 2.3983572895277208,
+        "current_age_years": 0.4462696783025325,
+        "anchor_total_variance": 0.3036289962520873,
+        "current_total_variance": 0.3653306577698146,
+        "current_provider_weight": 0.4538823745596867
       },
       "green": {
         "anchor_measurement_variance": 0.09927844728008574,
         "current_measurement_variance": 0.2285778060492817,
         "drift_variance_per_year": 0.21488452424006013,
-        "anchor_age_years": 2.3956194387405887,
-        "current_age_years": 0.44353182751540043,
-        "anchor_total_variance": 0.614059990634097,
-        "current_total_variance": 0.32388593179025293,
-        "current_provider_weight": 0.654685921600799
+        "anchor_age_years": 2.3983572895277208,
+        "current_age_years": 0.4462696783025325,
+        "anchor_total_variance": 0.6146483123979302,
+        "current_total_variance": 0.3244742535540861,
+        "current_provider_weight": 0.6544921128317719
       },
       "snp": {
         "anchor_measurement_variance": 0.012214885792703247,
         "current_measurement_variance": 0.04487973572774666,
         "drift_variance_per_year": 0.0025413871743783334,
-        "anchor_age_years": 2.3956194387405887,
-        "current_age_years": 0.44353182751540043,
-        "anchor_total_variance": 0.01830308230901,
-        "current_total_variance": 0.04600692182562288,
-        "current_provider_weight": 0.2846070771616268
+        "anchor_age_years": 2.3983572895277208,
+        "current_age_years": 0.4462696783025325,
+        "anchor_total_variance": 0.01831004024788578,
+        "current_total_variance": 0.04601387976449866,
+        "current_provider_weight": 0.28465367540349695
       },
       "pc": {
         "anchor_measurement_variance": 0.22478423573911993,
         "current_measurement_variance": 0.14185014819166283,
         "drift_variance_per_year": 0.10887640239325248,
-        "anchor_age_years": 2.3956194387405887,
-        "current_age_years": 0.44353182751540043,
-        "anchor_total_variance": 0.4856106617325379,
-        "current_total_variance": 0.19014029791844422,
-        "current_provider_weight": 0.7186237101066796
+        "anchor_age_years": 2.3983572895277208,
+        "current_age_years": 0.4462696783025325,
+        "anchor_total_variance": 0.4859087490765304,
+        "current_total_variance": 0.1904383852624367,
+        "current_provider_weight": 0.7184310014877744
       },
       "other": {
         "anchor_measurement_variance": 1.775428079298443,
         "current_measurement_variance": 0.914644044719191,
         "drift_variance_per_year": 0.8327803657307229,
-        "anchor_age_years": 2.3956194387405887,
-        "current_age_years": 0.44353182751540043,
-        "anchor_total_variance": 3.770452911644459,
-        "current_total_variance": 1.284008642250682,
-        "current_provider_weight": 0.745965296489162
+        "anchor_age_years": 2.3983572895277208,
+        "current_age_years": 0.4462696783025325,
+        "anchor_total_variance": 3.7727329400242837,
+        "current_total_variance": 1.2862886706305061,
+        "current_provider_weight": 0.74574359043625
       }
     },
     "formula": "logR=(1-w_current)*logR_anchor+w_current*logR_current; w_current=Var_anchor_total/(Var_anchor_total+Var_current_total)"
@@ -5712,14 +5712,14 @@
       "majority_consensus_available": 632,
       "all_scenarios_different": 0,
       "majority_consensus_totals": {
+        "ld": 58,
         "lab": 319,
         "con": 149,
-        "snp": 37,
-        "ld": 58,
         "ref": 49,
-        "other": 7,
+        "snp": 37,
         "pc": 9,
-        "green": 4
+        "green": 4,
+        "other": 7
       },
       "note": "Consensus is diagnostic only and never selects the live route."
     },
@@ -5734,14 +5734,14 @@
       "other": 0.6599927427398614
     },
     "freshness_adjusted_weights_by_party": {
-      "lab": 0.5080106871401785,
-      "con": 0.5009139648781418,
-      "ref": 0.8181592328790209,
-      "ld": 0.45385461004793515,
-      "green": 0.654685921600799,
-      "snp": 0.2846070771616268,
-      "pc": 0.7186237101066796,
-      "other": 0.745965296489162
+      "lab": 0.5080044272459935,
+      "con": 0.5009134626169991,
+      "ref": 0.8175834623536177,
+      "ld": 0.4538823745596867,
+      "green": 0.6544921128317719,
+      "snp": 0.28465367540349695,
+      "pc": 0.7184310014877744,
+      "other": 0.74574359043625
     }
   },
   "promotion_policy": "Never auto-promote. Passing the research gate only nominates the method for review and a fresh external validation."
